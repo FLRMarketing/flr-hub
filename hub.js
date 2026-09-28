@@ -15,7 +15,7 @@
   const NAME_KEY = 'flr-hub:name';         // this browser only: greet people by name before the database answers
   const ROLES = { estimator: 'Estimator', admin: 'Administrator', developer: 'Developer' };
   const ESTIMATOR = { id: 'estimator', title: 'Cost Estimator', subtitle: 'Price commercial flooring jobs and build quotes.', url: 'estimator/' };
-  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave' };
+  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const strongEnough = p => p.length >= 10 && /[A-Za-z]/.test(p) && /\d/.test(p);
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -150,6 +150,7 @@ a{color:var(--tint)}
 .app-icon--estimator{background:linear-gradient(160deg,#3a47e0 0%,#00098b 78%)}
 .app-icon--speeding{background:linear-gradient(160deg,#ff8a3d 0%,#e3122e 78%)}
 .app-icon--annual-leave{background:linear-gradient(160deg,#4fd46a 0%,#17853a 78%)}
+.app-icon--fitters{background:linear-gradient(160deg,#35c4d8 0%,#0a6f8c 78%)}
 @media (hover:hover){.tile-link:hover .app-icon{transform:translateY(-3px) scale(1.04);box-shadow:var(--sh-icon-lift)}}
 .tile-link:active .app-icon{transform:scale(.92);transition-duration:.12s}
 .tile-name{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;

@@ -8,6 +8,8 @@ The front door to FLR's staff tools. One FLR account (the Cost Estimator's sign-
 - **Annual Leave** opens here (`annual-leave/`). Leave approvers (a list in the database) see and decide everyone's leave;
   everyone else sees only their own requests and days left. monday.com stays the source of truth: the `flr-leave`
   function keeps the database's copy in step with it and writes decisions back.
+- **Fitter Schedule** opens the fitter schedule site in a new tab: who is free, who is working and which jobs still need a
+  fitter. Its link lives in the database like the others, and the site still asks for the team passcode.
 
 GitHub Pages is public, so nothing private belongs in this repository: no data, no staff photos or names, no links to
 private tools, no writer key and never the Supabase `service_role` key.
