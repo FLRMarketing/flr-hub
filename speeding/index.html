@@ -14,7 +14,7 @@
 </head>
 <body>
 <title>FLR Group Fleet Management</title>
-<script>(function(){var d=document.documentElement,l='apple',m='light';try{var s=JSON.parse(localStorage.getItem('flr-report-look')||'null');if(s){if(s.look==='flr')l='flr';if(s.mode==='dark')m='dark';}}catch(e){}d.setAttribute('data-look',l);d.setAttribute('data-mode',m);})();</script>
+<script>(function(){var d=document.documentElement,m='light';try{var s=JSON.parse(localStorage.getItem('flr-report-look')||'null');if(s&&s.mode==='dark')m='dark';}catch(e){}d.setAttribute('data-look','apple');d.setAttribute('data-mode',m);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap">
 <style>
@@ -24,11 +24,11 @@
 </style>
 <style>
 /* ============================================================================
-   Tokens. Two looks x two appearances, switched on <html>:
-   data-look="apple" | "flr"   data-mode="light" | "dark"
-   The page opens in Apple + light (the viewer's own theme is deliberately not
-   followed, matching the live report's light-only choice); the switches in the
-   navigation bar change both, and remember the choice in this browser only.
+   Tokens. The Apple look (the only look since 28 Sep 2026) in two appearances,
+   switched on <html>: data-look="apple", data-mode="light" | "dark".
+   The page opens in light (the viewer's own theme is deliberately not followed,
+   matching the live report's light-only choice); the button in the navigation
+   bar switches it and remembers the choice in this browser only.
    ========================================================================== */
 :root{
   color-scheme:light;
@@ -92,59 +92,6 @@
   --sh-sheet:0 30px 90px rgba(0,0,0,.7),0 0 0 .5px rgba(255,255,255,.08);
   --sh-thumb:0 3px 8px rgba(0,0,0,.3);
 }
-/* FLR brand rules: square, flat, navy, Eurostile headings in capitals (the live report's look) */
-:root[data-look="flr"]{
-  color-scheme:light;
-  --bg:#f3f4f6; --surface:#ffffff; --surface-2:#f7f8fa; --row-hover:#f2f3fa;
-  --fill:#ffffff; --fill-2:#f2f3fa;
-  --ink:#0b0d12; --ink-2:#434a50; --ink-3:#5d656c; --head-ink:#00098b;
-  --sep:#dcdfe3; --line:#dcdfe3; --line-2:#7c858c;
-  --tint:#00098b; --tint-fill:#00098b; --on-tint:#ffffff; --tint-soft:#f2f3fa; --tint-hover:#000670;
-  --red:#c4161c; --red-ink:#c4161c; --red-soft:#fdecec;
-  --gold:#dda44d; --gold-ink:#5a3d00; --gold-soft:#fbf1dd;
-  --green-ink:#0d5230; --green-soft:#e9f5ee; --green-line:#8fc9a6;
-  --plate:#f8d33a; --plate-ink:#111111; --plate-edge:#111111;
-  --ph-bg:#e2e4e6; --ph-line:#7c858c;
-  --sea:#dde6ef; --land:#fbfbfa; --map-border:#a9b1b9; --map-label:#5d656c;
-  --sel:#00098b; --halo:#ffffff;
-  --mat:#ffffff; --mat-solid:#ffffff; --mat-edge:#00098b; --blur:none;
-  --scrim:rgba(11,13,18,.45);
-  --seg-bg:#ffffff; --seg-thumb:#00098b; --seg-on:#ffffff; --seg-bd:#00098b;
-  --tab-thumb:#00098b; --tab-on:#ffffff;
-  --focus:#00098b;
-  --sh-card:none; --sh-float:none; --sh-sheet:none; --sh-thumb:none;
-  --r-card:0px; --r-ctl:0px; --r-btn:0px; --r-chip:0px; --r-face:0px; --r-plate:0px;
-  --r-sheet:0px; --r-seg:0px; --r-thumb:0px; --r-tab:0px; --r-cell:0px;
-  --font-text:"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --font-display:"Eurostile","Eurostile LT Std","Helvetica Neue",Helvetica,Arial,sans-serif;
-  --font-num:"Eurostile","Eurostile LT Std","Helvetica Neue",Helvetica,Arial,sans-serif;
-  --head-case:uppercase; --head-weight:700;
-  --track-xl:.03em; --track-l:.05em; --track-m:.04em; --track-body:0em;
-  --label-case:uppercase; --label-track:.06em; --label-size:11px; --label-weight:700;
-  --rule-w:2px; --rule-c:#00098b; --kpi-top:3px; --bd-w:1px;
-  --nav-h:68px;
-}
-/* FLR brand rules, dark: the design system's Navy theme (white on Pantone 2738, cyan actions) */
-:root[data-look="flr"][data-mode="dark"]{
-  color-scheme:dark;
-  --bg:#00098b; --surface:#00098b; --surface-2:#00098b; --row-hover:#00098b;
-  --fill:#00098b; --fill-2:#00098b;
-  --ink:#ffffff; --ink-2:#c3c5c8; --ink-3:#c3c5c8; --head-ink:#ffffff;
-  --sep:#7c858c; --line:#7c858c; --line-2:#c3c5c8;
-  --tint:#5ac7da; --tint-fill:#5ac7da; --on-tint:#00098b; --tint-soft:#00098b; --tint-hover:#8fdbe8;
-  --red:#c4161c; --red-ink:#ff9a9e; --red-soft:#00098b;
-  --gold:#dda44d; --gold-ink:#dda44d; --gold-soft:#00098b;
-  --green-ink:#8fc9a6; --green-soft:#00098b; --green-line:#8fc9a6;
-  --ph-bg:#7c858c; --ph-line:#c3c5c8;
-  --sea:#000670; --land:#00098b; --map-border:#7c858c; --map-label:#c3c5c8;
-  --sel:#5ac7da; --halo:#00098b;
-  --mat:#00098b; --mat-solid:#00098b; --mat-edge:#ffffff;
-  --scrim:rgba(0,3,40,.6);
-  --seg-bg:#00098b; --seg-thumb:#5ac7da; --seg-on:#00098b; --seg-bd:#5ac7da;
-  --tab-thumb:#5ac7da; --tab-on:#00098b;
-  --focus:#ffffff;
-  --rule-c:#ffffff;
-}
 /* ---- Map colours (read by the map renderer) ---- */
 :root{
   --m-land:#f3f1ec; --m-urban:#e8e4dc; --m-built:#ece6de; --m-park:#cfe7c1; --m-wood:#bcdca9; --m-water:#a9cdea; --m-river:#9cc5e6; --m-rail:#b3afa8;
@@ -159,20 +106,6 @@
   --m-prim:#6f6147; --m-prim-c:#3a3326; --m-trunk:#8a7446; --m-trunk-c:#43381f; --m-mway:#a97a3d; --m-mway-c:#4d391c;
   --m-label:#e8e8ec; --m-label-2:#a7a8ae; --m-halo:rgba(8,9,12,.85);
   --sea:#15283b; --land:#1d1f23;
-}
-:root[data-look="flr"]{
-  --m-land:#f6f6f3; --m-urban:#ebecee; --m-built:#eceef0; --m-park:#dbe7d5; --m-wood:#cddec6; --m-water:#cfdde9; --m-river:#bfd2e2; --m-rail:#aeb3b7;
-  --m-minor:#ffffff; --m-minor-c:#d9dcdf; --m-tert:#ffffff; --m-tert-c:#cdd1d5; --m-sec:#ffffff; --m-sec-c:#b9bec3;
-  --m-prim:#e4e6f4; --m-prim-c:#a3a9ac; --m-trunk:#c7cbe9; --m-trunk-c:#7c858c; --m-mway:#5a64c2; --m-mway-c:#00098b;
-  --m-label:#0b0d12; --m-label-2:#434a50; --m-halo:rgba(255,255,255,.94);
-  --sea:#cfdde9; --land:#f6f6f3;
-}
-:root[data-look="flr"][data-mode="dark"]{
-  --m-land:#000a78; --m-urban:#040f84; --m-built:#061287; --m-park:#0a1c6e; --m-wood:#0b2066; --m-water:#00054f; --m-river:#1b2aa8; --m-rail:#5a64b8;
-  --m-minor:#1c27a3; --m-minor-c:#000670; --m-tert:#2632ae; --m-tert-c:#00076d; --m-sec:#303cb8; --m-sec-c:#000768;
-  --m-prim:#4450c4; --m-prim-c:#00075f; --m-trunk:#5e69cf; --m-trunk-c:#000658; --m-mway:#5ac7da; --m-mway-c:#1d7c8e;
-  --m-label:#ffffff; --m-label-2:#c3c5c8; --m-halo:rgba(0,6,80,.9);
-  --sea:#00054f; --land:#000a78;
 }
 
 /* ============================================================================
@@ -227,7 +160,6 @@ a:hover{text-decoration-thickness:2px}
 .seg label:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:-1px;border-radius:var(--r-thumb)}
 .seg:not(.live) label:has(input:checked){background:var(--seg-thumb);color:var(--seg-on);border-radius:var(--r-thumb)}
 .seg.dragging{cursor:grabbing}
-.seg-look label{min-height:30px;padding:0 12px}
 
 /* ---- Tab bar: a floating capsule, top centre on wide screens, bottom on phones ---- */
 .tabbar{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + (var(--nav-h) - 42px) / 2);left:50%;transform:translateX(-50%);display:flex;padding:3px;border-radius:var(--r-tab);background:var(--mat);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--sh-float),inset 0 0 0 var(--hair) var(--mat-edge);touch-action:none;user-select:none;-webkit-user-select:none}
@@ -839,7 +771,6 @@ ul.plain li:first-child{border-top:0}
 .s-top{display:flex;align-items:center;gap:10px;min-width:0}
 .s-top .n{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .s-over{flex:none;padding:2px 8px;border-radius:var(--r-chip);background:var(--red-soft);color:var(--red-ink);font:700 12px/1.4 var(--font-text)}
-:root[data-look="flr"] .s-over{background:var(--red);color:#fff}
 .s-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:12.5px;color:var(--ink-2)}
 .s-meta .veh{margin-top:0}
 .s-where{color:var(--ink-3)}
@@ -878,7 +809,6 @@ ul.plain li:first-child{border-top:0}
 .tc-x i{font-style:normal;color:var(--ink-3)}
 .tc-x small{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .tc-x.sel span{font-weight:700;color:var(--ink)}
-:root[data-look="flr"] .tc-bar{border-radius:0}
 .tl-list{list-style:none;margin:0 -18px;padding:0}
 .tl-day{padding:12px 18px 6px;font:600 12.5px/1.2 var(--font-text);letter-spacing:var(--label-track);text-transform:var(--label-case);color:var(--ink-3);border-top:var(--hair) solid var(--sep)}
 .tl-list > .tl-day:first-child{border-top:0;padding-top:2px}
@@ -891,7 +821,6 @@ ul.plain li:first-child{border-top:0}
 .tl-o{justify-self:start;padding:2px 7px;border-radius:var(--r-chip);background:var(--tint-soft);color:var(--tint);font:700 12px/1.4 var(--font-text);font-variant-numeric:tabular-nums}
 .tl-o.o15{background:var(--gold-soft);color:var(--gold-ink)}
 .tl-o.o20{background:var(--red-soft);color:var(--red-ink)}
-:root[data-look="flr"] .tl-o.o20{background:var(--red);color:#fff}
 .tl-w{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--ink-3)}
 @media (max-width:560px){.tl-row{grid-template-columns:44px 84px 46px minmax(0,1fr) 10px;gap:8px;font-size:13.5px}.tl-w{grid-column:2/5}}
 
@@ -909,7 +838,6 @@ ul.plain li:first-child{border-top:0}
 .due-date small{margin-top:2px;font:600 10.5px/1 var(--font-text);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
 .due-row.st-over .due-date{background:var(--red-soft);color:var(--red-ink)}
 .due-row.st-soon .due-date{background:var(--gold-soft);color:var(--gold-ink)}
-:root[data-look="flr"] .due-date{border-radius:0}
 .due-main{display:flex;flex-direction:column;gap:3px;min-width:0}
 .due-top{display:flex;align-items:center;gap:8px}
 .due-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--ink-3)}
@@ -988,7 +916,6 @@ ul.plain li:first-child{border-top:0}
 .msh.g span{background:#00703c;color:#ffd200}
 .msh.a span,.msh.b span{background:#fff;color:#111;box-shadow:0 0 0 1px #111,0 1px 3px rgba(0,0,0,.2)}
 .msh.b span{font-size:10.5px}
-:root[data-look="flr"] .msh span{border-radius:0}
 .leaflet-hotspot-pane .hs{opacity:.84}
 @media (max-width:980px){:root{--panel-w:330px}}
 @media (max-width:720px){
@@ -1001,13 +928,7 @@ ul.plain li:first-child{border-top:0}
   .mp-grab{display:block;position:sticky;top:0;z-index:3;flex:none;height:20px;margin-bottom:-20px;cursor:grab;touch-action:none}
   .mp-grab::before{content:"";display:block;width:38px;height:5px;margin:8px auto 0;border-radius:3px;background:var(--ink-3);opacity:.45}
   .mp-sum{padding-top:22px;touch-action:none}
-  :root[data-look="flr"] .mpwrap{border-radius:0}
 }
-:root[data-look="flr"] .mpwrap,:root[data-look="flr"] .mfilters,:root[data-look="flr"] .mstatus{border-radius:0}
-:root[data-look="flr"] .mb-btn{border-radius:0;border-color:var(--tint);color:var(--tint)}
-:root[data-look="flr"] .mb-btn[aria-expanded="true"]{color:var(--on-tint)}
-:root[data-look="flr"] .fchip{border-radius:0}
-:root[data-look="flr"] .dg-n{border-radius:0}
 
 /* ============================================================================
    Movement in the review order: arrows on each row, the "Changes since" line,
@@ -1100,9 +1021,6 @@ ul.plain li:first-child{border-top:0}
 .pf-period.pf-up.priority{background:var(--red-soft);box-shadow:inset 3px 0 0 var(--red)}
 .pf-period.pf-up.above{background:var(--gold-soft);box-shadow:inset 3px 0 0 var(--gold)}
 @media (max-width:760px){.pf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-:root[data-look="flr"] .pf-grid{gap:1px;border-radius:0}
-:root[data-look="flr"] .pf{background:var(--surface)}
-:root[data-look="flr"] .pf .k{font-weight:700;font-size:11px}
 .dmv-pos{font-size:14px;color:var(--ink-2)}
 .dmv-pos b{font:700 20px/1 var(--font-num);letter-spacing:-.01em;color:var(--ink)}
 .dmv-list{display:grid;gap:14px;list-style:none;margin:0;padding:0}
@@ -1114,10 +1032,6 @@ ul.plain li:first-child{border-top:0}
 .dmv-why{max-width:70ch;margin:3px 0 0;font-size:14px;line-height:1.45;color:var(--ink-2)}
 .dmove .note{margin:12px 0 0}
 
-/* ---- FLR look: square shapes, brand weights ---- */
-:root[data-look="flr"] .mv{border-radius:0;font-weight:700}
-:root[data-look="flr"] .mv-text h3{font-weight:700}
-:root[data-look="flr"] .dr.flying.rise{border-radius:0;box-shadow:0 0 0 1px var(--line-2)}
 
 /* ============================================================================
    Smooth zoom: hotspot squares scale with the map while it zooms and cross-fade into the
@@ -1141,106 +1055,16 @@ ul.plain li:first-child{border-top:0}
    FLR brand rules: what tokens alone can't restore (the live report's look).
    Colours still come from tokens, so the Navy theme follows automatically.
    ========================================================================== */
-:root[data-look="flr"] .nb-mat{opacity:1;box-shadow:inset 0 -2px 0 var(--rule-c)}
-:root[data-look="flr"] .nb-logo{width:112px}
-:root[data-look="flr"] .nb-title{font:700 15px/1.2 var(--font-display);letter-spacing:.05em;text-transform:uppercase;color:var(--head-ink)}
-:root[data-look="flr"] .nb-back{margin-left:0;padding:0 12px 0 8px;border:1px solid var(--tint);border-radius:0;font:700 13px/1 var(--font-text);letter-spacing:.06em;text-transform:uppercase}
-:root[data-look="flr"] .nb-back svg{width:9px;height:15px}
-:root[data-look="flr"] .iconbtn{border-radius:0;background:var(--surface);color:var(--tint)}
-:root[data-look="flr"] .seg{padding:0}
-:root[data-look="flr"] .seg .thumb{top:0;bottom:0}
-:root[data-look="flr"] .seg label{font-weight:700;color:var(--tint)}
-:root[data-look="flr"] .seg label.on{color:var(--seg-on)}
-:root[data-look="flr"] .seg label+label{box-shadow:inset 1px 0 0 var(--seg-bd)}
-:root[data-look="flr"] .tabbar{padding:0;box-shadow:inset 0 0 0 1px var(--mat-edge)}
-:root[data-look="flr"] .tb-thumb{top:0;bottom:0}
-:root[data-look="flr"] .tabbar a{font-weight:700;color:var(--tint)}
-:root[data-look="flr"] .tabbar a[aria-current="page"]{color:var(--tab-on)}
-:root[data-look="flr"] .lt-title{font-size:clamp(24px,2.8vw,30px);line-height:1.1}
-:root[data-look="flr"] h2{font-size:18px}
-:root[data-look="flr"] .dlg-head h2{font-size:20px;text-transform:none;letter-spacing:.01em}
-:root[data-look="flr"] .phead h2{font-size:26px;letter-spacing:.01em}
-:root[data-look="flr"] .sect,:root[data-look="flr"] .card h3{font:700 13px/1.3 var(--font-text);letter-spacing:.07em;text-transform:uppercase;color:var(--head-ink)}
-:root[data-look="flr"] .sect{margin-top:22px}
-:root[data-look="flr"] .how summary .howh{font-size:16px}
-:root[data-look="flr"] .how summary{color:var(--head-ink)}
-:root[data-look="flr"] .how h3,:root[data-look="flr"] .caution h3{font-size:14px}
-:root[data-look="flr"] .mp-body h4{font-size:12px;color:var(--head-ink)}
 
 /* Summary figures: white panels with a navy top rule, figures in navy Eurostile */
-:root[data-look="flr"] .kpi .l{font:700 12px/1.3 var(--font-text);color:var(--ink-2)}
-:root[data-look="flr"] .kpi .l::before{display:none}
-:root[data-look="flr"] .kpi .v,:root[data-look="flr"] .kpi.alertish .v{font:700 32px/1.05 var(--font-display);letter-spacing:0;color:var(--head-ink)}
 
 /* Alerts and callouts: flat, bordered, with the live report's left rules */
-:root[data-look="flr"] .alert{box-shadow:none}
-:root[data-look="flr"] .alert::before{display:none}
-:root[data-look="flr"] .alert b{font-weight:700}
-:root[data-look="flr"] .alert.warn{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-ink)}
-:root[data-look="flr"] .alert.bad{border-color:var(--red);background:var(--red-soft);color:var(--red-ink)}
-:root[data-look="flr"] .alert.info{border-color:var(--tint);border-left-width:4px}
-:root[data-look="flr"] .caution{padding:12px 16px;border-left:4px solid var(--gold)}
-:root[data-look="flr"] .caution::before{display:none}
-:root[data-look="flr"] .caution h3{font:700 13px/1.3 var(--font-text);letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink)}
-:root[data-look="flr"] .avsec{border-left:5px solid var(--tint)}
 
 /* Driver list */
-:root[data-look="flr"] .toolbar,:root[data-look="flr"] .toolbar.stuck{background:var(--bg);box-shadow:none}
-:root[data-look="flr"] .toolbar.stuck{box-shadow:inset 0 -1px 0 var(--line)}
-:root[data-look="flr"] .drivers thead th{background:var(--surface-2);box-shadow:inset 0 -2px 0 var(--rule-c);font-weight:700}
-:root[data-look="flr"] .drivers td{border-top:1px solid var(--line)}
-:root[data-look="flr"] .drivers td.c-driver{border-top-color:var(--line);background-image:none}
-:root[data-look="flr"] .drivers tbody tr:first-child td{border-top:0}
-:root[data-look="flr"] .drivers td.big{font:700 17px/1.2 var(--font-text)}
-:root[data-look="flr"] .namebtn{font-weight:700;letter-spacing:0}
-:root[data-look="flr"] .plate{box-shadow:none}
-:root[data-look="flr"] .chip{padding:3px 8px;font-weight:700}
-:root[data-look="flr"] .chip::before{display:none}
-:root[data-look="flr"] .chip.priority{background:var(--red);color:#fff}
-:root[data-look="flr"] .chip.above{background:var(--gold);color:#111}
-:root[data-look="flr"] .chip.within{background:var(--surface-2);border-color:var(--line);color:var(--ink-2)}
-:root[data-look="flr"] .chip.limited,:root[data-look="flr"] .chip.below{border:1px dashed var(--ph-line);background:var(--surface);color:var(--ink-2)}
-:root[data-look="flr"] .chip.inc{background:var(--tint-fill);color:var(--on-tint)}
-:root[data-look="flr"] .chip.review{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-ink)}
-:root[data-look="flr"] .spdc .over{background:var(--red);color:#fff}
-:root[data-look="flr"] .spd{font-family:var(--font-display);letter-spacing:0}
 
 /* Buttons, links and fields */
-:root[data-look="flr"] .btn{font-weight:700;font-size:13px}
-:root[data-look="flr"] .btn.ghost{border-color:var(--tint);background:var(--surface);color:var(--tint)}
-:root[data-look="flr"] .btn.ghost:hover{background:var(--row-hover)}
-:root[data-look="flr"] .linkbtn{font-weight:400;text-decoration:underline;text-underline-offset:2px}
-:root[data-look="flr"] .mini button{padding:0;border-radius:0;background:none;color:var(--tint);font-weight:400;text-decoration:underline}
-:root[data-look="flr"] .close{border-radius:0;background:var(--surface)}
-:root[data-look="flr"] .field input,:root[data-look="flr"] .field select{font-size:14px;letter-spacing:0}
-:root[data-look="flr"] .field input:focus-visible,:root[data-look="flr"] .field select:focus-visible{box-shadow:none;outline:2px solid var(--focus);outline-offset:0;border-color:var(--focus)}
-:root[data-look="flr"] .field select.on{border-color:var(--tint);box-shadow:inset 0 0 0 1px var(--tint);color:var(--ink);font-weight:400}
 
 /* Detail content */
-:root[data-look="flr"] .facts{gap:8px 16px;border:0;background:none;font-size:14px}
-:root[data-look="flr"] .facts dt,:root[data-look="flr"] .facts dd{padding:0;border:0}
-:root[data-look="flr"] .facts dt{color:var(--ink-3)}
-:root[data-look="flr"] .facts dd{font-weight:700}
-:root[data-look="flr"] .stats,:root[data-look="flr"] .kv{gap:1px}
-:root[data-look="flr"] .kv div{background:var(--surface)}
-:root[data-look="flr"] .stats dt,:root[data-look="flr"] .kv dt{font-weight:700;font-size:11px}
-:root[data-look="flr"] .stats dd{font-family:var(--font-text)}
-:root[data-look="flr"] .bars .track{border:1px solid var(--line);background:var(--surface-2)}
-:root[data-look="flr"] .recon .mk{border-radius:0;background:var(--tint-fill);color:var(--on-tint)}
-:root[data-look="flr"] .recon.bad .mk{background:var(--red);color:#fff}
-:root[data-look="flr"] .recon.na .mk{background:var(--ink-3);color:var(--surface)}
-:root[data-look="flr"] .duecard{padding-left:16px}
-:root[data-look="flr"] .duecard::before{display:none}
-:root[data-look="flr"] .due-l,:root[data-look="flr"] .vh-name,:root[data-look="flr"] .av-name{letter-spacing:0}
-:root[data-look="flr"] .evt th{background:var(--surface-2);border-bottom:2px solid var(--rule-c);font-weight:700}
-:root[data-look="flr"] .evt td{border-top:1px solid var(--line)}
-:root[data-look="flr"] .mstatus{border-top:1px solid var(--line)}
-:root[data-look="flr"] .mpwrap{border-left:1px solid var(--line-2)}
-:root[data-look="flr"] .leaflet-bar{border:1px solid var(--line-2)!important;border-radius:0!important;background:var(--surface)!important;box-shadow:none!important}
-:root[data-look="flr"] .mlegend{border:1px solid var(--line-2);border-radius:0;background:var(--surface);box-shadow:none}
-:root[data-look="flr"] .foot{border-top:1px solid var(--line)}
-@media (max-width:980px){:root[data-look="flr"] .mpwrap{border-left:0;border-top:2px solid var(--rule-c)}}
-:root[data-look="flr"][data-mode="dark"] .nb-brand{border-radius:0}
 
 /* ---- FLR site only: a driver's own page ("My driving") and the administrators' sign-in links ---- */
 .mine{display:flex;flex-direction:column;gap:12px;margin:0 0 18px}
@@ -1265,6 +1089,8 @@ ul.plain li:first-child{border-top:0}
 .si-row .field select{height:36px;font-size:14px}
 @media (max-width:640px){.si-row{grid-template-columns:minmax(0,1fr) auto}.si-row .si{grid-column:1/-1;grid-row:2}}
 .signins .sub{margin:4px 0 0}
+html.drv .f-driver{display:none}
+#fleet-page > .avsec{margin-top:16px}
 
 </style>
 <header class="navbar" id="navbar">
@@ -1276,11 +1102,6 @@ ul.plain li:first-child{border-top:0}
       <div class="nb-title" id="nb-title" aria-hidden="true"></div>
     </div>
     <div class="nb-trail">
-      <fieldset class="seg seg-look" id="look-seg">
-        <legend>Look</legend>
-        <label title="Apple look: rounded, translucent, system font"><input type="radio" name="look" value="apple">Apple</label>
-        <label title="FLR brand rules: square, flat, Eurostile capitals"><input type="radio" name="look" value="flr">FLR</label>
-      </fieldset>
       <button type="button" class="iconbtn" id="mode-btn" aria-pressed="false" title="Dark appearance"><span class="sr">Dark appearance</span><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M5.35 5.35l1.55 1.55M17.1 17.1l1.55 1.55M2.6 12h2.2M19.2 12h2.2M5.35 18.65l1.55-1.55M17.1 6.9l1.55-1.55"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.8 14.6A8.2 8.2 0 0 1 9.4 4.2a8.2 8.2 0 1 0 10.4 10.4z"/></svg></button>
     </div>
   </div>
@@ -1834,19 +1655,17 @@ ul.plain li:first-child{border-top:0}
 
   // ---- Look (Apple / FLR brand) and appearance (light / dark), cross-faded ----
   function initAppearance(onChange){
-    const look = document.getElementById('look-seg'), btn = document.getElementById('mode-btn');
-    const save = () => { try { localStorage.setItem('flr-report-look', JSON.stringify({look:root.dataset.look, mode:root.dataset.mode})); } catch(e) {} };
-    for (const i of look.querySelectorAll('input')) i.checked = i.value === root.dataset.look;
+    const btn = document.getElementById('mode-btn');
+    const save = () => { try { localStorage.setItem('flr-report-look', JSON.stringify({look:'apple', mode:root.dataset.mode})); } catch(e) {} };
     const dark = () => root.dataset.mode === 'dark';
     const label = () => { btn.setAttribute('aria-pressed', String(dark())); btn.title = dark() ? 'Light appearance' : 'Dark appearance'; btn.querySelector('.sr').textContent = btn.title; };
     label();
     const apply = fn => {
       const run = () => { fn(); save(); label(); resync(); onChange(); };
-      if (document.startViewTransition && !reduced()) { try { document.startViewTransition(run); return; } catch(e) {} }
+      // A background tab skips (and rejects) the transition but still runs the change, so the rejections are expected.
+      if (document.startViewTransition && !reduced()) { try { const t = document.startViewTransition(run); for (const p of [t.ready, t.finished, t.updateCallbackDone]) if (p) p.catch(() => {}); return; } catch(e) {} }
       run();
     };
-    initSeg(look);
-    look.addEventListener('change', e => { const v = e.target.value; if (v !== root.dataset.look) apply(() => { root.dataset.look = v; }); });
     btn.addEventListener('click', () => apply(() => { root.dataset.mode = dark() ? 'light' : 'dark'; }));
   }
 
@@ -3331,7 +3150,7 @@ ul.plain li:first-child{border-top:0}
     const names = [...new Set(report.drivers.map(r => r.d))].sort((a, b) => a.localeCompare(b, 'en-GB'));
     $('#mf-driver').innerHTML = '<option value="all">All drivers</option>' + names.map(n => `<option value="${esc(n)}">${isSpare({d:n}) ? `${esc(n)} (no assigned driver)` : esc(n)}</option>`).join('');
     const regs = report.drivers.slice().sort((a, b) => a.reg.localeCompare(b.reg, 'en-GB', {numeric:true}));
-    $('#mf-reg').innerHTML = '<option value="all">All vehicles</option>' + regs.map(r => `<option value="${esc(r.reg)}">${esc(r.reg)} · ${isSpare(r) ? 'spare vehicle' : `assigned to ${esc(r.d)}`}</option>`).join('');
+    $('#mf-reg').innerHTML = `<option value="all">${DRV() ? 'All your vehicles' : 'All vehicles'}</option>` + regs.map(r => `<option value="${esc(r.reg)}">${esc(r.reg)}${DRV() ? '' : ` · ${isSpare(r) ? 'spare vehicle' : `assigned to ${esc(r.d)}`}`}</option>`).join('');
     const lims = [...new Set(allEvents.map(e => e.limit))].sort((a, b) => a - b);
     $('#mf-lim').innerHTML = '<option value="all">All limits</option>' + lims.map(l => `<option value="${l}">${l} mph</option>`).join('');
     if (MAP.f.driver !== 'all' && !names.includes(MAP.f.driver)) MAP.f.driver = 'all';
@@ -4266,15 +4085,17 @@ ul.plain li:first-child{border-top:0}
   });
 
   // ---- FLR site: a driver's own view ("My driving") ----
-  // The database has already cut the data down to this driver; this takes away the fleet pages (Drivers, Vehicles),
-  // the review order, FleetView links and the fleet-manager guidance, and makes their own page the first tab.
+  // The database has already cut the data down to this driver. Their three tabs are their own page, a map of their
+  // own incidents and their own vehicle; the review order, FleetView links and the fleet-manager guidance go.
   function enterDriverMode(scope){
     SCOPE = scope;
     document.documentElement.classList.add('drv');
     VIEW_TITLE.driver = 'My driving';
     const tab = $('#tab-report');
     tab.setAttribute('href', '#' + myHome()); tab.querySelector('span').textContent = 'My driving';
-    const fleetTab = $('#tab-fleet'); if (fleetTab) fleetTab.remove();   // removed, not hidden: the tab bar measures every link
+    $('#tab-fleet').querySelector('span').textContent = 'My vehicle';
+    VIEW_TITLE.fleet = 'My vehicle'; VIEW_TITLE.map = 'My speeding map'; $('#h-map-lt').textContent = 'My speeding map';
+    for (const f of document.querySelectorAll('.foot > span:first-child')) f.textContent = '© FLR Group · Only you and FLR administrators can see these pages.';
     const brand = $('.nb-brand'); brand.setAttribute('href', '#' + myHome()); brand.setAttribute('aria-label', 'FLR Group Fleet Management: My driving');
     TABS.sync(true);
     route();
@@ -4290,6 +4111,19 @@ ul.plain li:first-child{border-top:0}
       out.push(`<p class="note">${one ? `Vehicle ${esc(w[0])} isn't` : `Vehicles ${w.map(esc).join(' and ')} aren't`} shown here. In the last 30 days FleetView also recorded another driver on ${one ? 'it' : 'them'}, so ${one ? 'its' : 'their'} figures mix two people's driving. Ask your fleet manager about ${one ? 'it' : 'them'}.</p>`);
     }
     return out.length ? `<div class="mine">${out.join('')}</div>` : '';
+  }
+  // "My vehicle": the vehicle(s) the Monday fleet board matches to this driver, with MOT, tax and service. The same
+  // cards as on their own page; no costs, maintenance log or anyone else's vehicle (the database sends only theirs).
+  function renderMyVehicles(){
+    const el = $('#fleet-page');
+    const head = `<header class="lt"><p class="lt-eyebrow">Monday fleet board · MOT, tax and service</p><h1 class="lt-title" id="h-fleet" tabindex="-1">My vehicle</h1></header>`;
+    if (!fleetMeta) { el.innerHTML = head + syncHtml(); return; }
+    const matched = new Set(SCOPE.regs.map(g => (fvMatch(g) || {}).itemId).filter(Boolean));
+    const ids = [...new Set([...matched, ...(((fleetMeta.byDriver || {})[canonName(SCOPE.driver)]) || [])])].filter(id => vehicleData(id));
+    const cards = ids.map(id => avCard(id, matched.has(id) ? 'Your vehicle in FleetView' : 'Assigned to you on the Monday board', ''));
+    el.innerHTML = head + `<section class="avsec" aria-labelledby="h-fleet">${syncHtml()}${cards.length ? `<div class="avcards">${cards.join('')}</div>`
+      : `<div class="empty"><b>No vehicle details for you yet.</b>The Monday fleet board doesn't match a vehicle to you at the moment. Ask your fleet manager.</div>`}
+      <p class="note">From the Monday fleet board, synced every hour on weekdays. Tell your fleet manager if anything here is wrong.</p></section>`;
   }
   function renderMineEmpty(el){
     const name = SCOPE.driver;
@@ -4498,6 +4332,7 @@ ul.plain li:first-child{border-top:0}
       <span class="pill ${d.u.cls}">${esc(d.u.label.replace(/^OK · /, ''))}</span><span class="go" aria-hidden="true"></span></a></li>`;
   }
   function renderFleetPage(){
+    if (DRV()) { renderMyVehicles(); return; }
     const el = $('#fleet-page');
     const head = sub => `<header class="lt"><p class="lt-eyebrow">Monday fleet board · MOT, tax and service</p><h1 class="lt-title" id="h-fleet" tabindex="-1">Vehicles</h1>${sub ? `<p class="lt-sub">${sub}</p>` : ''}</header>`;
     if (!fleetMeta) { el.innerHTML = head('') + syncHtml(); return; }
@@ -4571,7 +4406,7 @@ ul.plain li:first-child{border-top:0}
   const isRoute = h => h === '' || h === 'report' || h === 'map' || h.startsWith('map/') || h === 'vehicles' || h.startsWith('driver/') || h.startsWith('vehicle/');
   const viewOf = h => isMapRoute(h) ? 'map' : h.startsWith('driver/') ? 'driver' : h.startsWith('vehicle/') ? 'vehicle' : h === 'vehicles' ? 'fleet' : 'report';
   const isMapRoute = h => h != null && (h === 'map' || h.startsWith('map/'));
-  const isRoot = w => DRV() ? w === 'driver' || w === 'map' : w === 'report' || w === 'map' || w === 'fleet';   // a driver's own page is their first tab
+  const isRoot = w => DRV() ? w === 'driver' || w === 'map' || w === 'fleet' : w === 'report' || w === 'map' || w === 'fleet';   // a driver's own page is their first tab
   const VIEW_TITLE = {report:'Drivers', map:'Speeding map', fleet:'Vehicles', driver:'Driver details', vehicle:'Vehicle details'};
   const viewEl = w => $('#view-' + w);
   const ALL_VIEWS = () => ['report', 'map', 'fleet', 'driver', 'vehicle'].map(viewEl);
@@ -4612,7 +4447,7 @@ ul.plain li:first-child{border-top:0}
   function route(){
     const h = currentHash();
     if (!isRoute(h)) return;   // an in-page link, not a change of page
-    if (DRV() && !(isMapRoute(h) || h === myHome() || SCOPE.regs.some(g => h === 'driver/' + slug(g)))) { location.replace('#' + myHome()); return; }   // a driver has only their own pages and map
+    if (DRV() && !(isMapRoute(h) || h === 'vehicles' || h === myHome() || SCOPE.regs.some(g => h === 'driver/' + slug(g)))) { location.replace('#' + myHome()); return; }   // a driver has only their own pages, map and vehicle
     const which = viewOf(h);
     const was = lastRoute; lastRoute = h;
     const animate = !skipAnim && was != null; skipAnim = false;
@@ -4701,7 +4536,7 @@ ul.plain li:first-child{border-top:0}
   }
   window.addEventListener('hashchange', route);
 
-  // ---- Apple-style shell: bars that respond to scroll, tabs, back, swipe back, looks ----
+  // ---- Apple-style shell: bars that respond to scroll, tabs, back, swipe back, light and dark ----
   const CHROME = UI.initChrome({navbar:$('#navbar'), stack:$('#stack'), view:() => viewEl(topW()), solid:v => v.id === 'view-map',
     title:v => v.querySelector('.lt-title, .phead h2'), toolbar:v => v.id === 'view-report' ? $('#toolbar') : null});
   const TABS = UI.initTabs($('#tabbar'), a => { location.hash = a.getAttribute('href'); });
