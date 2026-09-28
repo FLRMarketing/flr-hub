@@ -2,6 +2,8 @@
 """Build speeding/: the Driver Speeding Report for the FLR site, from the report's own template.
 
 It is the same page as on Claude (same template, same rules; the CALC block is untouched), except:
+  * the FLR database decides what each person gets (administrators every driver, a linked driver only their own log),
+    and the report's pages stay hidden until it has answered (bridge.js sets html[data-hub]);
   * no staff photos and no list of photo names: the photos come from the FLR database after sign-in, like all the data;
   * a whole HTML document carrying what the Claude frame normally supplies (charset, viewport, a small reset), plus
     this site's sign-in settings and bridge.js, which answers the page's database requests from the FLR database;
@@ -38,14 +40,15 @@ head = """<!doctype html>
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}html[data-hub="loading"] #tabbar,html[data-hub="loading"] #stack{visibility:hidden}</style>
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
-<script src="bridge.js"></script>
+<script src="bridge.js?v=1.1"></script>
 </head>
 <body>
 """
+# bridge.js?v=: bump it whenever bridge.js changes, so a new page never runs with a cached old bridge (Pages caches 10 min).
 html = head + page + '\n</body>\n</html>\n'
 assert 'const PHOTOS = new Set([]);' in html, 'the public page must not list staff photos'
 

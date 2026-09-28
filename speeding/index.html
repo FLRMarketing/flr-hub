@@ -6,11 +6,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}html[data-hub="loading"] #tabbar,html[data-hub="loading"] #stack{visibility:hidden}</style>
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
-<script src="bridge.js"></script>
+<script src="bridge.js?v=1.1"></script>
 </head>
 <body>
 <title>FLR Group Fleet Management</title>
@@ -1242,6 +1242,30 @@ ul.plain li:first-child{border-top:0}
 @media (max-width:980px){:root[data-look="flr"] .mpwrap{border-left:0;border-top:2px solid var(--rule-c)}}
 :root[data-look="flr"][data-mode="dark"] .nb-brand{border-radius:0}
 
+/* ---- FLR site only: a driver's own page ("My driving") and the administrators' sign-in links ---- */
+.mine{display:flex;flex-direction:column;gap:12px;margin:0 0 18px}
+.mine .alert{margin:0}
+.mine-regs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0;padding:0;list-style:none;font-size:14px;color:var(--ink-2)}
+.mine-regs a{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:var(--r-chip);background:var(--fill);color:var(--ink);font-weight:600;text-decoration:none}
+.mine-regs a[aria-current="page"]{background:var(--tint-fill);color:var(--on-tint)}
+.signin-card{display:flex;flex-direction:column;gap:12px}
+.signin-card .card-h{margin:0}
+.signin-card .field{max-width:520px}
+.si{display:flex;flex-direction:column;gap:8px;min-width:0}
+.si-ask{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0;padding:10px 12px;border-radius:12px;background:var(--tint-soft);font-size:14px;line-height:1.4}
+.si-ask span{flex:1 1 240px;min-width:0}
+.si-msg{margin:0;font-size:13px;line-height:1.4;color:var(--ink-2)}
+.si-msg.bad{color:var(--red-ink)}
+.si-list{margin:0;padding:0;list-style:none}
+.si-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto;gap:8px 14px;align-items:start;padding:12px 0;border-top:var(--hair) solid var(--sep)}
+.si-row:first-child{border-top:0}
+.si-row > div:first-child{padding-top:1px}
+.si-row > div:first-child b{display:block;font-weight:600}
+.si-row > .linkbtn{padding-top:9px}
+.si-row .field select{height:36px;font-size:14px}
+@media (max-width:640px){.si-row{grid-template-columns:minmax(0,1fr) auto}.si-row .si{grid-column:1/-1;grid-row:2}}
+.signins .sub{margin:4px 0 0}
+
 </style>
 <header class="navbar" id="navbar">
   <div class="nb-mat" aria-hidden="true"></div>
@@ -1335,6 +1359,8 @@ ul.plain li:first-child{border-top:0}
         <div id="serious"></div>
       </section>
 
+      <section class="section signins" id="signins" aria-labelledby="h-signins" hidden></section>
+
       <section class="section" aria-labelledby="h-how">
         <details class="how" id="how">
           <summary><h2 id="h-how" class="howh">How this report works</h2></summary>
@@ -1424,6 +1450,7 @@ ul.plain li:first-child{border-top:0}
 </main>
 
 <dialog class="sheetdlg" id="dlg-incident" aria-labelledby="di-title"></dialog>
+<dialog class="sheetdlg" id="dlg-signin" aria-labelledby="ds-title"></dialog>
 
 <script>
 /* ============================================================================
@@ -2543,6 +2570,16 @@ ul.plain li:first-child{border-top:0}
   const savePrefs = () => { try { localStorage.setItem('flr-speed-prefs-v2', JSON.stringify({sort:prefs.sort, dir:prefs.dir, since:prefs.since})); } catch(e){} };
   let view = null, shown = [], seriousShown = 10, seriousList = [], driverInc = [], periodMoved = false, eventsSeen = false;
   const narrowMQ = matchMedia('(max-width:880px)');
+  // FLR site only (window.FLRHUB, from its bridge.js). The FLR database decides what each person receives:
+  // administrators every driver; a linked driver only their own log, shown here as "My driving" with the fleet pages
+  // taken away. Administrators also link FLR accounts to drivers here. On Claude there is no FLRHUB.
+  let SCOPE = null, SIGNIN = null, signinLoading = false;
+  const signinAsk = new Map();                  // driver -> account id ('' = unlink) waiting for Link / Unlink
+  const signinMsg = new Map();                  // driver -> {text, bad}: the last outcome, shown under their control
+  const HUBAPI = () => window.FLRHUB || null;
+  const DRV = () => !!SCOPE && SCOPE.kind === 'driver';
+  const hubAdmin = () => { const h = HUBAPI(); return !!h && !!h.scope && h.scope.kind === 'all' && h.scope.admin === true; };
+  const myHome = () => 'driver/' + (SCOPE && SCOPE.regs.length ? slug(SCOPE.regs[0]) : '');
 
   // FleetView's overall driver score for a row: its 30-day score, or FleetView's own score for the week in a week
   // view. The reference is FleetView's fleet average for the 30 days (FleetView gives no weekly fleet average).
@@ -2567,7 +2604,7 @@ ul.plain li:first-child{border-top:0}
     view.fleetScore = fleetScore();
     view.rows.forEach(r => { r.score = scoreFor(r.reg, view); r.stSpeed = statusOf(r, view.avg); r.st = reviewStatusOf(r, view.avg, view.fleetScore); r.scoreUp = r.st !== r.stSpeed; r.key = r.reg; r.x = view.avg ? r.per100 / view.avg : 0; });
     computeMoves();
-    renderKpis(); renderBench(); renderMoves(); renderList(); renderSerious(); renderHow();
+    renderKpis(); renderBench(); renderMoves(); renderList(); renderSerious(); renderHow(); renderSigninSection();
     mapDataChanged();
     refreshFleetViews();
     armReplay();
@@ -2997,14 +3034,14 @@ ul.plain li:first-child{border-top:0}
           <dt>Vehicle</dt><dd>${vehicle(it.reg, it.grp)}</dd>
           <dt>FleetView-assigned driver</dt><dd>${isSpare(it) ? 'None <span class="role">(spare vehicle, no driver assigned in FleetView)</span>' : `${esc(it.d)} <span class="role">(assigned to the vehicle in FleetView; not verified as driving)</span>`}</dd>
         </dl>
-        <div class="caution" role="note" style="margin:0"><h3>Check before acting</h3><ul><li>Confirm the speed limit at this location. FleetView's map limits can be wrong near limit changes.</li><li>Confirm who was driving. FleetView records the vehicle, not the person.</li><li>Check the original event in FleetView, and dashcam footage where available.</li></ul></div>
+        ${DRV() ? '' : `<div class="caution" role="note" style="margin:0"><h3>Check before acting</h3><ul><li>Confirm the speed limit at this location. FleetView's map limits can be wrong near limit changes.</li><li>Confirm who was driving. FleetView records the vehicle, not the person.</li><li>Check the original event in FleetView, and dashcam footage where available.</li></ul></div>`}
         <div class="actions">
           ${onMap ? `<button type="button" class="btn" id="inc-map">View on speeding map</button>` : ''}
           ${hasLoc ? `<a class="btn ${onMap ? 'ghost' : ''}" href="${mapUrl(it.lat, it.lon)}" target="_blank" rel="noopener">Open in Google Maps</a>` : '<span class="note">No location was recorded for this incident.</span>'}
-          <a class="btn ghost" href="${fvUrl(iso, iso)}" target="_blank" rel="noopener">Open in FleetView</a>
-          <button type="button" class="btn ghost" id="inc-driver">Driver and vehicle details</button>
+          ${DRV() ? '' : `<a class="btn ghost" href="${fvUrl(iso, iso)}" target="_blank" rel="noopener">Open in FleetView</a>`}
+          <button type="button" class="btn ghost" id="inc-driver">${DRV() ? 'My driving' : 'Driver and vehicle details'}</button>
         </div>
-        <p class="note">"Open in FleetView" opens FleetView's speeding report for ${esc(it.date)}. Pick vehicle ${esc(it.reg)} there to see this event.</p>
+        ${DRV() ? '' : `<p class="note">"Open in FleetView" opens FleetView's speeding report for ${esc(it.date)}. Pick vehicle ${esc(it.reg)} there to see this event.</p>`}
       </div>`;
     openDialog($('#dlg-incident'), html, from);
     const dlg = $('#dlg-incident');
@@ -3891,14 +3928,14 @@ ul.plain li:first-child{border-top:0}
           <dt>Location</dt><dd>${loc}</dd>
           <dt>Event reference</dt><dd>${esc(e.reg)} · ${esc(new Date(e.utc * 1000).toISOString().replace('.000', ''))}<span class="role">Vehicle and recorded time. FleetView gives no event ID.</span></dd>
         </dl>
-        <div class="caution" role="note" style="margin:0"><h3>Verify before acting</h3><ul><li>Check the speed limit at this exact location. FleetView's map limits can be wrong, especially near limit changes and in 20 mph zones.</li><li>Check the position: GPS points can be off by several metres, so confirm which road the vehicle was on.</li><li>Confirm who was driving. FleetView records the vehicle, not the person.</li></ul></div>
+        ${DRV() ? '' : `<div class="caution" role="note" style="margin:0"><h3>Verify before acting</h3><ul><li>Check the speed limit at this exact location. FleetView's map limits can be wrong, especially near limit changes and in 20 mph zones.</li><li>Check the position: GPS points can be off by several metres, so confirm which road the vehicle was on.</li><li>Confirm who was driving. FleetView records the vehicle, not the person.</li></ul></div>`}
         <div class="actions">
           ${e.onMap && MAP.map ? `<button type="button" class="btn narrow-only" data-pact="showmap" data-ev="${esc(e.id)}">Show on the map</button>` : ''}
           ${e.lat != null ? `<a class="btn ${e.onMap && MAP.map ? 'wide-primary' : ''}" href="${mapUrl(e.lat, e.lon)}" target="_blank" rel="noopener">Open in Google Maps</a>` : ''}
-          <a class="btn ghost" href="${fvUrl(iso, iso)}" target="_blank" rel="noopener">Open in FleetView</a>
-          <button type="button" class="btn ghost" data-pact="driver" data-reg="${esc(e.reg)}">Driver and vehicle details</button>
+          ${DRV() ? '' : `<a class="btn ghost" href="${fvUrl(iso, iso)}" target="_blank" rel="noopener">Open in FleetView</a>`}
+          <button type="button" class="btn ghost" data-pact="driver" data-reg="${esc(e.reg)}">${DRV() ? 'My driving' : 'Driver and vehicle details'}</button>
         </div>
-        <p class="note">FleetView doesn't provide a link to a single event or its own location pin. "Open in FleetView" opens its speeding report for ${esc(e.date)}; choose vehicle ${esc(e.reg)} and the event at ${esc(e.time)}. "Open in Google Maps" shows the recorded position on a street map.</p>
+        <p class="note">${DRV() ? '' : `FleetView doesn't provide a link to a single event or its own location pin. "Open in FleetView" opens its speeding report for ${esc(e.date)}; choose vehicle ${esc(e.reg)} and the event at ${esc(e.time)}. `}"Open in Google Maps" shows the recorded position on a street map.</p>
       </div>`;
   }
 
@@ -4108,7 +4145,7 @@ ul.plain li:first-child{border-top:0}
     const el = $('#driver-page');
     if (!report || !view) { el.innerHTML = `<div class="empty"><b>${dbState === 'loading' ? 'Loading…' : 'No report data yet.'}</b></div>`; return; }
     const r = view.rows.find(x => slug(x.reg) === key);
-    if (!r) { el.innerHTML = `<div class="empty"><b>Driver not found.</b>This vehicle isn't in the current report. It may have left FleetView.</div>`; return; }
+    if (!r) { if (DRV()) renderMineEmpty(el); else el.innerHTML = `<div class="empty"><b>Driver not found.</b>This vehicle isn't in the current report. It may have left FleetView.</div>`; return; }
     const all = report.drivers.find(x => x.reg === r.reg), fa = fleetAvg30(), spare = isSpare(r), w = r.worst;
     const statusText = r.st === 'limited'
       ? `Only ${fmt(r.mi)} miles were driven in this period, so the rate of ${f1(r.per100)} per 100 miles rests on very little driving. Treat it as limited evidence, but still check any serious incidents.`
@@ -4136,7 +4173,7 @@ ul.plain li:first-child{border-top:0}
     } else {
       hist = `<section class="card"><h3>Incidents</h3><p class="note">This refresh doesn't include the vehicle's incident list. Check individual incidents in FleetView.</p></section>`;
     }
-    el.innerHTML = `
+    el.innerHTML = `${mineHtml(r)}
       <header class="phead dhead"><div class="who">${face(r.d, 'lg')}<div><div class="role">${spare ? 'No FleetView-assigned driver' : 'FleetView-assigned driver'}</div><h2 id="h-driver" tabindex="-1">${spare ? 'Spare vehicle' : esc(r.d)}</h2>${vehicle(r.reg, r.grp)}</div></div>
         <div class="phead-st"><span class="chip ${r.st}">${STATUS[r.st].label}</span><span class="role">${esc(view.label)}</span></div></header>
       <p class="dlead">${statusText}</p>
@@ -4146,15 +4183,16 @@ ul.plain li:first-child{border-top:0}
         <div class="dm ${r.o20 ? 'sev' : ''}"><span class="k">Serious, 20+ over</span><b>${fmt(r.o20)}</b><span class="s">${fmt(r.o15)} at 15+ over</span></div>
         <div class="dm"><span class="k">Miles</span><b>${fmt(r.mi)}</b><span class="s">${r.trips != null ? plural(r.trips, 'journey', 'journeys') : ''}${w && view.week == null ? ` · worst ${w.speed} in ${w.limit}` : ''}</span></div>
       </div>
-      ${driverMovesHtml(r)}
+      ${DRV() ? '' : driverMovesHtml(r)}
       ${perfHtml(r)}
       ${report.weeks && all.weeks ? `<section class="card dtrend" aria-labelledby="h-dtrend"><div class="card-h"><h3 id="h-dtrend">Week by week</h3><span class="role">Incidents per 100 miles, with incidents and miles under each week</span></div>${trendChart(weeksOf(r.reg), fa, view.week)}</section>` : ''}
       ${hist}
       ${parts.length ? `<div class="pgrid">${parts.join('')}</div>` : ''}
       ${assignedVehicleHtml(r)}
-      <div class="caution" role="note"><h3>${spare ? 'Before acting on these incidents' : 'Before discussing this with the driver'}</h3><ul><li>${spare ? `No driver is assigned to vehicle ${esc(r.reg)} in FleetView, so check your own records for who was using it.` : `Incidents are recorded against vehicle ${esc(r.reg)}. ${esc(r.d)} is the FleetView-assigned driver, which doesn't prove who was driving.`}</li><li>Speed limits come from FleetView's map data. Check the location of any incident you plan to raise.</li></ul></div>
-      <div class="actions">${incidentsLoaded ? `<button type="button" class="btn" data-mapveh="${esc(r.reg)}">View on speeding map</button>` : ''}<a class="btn ghost" href="${fvUrl(view.start, view.end)}" target="_blank" rel="noopener">Open in FleetView</a></div>
-      <p class="note">${incidentsLoaded ? `"View on speeding map" shows this vehicle's incidents for ${esc(view.week == null ? 'the last 30 days' : 'the week ' + view.label)}. ` : ''}"Open in FleetView" opens FleetView's speeding report for ${esc(ukDate(view.start))} to ${esc(ukDate(view.end))}. Choose vehicle ${esc(r.reg)} there.</p>`;
+      ${hubAdmin() && !spare ? signinCardHtml(r) : ''}
+      ${DRV() ? '' : `<div class="caution" role="note"><h3>${spare ? 'Before acting on these incidents' : 'Before discussing this with the driver'}</h3><ul><li>${spare ? `No driver is assigned to vehicle ${esc(r.reg)} in FleetView, so check your own records for who was using it.` : `Incidents are recorded against vehicle ${esc(r.reg)}. ${esc(r.d)} is the FleetView-assigned driver, which doesn't prove who was driving.`}</li><li>Speed limits come from FleetView's map data. Check the location of any incident you plan to raise.</li></ul></div>`}
+      <div class="actions">${incidentsLoaded ? `<button type="button" class="btn" data-mapveh="${esc(r.reg)}">View on speeding map</button>` : ''}${DRV() ? '' : `<a class="btn ghost" href="${fvUrl(view.start, view.end)}" target="_blank" rel="noopener">Open in FleetView</a>`}</div>
+      <p class="note">${incidentsLoaded ? `"View on speeding map" shows this vehicle's incidents for ${esc(view.week == null ? 'the last 30 days' : 'the week ' + view.label)}. ` : ''}${DRV() ? 'Only you and FLR administrators can see this page.' : `"Open in FleetView" opens FleetView's speeding report for ${esc(ukDate(view.start))} to ${esc(ukDate(view.end))}. Choose vehicle ${esc(r.reg)} there.`}</p>`;
   }
   // Incidents as a timeline: a heading for each day, then one row per incident.
   function tlRows(items, from, to, other, driver){
@@ -4186,7 +4224,7 @@ ul.plain li:first-child{border-top:0}
         <div class="av-model">${esc([v.make, v.model].filter(Boolean).join(' ') || 'Make and model not on the board')}</div>
         ${v.formerReg ? `<div class="av-small">Former registration <b>${esc(v.formerReg)}</b></div>` : ''}</div>
       <div class="av-assign"><div class="role">Current assignment (Monday)</div><div class="av-name">${esc(v.assigned || 'Nobody')}</div>${note || ''}
-        <a class="btn" href="#vehicle/${esc(id)}">View full vehicle details</a></div>
+        ${DRV() ? '' : `<a class="btn" href="#vehicle/${esc(id)}">View full vehicle details</a>`}</div>
       <div class="av-due" role="group" aria-label="MOT, tax and service for ${esc(v.plate)}">${dueRow(v.mot, 'MOT')}${dueRow(v.tax, 'Tax')}${dueRow(v.service, 'Service')}</div>
     </article>`;
   }
@@ -4206,7 +4244,7 @@ ul.plain li:first-child{border-top:0}
       cards.push(avCard(m.itemId, `Vehicle in these incidents (FleetView ${r.reg})`, note, sameP ? '' : 'diff'));
     } else {
       cards.push(`<article class="avcard review-card"><div class="av-id"><div class="role">Vehicle in these incidents (FleetView)</div><span class="plate bigplate">${esc(r.reg)}</span></div>
-        <div class="av-review"><b>Vehicle match needs review</b><p>${m.reasons.map(esc).join(' ')}</p><p class="note">No Monday vehicle details are shown for ${esc(r.reg)}, so another vehicle's MOT, tax or assignment can't be mistaken for this one. Fix the registration on the Monday board and it will match at the next sync. <a href="#vehicles">See the review list</a>.</p></div></article>`);
+        <div class="av-review"><b>Vehicle match needs review</b><p>${m.reasons.map(esc).join(' ')}</p><p class="note">No Monday vehicle details are shown for ${esc(r.reg)}, so another vehicle's MOT, tax or assignment can't be mistaken for this one. ${DRV() ? 'Your fleet manager can fix this on the Monday board.' : 'Fix the registration on the Monday board and it will match at the next sync. <a href="#vehicles">See the review list</a>.'}</p></div></article>`);
     }
     const person = spare ? null : canonName(r.d);
     const others = person ? ((fleetMeta.byDriver || {})[person] || []).filter(id => id !== m.itemId) : [];
@@ -4225,6 +4263,142 @@ ul.plain li:first-child{border-top:0}
       e.target.parentElement.remove();
       const f = $('#dinc-body [data-dinc="30"]'); if (f) f.focus();
     }
+  });
+
+  // ---- FLR site: a driver's own view ("My driving") ----
+  // The database has already cut the data down to this driver; this takes away the fleet pages (Drivers, Vehicles),
+  // the review order, FleetView links and the fleet-manager guidance, and makes their own page the first tab.
+  function enterDriverMode(scope){
+    SCOPE = scope;
+    document.documentElement.classList.add('drv');
+    VIEW_TITLE.driver = 'My driving';
+    const tab = $('#tab-report');
+    tab.setAttribute('href', '#' + myHome()); tab.querySelector('span').textContent = 'My driving';
+    const fleetTab = $('#tab-fleet'); if (fleetTab) fleetTab.remove();   // removed, not hidden: the tab bar measures every link
+    const brand = $('.nb-brand'); brand.setAttribute('href', '#' + myHome()); brand.setAttribute('aria-label', 'FLR Group Fleet Management: My driving');
+    TABS.sync(true);
+    route();
+  }
+  // Above a driver's own figures: a preview notice for administrators, their other vehicles, and any vehicle left out.
+  function mineHtml(r){
+    if (!DRV()) return '';
+    const out = [];
+    if (SCOPE.preview) out.push(`<div class="alert warn"><b>Preview.</b><span>This is exactly what ${esc(SCOPE.driver)} sees when they sign in. <a href="${esc(HUBAPI().exitPreviewHref())}">Back to Fleet Management</a></span></div>`);
+    if (SCOPE.regs.length > 1) out.push(`<ul class="mine-regs" aria-label="Your vehicles"><li>Your vehicles</li>${SCOPE.regs.map(g => `<li><a href="#driver/${esc(slug(g))}"${r && r.reg === g ? ' aria-current="page"' : ''}>${esc(g)}</a></li>`).join('')}</ul>`);
+    if (SCOPE.withheld.length) {
+      const w = SCOPE.withheld, one = w.length === 1;
+      out.push(`<p class="note">${one ? `Vehicle ${esc(w[0])} isn't` : `Vehicles ${w.map(esc).join(' and ')} aren't`} shown here. In the last 30 days FleetView also recorded another driver on ${one ? 'it' : 'them'}, so ${one ? 'its' : 'their'} figures mix two people's driving. Ask your fleet manager about ${one ? 'it' : 'them'}.</p>`);
+    }
+    return out.length ? `<div class="mine">${out.join('')}</div>` : '';
+  }
+  function renderMineEmpty(el){
+    const name = SCOPE.driver;
+    el.innerHTML = `${mineHtml(null)}<header class="phead dhead"><div class="who">${face(name, 'lg')}<div><div class="role">My driving</div><h2 id="h-driver" tabindex="-1">${esc(name)}</h2></div></div></header>
+      <div class="empty"><b>${SCOPE.withheld.length ? 'Nothing else to show you this time.' : 'No figures for you in this report.'}</b>${SCOPE.withheld.length ? '' : `FleetView had no vehicle assigned to ${esc(name)} in the last 30 days, or the name there has changed. Ask your fleet manager to check.`}</div>`;
+  }
+
+  // ---- FLR site: which FLR account belongs to which driver (administrators) ----
+  // A linked account sees only that driver's own page. The database checks every change and records who made it.
+  async function loadSignins(){
+    const hub = HUBAPI();
+    if (!hubAdmin() || signinLoading) return;
+    signinLoading = true;
+    try { setSignins(await hub.links()); } catch (e) { SIGNIN = {error: (e && e.message) || "Sign-ins couldn't be loaded."}; }
+    signinLoading = false;
+    renderSignins();
+  }
+  function setSignins(x){
+    const accounts = Array.isArray(x && x.accounts) ? x.accounts : [], links = Array.isArray(x && x.links) ? x.links : [];
+    SIGNIN = {accounts, links, byDriver:new Map(links.map(l => [l.driver, l])), byAccount:new Map(links.map(l => [l.account, l])), acc:new Map(accounts.map(a => [a.id, a]))};
+  }
+  const accLabel = a => a ? (a.name ? `${a.name} (${a.email})` : a.email) : 'an account that no longer exists';
+  // Drivers who can be linked: everyone in the current report except spare vehicles, A to Z.
+  const linkable = () => report ? [...new Set(report.drivers.filter(r => !isSpare(r)).map(r => r.d))].sort((a, b) => a.localeCompare(b, 'en-GB')) : [];
+  function signinControl(driver, id){
+    const cur = SIGNIN.byDriver.get(driver), now = cur ? cur.account : '', ask = signinAsk.get(driver), msg = signinMsg.get(driver);
+    const chosen = ask != null ? ask : now;
+    const opts = SIGNIN.accounts.filter(a => a.status === 'active' || a.id === chosen).map(a => {
+      const other = SIGNIN.byAccount.get(a.id);
+      const extra = a.role === 'admin' ? ' · administrator, already sees every driver' : other && other.driver !== driver ? ` · linked to ${other.driver} now` : a.status !== 'active' ? ' · switched off' : '';
+      return `<option value="${esc(a.id)}"${a.id === chosen ? ' selected' : ''}>${esc(accLabel(a) + extra)}</option>`;
+    }).join('');
+    let confirm = '';
+    if (ask != null && ask !== now) confirm = ask
+      ? `<div class="si-ask" role="group" aria-label="Confirm the link"><span>Link <b>${esc(accLabel(SIGNIN.acc.get(ask)))}</b> to ${esc(driver)}? They'll see ${esc(driver)}'s speeding, performance and vehicle dates, and nobody else's.</span><button type="button" class="btn sm" data-si-go="${esc(driver)}">Link</button><button type="button" class="btn ghost sm" data-si-no="${esc(driver)}">Cancel</button></div>`
+      : `<div class="si-ask" role="group" aria-label="Confirm unlinking"><span>Unlink <b>${esc(accLabel(SIGNIN.acc.get(now)))}</b>? They won't see ${esc(driver)}'s page any more.</span><button type="button" class="btn sm" data-si-go="${esc(driver)}">Unlink</button><button type="button" class="btn ghost sm" data-si-no="${esc(driver)}">Cancel</button></div>`;
+    return `<div class="si" data-si="${esc(driver)}"><div class="field"><label for="${id}" class="sr">FLR account for ${esc(driver)}</label><select id="${id}" data-si-sel="${esc(driver)}"><option value="">Not linked</option>${opts}</select></div>${confirm}${msg ? `<p class="si-msg${msg.bad ? ' bad' : ''}" role="status">${esc(msg.text)}</p>` : ''}</div>`;
+  }
+  function signinCardHtml(r){
+    const head = `<div class="card-h"><h3 id="h-signin">FLR sign-in</h3><span class="role">Who sees this page as their own</span></div>`;
+    const body = !SIGNIN ? `<p class="note">Loading sign-ins…</p>` : SIGNIN.error ? `<p class="si-msg bad">${esc(SIGNIN.error)}</p>`
+      : `${signinControl(r.d, 'si-page')}
+        <p class="note">A linked account sees only ${esc(r.d)}'s own page on the FLR site: incidents, map, FleetView performance and vehicle dates. Not other drivers, and not the review order. Administrators always see every driver. People appear in this list once they've registered on the FLR Hub.</p>
+        <div class="actions"><a class="btn ghost" href="${esc(HUBAPI().previewHref(r.d))}" target="_blank" rel="noopener">Preview their page</a></div>`;
+    return `<section class="card signin-card" aria-labelledby="h-signin">${head}${body}</section>`;
+  }
+  function renderSigninSection(){
+    const el = $('#signins');
+    if (!hubAdmin()) { el.hidden = true; return; }
+    el.hidden = false;
+    const names = linkable(), ok = SIGNIN && !SIGNIN.error, linked = ok ? names.filter(n => SIGNIN.byDriver.has(n)).length : 0;
+    el.innerHTML = `<div class="sechead"><div><h2 id="h-signins">Driver sign-ins</h2><p class="sub">${!SIGNIN ? 'Loading…' : !ok ? esc(SIGNIN.error)
+      : `${fmt(linked)} of ${plural(names.length, 'driver', 'drivers')} can sign in to the FLR site and see their own page. Only administrators see every driver.`}</p></div>
+      <button type="button" class="btn ghost" id="si-open"${ok ? '' : ' disabled'}>Manage sign-ins</button></div>`;
+  }
+  function openSigninSheet(from){
+    openDialog($('#dlg-signin'), `<div class="dlg-head"><div><div class="role">FLR site</div><h2 id="ds-title">Driver sign-ins</h2></div><button type="button" class="close" aria-label="Close sign-ins">×</button></div>
+      <div class="dlg-body"><p class="note">Link each driver to their own FLR account. A linked account sees only that driver's page: incidents, map, FleetView performance and vehicle dates. Not other drivers, and not the review order. Administrators always see every driver. People appear in the lists once they've registered on the FLR Hub.</p>
+        <div class="field"><label for="si-q">Find a driver</label><input id="si-q" type="search" placeholder="Search drivers" autocomplete="off"></div>
+        <ul class="si-list" id="si-list"></ul><div id="si-gone"></div></div>`, from);
+    $('#si-q').addEventListener('input', renderSigninSheet);
+    renderSigninSheet();
+  }
+  function renderSigninSheet(){
+    const list = $('#si-list');
+    if (!list || !SIGNIN || SIGNIN.error) return;
+    const all = linkable(), q = $('#si-q').value.trim().toLowerCase(), names = all.filter(n => !q || n.toLowerCase().includes(q));
+    list.innerHTML = names.length ? names.map(n => `<li class="si-row"><div><b>${esc(n)}</b><span class="role">${report.drivers.filter(r => r.d === n).map(r => esc(r.reg)).join(', ')}</span></div>${signinControl(n, 'si-' + slug(n))}<a class="linkbtn" href="${esc(HUBAPI().previewHref(n))}" target="_blank" rel="noopener">Preview<span class="sr"> ${esc(n)}'s page</span></a></li>`).join('')
+      : `<li class="si-row"><span class="note">No driver matches “${esc(q)}”.</span></li>`;
+    const gone = SIGNIN.links.filter(l => !all.includes(l.driver));
+    $('#si-gone').innerHTML = gone.length ? `<h3 class="sub4">Linked, but not in the current report</h3><ul class="si-list">${gone.map(l => `<li class="si-row"><div><b>${esc(l.driver)}</b><span class="role">${esc(accLabel(SIGNIN.acc.get(l.account)))}</span></div>${signinControl(l.driver, 'si-gone-' + slug(l.driver))}<span></span></li>`).join('')}</ul>
+      <p class="note">FleetView had no vehicle under these names in the last 30 days, so these accounts see an empty page. Unlink them, or leave them if the driver is only away.</p>` : '';
+  }
+  function renderSignins(focusId){
+    renderSigninSection();
+    if (currentHash().startsWith('driver/')) refreshFleetViews();
+    if ($('#dlg-signin').open) renderSigninSheet();
+    if (focusId) { const f = document.getElementById(focusId); if (f) f.focus({preventScroll:true}); }
+  }
+  $('#signins').addEventListener('click', e => { if (e.target.closest('#si-open')) openSigninSheet(e.target.closest('#si-open')); });
+  // Choosing an account (or "Not linked") asks first; Link / Unlink saves it.
+  document.addEventListener('change', e => {
+    const sel = e.target.closest ? e.target.closest('select[data-si-sel]') : null;
+    if (!sel || !SIGNIN || SIGNIN.error) return;
+    const driver = sel.dataset.siSel, cur = SIGNIN.byDriver.get(driver);
+    signinMsg.delete(driver);
+    if (sel.value === (cur ? cur.account : '')) signinAsk.delete(driver); else signinAsk.set(driver, sel.value);
+    renderSignins(sel.id);
+  });
+  document.addEventListener('click', async e => {
+    const b = e.target.closest ? e.target.closest('[data-si-go],[data-si-no]') : null;
+    if (!b || !SIGNIN || SIGNIN.error) return;
+    const box = b.closest('.si'), selId = box && box.querySelector('select') ? box.querySelector('select').id : null;
+    const driver = b.dataset.siGo != null ? b.dataset.siGo : b.dataset.siNo;
+    if (b.dataset.siNo != null) { signinAsk.delete(driver); renderSignins(selId); return; }
+    const want = signinAsk.get(driver), cur = SIGNIN.byDriver.get(driver), hub = HUBAPI();
+    for (const x of box.querySelectorAll('button,select')) x.disabled = true;
+    try {
+      let x;
+      if (!want) x = await hub.link(cur.account, '');
+      else { if (cur && cur.account !== want) await hub.link(cur.account, ''); x = await hub.link(want, driver); }
+      setSignins(x);
+      signinMsg.set(driver, {text: want ? `Linked. ${accLabel(SIGNIN.acc.get(want))} now sees ${driver}'s page when they sign in.` : `Unlinked. That account no longer sees ${driver}'s page.`});
+    } catch (err) {
+      signinMsg.set(driver, {text: (err && err.message) || "That didn't save. Try again in a moment.", bad: true});
+      try { setSignins(await hub.links()); } catch (e2) { /* keep what we had */ }
+    }
+    signinAsk.delete(driver);
+    renderSignins(selId);
   });
 
   // ---- Vehicle Details page ----
@@ -4397,7 +4571,7 @@ ul.plain li:first-child{border-top:0}
   const isRoute = h => h === '' || h === 'report' || h === 'map' || h.startsWith('map/') || h === 'vehicles' || h.startsWith('driver/') || h.startsWith('vehicle/');
   const viewOf = h => isMapRoute(h) ? 'map' : h.startsWith('driver/') ? 'driver' : h.startsWith('vehicle/') ? 'vehicle' : h === 'vehicles' ? 'fleet' : 'report';
   const isMapRoute = h => h != null && (h === 'map' || h.startsWith('map/'));
-  const isRoot = w => w === 'report' || w === 'map' || w === 'fleet';
+  const isRoot = w => DRV() ? w === 'driver' || w === 'map' : w === 'report' || w === 'map' || w === 'fleet';   // a driver's own page is their first tab
   const VIEW_TITLE = {report:'Drivers', map:'Speeding map', fleet:'Vehicles', driver:'Driver details', vehicle:'Vehicle details'};
   const viewEl = w => $('#view-' + w);
   const ALL_VIEWS = () => ['report', 'map', 'fleet', 'driver', 'vehicle'].map(viewEl);
@@ -4419,8 +4593,8 @@ ul.plain li:first-child{border-top:0}
     CHROME.now();
   }
   function showView(which){
-    const tab = NAV[0] ? NAV[0].w : 'report';
-    for (const t of ['report', 'map', 'fleet']) { const el = $('#tab-' + t); if (t === tab) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); }
+    const tab = NAV[0] ? (DRV() && NAV[0].w === 'driver' ? 'report' : NAV[0].w) : 'report';
+    for (const t of ['report', 'map', 'fleet']) { const el = $('#tab-' + t); if (!el) continue; if (t === tab) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); }
     TABS.sync(false);
     document.title = (which !== 'report' ? VIEW_TITLE[which] + ' · ' : '') + 'FLR Group Fleet Management';
     MAP.visible = which === 'map';
@@ -4438,6 +4612,7 @@ ul.plain li:first-child{border-top:0}
   function route(){
     const h = currentHash();
     if (!isRoute(h)) return;   // an in-page link, not a change of page
+    if (DRV() && !(isMapRoute(h) || h === myHome() || SCOPE.regs.some(g => h === 'driver/' + slug(g)))) { location.replace('#' + myHome()); return; }   // a driver has only their own pages and map
     const which = viewOf(h);
     const was = lastRoute; lastRoute = h;
     const animate = !skipAnim && was != null; skipAnim = false;
@@ -4573,6 +4748,9 @@ ul.plain li:first-child{border-top:0}
     route();
     const db = await window.claude?.use?.('db');
     if (!db) { dbState = 'unavailable'; renderAll(); return; }
+    const hub = HUBAPI();
+    if (hub && hub.scope && hub.scope.kind === 'driver') enterDriverMode(hub.scope);
+    else if (hubAdmin()) loadSignins();
     db.doc('reports/latest').onSnapshot(snap => {
       dbState = 'ready';
       report = snap.exists ? snap.data() : null;

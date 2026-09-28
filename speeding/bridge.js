@@ -2,9 +2,14 @@
    FLR Hub: runs Fleet Management (the driver speeding report) on the FLR site.
    The report asks for its database the way it does on Claude
    (window.claude.use('db')). This answers from the FLR database instead,
-   after checking the FLR sign-in, and only for the people the Speeding tile
-   is for. Nothing about drivers is in this site's files: the data and staff
-   photos (as data URLs in window.__FLR_PHOTOS) arrive after sign-in.
+   after checking the FLR sign-in. The database decides what each person gets:
+   administrators every driver; an account linked to a driver only that
+   driver's own log (the page shows it as "My driving"); anyone else nothing.
+   Nothing about drivers is in this site's files: the data and staff photos
+   (as data URLs in window.__FLR_PHOTOS) arrive after sign-in.
+   window.FLRHUB tells the page which view it has (scope) and, for
+   administrators, links FLR accounts to drivers. ?preview=<driver> shows an
+   administrator exactly what that driver sees.
    ========================================================================== */
 (function () {
   'use strict';
@@ -14,7 +19,10 @@
   const SIGN_IN = HUB + '?next=speeding';
   const FRESH_MS = 10 * 60 * 1000;              // re-read when the page comes back to the front after 10 minutes
   const PHOTO = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
-  let sb = null, data = null, loadedAt = 0, loading = null;
+  const PREVIEW = (() => { try { return (new URLSearchParams(location.search).get('preview') || '').trim().slice(0, 120); } catch (e) { return ''; } })();
+  let sb = null, data = null, scope = null, loadedAt = 0, loading = null;
+  // The report's pages stay hidden until the database has said which view this person gets.
+  document.documentElement.dataset.hub = 'loading';
   const subs = [];                              // the page's subscriptions, so fresh data reaches every one
   // The slide in from the hub is skipped when the page arrives hidden (a background tab): nothing to report.
   addEventListener('pagereveal', e => { const t = e.viewTransition; if (t) { t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {}); } });
@@ -28,6 +36,7 @@
     return sb;
   }
   const flrCode = e => { const m = /FLR_[A-Z_]+/.exec(e ? `${e.message || ''} ${e.details || ''}` : ''); return m ? m[0] : ''; };
+  const detailOf = e => (e && typeof e.details === 'string' ? e.details : '');
   const missing = e => !!e && (e.code === 'PGRST202' || e.code === '42883' || /could not find the function/i.test(e.message || ''));
   const offline = e => !!e && /Failed to fetch|NetworkError|Load failed|fetch failed/i.test(e.message || '');
   const expired = e => !!e && (e.code === 'PGRST301' || e.code === 'PGRST303' || /JWT expired|invalid JWT/i.test(e.message || ''));
@@ -56,7 +65,8 @@
           background: primary ? 'var(--tint-fill, #00098b)' : 'var(--fill, rgba(118,118,128,.12))', color: primary ? 'var(--on-tint, #fff)' : 'var(--ink, #101116)' });
         row.appendChild(b);
       };
-      btn('Back to FLR Hub', true, { href: HUB });
+      if (o.own) btn('Open Fleet Management', true, { href: location.pathname });
+      btn('Back to FLR Hub', !o.own, { href: HUB });
       if (o.retry) btn('Try again', false, { run: () => location.reload() });
       if (o.switchAccount) btn('Use another account', false, { run: async () => { try { await client().auth.signOut({ scope: 'local' }); } catch (e) { /* leave anyway */ } location.replace(SIGN_IN); } });
       card.append(h, p, row); box.appendChild(card); document.body.appendChild(box); h.focus();
@@ -70,11 +80,15 @@
     let session = null;
     try { session = (await c.auth.getSession()).data.session; } catch (e) { /* treated as signed out */ }
     if (!session) { location.replace(SIGN_IN); return new Promise(() => {}); }   // the hub signs people in, then brings them back
-    const r = await c.rpc('speeding_data');
+    const r = PREVIEW ? await c.rpc('speeding_preview', { p_driver: PREVIEW }) : await c.rpc('speeding_data');
     if (!r.error) return r.data;
-    const code = flrCode(r.error);
+    const code = flrCode(r.error), why = detailOf(r.error);
     if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return new Promise(() => {}); }
-    if (code === 'FLR_FORBIDDEN') blocked('You don’t have access to Fleet Management', 'It’s only open to the people on its list. Ask an FLR administrator if you need it.', { switchAccount: true });
+    if (code === 'FLR_FORBIDDEN' && why === 'speeding.unlinked') blocked('Your account isn’t linked to a driver yet', 'Fleet Management shows you your own driving once an FLR administrator links your FLR account to your name. Ask them to link it.', { switchAccount: true });
+    else if (code === 'FLR_FORBIDDEN' && why === 'speeding.off') blocked('Fleet Management is switched off', 'An FLR administrator has turned it off for now. Try again later.');
+    else if (code === 'FLR_FORBIDDEN' && why === 'speeding.preview') blocked('Only administrators can preview', 'Previewing another driver’s page is for FLR administrators.', { own: true });
+    else if (code === 'FLR_VALIDATION' && PREVIEW) blocked('That driver isn’t in the current report', 'Go back to Fleet Management and choose a driver from the list.', { own: true });
+    else if (code === 'FLR_FORBIDDEN') blocked('You don’t have access to Fleet Management', 'Ask an FLR administrator if you need it.', { switchAccount: true });
     else if (code === 'FLR_ACCOUNT_DISABLED') blocked('Your FLR account is switched off', 'Ask an FLR administrator to switch it back on.');
     else if (code === 'FLR_NO_PROFILE') blocked('Your account isn’t set up for FLR tools', 'Ask an FLR administrator to finish setting it up.');
     else if (missing(r.error)) blocked('Fleet Management isn’t set up yet', 'Its data hasn’t been added to the FLR database.');
@@ -87,8 +101,29 @@
     for (const [k, v] of Object.entries((d && d.photos) || {})) if (typeof v === 'string' && PHOTO.test(v)) photos[k] = v;
     window.__FLR_PHOTOS = photos;
     data = { docs: (d && d.docs) || {}, collections: (d && d.collections) || {} };
+    const s = d && d.scope && typeof d.scope === 'object' ? d.scope : { kind: 'all' };
+    scope = Object.freeze({ kind: s.kind === 'driver' ? 'driver' : 'all', admin: s.admin === true, preview: s.preview === true,
+      driver: typeof s.driver === 'string' ? s.driver : '', regs: Object.freeze((Array.isArray(s.regs) ? s.regs : []).filter(x => typeof x === 'string')),
+      withheld: Object.freeze((Array.isArray(s.withheld) ? s.withheld : []).filter(x => typeof x === 'string')) });
+    document.documentElement.dataset.hub = scope.kind;
     loadedAt = Date.now();
   }
+  // Administrators link FLR accounts to FleetView drivers from the page. The database checks the caller every time.
+  async function call(fn, args) {
+    const r = await client().rpc(fn, args || {});
+    if (!r.error) return r.data;
+    const code = flrCode(r.error), why = detailOf(r.error);
+    if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return new Promise(() => {}); }
+    throw new Error(code === 'FLR_VALIDATION' && why ? why : code === 'FLR_FORBIDDEN' ? 'Only FLR administrators can change sign-ins.'
+      : offline(r.error) ? 'Can’t reach the FLR database. Check your connection, then try again.' : 'That didn’t save. Try again in a moment.');
+  }
+  const hub = {
+    get scope() { return scope; },
+    links: () => call('speeding_links'),
+    link: (account, driver) => call('speeding_link', { p_account: account, p_driver: driver || '' }),
+    previewHref: driver => location.pathname + '?preview=' + encodeURIComponent(driver),
+    exitPreviewHref: () => location.pathname,
+  };
   async function load() { const d = await fetchData(); if (!d) return false; take(d); return true; }
 
   // The same shapes the Claude database hands the page.
@@ -111,6 +146,7 @@
   }
   const db = Object.freeze({ doc: name => subscribe('doc', name), collection: name => subscribe('collection', name) });
   window.claude = Object.freeze({ use: async name => name === 'db' && (await (loading || (loading = load()))) ? db : null });
+  window.FLRHUB = Object.freeze(hub);
 
   // The refresh jobs update the data every morning and hourly on weekdays: coming back to the page after a while
   // reads it again and hands every subscription the new version.
@@ -119,7 +155,10 @@
     loadedAt = Date.now();
     const d = await fetchData();
     if (!d) return;
+    const was = scope;
     take(d);
+    // Linked, unlinked or made an administrator since the page opened: start again with the view they have now.
+    if (was && (was.kind !== scope.kind || was.driver !== scope.driver)) { location.reload(); return; }
     subs.slice().forEach(deliver);
   });
 })();
