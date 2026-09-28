@@ -370,9 +370,9 @@ table.plan .dh.today .dn{background:var(--tint-fill);color:var(--on-tint)}
 table.plan .dh.inreq{box-shadow:inset 0 -3px 0 var(--tint)}
 table.plan td.day{position:relative;height:30px;min-width:31px}
 .weekend{background-color:var(--weekend)}
-.closed-bh{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bh) 42%,transparent) 0 1.5px,transparent 1.5px 6px)}
-.closed-shut{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--shut) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
-.closed-jeff{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jeff) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-bh{--cl:var(--bh);background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bh) 42%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-shut{--cl:var(--shut);background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--shut) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-jeff{--cl:var(--jeff);background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jeff) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
 .fill{position:absolute;top:5px;bottom:5px;left:2px;width:calc(100% - 4px);display:block;padding:0;border:0;border-radius:var(--r-cell)}
 .fill.half-am{width:calc(50% - 3px)}
 .fill.half-pm{left:auto;right:2px;width:calc(50% - 3px)}
@@ -390,8 +390,36 @@ tr.count td{height:24px;font:600 11.5px/1 var(--font-text);font-variant-numeric:
 tr.count td.over{background-color:var(--red-soft);color:var(--red-ink);font-weight:700}
 tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
 @media (max-width:640px){table.plan .name{min-width:116px;max-width:140px;padding-inline:10px;font-size:12.5px}}
-.key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:2px 0 12px;font-size:12.5px;color:var(--ink-2)}
-.key span{display:inline-flex;align-items:center;gap:6px}
+/* The colour key pulls down from its button at the end of the filters, anchored to it, and is out of the way otherwise */
+.diary-filters{position:relative}
+.keydrop{position:relative;flex:none;margin-left:auto}
+.keydrop>summary{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 11px 0 13px;border-radius:999px;background:var(--fill);color:var(--ink);
+  font:600 13px/1 var(--font-text);list-style:none;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+  transition:background-color .15s,transform .28s var(--ease)}
+.keydrop>summary::-webkit-details-marker{display:none}
+.keydrop>summary:active{transform:scale(.95);transition-duration:.08s}
+.keydrop>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (hover:hover){.keydrop>summary:hover{background:var(--fill-2)}}
+.keydrop[open]:not(.closing)>summary{background:var(--fill-2)}
+.kb-dots{display:inline-flex;gap:2px}
+.kb-dots i{width:8px;height:8px;border-radius:50%}
+.kb-chev{width:14px;height:14px;color:var(--ink-3);transition:transform .32s var(--ease)}
+.keydrop[open]:not(.closing) .kb-chev{transform:rotate(180deg)}
+.key-pop{position:absolute;z-index:30;top:calc(100% + 8px);right:0;display:grid;grid-template-columns:repeat(3,max-content);gap:16px 30px;
+  width:max-content;max-width:calc(100vw - 2 * var(--gutter));padding:16px 20px 18px;border-radius:16px;
+  background:var(--mat-alert);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--sh-float)}
+.key-sec{display:grid;align-content:start;gap:9px;min-width:0}
+.key-sec h3{font:600 12.5px/1.3 var(--font-text);color:var(--ink-3)}
+.key-sec ul{display:grid;gap:8px;padding:0;margin:0;list-style:none}
+.key-sec li{display:flex;align-items:center;gap:9px;font:500 13.5px/1.3 var(--font-text);color:var(--ink);white-space:nowrap}
+.key-sec .sw{width:20px;height:14px}
+@media (max-width:760px){.key-pop{grid-template-columns:repeat(2,max-content)}.key-sec.other{grid-column:1 / -1}.key-sec.other ul{grid-template-columns:repeat(2,max-content);column-gap:30px}}
+@media (max-width:560px){
+  .keydrop{position:static;margin-left:0}   /* the button lines up with the chips, and the panel spans the filters below them */
+  .key-pop{left:0;right:0;width:auto;max-width:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .key-sec.other ul{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
+  .key-sec li{white-space:normal}
+}
 .sw{position:relative;display:inline-block;flex:none;width:16px;height:12px;border-radius:4px;box-shadow:inset 0 0 0 var(--hair) var(--line-2)}
 .sw.acc{background:var(--ok);box-shadow:none}
 .sw.new{background:repeating-linear-gradient(135deg,var(--tint-fill) 0 3px,color-mix(in srgb,var(--tint-fill) 32%,var(--surface)) 3px 6px);box-shadow:none}
@@ -411,7 +439,12 @@ tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
 .cal .cell.we{background-color:var(--weekend)}
 .cal .d{display:inline-grid;place-items:center;align-self:flex-start;min-width:26px;height:26px;padding:0 4px;border-radius:13px;font:600 13px/1 var(--font-text);font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .cal .cell.today .d{background:var(--tint-fill);color:var(--on-tint)}
-.cal .closure{padding:0 4px;font-size:11.5px;line-height:1.3;color:var(--ink-2)}
+/* A holiday's name and day number sit on solid plates tinted with the holiday's colour, so they read clearly over its stripes */
+.cal .cell:is(.closed-bh,.closed-shut,.closed-jeff):not(.today) .d{background:var(--surface);color:var(--ink);
+  box-shadow:0 0 0 var(--hair) color-mix(in srgb,var(--cl) 55%,transparent)}
+.cal .closure{align-self:stretch;margin-top:1px;padding:4px 7px 4px 9px;border-radius:7px;background:color-mix(in srgb,var(--cl,var(--bh)) 14%,var(--surface));
+  box-shadow:inset 3px 0 0 var(--cl,var(--bh)),0 0 0 var(--hair) color-mix(in srgb,var(--cl,var(--bh)) 32%,transparent);
+  font:600 12px/1.32 var(--font-text);letter-spacing:-.004em;color:var(--ink);overflow-wrap:anywhere}
 .who{display:flex;align-items:center;gap:5px;width:100%;min-width:0;padding:2px 6px;border:0;border-radius:6px;background:none;font:500 12px/1.35 var(--font-text);color:var(--ink);text-align:left;white-space:nowrap}
 .who .wn{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .who.accepted{background:var(--green-soft)}
@@ -433,7 +466,54 @@ button.who:active{transform:scale(.96);transition-duration:.08s}
 .ag-main{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;padding-top:3px}
 .ag-main .who{width:auto;max-width:100%;padding:5px 10px;border-radius:999px;font-size:13px}
 .ag-main .who.pending{padding:4px 9px}
-.ag-closure{display:flex;align-items:center;gap:8px;flex-basis:100%;font:600 13.5px/1.3 var(--font-text);color:var(--ink-2)}
+.ag-closure{display:flex;align-items:center;gap:8px;flex-basis:100%;font:600 13.5px/1.3 var(--font-text);color:var(--ink)}
+
+/* ---------------------------------------------------------------- leave list: each person's leave for the year, in date order */
+.lv{display:grid;gap:22px}
+.lv-sec{display:grid;gap:8px;min-width:0}
+.lv-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding-inline:18px;font:600 13px/1.3 var(--font-text);color:var(--ink-2)}
+.lv-head .limit{font-weight:400;color:var(--ink-3)}
+.lv-card{padding:0;margin:0;list-style:none;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.lv-person{display:grid;grid-template-columns:minmax(140px,210px) minmax(0,1fr);gap:4px 16px;padding:8px 10px 8px 18px}
+.lv-person+.lv-person,.lv-none{box-shadow:inset 0 var(--hair) 0 var(--sep)}
+.lv-who{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:9px}
+.lv-who b{font:600 15px/1.3 var(--font-text);letter-spacing:-.012em;overflow-wrap:anywhere}
+.lv-who small{font-size:12.5px;line-height:1.35;color:var(--ink-3)}
+.lv-entries{display:grid;gap:2px;padding:0;margin:0;list-style:none;min-width:0}
+.lv-entry{display:grid;grid-template-columns:minmax(min-content,14.5em) minmax(min-content,7.8em) minmax(min-content,13em) auto minmax(0,1fr) 14px;
+  align-items:center;gap:12px;width:100%;min-height:40px;padding:6px 10px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:left}
+.lv-when{display:contents}
+.lv-dates{display:flex;align-items:center;gap:9px;min-width:0;font:600 14px/1.3 var(--font-text);font-variant-numeric:tabular-nums;letter-spacing:-.006em}
+.lv-dates .sw{width:18px;height:13px}
+.lv-dates .nw{white-space:nowrap}
+.lv-len{font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.lv-len small{font-size:12px;color:var(--ink-3)}
+.lv-type{min-width:0;font-size:14px;color:var(--ink)}
+.lv-status{display:flex;justify-content:flex-start}
+.lv-go{grid-column:6;width:14px;height:14px;color:var(--ink-3)}   /* the chevron keeps to the edge; status stays by the type */
+button.lv-entry{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s,transform .25s var(--ease)}
+button.lv-entry:active{background:var(--fill);transform:scale(.985);transition-duration:.08s}
+@media (hover:hover){button.lv-entry:hover{background:var(--row-hover)}}
+button.lv-entry:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.lv-none{display:flex;flex-wrap:wrap;gap:2px 10px;padding:12px 18px;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.lv-none b{font-weight:600;color:var(--ink-3)}
+@media (max-width:1040px){   /* tablets: the name above the entries, each entry still on one line */
+  .lv-person{grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 8px 8px 18px}
+  .lv-who{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;padding:2px 10px 4px 0}
+}
+@media (max-width:640px){
+  .lv{gap:18px}
+  .lv-head{padding-inline:16px}
+  .lv-person{padding:10px 6px 8px 16px}
+  /* phones, two lines: the dates and how long (which wraps only if it must), then the type and status */
+  .lv-entry{grid-template-columns:minmax(0,1fr) auto 14px;grid-template-areas:"when when go" "type status go";gap:3px 10px;padding:8px 10px}
+  .lv-when{grid-area:when;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;min-width:0;padding-left:27px}   /* a wrapped length lines up with the dates */
+  .lv-dates{flex:none;max-width:calc(100% + 27px);margin-left:-27px}
+  .lv-type{grid-area:type;padding-left:27px;font-size:13.5px;color:var(--ink-2)}
+  .lv-status{grid-area:status}
+  .lv-go{grid-area:go}
+  .lv-none{padding-inline:16px}
+}
 
 /* ---------------------------------------------------------------- tables: a sortable table on wide screens, list rows on phones */
 .table-wrap{border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow-x:auto}
@@ -598,6 +678,7 @@ html.staff .tabbar,html.staff #copy-form{display:none}
   </symbol>
   <symbol id="i-chev-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
   <symbol id="i-chev-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 12.6 4.1 4.1 8.9-9.3"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.6 4.6"/></symbol>
@@ -1976,37 +2057,45 @@ function renderDiaryShell() {
   const st = state.diary;
   setHead('Leave diary', 'Who is off, and how much cover each group has left.');
   const groupOpts = [`<option value="all">All leave groups</option>`, ...[...state.data.groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => `<option value="${esc(g.id)}" ${st.group === g.id ? 'selected' : ''}>${esc(g.name)}</option>`), `<option value="none" ${st.group === 'none' ? 'selected' : ''}>No group</option>`].join('');
-  const key = [
-    '<span><i class="sw acc"></i>Accepted</span>',
-    '<span><i class="sw new"></i>New request</span>',
-    '<span><i class="sw rev"></i>Review</span>',
-    '<span><i class="sw closed-bh"></i>Bank holiday</span>',
-    '<span><i class="sw closed-shut"></i>Christmas shutdown</span>',
-    '<span><i class="sw closed-jeff"></i>Jeff Day</span>',
-    ...Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => `<span><i class="sw" style="background:${c}"></i>${esc(t)}</span>`),
-  ].join('');
+  const item = (sw, label) => `<li>${sw}${esc(label)}</li>`;
+  const key = `<div class="key-sec"><h3>Annual leave</h3><ul>
+        ${item('<i class="sw acc"></i>', 'Accepted')}${item('<i class="sw new"></i>', 'New request')}${item('<i class="sw rev"></i>', 'Review')}</ul></div>
+      <div class="key-sec"><h3>Closures</h3><ul>
+        ${item('<i class="sw closed-bh"></i>', 'Bank holiday')}${item('<i class="sw closed-shut"></i>', 'Christmas shutdown')}${item('<i class="sw closed-jeff"></i>', 'Jeff Day')}</ul></div>
+      <div class="key-sec other"><h3>Other leave</h3><ul>
+        ${Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => item(`<i class="sw" style="background:${c}"></i>`, t)).join('')}</ul></div>`;
+  const nav = diaryNavText(st);
   return `<div class="toolbar diary-nav">
       <div class="monthnav">
-        <button class="iconbtn" type="button" data-act="month" data-id="-1" aria-label="Previous month">${icon('chev-l')}</button>
-        <h2 class="month" id="month-label" aria-live="polite">${esc(monthName(st.y, st.m))}</h2>
-        <button class="iconbtn" type="button" data-act="month" data-id="1" aria-label="Next month">${icon('chev-r')}</button>
-        <button class="btn sm" type="button" data-act="month" data-id="0">This month</button>
+        <button class="iconbtn" type="button" data-act="month" data-id="-1" aria-label="${nav.prev}">${icon('chev-l')}</button>
+        <h2 class="month" id="month-label" aria-live="polite">${esc(nav.label)}</h2>
+        <button class="iconbtn" type="button" data-act="month" data-id="1" aria-label="${nav.next}">${icon('chev-r')}</button>
+        <button class="btn sm" type="button" data-act="month" data-id="0">${nav.now}</button>
       </div>
       <fieldset class="seg" id="diary-mode"><legend>View</legend>
         <label><input type="radio" name="diary-mode" value="planner" ${st.mode === 'planner' ? 'checked' : ''}>Planner</label>
         <label><input type="radio" name="diary-mode" value="calendar" ${st.mode === 'calendar' ? 'checked' : ''}>Calendar</label>
+        <label><input type="radio" name="diary-mode" value="list" ${st.mode === 'list' ? 'checked' : ''}>Leave List</label>
       </fieldset>
     </div>
-    <div class="toolbar">
+    <div class="toolbar diary-filters">
       <input class="input grow" id="diary-search" type="search" placeholder="Find a name" value="${esc(st.search)}" aria-label="Find a name">
       <select class="input" id="diary-group" aria-label="Leave group">${groupOpts}</select>
       <div class="chiprow">
         <label class="fchip"><input type="checkbox" id="diary-pending" ${st.pending ? 'checked' : ''}>${icon('check')}Show pending</label>
         <label class="fchip"><input type="checkbox" id="diary-other" ${st.other ? 'checked' : ''}>${icon('check')}Show other leave</label>
       </div>
+      <details class="keydrop" id="diary-key">
+        <summary><span class="kb-dots" aria-hidden="true"><i style="background:var(--ok)"></i><i style="background:var(--tint-fill)"></i><i style="background:var(--gold)"></i></span>Colour key${icon('chev-d', 'ico kb-chev')}</summary>
+        <div class="key-pop">${key}</div>
+      </details>
     </div>
-    <div class="key" role="list" aria-label="Key">${key.replace(/<span>/g, '<span role="listitem">')}</div>
     <div id="diary-body"></div>`;
+}
+// The month arrows step a month in the Planner and Calendar, and a year in the Leave List, which shows a whole year.
+function diaryNavText(st) {
+  const list = st.mode === 'list', unit = list ? 'year' : 'month';
+  return { label: list ? String(st.y) : monthName(st.y, st.m), prev: `Previous ${unit}`, next: `Next ${unit}`, now: `This ${unit}` };
 }
 function diarySections() {
   const ctx = state.ctx, st = state.diary, q = normaliseName(st.search);
@@ -2027,13 +2116,19 @@ function diarySections() {
 function renderDiaryBody() {
   const host = document.getElementById('diary-body');
   if (!host) return;
-  const st = state.diary;
-  const label = document.getElementById('month-label'), month = monthName(st.y, st.m);
-  if (label.textContent !== month) label.textContent = month;
-  const dates = monthDays(st.y, st.m);
-  const map = offMap(dates, { pending: st.pending, other: st.other });
+  const st = state.diary, nav = diaryNavText(st);
+  const label = document.getElementById('month-label');
+  if (label.textContent !== nav.label) label.textContent = nav.label;
+  const bar = label.parentElement;
+  bar.querySelector('[data-id="-1"]').setAttribute('aria-label', nav.prev);
+  bar.querySelector('[data-id="1"]').setAttribute('aria-label', nav.next);
+  const now = bar.querySelector('[data-id="0"]');
+  if (now.textContent !== nav.now) now.textContent = nav.now;
   const sections = diarySections();
   if (!sections.length) { host.innerHTML = emptyHtml('No one matches', 'Try another name or leave group.', 'search'); return; }
+  if (st.mode === 'list') { host.innerHTML = renderLeaveList(st.y, sections); return; }
+  const dates = monthDays(st.y, st.m);
+  const map = offMap(dates, { pending: st.pending, other: st.other });
   host.innerHTML = st.mode === 'calendar' ? renderCalendar(dates, map, sections) : renderPlanner(dates, map, sections);
 }
 function renderPlanner(dates, map, sections) {
@@ -2096,6 +2191,78 @@ function renderCalendar(dates, map, sections) {
   const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((x) => `<div class="dow">${x}</div>`).join('');
   const list = agenda.length ? `<ul class="ag-list">${agenda.join('')}</ul>` : emptyHtml('No one is off', `No one in this view is off in ${monthName(state.diary.y, state.diary.m)}.`, 'diary');
   return `<div class="cal">${dows}${cells.join('')}</div><div class="agenda">${list}</div>`;
+}
+
+/* ---------- Leave List: each person's leave for the year, in date order ---------- */
+// The same people as the Planner and Calendar (name search and leave group), and the same leave: accepted annual leave,
+// pending requests while "Show pending" is on, and other leave while "Show other leave" is on.
+function leaveListEntries(y, visible) {
+  const ctx = state.ctx, st = state.diary, first = `${y}-01-01`, last = `${y}-12-31`, by = new Map();
+  const add = (s, e) => { const id = String(s.id); if (!by.has(id)) by.set(id, []); by.get(id).push(e); };
+  const half = (d, h) => (d.days.length === 1 && d.days[0].amount === 0.5 ? (h === 'pm' ? 'afternoon' : 'morning') : '');
+  for (const r of ctx.requests) {
+    if (!(r.decision === 'accepted' || (st.pending && isPending(r)))) continue;
+    const s = ctx.staffOf(r), d = ctx.daysOf(r);
+    if (!s || !visible.has(String(s.id)) || !d.from || d.from > last || d.to < first) continue;
+    add(s, { kind: 'annual', from: d.from, to: d.to, total: d.total, inYear: d.byYear[y] || 0, half: half(d, r.halfDay), request: r });
+  }
+  if (st.other) {
+    for (const e of ctx.otherLeave) {
+      const s = ctx.otherStaffOf(e), d = ctx.otherDaysOf(e);
+      if (!s || !visible.has(String(s.id)) || !d.from || d.from > last || d.to < first) continue;
+      add(s, { kind: 'other', from: d.from, to: d.to, total: d.total, inYear: d.byYear[y] || 0, half: half(d, e.halfDay), type: e.type });
+    }
+  }
+  for (const list of by.values()) list.sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || (a.kind === 'annual' ? -1 : 1));
+  return by;
+}
+function lvRange(from, to, y, html = false) {
+  const one = (d) => (html ? `<span class="nw">${esc(fmtDate(d, yearOf(d) !== y))}</span>` : fmtDate(d, yearOf(d) !== y));   // the year only when it isn't the one on screen
+  return !to || to === from ? one(from) : `${one(from)} – ${one(to)}`;
+}
+const lvDays = (n) => (n === 0.5 ? '½ day' : plural(n, 'day'));
+function renderLeaveList(y, sections) {
+  const visible = new Set();
+  for (const sec of sections) for (const s of sec.staff) visible.add(String(s.id));
+  const by = leaveListEntries(y, visible);
+  const entry = (e) => {
+    const range = lvRange(e.from, e.to, y), rangeHtml = lvRange(e.from, e.to, y, true), len = e.half ? '½ day' : lvDays(e.total);
+    const part = !e.half && e.inYear !== e.total ? `${fmtNum(e.inYear)} in ${y}` : '';   // leave that runs over New Year
+    const note = e.half || part;
+    const lenHtml = `<span class="lv-len">${esc(len)}${note ? ` <small>${esc(note)}</small>` : ''}</span>`;
+    if (e.kind === 'annual') {
+      const r = e.request, sw = r.decision === 'accepted' ? 'acc' : r.decision === 'review' ? 'rev' : 'new';
+      const status = r.decision === 'accepted' ? 'Accepted' : r.decision === 'review' ? 'Review' : 'New request';
+      const label = `${range}${e.half ? `, ${e.half}` : ''}, annual leave, ${len}${part ? ` (${part})` : ''}, ${status}`;
+      return `<li><button class="lv-entry" type="button" data-act="open" data-id="${esc(r.id)}" aria-label="${esc(label)}">
+        <span class="lv-when"><span class="lv-dates"><i class="sw ${sw}"></i><span>${rangeHtml}</span></span>${lenHtml}</span>
+        <span class="lv-type">Annual leave</span>
+        <span class="lv-status">${pillFor(r.decision)}</span>${icon('chev-r', 'ico lv-go')}</button></li>`;
+    }
+    return `<li><div class="lv-entry">
+        <span class="lv-when"><span class="lv-dates"><i class="sw" style="background:${OTHER_TYPE_COLOURS[e.type] || '#c4c4c4'}"></i><span>${rangeHtml}</span></span>${lenHtml}</span>
+        <span class="lv-type">${esc(e.type)}</span>
+        <span class="lv-status"><span class="pill grey">Recorded</span></span><span class="lv-go" aria-hidden="true"></span></div></li>`;
+  };
+  let listed = 0;
+  const html = sections.map((sec) => {
+    const off = sec.staff.filter((s) => by.has(String(s.id))), none = sec.staff.filter((s) => !by.has(String(s.id)));
+    listed += off.length;
+    const people = off.map((s) => {
+      const list = by.get(String(s.id));
+      const total = (kind) => list.filter((e) => e.kind === kind).reduce((n, e) => n + e.inYear, 0);
+      const annual = total('annual'), other = total('other');
+      const sum = [annual ? `${lvDays(annual)} annual leave` : '', other ? `${lvDays(other)} other leave` : ''].filter(Boolean).join(' · ');
+      return `<li class="lv-person"><div class="lv-who"><b>${esc(s.name)}</b>${sum ? `<small>${esc(sum)}</small>` : ''}</div>
+        <ol class="lv-entries">${list.map(entry).join('')}</ol></li>`;
+    }).join('');
+    const noneHtml = none.length ? `<li class="lv-none"><b>No leave in ${y}</b><span>${none.map((s) => esc(s.name)).join(', ')}</span></li>` : '';
+    return `<section class="lv-sec"><h3 class="lv-head">${esc(sec.title)}${sec.limit ? `<span class="limit">max ${sec.limit} off at once</span>` : ''}</h3>
+      <ul class="lv-card">${people}${noneHtml}</ul></section>`;
+  }).join('');
+  if (!listed) return emptyHtml(`No leave in ${y}`, `No one in this view has leave in ${y}. Try another year, name or leave group.`, 'diary');
+  return `<div class="lv">${html}</div>
+    <p class="foot">Each person’s leave in ${y}, in date order. Annual leave shows accepted requests, and new and review ones while “Show pending” is on; denied and cancelled requests aren’t listed. Select annual leave to see the request.</p>`;
 }
 
 /* ---------- Balances ---------- */
@@ -2367,9 +2534,9 @@ document.addEventListener('click', async (ev) => {
     case 'confirm-yes': { const run = state.confirm && state.confirm.run; state.confirm = null; renderOverlay(); if (run) run(); break; }
     case 'confirm-no': state.confirm = null; renderOverlay(); break;
     case 'month': {
-      const st = state.diary, before = st.y * 12 + st.m;
+      const st = state.diary, before = st.y * 12 + st.m, step = st.mode === 'list' ? 12 : 1;   // the Leave List shows a year
       if (id === '0') { st.y = startMonth.y; st.m = startMonth.m; }
-      else { const t = st.y * 12 + st.m + Number(id); st.y = Math.floor(t / 12); st.m = t % 12; }
+      else { const t = st.y * 12 + st.m + Number(id) * step; st.y = Math.floor(t / 12); st.m = t % 12; }
       renderDiaryBody();
       FLRUI.slideIn(document.getElementById('diary-body'), Math.sign(st.y * 12 + st.m - before));
       break;
@@ -2391,7 +2558,42 @@ document.getElementById('tabs').addEventListener('keydown', (ev) => {
   goTab(list[j].dataset.id);
   list[j].focus();
 });
+// The colour key pulls down from its button and goes back into it. It can be caught mid-way: each move starts from
+// where the panel is now. A tap outside it or Escape puts it away.
+function keyDrop(det, want, focus = false) {
+  const sum = det.querySelector('summary'), pop = det.querySelector('.key-pop');
+  let from = null;
+  if (det._anim) { const cs = getComputedStyle(pop); from = { opacity: cs.opacity, transform: cs.transform }; det._anim.onfinish = null; det._anim.cancel(); det._anim = null; }
+  const motion = !FLRUI.reduced() && pop.animate;
+  if (want) {
+    det.classList.remove('closing');
+    det.open = true;
+    const b = sum.getBoundingClientRect(), p = pop.getBoundingClientRect();
+    pop.style.transformOrigin = `${Math.round(b.left + b.width / 2 - p.left)}px -8px`;   // it grows out of the button
+    if (motion) det._anim = pop.animate([from || { opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2,1,.4,1)' });
+    return;
+  }
+  if (!det.open) return;
+  const done = () => { det.open = false; det.classList.remove('closing'); if (det._anim) { det._anim.cancel(); det._anim = null; } if (focus) sum.focus(); };
+  if (!motion) { done(); return; }
+  det.classList.add('closing');
+  det._anim = pop.animate([from || { opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.95)' }], { duration: 170, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+  det._anim.onfinish = done;   // closes first, then drops the held fade so the next opening starts clean
+}
+document.addEventListener('click', (ev) => {
+  const sum = ev.target.closest('.keydrop > summary');
+  if (!sum) return;
+  ev.preventDefault();
+  const det = sum.parentElement;
+  keyDrop(det, !det.open || det.classList.contains('closing'));
+});
+document.addEventListener('pointerdown', (ev) => {
+  for (const det of document.querySelectorAll('.keydrop[open]:not(.closing)')) if (!det.contains(ev.target)) keyDrop(det, false);
+}, true);
+
 document.addEventListener('keydown', (ev) => {
+  const openKey = ev.key === 'Escape' && document.querySelector('.keydrop[open]:not(.closing)');
+  if (openKey && !state.confirm && !state.panel) { keyDrop(openKey, false, openKey.contains(document.activeElement)); return; }
   if (ev.key === 'Escape') {
     if (state.confirm) { state.confirm = null; renderOverlay(); }
     else if (state.panel) { state.panel = null; renderOverlay(); }
@@ -2411,7 +2613,7 @@ document.addEventListener('input', (ev) => {
 });
 document.addEventListener('change', (ev) => {
   const t = ev.target;
-  if (t.name === 'diary-mode') { state.diary.mode = t.value; renderDiaryBody(); return; }
+  if (t.name === 'diary-mode') { state.diary.mode = t.value; renderDiaryBody(); FLRUI.fadeIn(document.getElementById('diary-body')); return; }
   if (t.name === 'mine-year') { mineYear = Number(t.value); renderView(); return; }
   switch (t.id) {
     case 'diary-group': state.diary.group = t.value; renderDiaryBody(); break;
