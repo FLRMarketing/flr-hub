@@ -1,0 +1,2446 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<link rel="icon" href="../assets/flr-icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="../tool-transition.css">
+<script src="../flr-config.js"></script>
+<script src="../vendor/supabase-2.116.0.js"></script>
+<script src="bridge.js"></script>
+</head>
+<body>
+<title>FLR Annual Leave</title>
+<style>
+/* ============================================================================
+   FLR Annual Leave in the FLR Hub's look, shared with the Speeding Report:
+   grouped grey ground, white cards, system type, FLR navy as the tint,
+   translucent bars and springs. Light and dark follow the viewer's theme.
+   ========================================================================== */
+:root{
+  color-scheme:light;
+  --bg:#f2f2f7; --surface:#ffffff; --surface-2:#f7f7fa; --row-hover:#f4f4f8; --weekend:#f3f3f7;
+  --fill:rgba(118,118,128,.12); --fill-2:rgba(118,118,128,.22);
+  --ink:#101116; --ink-2:#55575f; --ink-3:#6b6d75;
+  --sep:rgba(60,60,67,.2); --line-2:rgba(60,60,67,.3);
+  --tint:#00098b; --tint-fill:#00098b; --tint-hover:#1a24a8; --on-tint:#ffffff; --tint-soft:rgba(0,9,139,.08);
+  --ok:#2a9d48; --green-ink:#1d6b33; --green-soft:rgba(52,199,89,.16);
+  --accept:#1f7a36; --accept-hover:#1a6a2f;
+  --gold:#dda44d; --gold-ink:#7a4a00; --gold-soft:rgba(221,164,77,.22);
+  --red:#d70015; --red-ink:#b3000f; --red-soft:rgba(215,0,21,.1);
+  --bh:#8e8e93; --shut:#2f7bc0; --jeff:#8944ab;
+  --mat:rgba(246,246,249,.74); --mat-solid:#f6f6f9; --mat-edge:rgba(0,0,0,.07); --blur:saturate(180%) blur(22px);
+  --mat-alert:rgba(242,242,247,.9);
+  --scrim:rgba(8,10,24,.32);
+  --seg-bg:rgba(118,118,128,.12); --seg-thumb:#ffffff; --seg-on:#101116;
+  --tab-thumb:rgba(118,118,128,.16); --tab-on:#00098b;
+  --toast:rgba(28,28,30,.88); --on-toast:#ffffff;
+  --skeleton:rgba(118,118,128,.1); --skeleton-hi:rgba(118,118,128,.2);
+  --focus:#1a24a8;
+  --sh-card:0 0 0 .5px rgba(0,0,0,.03),0 1px 2px rgba(16,18,40,.04),0 4px 14px rgba(16,18,40,.04);
+  --sh-float:0 10px 30px rgba(16,18,40,.14),0 1px 3px rgba(16,18,40,.08);
+  --sh-sheet:0 28px 80px rgba(16,18,40,.3),0 2px 8px rgba(16,18,40,.1);
+  --sh-thumb:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
+  --font-text:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-num:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --r-card:14px; --r-ctl:10px; --r-sheet:22px; --r-seg:9px; --r-thumb:7px; --r-cell:5px;
+  --ease:cubic-bezier(.25,1,.5,1);
+  --nav-h:56px; --tabbar-h:0px; --gutter:16px; --hair:1px;
+}
+@media (min-resolution:2dppx){:root{--hair:.5px}}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#000000; --surface:#1c1c1e; --surface-2:#232326; --row-hover:#26262a; --weekend:#252528;
+    --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.36);
+    --ink:#f5f5f7; --ink-2:#aeaeb2; --ink-3:#98989f;
+    --sep:rgba(84,84,88,.55); --line-2:rgba(235,235,245,.28);
+    --tint:#9aa2ff; --tint-fill:#4550f0; --tint-hover:#5b65ff; --on-tint:#ffffff; --tint-soft:rgba(154,162,255,.16);
+    --ok:#30d158; --green-ink:#5bd87a; --green-soft:rgba(48,209,88,.18);
+    --accept:#1f7a36; --accept-hover:#248a3d;
+    --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
+    --red:#ff453a; --red-ink:#ff6b61; --red-soft:rgba(255,69,58,.2);
+    --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2;
+    --mat:rgba(28,28,30,.72); --mat-solid:#1c1c1e; --mat-edge:rgba(255,255,255,.08);
+    --mat-alert:rgba(44,44,46,.9);
+    --scrim:rgba(0,0,0,.5);
+    --seg-bg:rgba(118,118,128,.24); --seg-thumb:#636366; --seg-on:#ffffff;
+    --tab-thumb:rgba(255,255,255,.12); --tab-on:#b3b9ff;
+    --toast:rgba(58,58,60,.92);
+    --skeleton:rgba(118,118,128,.16); --skeleton-hi:rgba(118,118,128,.28);
+    --focus:#b3b9ff;
+    --sh-card:0 0 0 .5px rgba(255,255,255,.06);
+    --sh-float:0 12px 34px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.08);
+    --sh-sheet:0 30px 90px rgba(0,0,0,.7),0 0 0 .5px rgba(255,255,255,.08);
+    --sh-thumb:0 3px 8px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#000000; --surface:#1c1c1e; --surface-2:#232326; --row-hover:#26262a; --weekend:#252528;
+  --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.36);
+  --ink:#f5f5f7; --ink-2:#aeaeb2; --ink-3:#98989f;
+  --sep:rgba(84,84,88,.55); --line-2:rgba(235,235,245,.28);
+  --tint:#9aa2ff; --tint-fill:#4550f0; --tint-hover:#5b65ff; --on-tint:#ffffff; --tint-soft:rgba(154,162,255,.16);
+  --ok:#30d158; --green-ink:#5bd87a; --green-soft:rgba(48,209,88,.18);
+  --accept:#1f7a36; --accept-hover:#248a3d;
+  --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
+  --red:#ff453a; --red-ink:#ff6b61; --red-soft:rgba(255,69,58,.2);
+  --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2;
+  --mat:rgba(28,28,30,.72); --mat-solid:#1c1c1e; --mat-edge:rgba(255,255,255,.08);
+  --mat-alert:rgba(44,44,46,.9);
+  --scrim:rgba(0,0,0,.5);
+  --seg-bg:rgba(118,118,128,.24); --seg-thumb:#636366; --seg-on:#ffffff;
+  --tab-thumb:rgba(255,255,255,.12); --tab-on:#b3b9ff;
+  --toast:rgba(58,58,60,.92);
+  --skeleton:rgba(118,118,128,.16); --skeleton-hi:rgba(118,118,128,.28);
+  --focus:#b3b9ff;
+  --sh-card:0 0 0 .5px rgba(255,255,255,.06);
+  --sh-float:0 12px 34px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.08);
+  --sh-sheet:0 30px 90px rgba(0,0,0,.7),0 0 0 .5px rgba(255,255,255,.08);
+  --sh-thumb:0 3px 8px rgba(0,0,0,.3);
+}
+@media (prefers-reduced-transparency:reduce){:root:root{--mat:var(--mat-solid);--mat-alert:var(--surface);--blur:none}}
+@media (prefers-contrast:more){:root:root{--sep:var(--line-2);--ink-3:var(--ink-2);--mat:var(--mat-solid);--mat-alert:var(--surface);--blur:none}}
+
+/* ---------------------------------------------------------------- base */
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);scrollbar-gutter:stable;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  scroll-padding-top:calc(env(safe-area-inset-top,0px) + var(--nav-h) + 12px);scroll-padding-bottom:calc(var(--tabbar-h) + 16px)}
+html.overlay-open{overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.47 var(--font-text);letter-spacing:-.006em;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;overflow-x:clip;font-optical-sizing:auto}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer}
+h1,h2,h3,h4,p,ul,dl,dd{margin:0}
+a{color:var(--tint)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+.num{font-variant-numeric:tabular-nums}
+.ico{display:block;width:18px;height:18px;flex:none}
+.ico.spin{animation:spin .8s steps(8) infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------------------------------------------------------------- navigation bar: the material fades in as content scrolls under it */
+.navbar{position:fixed;z-index:50;top:0;left:0;right:0;padding-top:env(safe-area-inset-top,0px)}
+.nb-mat{position:absolute;inset:0;background:var(--mat);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  box-shadow:inset 0 calc(-1 * var(--hair)) 0 var(--mat-edge);opacity:var(--nb-mat,0);pointer-events:none}
+.nb-row{position:relative;display:flex;align-items:center;gap:10px;height:var(--nav-h);max-width:1296px;margin:0 auto;
+  padding-inline:max(var(--gutter),env(safe-area-inset-left,0px)) max(var(--gutter),env(safe-area-inset-right,0px))}
+.nb-lead,.nb-trail{display:flex;align-items:center;gap:10px;flex:1 1 0;min-width:0}
+.nb-trail{justify-content:flex-end;gap:8px}
+.brand{display:flex;align-items:center;gap:9px;flex:none;font:600 17px/1 var(--font-text);letter-spacing:-.02em;white-space:nowrap}
+.brand .mark{display:block;height:30px;width:auto;aspect-ratio:143/164}
+.nb-title{min-width:0;font:600 17px/1.2 var(--font-text);letter-spacing:-.022em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:var(--nb-title,0);transform:translateY(calc((1 - var(--nb-title,0)) * 4px))}
+.btn.nb-act{flex:none}
+.nb-act.busy:disabled{opacity:1}
+.nb-act.busy .ico{animation:spin 1s linear infinite}
+@media (min-width:721px){:root{--gutter:28px}.nb-title{display:none}}
+@media (max-width:1099px){
+  .brand-name{display:none}
+  .btn.nb-act{width:36px;padding:0}
+  .nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+
+/* ---------------------------------------------------------------- tab bar: a floating capsule, top centre on wide screens, bottom on phones */
+.tabbar{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + (var(--nav-h) - 42px) / 2);left:50%;transform:translateX(-50%);display:flex;padding:3px;
+  border-radius:999px;background:var(--mat);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--sh-float),inset 0 0 0 var(--hair) var(--mat-edge);
+  touch-action:none;user-select:none;-webkit-user-select:none}
+.tb-thumb{position:absolute;z-index:0;top:3px;bottom:3px;left:0;width:0;border-radius:999px;background:var(--tab-thumb);pointer-events:none}
+.tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;height:36px;padding:0 16px;border:0;border-radius:999px;background:none;
+  font:600 14px/1 var(--font-text);letter-spacing:-.01em;color:var(--ink-2);white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:color .18s,transform .28s var(--ease)}
+@media (hover:hover){.tab:hover{color:var(--ink)}}
+.tab[aria-selected="true"]{color:var(--tab-on)}
+.tab:active{transform:scale(.95);transition-duration:.08s}
+.tab:focus-visible{outline-offset:-2px}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;
+  font:700 12px/1 var(--font-text);letter-spacing:0;font-variant-numeric:tabular-nums}
+@media (max-width:720px){
+  :root{--tabbar-h:78px}
+  .tabbar{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));transform:none;padding:4px}
+  .tab{flex:1 1 0;flex-direction:column;justify-content:center;gap:3px;min-width:0;height:56px;padding:0 2px;font-size:11px;letter-spacing:0}
+  .tab .ico{width:23px;height:23px}
+  .tb-thumb{top:4px;bottom:4px}
+  .badge{position:absolute;top:4px;left:calc(50% + 5px);min-width:18px;height:18px;padding:0 5px;font-size:11px;box-shadow:0 0 0 2px var(--mat-solid)}
+}
+
+/* ---------------------------------------------------------------- page and large title */
+.page{display:block;max-width:1296px;margin:0 auto;padding-inline:max(var(--gutter),env(safe-area-inset-left,0px)) max(var(--gutter),env(safe-area-inset-right,0px));
+  padding-block:var(--nav-h) calc(var(--tabbar-h) + 48px)}
+.lt{display:flex;flex-direction:column;gap:4px;padding-block:14px 20px}
+.lt-eyebrow{font:600 13px/1.3 var(--font-text);letter-spacing:-.003em;color:var(--ink-3)}
+.lt-title{font:700 clamp(32px,4.2vw,40px)/1.08 var(--font-display);letter-spacing:-.022em;text-wrap:balance}
+.lt-title:focus{outline:none}
+.lt-sub{max-width:70ch;font-size:15px;color:var(--ink-2);text-wrap:pretty}
+.meta-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 22px;margin-top:6px}
+.meta{display:flex;flex-wrap:wrap;gap:4px 22px;font-size:14px}
+.meta>div{display:flex;gap:6px;align-items:baseline}
+.meta dt{color:var(--ink-3)}
+.meta dd{font-weight:600;font-variant-numeric:tabular-nums}
+.saving{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--tint)}
+.saving::before{content:"";width:7px;height:7px;flex:none;border-radius:50%;background:currentColor}
+@media (prefers-reduced-motion:no-preference){.saving::before{animation:pulse 1.2s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.25}}
+
+/* ---------------------------------------------------------------- buttons: feedback on press, not on release */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 16px;border:0;border-radius:999px;
+  background:var(--fill);color:var(--ink);font:600 14px/1 var(--font-text);letter-spacing:-.006em;white-space:nowrap;text-decoration:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .28s var(--ease),background-color .15s,color .15s,opacity .15s}
+.btn .ico{width:17px;height:17px}
+.btn:active{transform:scale(.96);transition-duration:.08s}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:disabled:active{transform:none}
+.btn[aria-busy="true"]:disabled{opacity:1}
+.btn.sm{min-height:30px;padding:0 12px;font-size:13px}
+.btn.lg{min-height:44px;padding:0 20px;font-size:15px}
+.btn.primary{background:var(--tint-fill);color:var(--on-tint)}
+.btn.tinted{background:var(--tint-soft);color:var(--tint)}
+.btn.accept{background:var(--accept);color:#fff}
+.btn.review{background:var(--gold-soft);color:var(--gold-ink)}
+.btn.deny{background:var(--red-soft);color:var(--red-ink)}
+@media (hover:hover){
+  .btn:hover:not(:disabled){background:var(--fill-2)}
+  .btn.primary:hover:not(:disabled){background:var(--tint-hover)}
+  .btn.tinted:hover:not(:disabled){background:color-mix(in srgb,var(--tint) 16%,transparent)}
+  .btn.accept:hover:not(:disabled){background:var(--accept-hover)}
+  .btn.review:hover:not(:disabled){background:color-mix(in srgb,var(--gold) 38%,transparent)}
+  .btn.deny:hover:not(:disabled){background:color-mix(in srgb,var(--red) 17%,transparent)}
+}
+.iconbtn{display:grid;place-items:center;width:36px;height:36px;flex:none;padding:0;border:0;border-radius:50%;background:var(--fill);color:var(--ink);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .28s var(--ease),background-color .15s}
+.iconbtn:active{transform:scale(.9);transition-duration:.08s}
+@media (hover:hover){.iconbtn:hover{background:var(--fill-2)}}
+
+/* ---------------------------------------------------------------- fields, segmented control, filter chips */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:10px}
+.toolbar .grow{flex:1 1 220px}
+.toolbar select.input{flex:0 1 auto}
+.input{height:38px;min-width:0;max-width:100%;padding:0 12px;border:0;border-radius:var(--r-ctl);background-color:var(--fill);color:var(--ink);
+  font:400 15px/1 var(--font-text);letter-spacing:-.01em;transition:background-color .15s,box-shadow .15s}
+select.input{-webkit-appearance:none;appearance:none;padding-right:34px;cursor:pointer;background-repeat:no-repeat;background-position:right 12px center;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%238e8e93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+input.input[type="search"]{padding-left:34px;background-repeat:no-repeat;background-position:11px center;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='6.8' cy='6.8' r='5' fill='none' stroke='%238e8e93' stroke-width='1.8'/%3E%3Cpath d='m10.6 10.6 3.9 3.9' stroke='%238e8e93' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")}
+.input::placeholder{color:var(--ink-3);opacity:1}
+@media (hover:hover){.input:hover{background-color:var(--fill-2)}}
+.input:focus-visible{outline:none;box-shadow:0 0 0 3px var(--tint-soft),inset 0 0 0 1.5px var(--focus)}
+textarea.note{display:block;width:100%;min-height:66px;resize:vertical;padding:10px 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);
+  font:400 15px/1.4 var(--font-text);transition:background-color .15s,box-shadow .15s}
+textarea.note::placeholder{color:var(--ink-3);opacity:1}
+textarea.note:focus-visible{outline:none;background:var(--surface);box-shadow:0 0 0 3px var(--tint-soft),inset 0 0 0 1.5px var(--focus)}
+textarea.note:disabled{opacity:.55}
+@media (pointer:coarse){.input,textarea.note{font-size:16px}}   /* 16px keeps iOS from zooming into a field */
+label.lbl{display:grid;gap:6px}
+.seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;flex:none;margin:0;padding:2px;min-width:0;border:0;border-radius:var(--r-seg);
+  background:var(--seg-bg);touch-action:pan-y}
+.seg legend{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.seg .thumb{position:absolute;z-index:0;top:2px;bottom:2px;left:0;width:0;border-radius:var(--r-thumb);background:var(--seg-thumb);box-shadow:var(--sh-thumb);pointer-events:none}
+.seg label{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;min-height:32px;padding:0 16px;font:600 13px/1.15 var(--font-text);
+  letter-spacing:-.006em;color:var(--ink-2);text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none;transition:color .18s}
+.seg label.on{color:var(--seg-on)}
+.seg input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.seg label:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:-1px;border-radius:var(--r-thumb)}
+.seg:not(.live) label:has(input:checked){background:var(--seg-thumb);color:var(--seg-on);border-radius:var(--r-thumb);box-shadow:var(--sh-thumb)}
+.seg.dragging{cursor:grabbing}
+.fchip{position:relative;display:inline-flex;align-items:center;gap:6px;flex:none;height:34px;padding:0 14px;border-radius:999px;background:var(--fill);color:var(--ink-2);
+  font:600 13px/1 var(--font-text);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+  transition:background-color .15s,color .15s,transform .28s var(--ease)}
+.fchip input{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
+.fchip .ico{display:none;width:14px;height:14px;margin-left:-3px}
+.fchip:has(input:checked){background:var(--tint-fill);color:var(--on-tint)}
+.fchip:has(input:checked) .ico{display:block}
+.fchip:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}
+.fchip:active{transform:scale(.95);transition-duration:.08s}
+@media (hover:hover){.fchip:not(:has(input:checked)):hover{background:var(--fill-2)}}
+.chiprow{display:flex;flex-wrap:wrap;gap:8px}
+.sortpick{display:none;align-items:center;gap:6px}
+@media (max-width:560px){
+  .toolbar .grow{flex-basis:100%}
+  .toolbar select.input{flex:1 1 150px}
+  .sortpick{flex:1 1 100%}
+  .sortpick select.input{flex:1 1 auto}
+}
+
+/* ---------------------------------------------------------------- alerts, empty states, loading */
+.alerts{display:flex;flex-direction:column;gap:8px;margin:0 0 16px}
+.alerts:empty{display:none}
+.alert{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);font-size:14px;line-height:1.45}
+.alert::before{content:"!";flex:none;display:grid;place-items:center;width:20px;height:20px;margin-top:1px;border-radius:50%;background:var(--gold);color:#1b1200;font:700 13px/1 var(--font-text)}
+.alert.bad::before{background:var(--red);color:#fff}
+.alert .at{display:flex;flex-direction:column;gap:2px;min-width:0}
+.alert b{font-weight:600}
+.alert .muted{color:var(--ink-3)}
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:44px 20px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);text-align:center;color:var(--ink-2)}
+.empty h3{font:600 17px/1.3 var(--font-text);letter-spacing:-.016em;color:var(--ink)}
+.empty p{max-width:46ch;font-size:14.5px}
+.em-ico{display:grid;place-items:center;width:52px;height:52px;margin-bottom:6px;border-radius:50%;background:var(--fill);color:var(--ink-2)}
+.em-ico .ico{width:26px;height:26px}
+.em-ico.ok{background:var(--green-soft);color:var(--green-ink)}
+.skeleton{display:grid;gap:16px}
+.skeleton div{height:200px;border-radius:var(--r-card);background:var(--skeleton)}
+.skeleton div+div{height:140px}
+@media (prefers-reduced-motion:no-preference){
+  .skeleton div{background:linear-gradient(90deg,var(--skeleton) 30%,var(--skeleton-hi) 50%,var(--skeleton) 70%) 0 0/300% 100%;animation:shimmer 1.4s linear infinite}
+}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
+
+/* ---------------------------------------------------------------- status pills (filled) and suggestions (outlined) */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font:600 12.5px/1.35 var(--font-text);letter-spacing:-.003em;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;flex:none;border-radius:50%;background:currentColor}
+.pill.ok{background:var(--green-soft);color:var(--green-ink)}
+.pill.new{background:var(--tint-soft);color:var(--tint)}
+.pill.review{background:var(--gold-soft);color:var(--gold-ink)}
+.pill.deny{background:var(--red-soft);color:var(--red-ink)}
+.pill.grey{background:var(--fill);color:var(--ink-2)}
+.pill.grey::before{background:transparent;box-shadow:inset 0 0 0 1.5px currentColor}
+.pill.sug{background:transparent;box-shadow:inset 0 0 0 1.5px currentColor}
+.chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;background:var(--fill);font:500 12.5px/1.4 var(--font-text);color:var(--ink-2);white-space:nowrap}
+.chip.days{background:var(--tint-soft);color:var(--tint);font-weight:600}
+
+/* ---------------------------------------------------------------- approvals */
+.cards{display:grid;gap:18px}
+.card{min-width:0;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.card-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 16px;padding:16px 18px}
+.ch-who{display:flex;align-items:center;gap:12px;min-width:0}
+.ch-who>div{min-width:0}
+.ch-side{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.avatar{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:50%;background:var(--tint-soft);color:var(--tint);font:600 15px/1 var(--font-text);letter-spacing:.02em}
+.card-head h2{font:600 19px/1.25 var(--font-display);letter-spacing:-.017em;overflow-wrap:anywhere}
+.meta-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:5px;font-size:13px;color:var(--ink-2)}
+.card-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);border-top:var(--hair) solid var(--sep)}
+.card-col{display:grid;align-content:start;gap:18px;min-width:0;padding:16px 18px 18px}
+.card-col.side{background:var(--surface-2);border-left:var(--hair) solid var(--sep)}
+@media (max-width:860px){.card-body{grid-template-columns:minmax(0,1fr)}.card-col.side{border-left:0;border-top:var(--hair) solid var(--sep)}}
+.card-foot{display:grid;gap:12px;padding:16px 18px 18px;border-top:var(--hair) solid var(--sep)}
+.panel-block{display:grid;gap:8px;min-width:0}
+.panel-title{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.eyebrow{font:600 13px/1.3 var(--font-text);letter-spacing:-.003em;color:var(--ink-2)}
+.dates{font:600 20px/1.25 var(--font-display);letter-spacing:-.018em;font-variant-numeric:tabular-nums;text-wrap:balance}
+.subtle{font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.subtle.neg{color:var(--red-ink);font-weight:600}
+.note-text{padding:10px 12px;border-radius:10px;background:var(--fill);font-size:14.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.formlink{font-weight:600;color:var(--ink);overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
+.statlist{border-radius:12px;background:var(--surface);box-shadow:0 0 0 var(--hair) var(--sep);overflow:hidden}
+.card-col.side .statlist{box-shadow:var(--sh-card)}
+.stat{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 12px;font-size:14px}
+.stat+.stat{background:linear-gradient(var(--sep),var(--sep)) 12px 0/calc(100% - 12px) var(--hair) no-repeat}
+.stat>span{color:var(--ink-2)}
+.stat b{font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.left-after{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px 12px;border-top:var(--hair) solid var(--sep)}
+.left-after>span:first-child{font:600 14px/1.3 var(--font-text)}
+.left-after .big{font:700 32px/1 var(--font-num);letter-spacing:-.02em}
+.big.neg{color:var(--red-ink)}
+.yearlabel{margin-top:2px;font:600 13px/1.3 var(--font-text);color:var(--ink-3)}
+.greyline{padding:10px 12px;border-radius:10px;background:var(--fill);font-size:13.5px;color:var(--ink-2)}
+.okline{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--green-soft);color:var(--green-ink);font-size:13.5px;font-weight:600}
+.okline .ico{width:16px;height:16px}
+.groupblock{display:grid;gap:8px}
+.gb-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;font-size:14px}
+.gb-head b{font-weight:600}
+.clash-list{display:grid;gap:6px;padding:0;list-style:none}
+.clash-list li{padding:8px 12px;border-radius:10px;background:var(--red-soft);font-size:13.5px;line-height:1.45}
+.clash-list li b{color:var(--red-ink);font-weight:600}
+.suggest{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.decide-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+@media (max-width:560px){.decide-row .btn{flex:1 1 0;padding-inline:10px}}
+
+/* ---------------------------------------------------------------- planner grid: the diary, and the few days around each request */
+.grid-wrap{overflow-x:auto;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overscroll-behavior-x:contain}
+.card .grid-wrap{border-radius:12px;box-shadow:none;border:var(--hair) solid var(--sep)}
+table.plan{min-width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+table.plan th,table.plan td{padding:0;text-align:center;border-bottom:var(--hair) solid var(--sep);border-right:var(--hair) solid var(--sep)}
+table.plan tr>:last-child{border-right:0}
+table.plan tbody tr:last-child>*{border-bottom:0}
+table.plan .name{position:sticky;left:0;z-index:2;min-width:168px;max-width:220px;padding:7px 12px;background-color:var(--surface);text-align:left;font-size:13px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:var(--hair) solid var(--line-2)}
+table.plan thead th{position:sticky;top:0;z-index:3;background-color:var(--surface)}
+table.plan thead th.weekend{background-color:var(--weekend)}
+table.plan thead th.name{z-index:4;font:600 12px/1.3 var(--font-text);color:var(--ink-3)}
+table.plan .dh{min-width:31px;padding:6px 0 7px;font:600 12.5px/1 var(--font-text);font-variant-numeric:tabular-nums;color:var(--ink)}
+table.plan .dh .dow{display:block;margin-bottom:4px;font-size:10px;font-weight:600;color:var(--ink-3)}
+table.plan .dh .dn{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:11px}
+table.plan .dh.today .dn{background:var(--tint-fill);color:var(--on-tint)}
+table.plan .dh.inreq{box-shadow:inset 0 -3px 0 var(--tint)}
+table.plan td.day{position:relative;height:30px;min-width:31px}
+.weekend{background-color:var(--weekend)}
+.closed-bh{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bh) 42%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-shut{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--shut) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-jeff{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jeff) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.fill{position:absolute;top:5px;bottom:5px;left:2px;width:calc(100% - 4px);display:block;padding:0;border:0;border-radius:var(--r-cell)}
+.fill.half-am{width:calc(50% - 3px)}
+.fill.half-pm{left:auto;right:2px;width:calc(50% - 3px)}
+button.fill{cursor:pointer;transition:transform .2s var(--ease),filter .15s}
+button.fill:active{transform:scale(.86);transition-duration:.08s}
+@media (hover:hover){button.fill:hover{filter:brightness(1.12) saturate(1.1)}}
+button.fill:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.fill.accepted{background:var(--ok)}
+.fill.new{background:repeating-linear-gradient(135deg,var(--tint-fill) 0 3px,color-mix(in srgb,var(--tint-fill) 32%,var(--surface)) 3px 6px)}
+.fill.review{background:repeating-linear-gradient(135deg,var(--gold) 0 3px,color-mix(in srgb,var(--gold) 38%,var(--surface)) 3px 6px)}
+tr.section th{padding:9px 0;background-color:var(--surface-2);text-align:left}
+.sec-t{position:sticky;left:0;display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding-inline:12px;font:600 13px/1.3 var(--font-text);color:var(--ink)}
+.sec-t .limit{font-weight:400;color:var(--ink-3)}
+tr.count td{height:24px;font:600 11.5px/1 var(--font-text);font-variant-numeric:tabular-nums;color:var(--ink-3)}
+tr.count td.over{background-color:var(--red-soft);color:var(--red-ink);font-weight:700}
+tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
+@media (max-width:640px){table.plan .name{min-width:116px;max-width:140px;padding-inline:10px;font-size:12.5px}}
+.key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:2px 0 12px;font-size:12.5px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.sw{position:relative;display:inline-block;flex:none;width:16px;height:12px;border-radius:4px;box-shadow:inset 0 0 0 var(--hair) var(--line-2)}
+.sw.acc{background:var(--ok);box-shadow:none}
+.sw.new{background:repeating-linear-gradient(135deg,var(--tint-fill) 0 3px,color-mix(in srgb,var(--tint-fill) 32%,var(--surface)) 3px 6px);box-shadow:none}
+.sw.rev{background:repeating-linear-gradient(135deg,var(--gold) 0 3px,color-mix(in srgb,var(--gold) 38%,var(--surface)) 3px 6px);box-shadow:none}
+.foot{margin:12px 4px 0;max-width:90ch;font-size:12.5px;line-height:1.5;color:var(--ink-3)}
+
+/* ---------------------------------------------------------------- diary: month navigation, calendar, and an agenda on phones */
+.diary-nav{justify-content:space-between;margin-bottom:12px}
+.monthnav{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
+.month{min-width:190px;font:700 22px/1.2 var(--font-display);letter-spacing:-.016em;text-align:center;font-variant-numeric:tabular-nums}
+.monthnav .btn{margin-left:4px}
+@media (max-width:560px){.month{min-width:0;flex:1 1 auto;font-size:19px}.diary-nav .seg{flex:1 1 100%}}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--hair);border-radius:var(--r-card);background:var(--sep);box-shadow:var(--sh-card);overflow:hidden}
+.cal .dow{padding:8px 10px;background:var(--surface-2);font:600 12px/1.2 var(--font-text);color:var(--ink-3)}
+.cal .cell{display:flex;flex-direction:column;gap:3px;min-width:0;min-height:112px;padding:6px 6px 8px;background-color:var(--surface)}
+.cal .cell.out{background-color:var(--surface-2)}
+.cal .cell.we{background-color:var(--weekend)}
+.cal .d{display:inline-grid;place-items:center;align-self:flex-start;min-width:26px;height:26px;padding:0 4px;border-radius:13px;font:600 13px/1 var(--font-text);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.cal .cell.today .d{background:var(--tint-fill);color:var(--on-tint)}
+.cal .closure{padding:0 4px;font-size:11.5px;line-height:1.3;color:var(--ink-2)}
+.who{display:flex;align-items:center;gap:5px;width:100%;min-width:0;padding:2px 6px;border:0;border-radius:6px;background:none;font:500 12px/1.35 var(--font-text);color:var(--ink);text-align:left;white-space:nowrap}
+.who .wn{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.who.accepted{background:var(--green-soft)}
+.who.pending{padding:1px 5px;border:1px dashed color-mix(in srgb,var(--tint) 60%,transparent);background:var(--tint-soft)}
+.who .dot{width:8px;height:8px;flex:none;border-radius:50%}
+button.who{cursor:pointer;transition:transform .2s var(--ease),filter .15s}
+button.who:active{transform:scale(.96);transition-duration:.08s}
+@media (hover:hover){button.who:hover{filter:brightness(.97)}}
+.agenda{display:none}
+@media (max-width:640px){.cal{display:none}.agenda{display:block}}
+.ag-list{padding:0;list-style:none;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.ag-day{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:start;gap:12px;padding:11px 14px}
+.ag-day+.ag-day{box-shadow:inset 0 var(--hair) 0 var(--sep)}
+.ag-date{display:flex;flex-direction:column;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;background:var(--fill);line-height:1}
+.ag-date b{font:700 19px/1 var(--font-num);font-variant-numeric:tabular-nums}
+.ag-date small{margin-top:3px;font:600 10.5px/1 var(--font-text);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.ag-day.today .ag-date{background:var(--tint-fill);color:var(--on-tint)}
+.ag-day.today .ag-date small{color:inherit;opacity:.85}
+.ag-main{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;padding-top:3px}
+.ag-main .who{width:auto;max-width:100%;padding:5px 10px;border-radius:999px;font-size:13px}
+.ag-main .who.pending{padding:4px 9px}
+.ag-closure{display:flex;align-items:center;gap:8px;flex-basis:100%;font:600 13.5px/1.3 var(--font-text);color:var(--ink-2)}
+
+/* ---------------------------------------------------------------- tables: a sortable table on wide screens, list rows on phones */
+.table-wrap{border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow-x:auto}
+table.data{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;font-variant-numeric:tabular-nums}
+table.data th{padding:12px 12px 9px;background:var(--surface);box-shadow:inset 0 calc(-1 * var(--hair)) 0 var(--sep);text-align:left;vertical-align:bottom;white-space:nowrap;
+  font:600 12.5px/1.25 var(--font-text);color:var(--ink-2)}
+table.data td{padding:11px 12px;border-top:var(--hair) solid var(--sep);vertical-align:middle;white-space:nowrap}
+table.data tbody tr:first-child td{border-top:0}
+table.data th:first-child,table.data td:first-child{padding-left:16px}
+table.data th:last-child,table.data td:last-child{padding-right:16px}
+table.data .r{text-align:right}
+table.data th button{display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:inherit;cursor:pointer}
+table.data.bal th{white-space:normal}   /* eleven columns: headings wrap so the table fits a laptop screen */
+table.data.bal td.c-name{white-space:normal;min-width:150px}
+table.data th[aria-sort] button{color:var(--tint)}
+@media (hover:hover){table.data th button:hover{color:var(--ink)}}
+.arr{min-width:.7em;font-size:11px}
+table.data tr.click{cursor:pointer;transition:background-color .15s}
+@media (hover:hover){table.data tr.click:hover{background:var(--row-hover)}}
+table.data tr.click:active{background:var(--fill-2);transition-duration:0s}
+table.data tr.click:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+table.data .go{width:30px;padding-left:0}
+.chev{display:block;width:8px;height:8px;margin:0 auto;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);opacity:.6}
+.c-name b{font-weight:600}
+td.hl{font:700 16px/1.2 var(--font-num)}
+.warn{color:var(--gold-ink);font-weight:700}
+.neg{color:var(--red-ink);font-weight:700}
+.breakdown{display:block;margin-top:2px;font-size:11.5px;color:var(--ink-3)}
+.x{display:block;margin-top:2px;font-size:12.5px;color:var(--ink-3)}
+.narrow-only-b{display:none}
+@media (max-width:820px){
+  .sortpick{display:inline-flex}
+  table.data thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  table.data,table.data tbody,table.data tr,table.data td{display:block}
+  table.data tbody tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;padding:13px 16px}
+  table.data tbody tr+tr{border-top:var(--hair) solid var(--sep)}
+  table.data td{padding:0!important;border:0!important;white-space:normal;text-align:left!important}
+  table.data td[data-label]::before{content:attr(data-label);display:block;margin-bottom:2px;font:500 11.5px/1.3 var(--font-text);color:var(--ink-3)}
+  .narrow-only-b{display:block}
+  .bal td.c-name{grid-column:1/-1;order:-2}
+  .bal td.c-groups{display:none}
+  .bal td.c-book,.bal td.c-rem,.bal td.c-ifp{order:-1}
+  .bal td.c-book::before,.bal td.c-rem::before,.bal td.c-ifp::before{min-height:2.6em}   /* the key figures line up even when a label wraps */
+  table.data.reqs tbody tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name dec" "dates days" "sug when" "chk chk";gap:8px 14px}
+  .reqs td.c-name{grid-area:name}
+  .reqs td.c-dec{grid-area:dec;justify-self:end}
+  .reqs td.c-dates{grid-area:dates}
+  .reqs td.c-days{grid-area:days;text-align:right!important}
+  .reqs td.c-sug{grid-area:sug}
+  .reqs td.c-when{grid-area:when;text-align:right!important}
+  .reqs td.c-chk{grid-area:chk}
+  .reqs td.go{display:none}
+}
+
+/* ---------------------------------------------------------------- request sheet: rises from below, follows the finger, flicks away */
+.sheet{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.sheet .scrim,.alertdlg .scrim{position:absolute;inset:0;background:var(--scrim);opacity:0}
+.sheet.closing,.alertdlg.closing{pointer-events:none}
+.sheet .panel{position:relative;display:flex;flex-direction:column;width:min(620px,100%);max-height:100%;border-radius:var(--r-sheet);background:var(--surface);
+  box-shadow:var(--sh-sheet);overflow:hidden;will-change:transform;outline:none}
+.sheet-content{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.grabber{display:none}
+.dlg-head{flex:none;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 14px 20px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.sheet.dragging .dlg-head,.sheet.dragging .grabber{cursor:grabbing}
+.dlg-head h2{font:700 22px/1.2 var(--font-display);letter-spacing:-.018em;overflow-wrap:anywhere}
+.dlg-head .subtle{margin-top:2px}
+.dlg-body{flex:1 1 auto;display:flex;flex-direction:column;gap:18px;padding:2px 20px 22px;overflow-y:auto;overscroll-behavior:contain}
+.dlg-body>*{flex-shrink:0}   /* the body scrolls; its blocks never squash */
+.dlg-foot{flex:none;display:grid;gap:12px;padding:14px 20px 18px;border-top:var(--hair) solid var(--sep);background:var(--surface)}
+pre.details{margin:0;padding:12px 14px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 var(--hair) var(--sep);font:400 13px/1.55 var(--font-text);
+  white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
+.close{display:grid;place-items:center;width:30px;height:30px;flex:none;padding:0;border:0;border-radius:50%;background:var(--fill);color:var(--ink-2);cursor:pointer;
+  transition:transform .28s var(--ease),background-color .15s}
+.close .ico{width:14px;height:14px}
+.close:active{transform:scale(.9);transition-duration:.08s}
+@media (hover:hover){.close:hover{background:var(--fill-2);color:var(--ink)}}
+@media (max-width:720px){
+  .sheet{align-items:flex-end;padding:calc(env(safe-area-inset-top,0px) + 12px) 0 0}
+  .sheet .panel{width:100%;border-radius:var(--r-sheet) var(--r-sheet) 0 0}
+  .grabber{display:block;flex:none;height:16px;cursor:grab;touch-action:none}
+  .grabber::before{content:"";display:block;width:38px;height:5px;margin:7px auto 0;border-radius:3px;background:var(--ink-3);opacity:.45}
+  .dlg-head{padding-top:8px}
+  .dlg-foot{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+}
+
+/* ---------------------------------------------------------------- confirmation (an Apple-style alert) and toast */
+.alertdlg{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:24px}
+.alertdlg .box{position:relative;width:min(100%,320px);border-radius:16px;background:var(--mat-alert);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  box-shadow:var(--sh-sheet);overflow:hidden;text-align:center;opacity:0}
+.alert-text{display:grid;gap:6px;padding:20px 18px 18px}
+.alert-text h2{font:600 17px/1.3 var(--font-text);letter-spacing:-.02em}
+.alert-text p{font-size:13.5px;line-height:1.4;color:var(--ink-2)}
+.alert-btns{display:grid;grid-template-columns:1fr 1fr;border-top:var(--hair) solid var(--sep)}
+.alert-btns button{min-height:46px;padding:0 10px;border:0;background:none;font:400 17px/1.2 var(--font-text);letter-spacing:-.02em;color:var(--tint);cursor:pointer;transition:background-color .1s}
+.alert-btns button+button{border-left:var(--hair) solid var(--sep)}
+.alert-btns button.go{font-weight:600;color:var(--green-ink)}
+.alert-btns button.danger{font-weight:600;color:var(--red)}
+.alert-btns button:active{background:var(--fill)}
+.alert-btns button:focus-visible{outline-offset:-3px}
+.toast-host{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + var(--tabbar-h) + 20px);z-index:95;display:flex;justify-content:center;padding-inline:16px;pointer-events:none}
+.toast{max-width:560px;padding:11px 18px;border-radius:20px;background:var(--toast);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);color:var(--on-toast);
+  font:600 14.5px/1.35 var(--font-text);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.2);pointer-events:auto}
+
+/* ---------------------------------------------------------------- My leave (staff on the FLR Hub): their own requests and balance only */
+html.staff{--tabbar-h:0px}
+html.staff .tabbar,html.staff #copy-form{display:none}
+.mine{display:grid;gap:22px}
+.mine-top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.mine-top{grid-template-columns:minmax(0,1fr)}}
+.mine .card{display:grid;gap:12px;padding:18px 20px 20px}
+.mine .card h2{font:600 19px/1.25 var(--font-display);letter-spacing:-.017em}
+.mb-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.mb-big{display:flex;align-items:baseline;gap:8px}
+.mb-big .big{font:700 56px/1 var(--font-num);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mb-big .big.neg{color:var(--red-ink)}
+.mb-unit{font:600 17px/1 var(--font-text);color:var(--ink-2)}
+.mb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--hair);margin:0;border-radius:12px;background:var(--sep);box-shadow:0 0 0 var(--hair) var(--sep);overflow:hidden}
+.mb-grid div{padding:10px 12px;background:var(--surface-2)}
+.mb-grid dt{font:500 12.5px/1.3 var(--font-text);color:var(--ink-3)}
+.mb-grid dd{margin:3px 0 0;font:700 21px/1.15 var(--font-num)}
+.mb-grid dd.neg{color:var(--red-ink)}
+.mine-request p{font-size:14.5px;color:var(--ink-2)}
+.mine-request .btn{justify-self:start}
+.mine-sect{margin:0 4px 10px;font:600 17px/1.3 var(--font-display);letter-spacing:-.016em}
+.mine-rows{padding:0;list-style:none;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.mine-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px}
+.mine-row+.mine-row{box-shadow:inset 0 var(--hair) 0 var(--sep)}
+.mr-dates{font-weight:600;font-variant-numeric:tabular-nums}
+.mr-main{min-width:0}
+.empty-act{margin-top:12px}
+@media (max-width:420px){.mine-row{grid-template-columns:46px minmax(0,1fr)}.mr-status{grid-column:2}}
+
+/* ---------------------------------------------------------------- motion preferences: springs jump, slides become fades (see FLRUI) */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+</style>
+
+<svg class="defs" aria-hidden="true" focusable="false">
+  <symbol id="flr-mark" viewBox="4 8 143 164"><path fill="#a7a9ac" fill-rule="evenodd" d="M 13.99 170.7 L 146.26 170.7 L 146.26 16.51 L 13.99 16.51 Z M 13.99 170.7 "/><path fill="#001796" fill-rule="evenodd" d="M 5.39 43.18 L 40.73 9.45 L 76.07 43.18 L 40.73 76.92 Z M 5.39 43.18 "/><path fill="#ffffff" fill-rule="nonzero" d="M 31.05 131.55 L 31.05 142.08 L 53.86 142.08 L 53.86 148.14 L 31.05 148.14 L 31.05 164.14 L 21.23 164.14 L 21.23 125.32 L 55.09 125.32 L 55.09 131.55 Z M 31.05 131.55 "/><path fill="#ffffff" fill-rule="nonzero" d="M 71.25 125.32 L 71.25 157.62 L 94.97 157.62 L 94.97 164.14 L 61.27 164.14 L 61.27 125.32 Z M 71.25 125.32 "/><path fill="#ffffff" fill-rule="nonzero" d="M 100.07 164.14 L 100.07 125.32 L 124.95 125.32 C 130.84 125.36 135.09 126.22 137.7 127.91 C 140.31 129.6 141.61 132.75 141.61 137.37 L 141.61 138.82 C 141.61 139.32 141.56 139.83 141.46 140.34 C 141.36 141.42 141.09 142.49 140.66 143.54 C 140.22 144.59 139.46 145.46 138.39 146.16 C 137.77 146.54 137.1 146.86 136.36 147.09 C 135.61 147.32 134.86 147.52 134.09 147.67 C 133.78 147.71 133.49 147.76 133.21 147.82 C 132.93 147.88 132.63 147.92 132.32 147.96 L 132.32 148.14 C 135.34 148.33 137.54 149.07 138.93 150.35 C 140.31 151.63 141 153.41 141 155.7 L 141 164.14 L 131.1 164.14 L 131.1 157.1 L 131.17 156.23 C 131.12 154.29 130.39 152.96 128.98 152.27 C 127.57 151.57 125.72 151.22 123.42 151.22 L 109.59 151.16 L 109.59 164.14 Z M 109.59 144.93 L 123.42 144.93 C 126.44 144.97 128.55 144.54 129.75 143.62 C 130.95 142.71 131.55 141.17 131.55 139 C 131.55 136.59 131.21 134.8 130.52 133.61 C 129.83 132.43 127.66 131.84 124.03 131.84 L 109.59 131.78 Z M 109.59 144.93 "/></symbol>
+  <symbol id="i-approvals" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.6 13.3h4.3l1.5 2.6h5.2l1.5-2.6h4.3"/>
+    <path d="M6.3 5h11.4a1.6 1.6 0 0 1 1.5 1.1l2.2 7.2v4.9a2 2 0 0 1-2 2H4.6a2 2 0 0 1-2-2v-4.9l2.2-7.2A1.6 1.6 0 0 1 6.3 5z"/>
+    <path d="m9.3 9.4 1.9 1.8 3.6-3.5"/>
+  </symbol>
+  <symbol id="i-diary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.5" y="5" width="17" height="15.5" rx="3.2"/>
+    <path d="M3.5 9.6h17M8 3.2v3.6M16 3.2v3.6"/>
+    <path stroke-width="2.4" d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/>
+  </symbol>
+  <symbol id="i-balances" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 20h16"/><rect x="5.3" y="11.2" width="3.4" height="5.8" rx="1.1"/><rect x="10.3" y="5.5" width="3.4" height="11.5" rx="1.1"/><rect x="15.3" y="8.6" width="3.4" height="8.4" rx="1.1"/>
+  </symbol>
+  <symbol id="i-requests" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 6.5h11M9 12h11M9 17.5h11"/><path stroke-width="2.6" d="M4.6 6.5h.01M4.6 12h.01M4.6 17.5h.01"/>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.8 4.2v4.3h-4.3"/>
+  </symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13.6a4.2 4.2 0 0 0 6 .3l2.9-2.9a4.2 4.2 0 0 0-6-6l-1.3 1.3"/><path d="M14 10.4a4.2 4.2 0 0 0-6-.3L5.1 13a4.2 4.2 0 0 0 6 6l1.3-1.3"/>
+  </symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 12.6 4.1 4.1 8.9-9.3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.6 4.6"/></symbol>
+  <symbol id="i-sort-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5.5M6.5 11 12 5.5l5.5 5.5"/></symbol>
+  <symbol id="i-sort-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13.5M6.5 13 12 18.5l5.5-5.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></symbol>
+  <symbol id="i-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+    <path d="M12 3.5v3.2"/><path opacity=".18" d="M18 6l-2.25 2.25"/><path opacity=".26" d="M20.5 12h-3.2"/><path opacity=".36" d="M18 18l-2.25-2.25"/>
+    <path opacity=".48" d="M12 20.5v-3.2"/><path opacity=".6" d="M6 18l2.25-2.25"/><path opacity=".72" d="M3.5 12h3.2"/><path opacity=".86" d="M6 6l2.25 2.25"/>
+  </symbol>
+</svg>
+
+<div class="app" id="app">
+  <header class="navbar" id="navbar">
+    <div class="nb-mat" aria-hidden="true"></div>
+    <div class="nb-row">
+      <div class="nb-lead">
+        <p class="brand"><svg class="mark" role="img" aria-label="FLR"><use href="#flr-mark"/></svg><span class="brand-name">Annual Leave</span></p>
+        <p class="nb-title" id="nb-title" aria-hidden="true">Approvals</p>
+      </div>
+      <div class="nb-trail">
+        <button class="btn nb-act" type="button" data-act="copy-form" id="copy-form" title="Copy the staff request form link"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="lbl">Copy form link</span></button>
+        <button class="btn nb-act" type="button" data-act="refresh" id="refresh" title="Load the leave boards from monday.com again"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg><span class="lbl">Refresh</span></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabbar" id="tabs" role="tablist" aria-label="Sections">
+    <span class="tb-thumb" aria-hidden="true"></span>
+    <button class="tab" type="button" role="tab" id="tab-approvals" data-act="tab" data-id="approvals" aria-selected="true" aria-controls="view"><svg class="ico" aria-hidden="true"><use href="#i-approvals"/></svg><span>Approvals</span><span class="badge" id="tab-badge" hidden></span></button>
+    <button class="tab" type="button" role="tab" id="tab-diary" data-act="tab" data-id="diary" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-diary"/></svg><span>Diary</span></button>
+    <button class="tab" type="button" role="tab" id="tab-balances" data-act="tab" data-id="balances" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-balances"/></svg><span>Balances</span></button>
+    <button class="tab" type="button" role="tab" id="tab-requests" data-act="tab" data-id="requests" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-requests"/></svg><span>All requests</span></button>
+  </nav>
+
+  <main class="page">
+    <header class="lt">
+      <p class="lt-eyebrow">FLR Annual Leave</p>
+      <h1 class="lt-title" id="lt-title" tabindex="-1">Approvals</h1>
+      <p class="lt-sub" id="lt-sub">Loading from monday.com. If Claude asks, allow monday.com for this page.</p>
+      <div class="meta-row">
+        <dl class="meta">
+          <div><dt>Leave year</dt><dd id="year-chip">2027 · Jan–Dec</dd></div>
+          <div><dt>Updated</dt><dd id="updated">Loading…</dd></div>
+        </dl>
+        <p class="saving" id="saving" hidden></p>
+      </div>
+    </header>
+    <div class="alerts" id="banners"></div>
+    <div id="view" role="tabpanel" aria-labelledby="tab-approvals">
+      <div class="skeleton" aria-hidden="true"><div></div><div></div></div>
+    </div>
+  </main>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="scrim" data-act="close"></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-content"></div>
+  </div>
+</div>
+<div class="alertdlg" id="confirm" hidden>
+  <div class="scrim" data-act="confirm-no"></div>
+  <div class="box" role="alertdialog" aria-modal="true" aria-labelledby="cf-title" aria-describedby="cf-body"></div>
+</div>
+<div class="toast-host" id="toast-host" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   Motion and gestures, as in the FLR Hub and the Speeding Report (from
+   WWDC "Designing Fluid Interfaces"): springs set by damping ratio and
+   response, motion that starts from where things are on screen, the
+   finger's speed handed to the animation, flicks projected forward to
+   choose where things land, and rubber-banding at the edges.
+   ===================================================================== */
+const FLRUI = (() => {
+  'use strict';
+  const root = document.documentElement;
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  // Spring: damping 1 = no overshoot; response = seconds to (roughly) arrive.
+  class Spring {
+    constructor(value, o = {}) {
+      this.x = value; this.v = 0; this.target = value; this.raf = 0;
+      this.precision = o.precision || .5; this.onUpdate = o.onUpdate || null; this.onRest = null;
+      this.set(o.damping == null ? 1 : o.damping, o.response || .4);
+      this._step = this._step.bind(this);
+    }
+    set(damping, response) { this.damping = damping; this.response = response; this.k = Math.pow(2 * Math.PI / response, 2); this.c = 4 * Math.PI * damping / response; return this; }
+    to(target, o = {}) {
+      if (o.damping != null || o.response != null) this.set(o.damping == null ? this.damping : o.damping, o.response || this.response);
+      if (o.velocity != null) this.v = o.velocity;
+      this.target = target; this.onRest = o.onRest || null;
+      if (reduced()) { this.jump(target); const r = this.onRest; this.onRest = null; if (r) r(); return this; }
+      if (!this.raf) { this.last = performance.now(); this.raf = requestAnimationFrame(this._step); }
+      return this;
+    }
+    jump(value) { this.stop(); this.x = this.target = value; this.v = 0; if (this.onUpdate) this.onUpdate(value, 0); return this; }
+    stop() { if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; return this; }
+    get moving() { return !!this.raf; }
+    _step(now) {
+      const dt = clamp((now - this.last) / 1000, 0, .064); this.last = now;
+      const n = Math.max(1, Math.ceil(dt * 240)), h = dt / n;
+      for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.target) - this.c * this.v; this.v += a * h; this.x += this.v * h; }
+      if (Math.abs(this.v) < this.precision * 12 && Math.abs(this.x - this.target) < this.precision) {
+        this.x = this.target; this.v = 0; this.raf = 0;
+        if (this.onUpdate) this.onUpdate(this.x, 0);
+        const r = this.onRest; this.onRest = null; if (r) r();
+        return;
+      }
+      if (this.onUpdate) this.onUpdate(this.x, this.v);
+      this.raf = requestAnimationFrame(this._step);
+    }
+  }
+  // Where a flick would come to rest (Apple's exponential-decay projection).
+  const project = (v, d = .998) => (v / 1000) * d / (1 - d);
+  // Past a boundary, follow less and less: responsive, but clearly the end.
+  const rubberband = (over, dim, c = .55) => (over * dim * c) / (dim + c * Math.abs(over));
+  function Tracker() {
+    const p = [];
+    return {
+      add(e) { p.push([e.clientX, e.clientY, e.timeStamp || performance.now()]); while (p.length > 2 && p[p.length - 1][2] - p[0][2] > 100) p.shift(); },
+      v() { if (p.length < 2) return { x: 0, y: 0 }; const a = p[0], b = p[p.length - 1], dt = (b[2] - a[2]) / 1000; return dt > 0 ? { x: (b[0] - a[0]) / dt, y: (b[1] - a[1]) / dt } : { x: 0, y: 0 }; },
+      clear() { p.length = 0; },
+    };
+  }
+  // After a drag, the pointer-up must not also count as a click.
+  function swallowClick() {
+    const h = (e) => { e.preventDefault(); e.stopPropagation(); };
+    addEventListener('click', h, { capture: true, once: true });
+    setTimeout(() => removeEventListener('click', h, true), 350);
+  }
+  // Lets :active give instant press feedback on iOS.
+  document.addEventListener('touchstart', () => {}, { passive: true });
+
+  // ---- The sliding selection shared by segmented controls and the tab bar ----
+  function Thumb(thumb) {
+    const sx = new Spring(0, { response: .34 }), sw = new Spring(0, { response: .34 });
+    let placed = false;
+    const paint = () => {
+      const stretch = clamp(Math.abs(sx.v) / 3200, 0, .14);   // a hint of speed while it travels
+      thumb.style.transform = `translate3d(${sx.x}px,0,0) scaleX(${1 + stretch})`;
+      thumb.style.width = sw.x + 'px';
+    };
+    sx.onUpdate = paint; sw.onUpdate = paint;
+    return {
+      to(el, o = {}) {
+        if (!el || !el.offsetWidth) return;
+        const x = el.offsetLeft, w = el.offsetWidth, opt = { velocity: o.velocity, damping: o.bounce ? .78 : 1, response: .34 };
+        if (o.instant || !placed) { sx.jump(x); sw.jump(w); placed = true; } else { sx.to(x, opt); sw.to(w, { damping: opt.damping, response: .34 }); }
+      },
+      drag(x) { sx.stop(); sw.stop(); sx.v = 0; sx.x = x; paint(); },
+      get x() { return sx.x; }, get w() { return sw.x; },
+    };
+  }
+  function nearest(items, c) { let best = items[0], bd = Infinity; for (const el of items) { const d = Math.abs(el.offsetLeft + el.offsetWidth / 2 - c); if (d < bd) { bd = d; best = el; } } return best; }
+
+  // Segmented control built on radio inputs: tap, arrow keys, or drag the thumb.
+  function initSeg(fs) {
+    if (!fs || fs._seg) return fs && fs._seg;
+    let thumb = fs.querySelector(':scope > .thumb');
+    if (!thumb) { thumb = document.createElement('span'); thumb.className = 'thumb'; thumb.setAttribute('aria-hidden', 'true'); fs.insertBefore(thumb, fs.querySelector(':scope > label')); }
+    fs.classList.add('live');
+    const T = Thumb(thumb);
+    const labels = () => [...fs.querySelectorAll(':scope > label')];
+    const cur = () => labels().find((l) => l.querySelector('input').checked);
+    const mark = () => { for (const l of labels()) l.classList.toggle('on', l.querySelector('input').checked); };
+    const sync = (instant) => { mark(); T.to(cur(), { instant }); };
+    fs.addEventListener('change', () => sync(false));
+    let d = null; const tr = Tracker();
+    fs.addEventListener('pointerdown', (e) => {
+      if (e.button || !cur() || e.target.closest('label') !== cur()) return;
+      d = { sx: e.clientX, id: e.pointerId, engaged: false }; tr.clear(); tr.add(e);
+    });
+    fs.addEventListener('pointermove', (e) => {
+      if (!d || e.pointerId !== d.id) return; tr.add(e);
+      if (!d.engaged) { if (Math.abs(e.clientX - d.sx) < 6) return; d.engaged = true; d.sx = e.clientX; d.x0 = T.x; fs.setPointerCapture(e.pointerId); fs.classList.add('dragging'); return; }
+      const ls = labels(), min = ls[0].offsetLeft, max = ls[ls.length - 1].offsetLeft + ls[ls.length - 1].offsetWidth - T.w;
+      let x = d.x0 + e.clientX - d.sx;
+      if (x < min) x = min - rubberband(min - x, fs.offsetWidth); else if (x > max) x = max + rubberband(x - max, fs.offsetWidth);
+      T.drag(x);
+    });
+    const end = (e) => {
+      if (!d || e.pointerId !== d.id) return;
+      const was = d; d = null; fs.classList.remove('dragging');
+      if (!was.engaged) return;
+      tr.add(e); swallowClick();
+      const v = tr.v().x, pick = nearest(labels(), T.x + T.w / 2 + project(v, .99)), inp = pick.querySelector('input');
+      if (!inp.checked) { inp.checked = true; inp.dispatchEvent(new Event('change', { bubbles: true })); }
+      mark(); T.to(pick, { velocity: v, bounce: Math.abs(v) > 250 });
+    };
+    fs.addEventListener('pointerup', end); fs.addEventListener('pointercancel', end);
+    try { new ResizeObserver(() => sync(true)).observe(fs); } catch (e) { /* no ResizeObserver */ }
+    sync(true);
+    fs._seg = { sync };
+    return fs._seg;
+  }
+
+  // Tab bar: the selection slides between tabs, and can be dragged from the current tab.
+  function initTabs(nav, onPick) {
+    const T = Thumb(nav.querySelector('.tb-thumb'));
+    const tabs = () => [...nav.querySelectorAll('.tab')];
+    const cur = () => tabs().find((t) => t.getAttribute('aria-selected') === 'true');
+    let pending = null;
+    const sync = (instant) => { const v = pending; pending = null; T.to(cur(), v ? { velocity: v, bounce: true } : { instant }); };
+    let d = null; const tr = Tracker();
+    nav.addEventListener('pointerdown', (e) => { if (e.button || e.target.closest('.tab') !== cur()) return; d = { sx: e.clientX, id: e.pointerId, engaged: false }; tr.clear(); tr.add(e); });
+    nav.addEventListener('pointermove', (e) => {
+      if (!d || e.pointerId !== d.id) return; tr.add(e);
+      if (!d.engaged) { if (Math.abs(e.clientX - d.sx) < 8) return; d.engaged = true; d.sx = e.clientX; d.x0 = T.x; nav.setPointerCapture(e.pointerId); return; }
+      const ls = tabs(), min = ls[0].offsetLeft, max = ls[ls.length - 1].offsetLeft + ls[ls.length - 1].offsetWidth - T.w;
+      let x = d.x0 + e.clientX - d.sx;
+      if (x < min) x = min - rubberband(min - x, nav.offsetWidth); else if (x > max) x = max + rubberband(x - max, nav.offsetWidth);
+      T.drag(x);
+    });
+    const end = (e) => {
+      if (!d || e.pointerId !== d.id) return;
+      const was = d; d = null;
+      if (!was.engaged) return;
+      tr.add(e); swallowClick();
+      const v = tr.v().x, pick = nearest(tabs(), T.x + T.w / 2 + project(v, .99));
+      if (pick !== cur()) { pending = v; onPick(pick); } else T.to(pick, { velocity: v, bounce: true });
+    };
+    nav.addEventListener('pointerup', end); nav.addEventListener('pointercancel', end);
+    try { new ResizeObserver(() => sync(true)).observe(nav); } catch (e) { /* no ResizeObserver */ }
+    sync(true);
+    return { sync };
+  }
+
+  // Tabs switch with a short fade (tabs don't slide on Apple platforms); months slide the way they're going.
+  function fadeIn(el, ms = 180) { if (!reduced() && el && el.animate) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms, easing: 'ease-out' }); }
+  function slideIn(el, dir) {
+    if (!el || !el.animate) return;
+    if (reduced() || !dir) { el.animate([{ opacity: .35 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' }); return; }
+    el.animate([{ transform: `translate3d(${dir * 36}px,0,0)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 340, easing: 'cubic-bezier(.25,1,.5,1)' });
+  }
+
+  // The bar's material, and its small title, fade in continuously as the page scrolls under them.
+  function initChrome(navbar, title) {
+    let raf = 0;
+    const now = () => {
+      raf = 0;
+      root.style.setProperty('--nb-mat', clamp((window.scrollY || 0) / 12, 0, 1).toFixed(3));
+      const t = title(), navB = navbar.getBoundingClientRect().bottom;
+      let p = 0;
+      if (t) { const r = t.getBoundingClientRect(); p = r.height ? clamp((navB - (r.top + r.height * .35)) / (r.height * .65), 0, 1) : 0; }
+      root.style.setProperty('--nb-title', p.toFixed(3));
+    };
+    const update = () => { if (!raf) raf = requestAnimationFrame(now); };
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+    now();
+    return { update };
+  }
+
+  // A sheet that rises from below (centred on wide screens), follows the finger by its top edge and can be flicked away.
+  function makeSheet(el, o) {
+    const panel = el.querySelector('.panel'), scrim = el.querySelector('.scrim'), content = el.querySelector('.sheet-content');
+    const s = new Spring(0, { response: .38 });
+    let H = 800, open = false, back = null;
+    s.onUpdate = (y) => { panel.style.transform = `translate3d(0,${y}px,0)`; scrim.style.opacity = (1 - clamp(y / H, 0, 1)).toFixed(3); };
+    const travel = () => { const r = panel.getBoundingClientRect(); return Math.max(240, innerHeight - (r.top - s.x) + 12); };
+    const bodyEl = () => content.querySelector('.dlg-body');
+    function show(html, key) {
+      const keep = open && el.dataset.key === key && bodyEl() ? bodyEl().scrollTop : 0;
+      content.innerHTML = html;
+      if (keep && bodyEl()) bodyEl().scrollTop = keep;
+      el.dataset.key = key;
+      if (open) return;
+      const wasHidden = el.hidden;
+      open = true;
+      back = document.activeElement;
+      el.hidden = false; el.classList.remove('closing');
+      o.onChange();
+      H = travel();
+      if (reduced()) {
+        s.jump(0);
+        if (panel.animate) { panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 }); scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 }); }
+      } else {
+        if (wasHidden) s.jump(H);
+        s.to(0, { damping: 1, response: .4 });   // from wherever it is now, so a sheet on its way out comes straight back
+      }
+      panel.focus({ preventScroll: true });
+    }
+    function hide(velocity = 0) {
+      if (!open) return;
+      open = false;
+      el.classList.add('closing');
+      o.onChange();
+      const ret = back; back = null;
+      if (ret && ret.isConnected && !ret.closest('[inert]') && ret !== document.body) ret.focus({ preventScroll: true }); else o.fallbackFocus();
+      const finish = () => { if (open) return; el.hidden = true; el.classList.remove('closing'); content.innerHTML = ''; delete el.dataset.key; };
+      if (reduced()) {
+        s.jump(H);
+        if (panel.animate) { panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).onfinish = finish; } else finish();
+        return;
+      }
+      s.to(H, { velocity, response: .34, onRest: finish });
+    }
+    let g = null; const tr = Tracker();
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || !open) return;
+      const h = e.target.closest('.grabber,.dlg-head');
+      if (!h || e.target.closest('button,a,input,select,textarea')) return;
+      s.stop();
+      g = { sy: e.clientY, y0: s.x, id: e.pointerId }; tr.clear(); tr.add(e);
+      try { h.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
+      el.classList.add('dragging');
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!g || e.pointerId !== g.id) return; tr.add(e);
+      let y = g.y0 + e.clientY - g.sy;
+      if (y < 0) y = -rubberband(-y, panel.offsetHeight);
+      s.x = y; s.v = 0; s.onUpdate(y);
+    });
+    const up = (e) => {
+      if (!g || e.pointerId !== g.id) return;
+      g = null; el.classList.remove('dragging'); tr.add(e);
+      const v = tr.v().y;
+      // Decide with where the flick would land, then hand the finger's speed to the spring.
+      if (s.x + project(v) > H * .42 && v > -150) o.onDismiss(v);
+      else s.to(0, { velocity: v, damping: 1, response: .36 });
+    };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    return { show, hide, get open() { return open; } };
+  }
+
+  // A confirmation that materialises in place (scale and fade together), as Apple alerts do.
+  function makeAlert(el, o) {
+    const box = el.querySelector('.box'), scrim = el.querySelector('.scrim');
+    const s = new Spring(0, { response: .3, precision: .002 });
+    s.onUpdate = (p) => { const q = clamp(p, 0, 1); box.style.opacity = q.toFixed(3); box.style.transform = `scale(${(1.1 - .1 * q).toFixed(4)})`; scrim.style.opacity = q.toFixed(3); };
+    let open = false, back = null;
+    function show(html) {
+      box.innerHTML = html;
+      if (open) return;
+      open = true; back = document.activeElement;
+      el.hidden = false; el.classList.remove('closing');
+      o.onChange();
+      if (reduced()) s.jump(1); else { if (!s.moving) s.jump(0); s.to(1, { damping: 1, response: .3 }); }
+      const f = box.querySelector('[data-focus]') || box.querySelector('button');
+      if (f) f.focus({ preventScroll: true });
+    }
+    function hide() {
+      if (!open) return;
+      open = false;
+      el.classList.add('closing');
+      o.onChange();
+      const ret = back; back = null;
+      if (ret && ret.isConnected && !ret.closest('[inert]') && ret !== document.body) ret.focus({ preventScroll: true }); else o.fallbackFocus();
+      const finish = () => { if (open) return; el.hidden = true; el.classList.remove('closing'); box.innerHTML = ''; };
+      if (reduced()) { s.jump(0); finish(); return; }
+      s.to(0, { damping: 1, response: .2, onRest: finish });
+    }
+    return { show, hide, get open() { return open; } };
+  }
+
+  return { Spring, reduced, clamp, initSeg, initTabs, fadeIn, slideIn, initChrome, makeSheet, makeAlert };
+})();
+</script>
+
+<script>
+'use strict';
+/* =====================================================================
+   FLR Annual Leave — reads and writes the FLR leave boards on monday.com
+   through the viewer's own monday.com connector.
+   ===================================================================== */
+
+const SERVER = 'monday.com';
+const TOOL = 'all_monday_api';
+let FORM_URL = '';   // the FLR Hub fills this in after sign-in (bridge.js): the link isn't in this public site
+
+const BOARDS = { req: '5105073088', alw: '5105073023', grp: '5105073015', clo: '5105073038', oth: '5105088856' };
+const BOARD_NAMES = {
+  req: 'FLR - Annual Leave Requests', alw: 'FLR - Leave Allowances', grp: 'FLR - Leave Groups',
+  clo: 'FLR - Bank Holidays & Closures', oth: 'FLR - Other Leave',
+};
+const REQ = {
+  employee: 'multi_selectfix3go54', dates: 'date_rangeguqisxa9', halfDay: 'single_select21isbzj',
+  notes: 'long_textpqrma3pp', email: 'emaild5yyc8lj', override: 'numeric_mm7myxeb',
+  decision: 'color_mm7m6q47', suggested: 'color_mm7ms2n8', allowanceCheck: 'color_mm7mch2p',
+  groupCheck: 'color_mm7m1hvs', workingDays: 'numeric_mm7mhjwa', leftAfter: 'numeric_mm7m3hg',
+  leaveGroup: 'text_mm7mb7d3', details: 'long_text_mm7mc2nk', staff: 'board_relation_mm7ms0ah',
+  decidedOn: 'date_mm7me598', managersNote: 'long_text_mm7mxp13',
+};
+const ALW = {
+  group: 'board_relation_mm7ms80n', allowance: 'numeric_mm7mkptt', shutdown: 'numeric_mm7m8qs9',
+  carried: 'numeric_mm7m314', booked: 'numeric_mm7mnq70', pending: 'numeric_mm7mb56e',
+};
+const GRP = { members: 'board_relation_mm7ms65q', maxOff: 'numeric_mm7m80jy', rules: 'long_text_mm7mjg7b' };
+const CLO = { date: 'date_mm7mny6j', type: 'color_mm7m8tgx' };
+// The Notes column on the other-leave board is never loaded: it can hold health information.
+const OTH = { dates: 'timerange_mm7mrm7g', halfDay: 'color_mm7mhgm1', workingDays: 'numeric_mm7mgar6', staff: 'board_relation_mm7mt3h4' };
+const OTHER_GROUP_TYPES = {
+  topics: 'Sick leave', group_mm7mmzt1: 'Unpaid leave', group_mm7mhhpx: 'Study leave',
+  group_mm7mafk9: 'Compassionate leave', group_mm7mq37s: 'Medical appointment',
+  group_mm7m3xrm: 'Maternity / paternity', group_mm7mazdm: 'TOIL',
+};
+const OTHER_TYPE_COLOURS = {
+  'Sick leave': '#df2f4a', 'Unpaid leave': '#7f5347', 'Study leave': '#784bd1',
+  'Compassionate leave': '#757575', 'Medical appointment': '#ff5ac4',
+  'Maternity / paternity': '#66ccff', 'TOIL': '#cab641',
+};
+const PLACEHOLDER_NAMES = ['leave request', 'incoming form answer', 'new item'];
+
+/* ---------------------------------------------------------------------
+   Leave rules — identical to the unit-tested module used by the monday app
+   --------------------------------------------------------------------- */
+const FIRST_LEAVE_YEAR = 2027;
+function toUTC(d) { const [y, m, day] = d.split('-').map(Number); return Date.UTC(y, m - 1, day); }
+function fromUTC(ms) { return new Date(ms).toISOString().slice(0, 10); }
+function addDays(d, n) { return fromUTC(toUTC(d) + n * 86400000); }
+function weekday(d) { return new Date(toUTC(d)).getUTCDay(); }
+function isWeekend(d) { const w = weekday(d); return w === 0 || w === 6; }
+function yearOf(d) { return Number(d.slice(0, 4)); }
+function cleanDate(v) {
+  if (!v || typeof v !== 'string') return null;
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
+}
+function todayInLondon(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const get = (t) => parts.find((p) => p.type === t).value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtDate(d, withYear = true) {
+  const [y, m, day] = d.split('-').map(Number);
+  return `${DOW[weekday(d)]} ${day} ${MON[m - 1]}${withYear ? ' ' + y : ''}`;
+}
+function fmtRange(from, to) {
+  if (!from) return 'No dates';
+  if (!to || to === from) return fmtDate(from);
+  return `${fmtDate(from, yearOf(from) !== yearOf(to))} – ${fmtDate(to)}`;
+}
+function fmtNum(n) { const r = Math.round(n * 10) / 10; return Number.isInteger(r) ? String(r) : r.toFixed(1); }
+function plural(n, word) { return `${fmtNum(n)} ${word}${n === 1 ? '' : 's'}`; }
+function normaliseName(s) { return (s || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+function decisionFromLabel(label) {
+  switch ((label || '').trim().toLowerCase()) {
+    case 'accepted': return 'accepted';
+    case 'denied': return 'denied';
+    case 'review': return 'review';
+    case 'cancelled': return 'cancelled';
+    default: return 'new';
+  }
+}
+function halfDayFromLabel(label) {
+  const l = (label || '').toLowerCase();
+  if (l.includes('morning')) return 'am';
+  if (l.includes('afternoon')) return 'pm';
+  return 'none';
+}
+const isPending = (r) => r.decision === 'new' || r.decision === 'review';
+const isActive = (r) => isPending(r) || r.decision === 'accepted';
+function leaveDays(req, bankHolidays) {
+  const out = { from: null, to: null, days: [], total: 0, byYear: {}, excluded: [], warnings: [], info: [] };
+  let from = req.from || req.to;
+  let to = req.to || req.from;
+  if (!from) { out.warnings.push('No leave dates on the request.'); return out; }
+  if (to < from) [from, to] = [to, from];
+  out.from = from; out.to = to;
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    if (isWeekend(d)) continue;
+    if (bankHolidays.has(d)) { out.excluded.push({ date: d, name: bankHolidays.get(d) }); continue; }
+    out.days.push({ date: d, amount: 1 });
+  }
+  if (req.halfDay && req.halfDay !== 'none' && out.days.length > 0) {
+    const label = req.halfDay === 'am' ? 'morning off' : 'afternoon off';
+    if (out.days.length === 1) { out.days[0].amount = 0.5; out.info.push(`Half day (${label}).`); }
+    else {
+      out.days[out.days.length - 1].amount = 0.5;
+      out.warnings.push(`Half day (${label}) was chosen on a multi-day request, so the last day is counted as a half day. Check the employee's notes.`);
+    }
+  }
+  if (out.days.length === 0) out.warnings.push('The dates contain no working days (only weekends or bank holidays).');
+  const override = req.daysOverride;
+  if (override !== null && override !== undefined && override !== '' && !Number.isNaN(Number(override)) && Number(override) >= 0) {
+    out.total = Number(override);
+    out.byYear = { [yearOf(out.days[0] ? out.days[0].date : from)]: out.total };
+    out.info.push(`Days override used: ${fmtNum(out.total)} days.`);
+  } else {
+    for (const { date, amount } of out.days) {
+      out.total += amount;
+      const y = yearOf(date);
+      out.byYear[y] = (out.byYear[y] || 0) + amount;
+    }
+  }
+  return out;
+}
+function buildContext({ requests, staff, groups, bankHolidays, today, otherLeave = [] }) {
+  const staffById = new Map(staff.map((s) => [String(s.id), s]));
+  const staffByName = new Map();
+  for (const s of staff) { const key = normaliseName(s.name); if (key && !staffByName.has(key)) staffByName.set(key, s); }
+  const groupById = new Map(groups.map((g) => [String(g.id), g]));
+  const membersByGroup = new Map(groups.map((g) => [String(g.id), new Set((g.memberIds || []).map(String))]));
+  const groupsByStaff = new Map(staff.map((s) => [String(s.id), new Set()]));
+  for (const g of groups) for (const m of g.memberIds || []) if (groupsByStaff.has(String(m))) groupsByStaff.get(String(m)).add(String(g.id));
+  for (const s of staff) {
+    for (const gid of s.groupIds || []) {
+      if (!groupById.has(String(gid))) continue;
+      groupsByStaff.get(String(s.id)).add(String(gid));
+      membersByGroup.get(String(gid)).add(String(s.id));
+    }
+  }
+  const ctx = {
+    requests, staff, groups, bankHolidays, today,
+    currentYear: Math.max(yearOf(today), FIRST_LEAVE_YEAR),
+    staffById, staffByName, groupById, membersByGroup, groupsByStaff, _days: new Map(),
+  };
+  ctx.daysOf = (r) => { if (!ctx._days.has(r.id)) ctx._days.set(r.id, leaveDays(r, bankHolidays)); return ctx._days.get(r.id); };
+  ctx.staffOf = (r) => {
+    if (r.staffId && staffById.has(String(r.staffId))) return staffById.get(String(r.staffId));
+    return staffByName.get(normaliseName(r.employeeName)) || null;
+  };
+  ctx.groupsOf = (s) => (s ? [...(groupsByStaff.get(String(s.id)) || [])].map((id) => groupById.get(id)) : []);
+  ctx.otherLeave = otherLeave;
+  ctx._otherDays = new Map();
+  ctx.otherDaysOf = (e) => {
+    if (!ctx._otherDays.has(e.id)) ctx._otherDays.set(e.id, leaveDays({ ...e, daysOverride: null }, bankHolidays));
+    return ctx._otherDays.get(e.id);
+  };
+  ctx.otherStaffOf = (e) => {
+    if (e.staffId && staffById.has(String(e.staffId))) return staffById.get(String(e.staffId));
+    return staffByName.get(normaliseName(e.employeeName)) || null;
+  };
+  return ctx;
+}
+function whoIsOffOther(ctx, date) {
+  const out = [];
+  if (isWeekend(date) || ctx.bankHolidays.has(date)) return out;
+  for (const e of ctx.otherLeave) {
+    const entry = ctx.otherDaysOf(e).days.find((x) => x.date === date);
+    if (entry) out.push({ entry: e, staff: ctx.otherStaffOf(e), type: e.type, amount: entry.amount });
+  }
+  return out;
+}
+function otherTotalsFor(ctx, s, year) {
+  const totals = {};
+  for (const e of ctx.otherLeave) {
+    const owner = ctx.otherStaffOf(e);
+    if (!owner || String(owner.id) !== String(s.id)) continue;
+    const n = ctx.otherDaysOf(e).byYear[year] || 0;
+    if (n) totals[e.type] = (totals[e.type] || 0) + n;
+  }
+  return totals;
+}
+function maxOffOf(g) { const n = Number(g && g.maxOff); return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1; }
+function balanceFor(ctx, s, year, excludeId = null) {
+  const inCurrent = year === ctx.currentYear;
+  const allowance = Number(s.allowance) || 0;
+  const reserved = Number(s.shutdownReserve) || 0;
+  const carried = inCurrent ? Number(s.carriedOver) || 0 : 0;
+  const takenBefore = inCurrent ? Number(s.takenBefore) || 0 : 0;
+  let booked = 0, pending = 0;
+  for (const r of ctx.requests) {
+    if (r.id === excludeId) continue;
+    const owner = ctx.staffOf(r);
+    if (!owner || String(owner.id) !== String(s.id)) continue;
+    const n = ctx.daysOf(r).byYear[year] || 0;
+    if (r.decision === 'accepted') booked += n; else if (isPending(r)) pending += n;
+  }
+  const entitlement = allowance - reserved + carried;
+  const remaining = entitlement - takenBefore - booked;
+  return {
+    allowance, reserved, carried, takenBefore, booked, pending, entitlement,
+    remaining, remainingIfPending: remaining - pending,
+    allowanceMissing: s.allowance === null || s.allowance === undefined || s.allowance === '',
+  };
+}
+function evaluateRequest(ctx, req) {
+  const days = ctx.daysOf(req);
+  const s = ctx.staffOf(req);
+  const res = {
+    requestId: req.id, staff: s, days, years: [], allowanceStatus: 'Not on allowance board',
+    groupStatus: 'No group set', groups: [], clashDays: 0, clashWithAccepted: false,
+    suggested: 'Review', reason: '', leftAfter: null, groupNames: '', details: '',
+  };
+  const lines = [];
+  lines.push(`Dates: ${fmtRange(days.from, days.to)} = ${plural(days.total, 'working day')} (weekends and bank holidays not counted).`);
+  if (days.excluded.length) lines.push(`Bank holidays not counted: ${days.excluded.map((e) => `${fmtDate(e.date)} (${e.name})`).join(', ')}.`);
+  for (const i of days.info) lines.push(i);
+  for (const w of days.warnings) lines.push(`Warning: ${w}`);
+  if (days.from && days.from < ctx.today) lines.push('Note: these dates start in the past.');
+  if (!s) {
+    lines.push(`"${req.employeeName || '(no name)'}" was not found on the FLR - Leave Allowances board, so allowance and group checks could not run. Add them there (the name must match the form exactly).`);
+    res.reason = 'Employee not found on the allowance board';
+    lines.push(`Suggested: Review – ${res.reason}.`);
+    res.details = lines.join('\n');
+    return res;
+  }
+  let over = false;
+  let preTracker = 0;
+  const years = Object.keys(days.byYear).map(Number).sort();
+  if (years.length === 0 && days.from) years.push(yearOf(days.from));
+  for (const y of years) {
+    if (y < FIRST_LEAVE_YEAR) { preTracker += days.byYear[y] || 0; continue; }
+    const b = balanceFor(ctx, s, y, req.id);
+    const thisReq = days.byYear[y] || 0;
+    const leftAfter = b.remaining - thisReq;
+    const leftIfPending = leftAfter - b.pending;
+    res.years.push({ year: y, ...b, thisRequest: thisReq, leftAfter, leftIfPending });
+    if (leftAfter < 0) over = true;
+    let line = `Allowance ${y}: ${fmtNum(b.allowance)} days`;
+    if (b.reserved) line += ` − ${fmtNum(b.reserved)} held for the Christmas shutdown`;
+    if (b.carried) line += ` + ${fmtNum(b.carried)} carried over`;
+    if (b.reserved || b.carried) line += ` = ${fmtNum(b.entitlement)} bookable`;
+    line += `. Used: ${fmtNum(b.booked)} accepted`;
+    if (b.takenBefore) line += ` + ${fmtNum(b.takenBefore)} taken before the tracker`;
+    line += `. This request: ${fmtNum(thisReq)} → ${fmtNum(leftAfter)} left after this.`;
+    if (b.pending) line += ` Other pending requests: ${fmtNum(b.pending)} days (${fmtNum(leftIfPending)} left if they are accepted too).`;
+    if (b.allowanceMissing) line += ' (No annual allowance set on the allowance board – counted as 0.)';
+    lines.push(line);
+  }
+  const startsBeforeTracker = Boolean(days.from && yearOf(days.from) < FIRST_LEAVE_YEAR);
+  if (startsBeforeTracker) lines.push(`Note: ${plural(preTracker, 'day')} fall before the tracker starts on 1 Jan ${FIRST_LEAVE_YEAR}, so they are not checked against the allowance.`);
+  const primary = res.years.find((y) => days.from && y.year === yearOf(days.days[0] ? days.days[0].date : days.from)) || res.years[0];
+  res.leftAfter = primary ? primary.leftAfter : null;
+  res.allowanceStatus = over ? 'Over allowance' : 'Within allowance';
+  const groups = ctx.groupsOf(s).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+  res.groupNames = groups.map((g) => g.name).join(', ');
+  if (groups.length === 0) {
+    res.groupStatus = 'No group set';
+    lines.push('Leave group: none set, so clashes could not be checked. Add this person to a group on FLR - Leave Groups.');
+  } else {
+    let anyClash = false;
+    for (const g of groups) {
+      const limit = maxOffOf(g);
+      const members = ctx.membersByGroup.get(String(g.id)) || new Set();
+      const clashes = [];
+      for (const { date } of days.days) {
+        const others = new Map();
+        for (const r2 of ctx.requests) {
+          if (r2.id === req.id || !isActive(r2)) continue;
+          const s2 = ctx.staffOf(r2);
+          if (!s2 || String(s2.id) === String(s.id) || !members.has(String(s2.id))) continue;
+          const d2 = ctx.daysOf(r2);
+          if (!d2.from || date < d2.from || date > d2.to) continue;
+          const status = r2.decision === 'accepted' ? 'accepted' : 'pending';
+          const half = d2.days.find((x) => x.date === date && x.amount === 0.5) ? ' (half day)' : '';
+          const prev = others.get(String(s2.id));
+          if (!prev || (prev.status !== 'accepted' && status === 'accepted')) others.set(String(s2.id), { name: s2.name, status, half });
+        }
+        const list = [...others.values()];
+        const acceptedOthers = list.filter((o) => o.status === 'accepted').length;
+        if (1 + list.length > limit) clashes.push({ date, others: list, headcount: 1 + list.length, withAccepted: 1 + acceptedOthers > limit });
+      }
+      res.groups.push({ id: g.id, name: g.name, limit, rules: g.rules || '', clashes });
+      if (clashes.length) {
+        anyClash = true;
+        res.clashDays += clashes.length;
+        if (clashes.some((c) => c.withAccepted)) res.clashWithAccepted = true;
+        const shown = clashes.slice(0, 6).map((c) => `${fmtDate(c.date, false)}: ${c.others.map((o) => `${o.name} – ${o.status}${o.half}`).join(', ')}`);
+        const more = clashes.length > 6 ? ` …and ${clashes.length - 6} more day(s)` : '';
+        lines.push(`Group "${g.name}" (max ${limit} off at once): CLASH on ${plural(clashes.length, 'day')} – ${shown.join('; ')}${more}.`);
+      } else {
+        lines.push(`Group "${g.name}" (max ${limit} off at once): no clash.`);
+      }
+      if (g.rules) lines.push(`Group rules: ${g.rules}`);
+    }
+    res.groupStatus = anyClash ? 'Clash' : 'No clash';
+  }
+  if (over) { res.suggested = 'Deny'; res.reason = 'not enough allowance left'; }
+  else if (startsBeforeTracker) { res.suggested = 'Review'; res.reason = `some dates are before the tracker starts on 1 Jan ${FIRST_LEAVE_YEAR}`; }
+  else if (res.groupStatus === 'Clash') {
+    res.suggested = 'Review';
+    res.reason = res.clashWithAccepted ? 'too many people in the group would be off (clashes with accepted leave)' : 'clashes with other pending requests in the group';
+  } else if (res.groupStatus === 'No group set') { res.suggested = 'Review'; res.reason = 'no leave group set, so clashes could not be checked'; }
+  else if (days.warnings.length) { res.suggested = 'Review'; res.reason = days.warnings[0].replace(/\.$/, ''); }
+  else { res.suggested = 'Accept'; res.reason = 'within allowance and no group clash'; }
+  lines.push(`Suggested: ${res.suggested} – ${res.reason}.`);
+  res.details = lines.join('\n');
+  return res;
+}
+function whoIsOff(ctx, date, { includePending = true } = {}) {
+  const out = [];
+  if (isWeekend(date) || ctx.bankHolidays.has(date)) return out;
+  for (const r of ctx.requests) {
+    if (!(r.decision === 'accepted' || (includePending && isPending(r)))) continue;
+    const entry = ctx.daysOf(r).days.find((x) => x.date === date);
+    if (entry) out.push({ request: r, staff: ctx.staffOf(r), amount: entry.amount });
+  }
+  return out;
+}
+
+/* ---------------------------------------------------------------------
+   State
+   --------------------------------------------------------------------- */
+const today = todayInLondon();
+const startMonth = (() => {
+  const y = yearOf(today), m = Number(today.slice(5, 7)) - 1;
+  return y * 12 + m >= FIRST_LEAVE_YEAR * 12 ? { y, m } : { y: FIRST_LEAVE_YEAR, m: 0 };
+})();
+const state = {
+  tab: 'approvals',
+  mcp: undefined,          // undefined = not resolved yet, null = unavailable
+  loading: true,
+  data: null,
+  ctx: null,
+  evals: new Map(),
+  error: null,
+  access: [],
+  lastLoaded: null,
+  viewer: 'the approver',
+  savingCount: 0,
+  recheck: false,
+  busy: null,
+  notes: {},
+  panel: null,
+  confirm: null,
+  diary: { y: startMonth.y, m: startMonth.m, group: 'all', search: '', pending: true, other: true, mode: 'planner' },
+  bal: { year: Math.max(yearOf(today), FIRST_LEAVE_YEAR), search: '', group: 'all', sort: 'name', dir: 1 },
+  all: { search: '', decision: 'any', year: 'any' },
+};
+try {
+  const t = localStorage.getItem('flr-leave-tab');
+  if (['approvals', 'diary', 'balances', 'requests'].includes(t)) state.tab = t;
+} catch (e) { /* storage unavailable */ }
+
+/* ---------------------------------------------------------------------
+   monday.com access
+   --------------------------------------------------------------------- */
+async function gql(query, variables, { read = false } = {}) {
+  const input = { query, variables: JSON.stringify(variables || {}) };
+  let attempt = 0;
+  for (;;) {
+    try {
+      const res = await state.mcp.callTool(SERVER, TOOL, input, { cache: false });
+      let p = res && res.payload;
+      if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) { /* not JSON */ } }
+      if (typeof p === 'string' || p === null || p === undefined) {
+        throw { code: 'tool_error', message: typeof p === 'string' ? p : 'monday.com returned an empty answer.' };
+      }
+      return p;
+    } catch (err) {
+      if (read && attempt === 0 && err && err.retryable) {
+        attempt++;
+        const wait = Math.min(err.retryAfterMs || (1200 + Math.random() * 1800), 8000);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+const COLS = `id text value ... on StatusValue { label } ... on NumbersValue { number } ... on DateValue { date } ... on TimelineValue { from to } ... on BoardRelationValue { linked_item_ids }`;
+const ITEM = `id name created_at group { id title } column_values(ids: $COLS) { ${COLS} }`;
+const BOARD_KEYS = ['req', 'alw', 'grp', 'clo', 'oth'];
+const BOARD_COLS = {
+  req: Object.values(REQ), alw: Object.values(ALW), grp: Object.values(GRP), clo: Object.values(CLO), oth: Object.values(OTH),
+};
+const LOAD_QUERY = `query (${BOARD_KEYS.map((k) => `$${k}: ID!, $${k}Cols: [String!]`).join(', ')}) {
+  me { name }
+  ${BOARD_KEYS.map((k) => `${k}: boards(ids: [$${k}]) { items_page(limit: 250) { cursor items { ${ITEM.replace('$COLS', `$${k}Cols`)} } } }`).join('\n  ')}
+}`;
+const NEXT_QUERY = `query ($cursor: String!, $cols: [String!]) { next_items_page(cursor: $cursor, limit: 250) { cursor items { ${ITEM.replace('$COLS', '$cols')} } } }`;
+
+async function loadBoards() {
+  const vars = {};
+  for (const k of BOARD_KEYS) { vars[k] = BOARDS[k]; vars[`${k}Cols`] = BOARD_COLS[k]; }
+  const p = await gql(LOAD_QUERY, vars, { read: true });
+  const out = { me: p.me && p.me.name, items: {}, missing: [] };
+  for (const k of BOARD_KEYS) {
+    const boards = p[k] || [];
+    if (!boards.length) { out.missing.push(BOARD_NAMES[k]); out.items[k] = []; continue; }
+    const page = boards[0].items_page || { items: [] };
+    const items = [...(page.items || [])];
+    let cursor = page.cursor;
+    for (let guard = 0; cursor && guard < 40; guard++) {
+      const n = await gql(NEXT_QUERY, { cursor, cols: BOARD_COLS[k] }, { read: true });
+      const np = n.next_items_page || {};
+      items.push(...(np.items || []));
+      cursor = np.cursor;
+    }
+    out.items[k] = items;
+  }
+  return out;
+}
+
+function cv(it) { const m = {}; for (const c of it.column_values || []) m[c.id] = c; return m; }
+function num(c) {
+  if (c && typeof c.number === 'number') return c.number;
+  const t = ((c && c.text) || '').trim();
+  if (!t) return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+function lab(c) { const v = c ? (c.label != null ? c.label : c.text) : null; return v && String(v).trim() ? String(v) : null; }
+function txt(c) { const v = c ? c.text : null; return v && String(v).trim() ? String(v) : null; }
+function links(c) {
+  if (c && Array.isArray(c.linked_item_ids)) return c.linked_item_ids.map(String);
+  try {
+    const p = JSON.parse((c && c.value) || 'null');
+    if (p && Array.isArray(p.linkedPulseIds)) return p.linkedPulseIds.map((x) => String(x.linkedPulseId));
+  } catch (e) { /* ignore */ }
+  return [];
+}
+function timeline(c) {
+  let p = null;
+  try { p = JSON.parse((c && c.value) || 'null'); } catch (e) { /* ignore */ }
+  return { from: cleanDate(c && c.from) || cleanDate(p && p.from), to: cleanDate(c && c.to) || cleanDate(p && p.to) };
+}
+
+function mapData(raw) {
+  const requests = raw.items.req.map((it) => {
+    const c = cv(it), d = timeline(c[REQ.dates]), staffIds = links(c[REQ.staff]);
+    const decidedOn = c[REQ.decidedOn] ? cleanDate(c[REQ.decidedOn].date || c[REQ.decidedOn].text) : null;
+    return {
+      id: String(it.id), name: it.name || '', employeeName: (txt(c[REQ.employee]) || '').split(',')[0].trim(),
+      staffId: staffIds[0] || null, from: d.from, to: d.to, halfDay: halfDayFromLabel(lab(c[REQ.halfDay])),
+      decision: decisionFromLabel(lab(c[REQ.decision])), daysOverride: num(c[REQ.override]),
+      notes: txt(c[REQ.notes]) || '', createdAt: it.created_at, email: txt(c[REQ.email]),
+      cur: {
+        suggested: lab(c[REQ.suggested]), allowanceCheck: lab(c[REQ.allowanceCheck]), groupCheck: lab(c[REQ.groupCheck]),
+        workingDays: num(c[REQ.workingDays]), leftAfter: num(c[REQ.leftAfter]), leaveGroup: txt(c[REQ.leaveGroup]),
+        details: txt(c[REQ.details]), staffIds, decidedOn, managersNote: txt(c[REQ.managersNote]),
+      },
+    };
+  });
+  const staff = raw.items.alw.map((it) => {
+    const c = cv(it);
+    return {
+      id: String(it.id), name: it.name || '', groupIds: links(c[ALW.group]), allowance: num(c[ALW.allowance]),
+      shutdownReserve: num(c[ALW.shutdown]), carriedOver: num(c[ALW.carried]), takenBefore: null,
+      savedBooked: num(c[ALW.booked]), savedPending: num(c[ALW.pending]),
+    };
+  });
+  const groups = raw.items.grp.map((it) => {
+    const c = cv(it);
+    return { id: String(it.id), name: it.name || '', memberIds: links(c[GRP.members]), maxOff: num(c[GRP.maxOff]), rules: txt(c[GRP.rules]) || '' };
+  });
+  const bankHolidays = new Map(), closureTypes = new Map();
+  for (const it of raw.items.clo) {
+    const c = cv(it);
+    const d = c[CLO.date] ? cleanDate(c[CLO.date].date || c[CLO.date].text) : null;
+    if (!d) continue;
+    bankHolidays.set(d, it.name || 'Bank holiday');
+    closureTypes.set(d, lab(c[CLO.type]) || 'Bank holiday');
+  }
+  const other = raw.items.oth.map((it) => {
+    const c = cv(it), d = timeline(c[OTH.dates]), staffIds = links(c[OTH.staff]);
+    const gid = it.group && it.group.id;
+    return {
+      id: 'o' + it.id, itemId: String(it.id), employeeName: it.name || '', staffId: staffIds[0] || null,
+      type: OTHER_GROUP_TYPES[gid] || (it.group && it.group.title) || 'Other leave',
+      from: d.from, to: d.to, halfDay: halfDayFromLabel(lab(c[OTH.halfDay])),
+      cur: { workingDays: num(c[OTH.workingDays]), staffIds },
+    };
+  });
+  return { requests, staff, groups, bankHolidays, closureTypes, other, today };
+}
+
+function rebuild() {
+  const d = state.data;
+  state.ctx = buildContext({ requests: d.requests, staff: d.staff, groups: d.groups, bankHolidays: d.bankHolidays, today: d.today, otherLeave: d.other });
+  state.evals = new Map();
+}
+function evaluate(r) {
+  if (!state.evals.has(r.id)) state.evals.set(r.id, evaluateRequest(state.ctx, r));
+  return state.evals.get(r.id);
+}
+
+/* ---------------------------------------------------------------------
+   Write-back: keep the board's check columns and balances in step
+   --------------------------------------------------------------------- */
+const r1 = (n) => Math.round(n * 10) / 10;
+const asStr = (n) => (n === null || n === undefined ? '' : String(r1(n)));
+function isPlaceholder(name) { const t = (name || '').trim().toLowerCase(); return !t || PLACEHOLDER_NAMES.includes(t); }
+
+function computeWrites() {
+  const ctx = state.ctx, writes = [];
+  for (const r of state.data.requests) {
+    const v = {}, cur = r.cur, owner = ctx.staffOf(r), d = ctx.daysOf(r), after = {};
+    if (isPending(r)) {
+      const res = evaluate(r);
+      if (cur.suggested !== res.suggested) { v[REQ.suggested] = { label: res.suggested }; after.suggested = res.suggested; }
+      if (cur.allowanceCheck !== res.allowanceStatus) { v[REQ.allowanceCheck] = { label: res.allowanceStatus }; after.allowanceCheck = res.allowanceStatus; }
+      if (cur.groupCheck !== res.groupStatus) { v[REQ.groupCheck] = { label: res.groupStatus }; after.groupCheck = res.groupStatus; }
+      if (asStr(cur.workingDays) !== asStr(res.days.total)) { v[REQ.workingDays] = String(res.days.total); after.workingDays = res.days.total; }
+      if (asStr(cur.leftAfter) !== asStr(res.leftAfter)) { v[REQ.leftAfter] = asStr(res.leftAfter); after.leftAfter = res.leftAfter; }
+      const gt = res.groupNames || '—';
+      if ((cur.leaveGroup || '') !== gt) { v[REQ.leaveGroup] = gt; after.leaveGroup = gt; }
+      if ((cur.details || '') !== res.details) { v[REQ.details] = { text: res.details }; after.details = res.details; }
+    } else if (cur.workingDays === null && d.days.length > 0) {
+      v[REQ.workingDays] = String(d.total); after.workingDays = d.total;
+    }
+    if (owner && cur.staffIds.length === 0) { v[REQ.staff] = { item_ids: [Number(owner.id)] }; after.staffIds = [String(owner.id)]; }
+    let rename = null;
+    if (owner && isPlaceholder(r.name)) { v.name = owner.name; rename = owner.name; }
+    if (Object.keys(v).length) writes.push({ board: BOARDS.req, item: r.id, values: v, apply: () => { Object.assign(cur, after); if (rename) r.name = rename; } });
+  }
+  for (const s of state.data.staff) {
+    const b = balanceFor(ctx, s, ctx.currentYear), v = {};
+    if (asStr(s.savedBooked) !== asStr(b.booked)) v[ALW.booked] = String(r1(b.booked));
+    if (asStr(s.savedPending) !== asStr(b.pending)) v[ALW.pending] = String(r1(b.pending));
+    if (Object.keys(v).length) writes.push({ board: BOARDS.alw, item: s.id, values: v, apply: () => { s.savedBooked = r1(b.booked); s.savedPending = r1(b.pending); } });
+  }
+  for (const e of state.data.other) {
+    const v = {}, owner = ctx.otherStaffOf(e), d = ctx.otherDaysOf(e);
+    if (owner && e.cur.staffIds.length === 0) v[OTH.staff] = { item_ids: [Number(owner.id)] };
+    if (d.days.length && asStr(e.cur.workingDays) !== asStr(d.total)) v[OTH.workingDays] = String(d.total);
+    if (Object.keys(v).length) writes.push({ board: BOARDS.oth, item: e.itemId, values: v, apply: () => { if (owner) e.cur.staffIds = [String(owner.id)]; e.cur.workingDays = d.total; } });
+  }
+  return writes;
+}
+
+async function saveChecks() {
+  if (state.savingCount) { state.recheck = true; return; }
+  const writes = computeWrites();
+  if (!writes.length) return;
+  state.savingCount = writes.length;
+  renderSaving();
+  try {
+    for (let i = 0; i < writes.length; i += 10) {
+      const batch = writes.slice(i, i + 10);
+      const args = [], body = [], vars = {};
+      batch.forEach((w, j) => {
+        args.push(`$b${j}: ID!, $i${j}: ID!, $v${j}: JSON!`);
+        body.push(`w${j}: change_multiple_column_values(board_id: $b${j}, item_id: $i${j}, column_values: $v${j}) { id }`);
+        vars[`b${j}`] = w.board; vars[`i${j}`] = w.item; vars[`v${j}`] = JSON.stringify(w.values);
+      });
+      await gql(`mutation (${args.join(', ')}) { ${body.join(' ')} }`, vars);
+      batch.forEach((w) => w.apply());
+      state.savingCount = Math.max(0, writes.length - i - batch.length);
+      renderSaving();
+    }
+  } catch (err) {
+    showToast('The checks could not be saved to monday.com. They will be saved on the next refresh.');
+  } finally {
+    state.savingCount = 0;
+    renderSaving();
+    if (state.recheck) { state.recheck = false; saveChecks(); }
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Loading
+   --------------------------------------------------------------------- */
+async function load() {
+  if (!state.mcp) return;
+  state.loading = true;
+  state.error = null;
+  renderChrome();
+  try {
+    const raw = await loadBoards();
+    state.viewer = raw.me || state.viewer;
+    state.access = raw.missing;
+    state.data = mapData(raw);
+    rebuild();
+    state.lastLoaded = new Date();
+  } catch (err) {
+    state.error = err || { code: 'upstream_error', message: 'Unknown error' };
+  } finally {
+    state.loading = false;
+    renderAll();
+  }
+  if (state.data && !state.error && !staffView()) saveChecks();   // staff on the FLR Hub only see their own leave: nothing to check
+}
+
+/* ---------------------------------------------------------------------
+   Decisions
+   --------------------------------------------------------------------- */
+const DECISION_ICON = { Accepted: '✅', Denied: '❌', Review: '🔍', Cancelled: '❌', 'New request': '🔄' };
+const DECISION_VERB = { Accepted: 'Accepted', Denied: 'Denied', Review: 'Sent to review', Cancelled: 'Cancelled', 'New request': 'Re-opened' };
+
+async function decide(id, action) {
+  const r = state.data && state.data.requests.find((x) => x.id === id);
+  if (!r || state.busy) return;
+  const note = (state.notes[id] || '').trim();
+  const details = isPending(r) ? evaluate(r).details : (r.cur.details || '');
+  const values = { [REQ.decision]: { label: action }, [REQ.decidedOn]: { date: todayInLondon() } };
+  if (note) values[REQ.managersNote] = { text: note };
+  state.busy = id;
+  renderAll();
+  try {
+    await gql('mutation ($b: ID!, $i: ID!, $v: JSON!) { change_multiple_column_values(board_id: $b, item_id: $i, column_values: $v) { id } }',
+      { b: BOARDS.req, i: id, v: JSON.stringify(values) });
+  } catch (err) {
+    state.busy = null;
+    renderAll();
+    showToast(`That decision was not saved: ${describeError(err).body}`);
+    return;
+  }
+  const bodyText = `${DECISION_ICON[action]} ${DECISION_VERB[action]} by ${state.viewer} on ${fmtDate(todayInLondon())}.` +
+    (note ? `\nNote: ${note}` : '') + (details ? `\n\nChecks at the time of the decision:\n${details}` : '');
+  try {
+    await gql('mutation ($i: ID!, $body: String!) { create_update(item_id: $i, body: $body) { id } }',
+      { i: id, body: escapeHtml(bodyText).replace(/\n/g, '<br>') });
+  } catch (err) {
+    showToast('Decision saved. The note on the monday.com item could not be added.');
+  }
+  delete state.notes[id];
+  state.busy = null;
+  showToast(`${displayName(r)}: ${DECISION_VERB[action].toLowerCase()}.`);
+  await load();
+}
+
+/* ---------------------------------------------------------------------
+   Helpers
+   --------------------------------------------------------------------- */
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+const esc = escapeHtml;
+function displayName(r) {
+  if (r.employeeName) return r.employeeName;
+  return isPlaceholder(r.name) ? 'Unnamed request' : r.name;
+}
+function describeError(e) {
+  const code = (e && e.code) || 'server_error';
+  const msg = (e && e.message) || '';
+  switch (code) {
+    case 'FLR_FORBIDDEN': return { title: 'Only leave approvers can do that', body: msg || 'Ask an FLR administrator if you should approve leave.' };
+    case 'FLR_SIGN_IN_REQUIRED': return { title: 'Sign in again', body: msg || 'Your FLR sign-in has expired. Go back to the FLR Hub, sign in, then try again.' };
+    case 'FLR_VALIDATION': return { title: 'That change isn’t allowed', body: msg || 'The FLR server refused it. Nothing was changed.' };
+    case 'tool_error': return { title: 'monday.com refused the change', body: msg || 'monday.com reported an error. Nothing was changed.' };
+    case 'not_configured': return { title: 'Annual Leave isn’t connected to monday.com yet', body: msg || 'The monday.com key hasn’t been added to the FLR server.' };
+    case 'offline': return { title: 'Can’t reach the FLR server', body: msg || 'Check your connection, then press Refresh.' };
+    default: return { title: 'Something went wrong', body: msg || 'The FLR server couldn’t finish that. Press Refresh to try again.' };
+  }
+}
+let toastTimer = null;
+function showToast(message) {
+  const host = document.getElementById('toast-host');
+  host.innerHTML = `<div class="toast">${esc(message)}</div>`;
+  const el = host.firstChild;
+  if (!FLRUI.reduced() && el.animate) el.animate([{ opacity: 0, transform: 'translate3d(0,14px,0) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.25,1,.5,1)' });
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    const t = host.firstChild;
+    if (!t) return;
+    if (FLRUI.reduced() || !t.animate) { host.innerHTML = ''; return; }
+    t.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translate3d(0,8px,0) scale(.98)' }], { duration: 220, easing: 'ease-in', fill: 'forwards' })
+      .onfinish = () => { if (host.firstChild === t) host.innerHTML = ''; };
+  }, 4200);
+}
+function pillFor(decision) {
+  switch (decision) {
+    case 'accepted': return '<span class="pill ok">Accepted</span>';
+    case 'denied': return '<span class="pill deny">Denied</span>';
+    case 'review': return '<span class="pill review">Review</span>';
+    case 'cancelled': return '<span class="pill grey">Cancelled</span>';
+    default: return '<span class="pill new">New request</span>';
+  }
+}
+function suggestPill(s) {
+  const cls = s === 'Accept' ? 'ok' : s === 'Deny' ? 'deny' : 'review';
+  return `<span class="pill sug ${cls}">Suggested: ${esc(s)}</span>`;
+}
+function monthName(y, m) { return new Date(Date.UTC(y, m, 1)).toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+function monthDays(y, m) {
+  const out = [], last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  for (let d = 1; d <= last; d++) out.push(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+  return out;
+}
+function closureClass(d) {
+  const t = state.data.closureTypes.get(d);
+  if (!t) return '';
+  if (/shutdown/i.test(t)) return 'closed-shut';
+  if (/jeff/i.test(t)) return 'closed-jeff';
+  return 'closed-bh';
+}
+function workingWindow(first, last, pad = 3) {
+  const isWork = (d) => !isWeekend(d) && !state.ctx.bankHolidays.has(d);
+  const before = [];
+  let cur = first;
+  for (let i = 0; i < 40 && before.length < pad; i++) { cur = addDays(cur, -1); if (isWork(cur)) before.unshift(cur); }
+  const mid = [];
+  for (let d = first; d <= last; d = addDays(d, 1)) if (isWork(d)) mid.push(d);
+  const after = [];
+  cur = last;
+  for (let i = 0; i < 40 && after.length < pad; i++) { cur = addDays(cur, 1); if (isWork(cur)) after.push(cur); }
+  return [...before, ...mid, ...after];
+}
+// staff id -> date -> { kind:'annual'|'other', decision, type, amount, request, entry }
+function offMap(dates, { pending = true, other = true } = {}) {
+  const ctx = state.ctx, map = new Map();
+  const put = (sid, date, cell) => {
+    if (!map.has(sid)) map.set(sid, new Map());
+    const row = map.get(sid), prev = row.get(date);
+    const rank = (c) => (c.kind === 'annual' ? (c.decision === 'accepted' ? 3 : 2) : 1);
+    if (!prev || rank(cell) > rank(prev)) row.set(date, cell);
+  };
+  for (const date of dates) {
+    for (const e of whoIsOff(ctx, date, { includePending: pending })) {
+      if (e.staff) put(String(e.staff.id), date, { kind: 'annual', decision: e.request.decision, amount: e.amount, request: e.request });
+    }
+    if (other) for (const e of whoIsOffOther(ctx, date)) {
+      if (e.staff) put(String(e.staff.id), date, { kind: 'other', type: e.type, amount: e.amount, entry: e.entry });
+    }
+  }
+  return map;
+}
+function cellHtml(cell, dateLabel) {
+  if (!cell) return '';
+  const half = cell.amount === 0.5 ? (cell.kind === 'annual' ? (cell.request.halfDay === 'pm' ? ' half-pm' : ' half-am') : (cell.entry.halfDay === 'pm' ? ' half-pm' : ' half-am')) : '';
+  if (cell.kind === 'annual') {
+    const r = cell.request, cls = r.decision === 'accepted' ? 'accepted' : r.decision === 'review' ? 'review' : 'new';
+    const status = r.decision === 'accepted' ? 'Accepted' : r.decision === 'review' ? 'Review' : 'New request';
+    const title = `${displayName(r)} · annual leave · ${fmtRange(r.from, r.to)}${cell.amount === 0.5 ? ' · half day' : ''} · ${status}`;
+    return `<button class="fill ${cls}${half}" data-act="open" data-id="${esc(r.id)}" title="${esc(title)}" aria-label="${esc(title)}"></button>`;
+  }
+  const colour = OTHER_TYPE_COLOURS[cell.type] || '#c4c4c4';
+  const e = cell.entry;
+  const title = `${e.employeeName} · ${cell.type} · ${fmtRange(e.from, e.to)}${cell.amount === 0.5 ? ' · half day' : ''}`;
+  return `<span class="fill${half}" style="background:${colour}" title="${esc(title)}" aria-label="${esc(title)}"></span>`;
+}
+
+/* ---------------------------------------------------------------------
+   Rendering
+   --------------------------------------------------------------------- */
+const TABS = [
+  { id: 'approvals', label: 'Approvals' }, { id: 'diary', label: 'Diary' },
+  { id: 'balances', label: 'Balances' }, { id: 'requests', label: 'All requests' },
+];
+const VIEW_TITLES = { approvals: 'Approvals', diary: 'Leave diary', balances: 'Balances', requests: 'All requests' };
+let tabsCtl = null;
+let chrome = null;
+let lastView = null;
+const scrollByTab = {};
+// On the FLR Hub a bridge answers for monday.com and sets window.__FLR_LEAVE: who is signed in, and whether they approve
+// leave or only see their own. On Claude it is never set, and the page works as it always has.
+const onHub = () => Boolean(window.__FLR_LEAVE);
+const staffView = () => Boolean(window.__FLR_LEAVE && window.__FLR_LEAVE.access === 'staff');
+let mineYear = null;
+
+function icon(name, cls = 'ico') { return `<svg class="${cls}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`; }
+function initials(name) {
+  if (!name || name === 'Unnamed request') return '?';
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+function avatar(name) { return `<span class="avatar" aria-hidden="true">${esc(initials(name))}</span>`; }
+function emptyHtml(title, text, kind = '') {
+  const ico = kind === 'done' ? `<span class="em-ico ok">${icon('check')}</span>` : kind ? `<span class="em-ico">${icon(kind)}</span>` : '';
+  return `<div class="empty">${ico}<h3>${esc(title)}</h3><p>${esc(text)}</p></div>`;
+}
+function setHead(title, sub) {
+  document.getElementById('lt-title').textContent = title;
+  document.getElementById('nb-title').textContent = title;
+  const s = document.getElementById('lt-sub');
+  s.textContent = sub || '';
+  s.hidden = !sub;
+}
+function banner(kind, title, body, extra) {
+  return `<div class="alert ${kind}" role="${kind === 'bad' ? 'alert' : 'status'}"><div class="at"><b>${esc(title)}</b><span>${esc(body)}</span>${extra ? `<span class="muted">${esc(extra)}</span>` : ''}</div></div>`;
+}
+function focusTitle() { const t = document.getElementById('lt-title'); if (t) t.focus({ preventScroll: true }); }
+// A re-render keeps the field being typed in (and its caret); if the focused control went away, focus stays in the page.
+function rememberFocus() {
+  const a = document.activeElement;
+  if (!a || a === document.body || !document.getElementById('view').contains(a)) return null;
+  return { id: a.id, start: a.selectionStart, end: a.selectionEnd };
+}
+function restoreFocus(f) {
+  if (!f) return;
+  const el = f.id && document.getElementById(f.id);
+  if (el && !el.disabled) {
+    el.focus({ preventScroll: true });
+    if (typeof f.start === 'number') { try { el.setSelectionRange(f.start, f.end); } catch (e) { /* not a text field */ } }
+  } else if (!document.activeElement || document.activeElement === document.body) focusTitle();
+}
+// Approval cards glide into their new places when the list changes (a decided request leaves it).
+function captureFlip(view) {
+  if (lastView !== 'approvals' || state.tab !== 'approvals' || FLRUI.reduced()) return null;
+  const m = new Map();
+  for (const el of view.querySelectorAll('[data-card]')) m.set(el.dataset.card, el.getBoundingClientRect().top);
+  return m.size ? m : null;
+}
+function playFlip(view, before) {
+  if (!before) return;
+  for (const el of view.querySelectorAll('[data-card]')) {
+    if (!el.animate) return;
+    const was = before.get(el.dataset.card);
+    if (was === undefined) { el.animate([{ opacity: 0, transform: 'scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.25,1,.5,1)' }); continue; }
+    const dy = was - el.getBoundingClientRect().top;
+    if (Math.abs(dy) > 1) el.animate([{ transform: `translate3d(0,${dy}px,0)` }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.25,1,.5,1)' });
+  }
+}
+
+function renderAll() { renderChrome(); renderView(); renderOverlay(); }
+
+function renderChrome() {
+  document.documentElement.classList.toggle('staff', staffView());
+  const open = state.data ? state.data.requests.filter(isPending).length : 0;
+  for (const t of document.querySelectorAll('#tabs .tab')) {
+    const on = t.dataset.id === state.tab;
+    t.setAttribute('aria-selected', String(on));
+    t.tabIndex = on ? 0 : -1;
+  }
+  const badge = document.getElementById('tab-badge');
+  badge.textContent = open ? String(open) : '';
+  badge.hidden = !open;
+  document.getElementById('tab-approvals').setAttribute('aria-label', open ? `Approvals, ${open} waiting` : 'Approvals');
+  document.getElementById('view').setAttribute('aria-labelledby', `tab-${state.tab}`);
+  if (tabsCtl) tabsCtl.sync(false);
+  const year = state.ctx ? state.ctx.currentYear : Math.max(yearOf(today), FIRST_LEAVE_YEAR);
+  document.getElementById('year-chip').textContent = `${year} · Jan–Dec`;
+  const up = document.getElementById('updated');
+  up.textContent = state.loading ? 'Loading…' : state.lastLoaded ? state.lastLoaded.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const refresh = document.getElementById('refresh');
+  refresh.disabled = state.loading || !state.mcp;
+  refresh.classList.toggle('busy', Boolean(state.loading && state.mcp));
+  renderSaving();
+  const b = document.getElementById('banners');
+  let html = '';
+  if (state.mcp === null) {
+    html += banner('bad', 'Open this page in Claude', 'This view cannot reach monday.com. Open it from claude.ai or the Claude app while signed in, with the monday.com connector added.');
+  }
+  if (state.error) {
+    const d = describeError(state.error);
+    html += banner('bad', d.title, d.body, state.data ? 'Showing the last data that loaded.' : '');
+  }
+  if (state.access.length) {
+    html += banner('warn', 'Some boards are not visible to you', `${state.access.join(', ')}. Ask the board owner to add you, then press Refresh.`);
+  }
+  if (onHub() && window.__FLR_LEAVE.syncError) {
+    html += banner('warn', 'This may be out of date', `The FLR server couldn't read monday.com: ${window.__FLR_LEAVE.syncError}`, 'Showing the last copy. It updates by itself once monday.com answers again.');
+  }
+  b.innerHTML = html;
+}
+function renderSaving() {
+  const el = document.getElementById('saving');
+  if (state.savingCount) { el.hidden = false; el.textContent = `Saving checks to monday.com… (${state.savingCount})`; }
+  else { el.hidden = true; el.textContent = ''; }
+}
+
+function renderView() {
+  const view = document.getElementById('view');
+  const focus = rememberFocus();
+  const flip = captureFlip(view);
+  if (!state.data) {
+    const title = VIEW_TITLES[state.tab];
+    if (state.loading || state.mcp === undefined) {
+      setHead(onHub() ? 'Annual Leave' : title, onHub() ? 'Loading…' : 'Loading from monday.com. If Claude asks, allow monday.com for this page.');
+      view.innerHTML = '<div class="skeleton" aria-hidden="true"><div></div><div></div></div>';
+    } else {
+      setHead(title, '');
+      view.innerHTML = emptyHtml('No leave data yet', 'Once monday.com is connected, requests, balances and the diary appear here.', 'diary');
+    }
+    lastView = null;
+    restoreFocus(focus);
+    return;
+  }
+  if (staffView()) { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); lastView = 'mine'; restoreFocus(focus); return; }
+  if (state.tab === 'approvals') view.innerHTML = renderApprovals();
+  else if (state.tab === 'diary') { view.innerHTML = renderDiaryShell(); FLRUI.initSeg(document.getElementById('diary-mode')); renderDiaryBody(); }
+  else if (state.tab === 'balances') { view.innerHTML = renderBalancesShell(); renderBalancesBody(); }
+  else { view.innerHTML = renderRequestsShell(); renderRequestsBody(); }
+  playFlip(view, flip);
+  lastView = state.tab;
+  restoreFocus(focus);
+}
+
+/* ---------- Approvals ---------- */
+function renderApprovals() {
+  const open = state.data.requests.filter(isPending).sort((a, b) => (a.from || '9999').localeCompare(b.from || '9999'));
+  setHead('Approvals', open.length ? `${open.length} request${open.length === 1 ? '' : 's'} waiting, soonest leave first` : 'Nothing waiting on you');
+  if (!open.length) {
+    return emptyHtml('All caught up', 'New requests from the staff form appear here. Use the Diary to see who is off, or Balances for days left.', 'done');
+  }
+  return `<div class="cards">${open.map(renderCard).join('')}</div>`;
+}
+function decideButtons(r, anyBusy, busy) {
+  return `<div class="decide-row">
+      <button class="btn accept lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="Accepted" ${anyBusy ? 'disabled' : ''}${busy ? ' aria-busy="true"' : ''}>${busy ? `${icon('spin', 'ico spin')}Saving…` : `${icon('check')}Accept`}</button>
+      <button class="btn review lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="Review" ${anyBusy ? 'disabled' : ''}>Review</button>
+      <button class="btn deny lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="Denied" ${anyBusy ? 'disabled' : ''}>Deny</button>
+    </div>`;
+}
+function renderCard(r) {
+  const ev = evaluate(r), d = ev.days, busy = state.busy === r.id, anyBusy = Boolean(state.busy);
+  const submitted = cleanDate(r.createdAt), name = displayName(r);
+  const chips = ev.groupNames ? ev.groupNames.split(', ').map((g) => `<span class="chip">${esc(g)}</span>`).join('') : '<span class="chip">No leave group</span>';
+  const excluded = d.excluded.length ? `<p class="subtle">Not counted: ${d.excluded.map((e) => `${esc(fmtDate(e.date, false))} (${esc(e.name)})`).join(', ')}</p>` : '';
+  const info = [...d.info, ...d.warnings.map((w) => `Warning: ${w}`)].map((t) => `<p class="subtle">${esc(t)}</p>`).join('');
+  const past = d.from && d.from < state.ctx.today ? '<p class="subtle">These dates start in the past.</p>' : '';
+  return `<article class="card" data-card="${esc(r.id)}" aria-label="${esc(name)}">
+    <header class="card-head">
+      <div class="ch-who">${avatar(name)}<div><h2>${esc(name)}</h2><div class="meta-line">${chips}<span>Submitted ${submitted ? esc(fmtDate(submitted)) : '—'}</span></div></div></div>
+      <div class="ch-side">${pillFor(r.decision)}<button class="btn tinted sm" type="button" data-act="open" data-id="${esc(r.id)}">Details</button></div>
+    </header>
+    <div class="card-body">
+      <div class="card-col">
+        <section class="panel-block"><h3 class="eyebrow">Requested</h3>
+          <p class="dates">${esc(fmtRange(d.from, d.to))}</p>
+          <div><span class="chip days num">${esc(plural(d.total, 'working day'))}</span></div>
+          ${excluded}${info}${past}
+        </section>
+        ${r.notes ? `<section class="panel-block"><h3 class="eyebrow">Employee notes</h3><p class="note-text">${esc(r.notes)}</p></section>` : ''}
+        ${r.email ? `<p class="subtle">Email: <span class="formlink">${esc(r.email)}</span></p>` : ''}
+        ${d.from ? `<section class="panel-block"><h3 class="eyebrow">Around these dates</h3>${renderMini(r, ev)}</section>` : ''}
+      </div>
+      <div class="card-col side">${renderAllowance(ev, r)}${renderGroup(ev)}</div>
+    </div>
+    <footer class="card-foot">
+      <div class="suggest">${suggestPill(ev.suggested)}<span class="subtle">${esc(ev.reason)}</span></div>
+      <label class="lbl" for="note-${esc(r.id)}"><span class="eyebrow">Note saved with the decision (optional)</span>
+        <textarea class="note" id="note-${esc(r.id)}" data-note="${esc(r.id)}" placeholder="e.g. Cover arranged with Dave" ${anyBusy ? 'disabled' : ''}>${esc(state.notes[r.id] || '')}</textarea></label>
+      ${decideButtons(r, anyBusy, busy)}
+    </footer>
+  </article>`;
+}
+function renderAllowance(ev, r) {
+  if (!ev.staff) {
+    return `<section class="panel-block"><div class="panel-title"><h3 class="eyebrow">Allowance</h3><span class="pill grey">Not on allowance board</span></div>
+      <p class="greyline">“${esc(r.employeeName || 'This employee')}” is not on FLR - Leave Allowances. Add them there, spelled exactly as on the form, then press Refresh.</p></section>`;
+  }
+  const pill = ev.allowanceStatus === 'Over allowance' ? '<span class="pill deny">Over allowance</span>' : '<span class="pill ok">Within allowance</span>';
+  const blocks = ev.years.map((y) => `
+    ${ev.years.length > 1 ? `<p class="yearlabel">${y.year}</p>` : ''}
+    <div class="statlist">
+      <div class="stat"><span>Annual allowance</span><b class="num">${fmtNum(y.allowance)}</b></div>
+      ${y.reserved ? `<div class="stat"><span>Christmas shutdown</span><b class="num">−${fmtNum(y.reserved)}</b></div>` : ''}
+      ${y.carried ? `<div class="stat"><span>Carried over</span><b class="num">+${fmtNum(y.carried)}</b></div>` : ''}
+      ${y.reserved || y.carried ? `<div class="stat"><span>Bookable</span><b class="num">${fmtNum(y.entitlement)}</b></div>` : ''}
+      <div class="stat"><span>Accepted so far</span><b class="num">${fmtNum(y.booked)}</b></div>
+      <div class="stat"><span>This request</span><b class="num">${fmtNum(y.thisRequest)}</b></div>
+      <div class="left-after"><span>Left after this</span><span class="big num${y.leftAfter < 0 ? ' neg' : ''}">${fmtNum(y.leftAfter)}</span></div>
+    </div>
+    ${y.pending ? `<p class="subtle">Other pending: ${fmtNum(y.pending)} days (${fmtNum(y.leftIfPending)} left if they are accepted too)</p>` : ''}
+    ${y.allowanceMissing ? '<p class="subtle neg">No annual allowance set on the allowance board, counted as 0.</p>' : ''}`).join('');
+  const none = ev.years.length ? '' : '<p class="greyline">No days in the 2027 leave year or later to check.</p>';
+  return `<section class="panel-block"><div class="panel-title"><h3 class="eyebrow">Allowance</h3>${pill}</div>${blocks}${none}</section>`;
+}
+function renderGroup(ev) {
+  if (!ev.staff) return '';
+  if (!ev.groups.length) {
+    return `<section class="panel-block"><div class="panel-title"><h3 class="eyebrow">Leave group cover</h3><span class="pill grey">No group set</span></div>
+      <p class="greyline">No leave group set. Add this person to a group on FLR - Leave Groups.</p></section>`;
+  }
+  const pill = ev.groupStatus === 'Clash' ? '<span class="pill deny">Clash</span>' : '<span class="pill ok">No clash</span>';
+  const parts = ev.groups.map((g) => {
+    const body = g.clashes.length
+      ? `<ul class="clash-list">${g.clashes.map((c) => `<li><b>${esc(fmtDate(c.date, false))}</b> · ${c.others.map((o) => `${esc(o.name)} (${esc(o.status)}${esc(o.half)})`).join(', ')} <span class="subtle">· ${c.headcount} would be off</span></li>`).join('')}</ul>`
+      : `<p class="okline">${icon('check')}No one else in this group is off.</p>`;
+    return `<div class="groupblock"><div class="gb-head"><b>${esc(g.name)}</b><span class="subtle">max ${g.limit} off at once</span></div>${body}${g.rules ? `<p class="subtle">${esc(g.rules)}</p>` : ''}</div>`;
+  }).join('');
+  return `<section class="panel-block"><div class="panel-title"><h3 class="eyebrow">Leave group cover</h3>${pill}</div>${parts}</section>`;
+}
+function renderMini(r, ev) {
+  const d = ev.days;
+  if (!d.from) return '';
+  const dates = workingWindow(d.from, d.to, 3);
+  if (!dates.length) return '<p class="subtle">No working days in this window.</p>';
+  const map = offMap(dates, { pending: true, other: true });
+  const s = ev.staff;
+  const rows = [];
+  if (s) rows.push(s);
+  if (s) {
+    const seen = new Set([String(s.id)]);
+    for (const g of state.ctx.groupsOf(s).filter(Boolean)) {
+      for (const id of state.ctx.membersByGroup.get(String(g.id)) || []) {
+        if (seen.has(id)) continue;
+        seen.add(id);
+        const row = map.get(id);
+        if (row && row.size) rows.push(state.ctx.staffById.get(id));
+      }
+    }
+  }
+  const inReq = new Set(d.days.map((x) => x.date));
+  const head = dates.map((dt) => `<th class="dh${inReq.has(dt) ? ' inreq' : ''}"><span class="dow">${DOW[weekday(dt)][0]}</span><span class="dn">${Number(dt.slice(8))}</span></th>`).join('');
+  const body = rows.filter(Boolean).map((p) => {
+    const row = map.get(String(p.id)) || new Map();
+    return `<tr><td class="name">${p.id === (s && s.id) ? `<b>${esc(p.name)}</b>` : esc(p.name)}</td>${dates.map((dt) => `<td class="day">${cellHtml(row.get(dt), dt)}</td>`).join('')}</tr>`;
+  }).join('');
+  return `<div class="grid-wrap"><table class="plan"><thead><tr><th class="name">${esc(MON[Number(dates[0].slice(5, 7)) - 1])} ${dates[0].slice(0, 4)}</th>${head}</tr></thead><tbody>${body || `<tr><td class="name">${esc(displayName(r))}</td>${dates.map(() => '<td class="day"></td>').join('')}</tr>`}</tbody></table></div>`;
+}
+
+/* ---------- Diary ---------- */
+function renderDiaryShell() {
+  const st = state.diary;
+  setHead('Leave diary', 'Who is off, and how much cover each group has left.');
+  const groupOpts = [`<option value="all">All leave groups</option>`, ...[...state.data.groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => `<option value="${esc(g.id)}" ${st.group === g.id ? 'selected' : ''}>${esc(g.name)}</option>`), `<option value="none" ${st.group === 'none' ? 'selected' : ''}>No group</option>`].join('');
+  const key = [
+    '<span><i class="sw acc"></i>Accepted</span>',
+    '<span><i class="sw new"></i>New request</span>',
+    '<span><i class="sw rev"></i>Review</span>',
+    '<span><i class="sw closed-bh"></i>Bank holiday</span>',
+    '<span><i class="sw closed-shut"></i>Christmas shutdown</span>',
+    '<span><i class="sw closed-jeff"></i>Jeff Day</span>',
+    ...Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => `<span><i class="sw" style="background:${c}"></i>${esc(t)}</span>`),
+  ].join('');
+  return `<div class="toolbar diary-nav">
+      <div class="monthnav">
+        <button class="iconbtn" type="button" data-act="month" data-id="-1" aria-label="Previous month">${icon('chev-l')}</button>
+        <h2 class="month" id="month-label" aria-live="polite">${esc(monthName(st.y, st.m))}</h2>
+        <button class="iconbtn" type="button" data-act="month" data-id="1" aria-label="Next month">${icon('chev-r')}</button>
+        <button class="btn sm" type="button" data-act="month" data-id="0">This month</button>
+      </div>
+      <fieldset class="seg" id="diary-mode"><legend>View</legend>
+        <label><input type="radio" name="diary-mode" value="planner" ${st.mode === 'planner' ? 'checked' : ''}>Planner</label>
+        <label><input type="radio" name="diary-mode" value="calendar" ${st.mode === 'calendar' ? 'checked' : ''}>Calendar</label>
+      </fieldset>
+    </div>
+    <div class="toolbar">
+      <input class="input grow" id="diary-search" type="search" placeholder="Find a name" value="${esc(st.search)}" aria-label="Find a name">
+      <select class="input" id="diary-group" aria-label="Leave group">${groupOpts}</select>
+      <div class="chiprow">
+        <label class="fchip"><input type="checkbox" id="diary-pending" ${st.pending ? 'checked' : ''}>${icon('check')}Show pending</label>
+        <label class="fchip"><input type="checkbox" id="diary-other" ${st.other ? 'checked' : ''}>${icon('check')}Show other leave</label>
+      </div>
+    </div>
+    <div class="key" role="list" aria-label="Key">${key.replace(/<span>/g, '<span role="listitem">')}</div>
+    <div id="diary-body"></div>`;
+}
+function diarySections() {
+  const ctx = state.ctx, st = state.diary, q = normaliseName(st.search);
+  const match = (s) => !q || normaliseName(s.name).includes(q);
+  const sections = [];
+  for (const g of [...state.data.groups].sort((a, b) => a.name.localeCompare(b.name))) {
+    if (st.group !== 'all' && st.group !== g.id) continue;
+    const ids = ctx.membersByGroup.get(String(g.id)) || new Set();
+    const members = state.data.staff.filter((s) => ids.has(String(s.id)) && match(s)).sort((a, b) => a.name.localeCompare(b.name));
+    if (members.length) sections.push({ title: g.name, limit: maxOffOf(g), rules: g.rules, staff: members, allIds: ids });
+  }
+  if (st.group === 'all' || st.group === 'none') {
+    const loose = state.data.staff.filter((s) => (ctx.groupsByStaff.get(String(s.id)) || new Set()).size === 0 && match(s)).sort((a, b) => a.name.localeCompare(b.name));
+    if (loose.length) sections.push({ title: 'No group', limit: null, rules: '', staff: loose, allIds: null });
+  }
+  return sections;
+}
+function renderDiaryBody() {
+  const host = document.getElementById('diary-body');
+  if (!host) return;
+  const st = state.diary;
+  const label = document.getElementById('month-label'), month = monthName(st.y, st.m);
+  if (label.textContent !== month) label.textContent = month;
+  const dates = monthDays(st.y, st.m);
+  const map = offMap(dates, { pending: st.pending, other: st.other });
+  const sections = diarySections();
+  if (!sections.length) { host.innerHTML = emptyHtml('No one matches', 'Try another name or leave group.', 'search'); return; }
+  host.innerHTML = st.mode === 'calendar' ? renderCalendar(dates, map, sections) : renderPlanner(dates, map, sections);
+}
+function renderPlanner(dates, map, sections) {
+  const ctx = state.ctx;
+  const dayClass = (d) => [isWeekend(d) ? 'weekend' : '', closureClass(d)].filter(Boolean).join(' ');
+  const head = dates.map((d) => {
+    const closure = state.data.bankHolidays.get(d);
+    return `<th class="dh ${dayClass(d)}${d === ctx.today ? ' today' : ''}"${closure ? ` title="${esc(closure)}"` : ''}><span class="dow">${DOW[weekday(d)][0]}</span><span class="dn">${Number(d.slice(8))}</span></th>`;
+  }).join('');
+  let body = '';
+  for (const sec of sections) {
+    body += `<tr class="section"><th colspan="${dates.length + 1}"><span class="sec-t">${esc(sec.title)}${sec.limit ? `<span class="limit">max ${sec.limit} off at once</span>` : ''}${sec.rules ? `<span class="limit">· ${esc(sec.rules)}</span>` : ''}</span></th></tr>`;
+    if (sec.limit) {
+      body += `<tr class="count"><td class="name">Annual leave off</td>${dates.map((d) => {
+        const working = !isWeekend(d) && !ctx.bankHolidays.has(d);
+        if (!working) return `<td class="${dayClass(d)}"></td>`;
+        let n = 0;
+        for (const id of sec.allIds) { const c = map.get(id) && map.get(id).get(d); if (c && c.kind === 'annual') n++; }
+        return `<td class="${n > sec.limit ? 'over' : ''}">${n || ''}</td>`;
+      }).join('')}</tr>`;
+    }
+    for (const s of sec.staff) {
+      const row = map.get(String(s.id)) || new Map();
+      body += `<tr><td class="name" title="${esc(s.name)}">${esc(s.name)}</td>${dates.map((d) => `<td class="day ${dayClass(d)}">${cellHtml(row.get(d), d)}</td>`).join('')}</tr>`;
+    }
+  }
+  return `<div class="grid-wrap"><table class="plan"><thead><tr><th class="name">Staff</th>${head}</tr></thead><tbody>${body}</tbody></table></div>
+    <p class="foot">The “Annual leave off” line counts annual leave only (accepted, and pending when shown). It turns red when a group goes over its limit. Other leave is shown for information and does not count.</p>`;
+}
+function renderCalendar(dates, map, sections) {
+  const ctx = state.ctx;
+  const visible = new Set();
+  for (const sec of sections) for (const s of sec.staff) visible.add(String(s.id));
+  const first = dates[0], lead = (weekday(first) + 6) % 7;
+  const cells = [], agenda = [];
+  for (let i = 0; i < lead; i++) cells.push('<div class="cell out" aria-hidden="true"></div>');
+  for (const d of dates) {
+    const closure = state.data.bankHolidays.get(d);
+    const people = [];
+    for (const id of visible) {
+      const c = map.get(id) && map.get(id).get(d);
+      if (!c) continue;
+      const s = ctx.staffById.get(id);
+      if (c.kind === 'annual') {
+        const pending = c.request.decision !== 'accepted';
+        people.push({ sort: s.name, html: `<button class="who ${pending ? 'pending' : 'accepted'}" type="button" data-act="open" data-id="${esc(c.request.id)}" title="${esc(`${s.name} · annual leave · ${pending ? 'pending' : 'accepted'}`)}"><span class="wn">${esc(s.name)}${c.amount === 0.5 ? ' ½' : ''}</span></button>` });
+      } else {
+        const colour = OTHER_TYPE_COLOURS[c.type] || '#c4c4c4';
+        people.push({ sort: s.name, html: `<span class="who" title="${esc(`${s.name} · ${c.type}`)}"><i class="dot" style="background:${colour}"></i><span class="wn">${esc(s.name)} · ${esc(c.type)}</span></span>` });
+      }
+    }
+    people.sort((a, b) => a.sort.localeCompare(b.sort));
+    const html = people.map((p) => p.html).join('');
+    cells.push(`<div class="cell${isWeekend(d) ? ' we' : ''}${d === ctx.today ? ' today' : ''} ${closureClass(d)}"><span class="d">${Number(d.slice(8))}</span>${closure ? `<span class="closure">${esc(closure)}</span>` : ''}${html}</div>`);
+    if (closure || people.length) {
+      agenda.push(`<li class="ag-day${d === ctx.today ? ' today' : ''}"><div class="ag-date"><b>${Number(d.slice(8))}</b><small>${DOW[weekday(d)]}</small></div><div class="ag-main">${closure ? `<span class="ag-closure"><i class="sw ${closureClass(d)}"></i>${esc(closure)}</span>` : ''}${html}</div></li>`);
+    }
+  }
+  while ((cells.length) % 7) cells.push('<div class="cell out" aria-hidden="true"></div>');
+  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((x) => `<div class="dow">${x}</div>`).join('');
+  const list = agenda.length ? `<ul class="ag-list">${agenda.join('')}</ul>` : emptyHtml('No one is off', `No one in this view is off in ${monthName(state.diary.y, state.diary.m)}.`, 'diary');
+  return `<div class="cal">${dows}${cells.join('')}</div><div class="agenda">${list}</div>`;
+}
+
+/* ---------- Balances ---------- */
+const BAL_COLS = [
+  ['name', 'Name', false], ['groups', 'Leave group', false], ['allowance', 'Allowance', true], ['reserved', 'Shutdown', true],
+  ['entitlement', 'Bookable', true], ['carried', 'Carried over', true], ['booked', 'Booked', true], ['pending', 'Pending', true],
+  ['other', 'Other leave', true], ['remaining', 'Remaining', true], ['remainingIfPending', 'If pending accepted', true],
+];
+function renderBalancesShell() {
+  const st = state.bal, ctx = state.ctx;
+  setHead('Balances', 'Days left per person for the chosen leave year.');
+  const years = [];
+  for (let y = FIRST_LEAVE_YEAR; y <= ctx.currentYear + 1; y++) years.push(y);
+  const groupOpts = [`<option value="all">All leave groups</option>`, ...[...state.data.groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => `<option value="${esc(g.id)}" ${st.group === g.id ? 'selected' : ''}>${esc(g.name)}</option>`), `<option value="none" ${st.group === 'none' ? 'selected' : ''}>No group</option>`].join('');
+  const sortOpts = BAL_COLS.map(([k, label]) => `<option value="${k}" ${st.sort === k ? 'selected' : ''}>${label}</option>`).join('');
+  return `<div class="toolbar">
+      <input class="input grow" id="bal-search" type="search" placeholder="Find a name" value="${esc(st.search)}" aria-label="Find a name">
+      <select class="input" id="bal-group" aria-label="Leave group">${groupOpts}</select>
+      <select class="input" id="bal-year" aria-label="Leave year">${years.map((y) => `<option value="${y}" ${st.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select>
+      <span class="sortpick"><select class="input" id="bal-sort" aria-label="Sort by">${sortOpts}</select><button class="iconbtn" type="button" id="bal-dir" data-act="sort-dir"></button></span>
+    </div>
+    <div id="bal-body"></div>
+    <p class="foot">20 days' allowance with 5 held back for the Christmas shutdown leaves 15 bookable days. Bank holidays and the Jeff Day are on top. Booked and Pending are saved to FLR - Leave Allowances automatically.</p>`;
+}
+function syncBalSort() {
+  const sel = document.getElementById('bal-sort'), dir = document.getElementById('bal-dir');
+  if (sel && sel.value !== state.bal.sort) sel.value = state.bal.sort;
+  if (dir) {
+    const up = state.bal.dir > 0;
+    dir.innerHTML = icon(up ? 'sort-up' : 'sort-down');
+    dir.setAttribute('aria-label', `Reverse the order (now ${up ? 'ascending' : 'descending'})`);
+  }
+}
+function renderBalancesBody() {
+  const host = document.getElementById('bal-body');
+  if (!host) return;
+  syncBalSort();
+  const st = state.bal, ctx = state.ctx, q = normaliseName(st.search);
+  let rows = state.data.staff.map((s) => {
+    const b = balanceFor(ctx, s, st.year);
+    const groups = ctx.groupsOf(s).filter(Boolean).map((g) => g.name).sort();
+    const totals = otherTotalsFor(ctx, s, st.year);
+    const other = Object.values(totals).reduce((a, n) => a + n, 0);
+    return { s, b, groups, totals, other };
+  });
+  rows = rows.filter((r) => (!q || normaliseName(r.s.name).includes(q)) &&
+    (st.group === 'all' || (st.group === 'none' ? r.groups.length === 0 : (ctx.groupsByStaff.get(String(r.s.id)) || new Set()).has(st.group))));
+  const key = st.sort, dir = st.dir;
+  rows.sort((a, z) => {
+    if (key === 'name') return a.s.name.localeCompare(z.s.name) * dir;
+    if (key === 'groups') return (a.groups.join(', ') || '~').localeCompare(z.groups.join(', ') || '~') * dir;
+    const av = key === 'other' ? a.other : a.b[key], zv = key === 'other' ? z.other : z.b[key];
+    return ((av || 0) - (zv || 0)) * dir || a.s.name.localeCompare(z.s.name);
+  });
+  const tone = (n) => (n < 0 ? 'neg' : n < 3 ? 'warn' : '');
+  const th = BAL_COLS.map(([k, label, right]) => `<th class="${right ? 'r' : ''}"${st.sort === k ? ` aria-sort="${st.dir > 0 ? 'ascending' : 'descending'}"` : ''}><button type="button" data-act="sort" data-id="${k}">${label}<span class="arr" aria-hidden="true">${st.sort === k ? (st.dir > 0 ? '↑' : '↓') : ''}</span></button></th>`).join('');
+  const tr = rows.map(({ s, b, groups, totals, other }) => {
+    const breakdown = Object.entries(totals).map(([t, n]) => `${t.split(' ')[0]} ${fmtNum(n)}`).join(' · ');
+    return `<tr><td class="c-name"><b>${esc(s.name)}</b>${b.allowanceMissing ? ' <span class="neg">no allowance set</span>' : ''}<span class="x narrow-only-b">${groups.length ? esc(groups.join(', ')) : 'No leave group'}</span></td>
+      <td class="c-groups">${groups.length ? esc(groups.join(', ')) : '<span class="subtle">—</span>'}</td>
+      <td class="r num" data-label="Allowance">${fmtNum(b.allowance)}</td><td class="r num" data-label="Shutdown">${fmtNum(b.reserved)}</td><td class="r num c-book" data-label="Bookable"><b>${fmtNum(b.entitlement)}</b></td>
+      <td class="r num" data-label="Carried over">${fmtNum(b.carried)}</td><td class="r num" data-label="Booked">${fmtNum(b.booked)}</td><td class="r num" data-label="Pending">${fmtNum(b.pending)}</td>
+      <td class="r num" data-label="Other leave">${fmtNum(other)}${breakdown ? `<span class="breakdown">${esc(breakdown)}</span>` : ''}</td>
+      <td class="r num hl c-rem ${tone(b.remaining)}" data-label="Remaining">${fmtNum(b.remaining)}</td><td class="r num c-ifp ${tone(b.remainingIfPending)}" data-label="If pending accepted">${fmtNum(b.remainingIfPending)}</td></tr>`;
+  }).join('');
+  host.innerHTML = rows.length
+    ? `<div class="table-wrap"><table class="data bal"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`
+    : emptyHtml('No one matches', 'Try another name or leave group.', 'search');
+}
+
+/* ---------- All requests ---------- */
+function renderRequestsShell() {
+  const st = state.all;
+  setHead('All requests', 'Every request on the board, latest leave first. Select a row for the full checks.');
+  const years = new Set();
+  for (const r of state.data.requests) if (r.from && yearOf(r.from) >= FIRST_LEAVE_YEAR) years.add(yearOf(r.from));
+  const yOpts = ['<option value="any">Any year</option>', ...[...years].sort().map((y) => `<option value="${y}" ${String(st.year) === String(y) ? 'selected' : ''}>${y}</option>`)].join('');
+  const dOpts = [['any', 'Any decision'], ['new', 'New request'], ['review', 'Review'], ['accepted', 'Accepted'], ['denied', 'Denied'], ['cancelled', 'Cancelled']]
+    .map(([v, l]) => `<option value="${v}" ${st.decision === v ? 'selected' : ''}>${l}</option>`).join('');
+  return `<div class="toolbar">
+      <input class="input grow" id="all-search" type="search" placeholder="Search name or notes" value="${esc(st.search)}" aria-label="Search requests">
+      <select class="input" id="all-decision" aria-label="Decision">${dOpts}</select>
+      <select class="input" id="all-year" aria-label="Year">${yOpts}</select>
+    </div>
+    <div id="all-body"></div>`;
+}
+function renderRequestsBody() {
+  const host = document.getElementById('all-body');
+  if (!host) return;
+  const st = state.all, q = normaliseName(st.search);
+  const rows = state.data.requests.filter((r) =>
+    (st.decision === 'any' || r.decision === st.decision) &&
+    (st.year === 'any' || (r.from && String(yearOf(r.from)) === String(st.year))) &&
+    (!q || normaliseName(`${displayName(r)} ${r.notes}`).includes(q))
+  ).sort((a, b) => (b.from || '').localeCompare(a.from || ''));
+  if (!rows.length) { host.innerHTML = emptyHtml('No requests match', 'Change the filters, or wait for new form submissions.', 'search'); return; }
+  const tr = rows.map((r) => {
+    const d = state.ctx.daysOf(r);
+    const ev = isPending(r) ? evaluate(r) : null;
+    const checks = ev ? `${esc(ev.allowanceStatus)} · ${esc(ev.groupStatus)}` : [r.cur.allowanceCheck, r.cur.groupCheck].filter(Boolean).map(esc).join(' · ') || '—';
+    return `<tr class="click" data-act="open" data-id="${esc(r.id)}" tabindex="0"><td class="c-name"><b>${esc(displayName(r))}</b></td><td class="c-dates">${esc(fmtRange(d.from, d.to))}</td><td class="r num c-days" data-label="Days">${fmtNum(d.total)}</td>
+      <td class="c-dec">${pillFor(r.decision)}</td><td class="c-sug" data-label="Suggested">${ev ? suggestPill(ev.suggested) : r.cur.suggested ? `<span class="subtle">${esc(r.cur.suggested)}</span>` : '—'}</td><td class="c-chk" data-label="Checks">${checks}</td>
+      <td class="c-when" data-label="Decided on">${r.cur.decidedOn ? esc(fmtDate(r.cur.decidedOn)) : '—'}</td><td class="go" aria-hidden="true"><i class="chev"></i></td></tr>`;
+  }).join('');
+  host.innerHTML = `<div class="table-wrap"><table class="data reqs"><thead><tr><th>Employee</th><th>Dates</th><th class="r">Days</th><th>Decision</th><th>Suggested</th><th>Checks</th><th>Decided on</th><th class="go"><span class="sr">Open</span></th></tr></thead><tbody>${tr}</tbody></table></div>`;
+}
+
+/* ---------- My leave: staff on the FLR Hub who don't approve leave see only their own ---------- */
+function renderMine() {
+  const hub = window.__FLR_LEAVE, ctx = state.ctx, me = state.data.staff[0] || null;
+  const form = FORM_URL ? `<a class="btn primary lg" href="${esc(FORM_URL)}" target="_blank" rel="noopener">${icon('plus')}Request leave</a>` : '';
+  if (!me) {
+    setHead('My leave', 'Your leave requests and the days you have left.');
+    return `<div class="empty"><span class="em-ico">${icon('diary')}</span><h3>Your FLR account isn’t linked to a staff record yet</h3>
+      <p>Your leave appears here once ${esc((hub.me && hub.me.email) || 'your email address')} is on the FLR - Leave Allowances board. Ask a leave approver to add it.</p>
+      ${form ? `<p class="empty-act">${form}</p>` : ''}</div>`;
+  }
+  const years = [];
+  for (let y = FIRST_LEAVE_YEAR; y <= ctx.currentYear + 1; y++) years.push(y);
+  const year = years.includes(mineYear) ? mineYear : ctx.currentYear;
+  const b = balanceFor(ctx, me, year);
+  setHead('My leave', `${me.name}: your leave requests and the days you have left.`);
+  const sum = [`${fmtNum(b.allowance)} days’ allowance`];
+  if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for the Christmas shutdown`);
+  if (b.carried) sum.push(`+ ${fmtNum(b.carried)} carried over`);
+  const mine = state.data.requests.slice().sort((x, z) => (z.from || '').localeCompare(x.from || ''));
+  const rows = mine.map((r) => {
+    const d = ctx.daysOf(r), start = d.from || r.from;
+    const bits = [plural(d.total, 'working day')];
+    if (r.halfDay !== 'none') bits.push(r.halfDay === 'am' ? 'morning off' : 'afternoon off');
+    if (r.cur.decidedOn && !isPending(r)) bits.push(`decided ${fmtDate(r.cur.decidedOn)}`);
+    return `<li class="mine-row">
+      <div class="ag-date">${start ? `<b>${Number(start.slice(8))}</b><small>${MON[Number(start.slice(5, 7)) - 1]}</small>` : '<b>?</b>'}</div>
+      <div class="mr-main"><p class="mr-dates">${esc(fmtRange(d.from, d.to))}</p><p class="subtle">${esc(bits.join(' · '))}</p></div>
+      <div class="mr-status">${pillFor(r.decision)}</div></li>`;
+  }).join('');
+  return `<div class="mine">
+    <div class="mine-top">
+      <section class="card mine-balance" aria-labelledby="mine-h">
+        <div class="mb-head"><h2 id="mine-h">Days left in ${year}</h2>
+          ${years.length > 1 ? `<fieldset class="seg" id="mine-year"><legend>Leave year</legend>${years.map((y) => `<label><input type="radio" name="mine-year" value="${y}" ${y === year ? 'checked' : ''}>${y}</label>`).join('')}</fieldset>` : ''}</div>
+        <p class="mb-big"><span class="big num${b.remaining < 0 ? ' neg' : ''}">${fmtNum(b.remaining)}</span><span class="mb-unit">days</span></p>
+        <dl class="mb-grid">
+          <div><dt>Bookable</dt><dd class="num">${fmtNum(b.entitlement)}</dd></div>
+          <div><dt>Accepted</dt><dd class="num">${fmtNum(b.booked)}</dd></div>
+          <div><dt>Waiting for a decision</dt><dd class="num">${fmtNum(b.pending)}</dd></div>
+          <div><dt>Left if accepted</dt><dd class="num${b.remainingIfPending < 0 ? ' neg' : ''}">${fmtNum(b.remainingIfPending)}</dd></div>
+        </dl>
+        <p class="subtle">${esc(sum.join(' '))} = ${fmtNum(b.entitlement)} bookable. Bank holidays and the Jeff Day are on top.</p>
+      </section>
+      <section class="card mine-request" aria-labelledby="mine-req-h">
+        <h2 id="mine-req-h">Need time off?</h2>
+        <p>Send a request with the leave form. It shows here as soon as it reaches monday.com, and a leave approver decides.</p>
+        ${form}
+      </section>
+    </div>
+    <section aria-labelledby="mine-list-h">
+      <h2 class="mine-sect" id="mine-list-h">Your requests</h2>
+      ${rows ? `<ul class="mine-rows">${rows}</ul>` : emptyHtml('No requests yet', 'Requests you send with the leave form appear here.', 'diary')}
+    </section>
+  </div>`;
+}
+
+/* ---------- Request sheet + confirmation ---------- */
+function syncInert() {
+  const s = sheetUI.open, a = alertUI.open;
+  document.getElementById('app').inert = s || a;
+  document.getElementById('sheet').inert = a;
+  document.documentElement.classList.toggle('overlay-open', s || a);
+}
+const sheetUI = FLRUI.makeSheet(document.getElementById('sheet'), {
+  onChange: () => syncInert(),
+  onDismiss: (v) => { state.panel = null; sheetUI.hide(v); },
+  fallbackFocus: focusTitle,
+});
+const alertUI = FLRUI.makeAlert(document.getElementById('confirm'), { onChange: () => syncInert(), fallbackFocus: focusTitle });
+
+function renderOverlay() {
+  const r = state.panel && state.data ? state.data.requests.find((x) => x.id === state.panel) : null;
+  if (r) {
+    const pending = isPending(r), ev = pending ? evaluate(r) : null, d = state.ctx.daysOf(r);
+    const anyBusy = Boolean(state.busy), submitted = cleanDate(r.createdAt), name = displayName(r);
+    const details = ev ? ev.details : r.cur.details || 'No checks recorded for this request.';
+    const actions = pending
+      ? `<label class="lbl" for="pnote-${esc(r.id)}"><span class="eyebrow">Note saved with the decision (optional)</span>
+          <textarea class="note" id="pnote-${esc(r.id)}" data-note="${esc(r.id)}" ${anyBusy ? 'disabled' : ''}>${esc(state.notes[r.id] || '')}</textarea></label>
+        ${decideButtons(r, anyBusy, state.busy === r.id)}`
+      : `<div class="decide-row">
+          ${r.decision === 'accepted' ? `<button class="btn deny lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="Cancelled" ${anyBusy ? 'disabled' : ''}>Cancel leave</button>` : ''}
+          <button class="btn lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="New request" ${anyBusy ? 'disabled' : ''}>Re-open</button>
+        </div>`;
+    sheetUI.show(`<header class="dlg-head">
+        <div class="ch-who">${avatar(name)}<div><h2 id="sheet-title">${esc(name)}</h2><p class="subtle">${esc(fmtRange(d.from, d.to))}</p></div></div>
+        <button class="close" type="button" data-act="close" aria-label="Close details">${icon('close')}</button>
+      </header>
+      <div class="dlg-body">
+        <div class="decide-row">${pillFor(r.decision)}${ev ? suggestPill(ev.suggested) : ''}</div>
+        ${ev ? `<p class="subtle">${esc(ev.reason)}</p>` : ''}
+        <div class="statlist">
+          <div class="stat"><span>Working days</span><b class="num">${fmtNum(d.total)}</b></div>
+          ${ev && ev.leftAfter !== null ? `<div class="stat"><span>Left after this</span><b class="num">${fmtNum(ev.leftAfter)}</b></div>` : ''}
+          <div class="stat"><span>Leave group</span><b>${esc((ev && ev.groupNames) || r.cur.leaveGroup || '—')}</b></div>
+          <div class="stat"><span>Submitted</span><b>${submitted ? esc(fmtDate(submitted)) : '—'}</b></div>
+          ${r.cur.decidedOn ? `<div class="stat"><span>Decided on</span><b>${esc(fmtDate(r.cur.decidedOn))}</b></div>` : ''}
+          ${r.email ? `<div class="stat"><span>Email</span><b class="formlink">${esc(r.email)}</b></div>` : ''}
+        </div>
+        ${r.notes ? `<section class="panel-block"><h3 class="eyebrow">Employee notes</h3><p class="note-text">${esc(r.notes)}</p></section>` : ''}
+        ${r.cur.managersNote ? `<section class="panel-block"><h3 class="eyebrow">Manager's note</h3><p class="note-text">${esc(r.cur.managersNote)}</p></section>` : ''}
+        <section class="panel-block"><h3 class="eyebrow">Check details</h3><pre class="details">${esc(details)}</pre></section>
+      </div>
+      <footer class="dlg-foot">${actions}</footer>`, r.id);
+  } else sheetUI.hide();
+  if (state.confirm) {
+    const c = state.confirm;
+    alertUI.show(`<div class="alert-text"><h2 id="cf-title">${esc(c.title)}</h2><p id="cf-body">${esc(c.body)}</p></div>
+      <div class="alert-btns"><button type="button" data-act="confirm-no" data-focus>${esc(c.no)}</button><button type="button" class="${c.tone === 'deny' ? 'danger' : 'go'}" data-act="confirm-yes">${esc(c.yes)}</button></div>`);
+  } else alertUI.hide();
+}
+
+/* ---------------------------------------------------------------------
+   Events
+   --------------------------------------------------------------------- */
+function requestDecision(id, action) {
+  const r = state.data.requests.find((x) => x.id === id);
+  if (!r) return;
+  if (action === 'Accepted' && isPending(r)) {
+    const ev = evaluate(r);
+    if (ev.suggested !== 'Accept') {
+      state.confirm = { title: 'Accept anyway?', body: `The checks suggest ${ev.suggested}: ${ev.reason}.`, yes: 'Accept anyway', no: 'Go back', tone: 'accept', run: () => decide(id, 'Accepted') };
+      renderOverlay();
+      return;
+    }
+  }
+  if (action === 'Cancelled') {
+    state.confirm = { title: 'Cancel this leave?', body: `${displayName(r)}'s leave will be marked as cancelled and the days go back into their allowance.`, yes: 'Cancel leave', no: 'Keep the leave', tone: 'deny', run: () => decide(id, 'Cancelled') };
+    renderOverlay();
+    return;
+  }
+  decide(id, action);
+}
+// Tabs keep their own scroll position; tapping the current tab again scrolls it to the top, as on iPhone.
+function goTab(id) {
+  if (!TABS.some((t) => t.id === id)) return;
+  if (id === state.tab) { window.scrollTo({ top: 0, behavior: FLRUI.reduced() ? 'auto' : 'smooth' }); return; }
+  scrollByTab[state.tab] = window.scrollY;
+  state.tab = id;
+  try { localStorage.setItem('flr-leave-tab', id); } catch (e) { /* storage unavailable */ }
+  renderChrome(); renderView();
+  window.scrollTo(0, scrollByTab[id] || 0);
+  FLRUI.fadeIn(document.getElementById('view'));
+  if (chrome) chrome.update();
+}
+
+document.addEventListener('click', async (ev) => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  switch (act) {
+    case 'tab': goTab(id); break;
+    case 'refresh': load(); break;
+    case 'copy-form': {
+      try { await navigator.clipboard.writeText(FORM_URL); showToast(`Form link copied: ${FORM_URL}`); }
+      catch (e) { showToast(`Copy this link: ${FORM_URL}`); }
+      break;
+    }
+    case 'open': state.panel = id; renderOverlay(); break;
+    case 'close': state.panel = null; renderOverlay(); break;
+    case 'decide': requestDecision(id, el.dataset.action); break;
+    case 'confirm-yes': { const run = state.confirm && state.confirm.run; state.confirm = null; renderOverlay(); if (run) run(); break; }
+    case 'confirm-no': state.confirm = null; renderOverlay(); break;
+    case 'month': {
+      const st = state.diary, before = st.y * 12 + st.m;
+      if (id === '0') { st.y = startMonth.y; st.m = startMonth.m; }
+      else { const t = st.y * 12 + st.m + Number(id); st.y = Math.floor(t / 12); st.m = t % 12; }
+      renderDiaryBody();
+      FLRUI.slideIn(document.getElementById('diary-body'), Math.sign(st.y * 12 + st.m - before));
+      break;
+    }
+    case 'sort':
+      if (state.bal.sort === id) state.bal.dir = -state.bal.dir; else { state.bal.sort = id; state.bal.dir = 1; }
+      renderBalancesBody();
+      break;
+    case 'sort-dir': state.bal.dir = -state.bal.dir; renderBalancesBody(); break;
+    default: break;
+  }
+});
+document.getElementById('tabs').addEventListener('keydown', (ev) => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
+  const list = [...document.querySelectorAll('#tabs .tab')];
+  const i = list.findIndex((t) => t.dataset.id === state.tab);
+  const j = ev.key === 'Home' ? 0 : ev.key === 'End' ? list.length - 1 : (i + (ev.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length;
+  ev.preventDefault();
+  goTab(list[j].dataset.id);
+  list[j].focus();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape') {
+    if (state.confirm) { state.confirm = null; renderOverlay(); }
+    else if (state.panel) { state.panel = null; renderOverlay(); }
+  }
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('tr.click')) {
+    ev.preventDefault();
+    state.panel = ev.target.dataset.id;
+    renderOverlay();
+  }
+});
+document.addEventListener('input', (ev) => {
+  const t = ev.target;
+  if (t.dataset && t.dataset.note) { state.notes[t.dataset.note] = t.value; return; }
+  if (t.id === 'diary-search') { state.diary.search = t.value; renderDiaryBody(); }
+  if (t.id === 'bal-search') { state.bal.search = t.value; renderBalancesBody(); }
+  if (t.id === 'all-search') { state.all.search = t.value; renderRequestsBody(); }
+});
+document.addEventListener('change', (ev) => {
+  const t = ev.target;
+  if (t.name === 'diary-mode') { state.diary.mode = t.value; renderDiaryBody(); return; }
+  if (t.name === 'mine-year') { mineYear = Number(t.value); renderView(); return; }
+  switch (t.id) {
+    case 'diary-group': state.diary.group = t.value; renderDiaryBody(); break;
+    case 'diary-pending': state.diary.pending = t.checked; renderDiaryBody(); break;
+    case 'diary-other': state.diary.other = t.checked; renderDiaryBody(); break;
+    case 'bal-group': state.bal.group = t.value; renderBalancesBody(); break;
+    case 'bal-year': state.bal.year = Number(t.value); renderBalancesBody(); break;
+    case 'bal-sort': state.bal.sort = t.value; state.bal.dir = 1; renderBalancesBody(); break;
+    case 'all-decision': state.all.decision = t.value; renderRequestsBody(); break;
+    case 'all-year': state.all.year = t.value; renderRequestsBody(); break;
+    default: break;
+  }
+});
+
+/* ---------------------------------------------------------------------
+   Start
+   --------------------------------------------------------------------- */
+renderChrome();
+tabsCtl = FLRUI.initTabs(document.getElementById('tabs'), (el) => goTab(el.dataset.id));
+chrome = FLRUI.initChrome(document.getElementById('navbar'), () => document.getElementById('lt-title'));
+renderView();
+(async () => {
+  let mcp = null;
+  try { mcp = window.claude && window.claude.use ? await window.claude.use('mcp') : null; } catch (e) { mcp = null; }
+  state.mcp = mcp;
+  if (!mcp) { state.loading = false; renderAll(); return; }
+  load();
+})();
+</script>
+
+</body>
+</html>
