@@ -240,21 +240,64 @@
   };
   function tileEl(t, o = {}) {
     const li = $('#tile-tpl').content.firstElementChild.cloneNode(true);
-    const a = li.querySelector('.tile-link');
-    if (o.loading) { li.classList.add('tile--loading'); li.setAttribute('aria-hidden', 'true'); a.tabIndex = -1; return li; }
+    const a = li.querySelector('.tile-link'), tip = li.querySelector('.tile-tip');
+    if (o.loading) { li.classList.add('tile--loading'); li.setAttribute('aria-hidden', 'true'); a.tabIndex = -1; tip.remove(); return li; }
     const external = /^https:/i.test(t.url);
     a.href = t.url;
     if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
     const icon = li.querySelector('.app-icon');
     icon.classList.add('app-icon--' + (ICONS[t.id] ? t.id : 'link'));
     icon.querySelector('use').setAttribute('href', '#' + (ICONS[t.id] || 'i-tile'));
-    li.querySelector('.tile-title').textContent = t.title;
-    li.querySelector('.tile-sub').textContent = t.subtitle || '';
+    li.querySelector('.tile-name').textContent = t.title;
+    // The card is the link's description, so screen readers hear it without hovering.
+    tip.id = 'tip-' + t.id;
+    a.setAttribute('aria-describedby', tip.id);
+    li.querySelector('.tip-title').textContent = t.title;
+    const text = li.querySelector('.tip-text');
+    text.textContent = t.subtitle || ''; text.hidden = !t.subtitle;
     const host = external ? new URL(t.url).hostname : '';
-    li.querySelector('.tile-go-label').textContent = !external ? 'Open' : /(^|\.)claude\.ai$/.test(host) ? 'Open in Claude' : 'Open in a new tab';
-    li.querySelector('.tile-go use').setAttribute('href', external ? '#i-external' : '#i-chevron');
+    li.querySelector('.tip-go-label').textContent = !external ? 'Opens here' : /(^|\.)claude\.ai$/.test(host) ? 'Opens in Claude' : 'Opens in a new tab';
+    li.querySelector('.tip-go use').setAttribute('href', external ? '#i-external' : '#i-chevron');
     return li;
   }
+
+  /* ---------------------------------------------------------------- the description card that rises from each icon */
+  // Centred under its icon, nudged in from the screen edges, and above the icon when there's no room below.
+  function placeTip(li) {
+    const tip = li.querySelector('.tile-tip');
+    if (!tip) return;
+    li.classList.remove('tip-off');
+    const r = li.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, m = 12;
+    const left = r.left + r.width / 2 - w / 2;
+    const dx = left < m ? m - left : left + w > innerWidth - m ? innerWidth - m - (left + w) : 0;
+    tip.style.setProperty('--tip-dx', `${Math.round(dx)}px`);
+    li.classList.toggle('tip-up', r.bottom + 10 + h > innerHeight - m && r.top - 10 - h > m);
+  }
+  const tilesEl = $('#tiles');
+  const hideTips = () => document.querySelectorAll('.tile.show-tip').forEach(li => li.classList.remove('show-tip'));
+  tilesEl.addEventListener('pointerover', e => { const li = e.target.closest('.tile'); if (li && !li.contains(e.relatedTarget)) placeTip(li); });
+  tilesEl.addEventListener('focusin', e => { const li = e.target.closest('.tile'); if (li) placeTip(li); });
+  // Touch screens have no hover: a long press shows the card and a tap still opens the tool, as on iPhone.
+  let press = null;
+  tilesEl.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse') return;
+    const li = e.target.closest('.tile:not(.tile--loading)');
+    if (!li) return;
+    const p = press = { x: e.clientX, y: e.clientY, fired: false };
+    p.timer = setTimeout(() => { hideTips(); placeTip(li); li.classList.add('show-tip'); p.fired = true; }, 450);
+  });
+  tilesEl.addEventListener('pointermove', e => { if (press && !press.fired && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) { clearTimeout(press.timer); press = null; } });
+  const endPress = () => { if (press && !press.fired) { clearTimeout(press.timer); press = null; } };
+  tilesEl.addEventListener('pointerup', endPress);
+  tilesEl.addEventListener('pointercancel', endPress);
+  tilesEl.addEventListener('click', e => { if (press && press.fired) { e.preventDefault(); press = null; } }, true);
+  tilesEl.addEventListener('contextmenu', e => { if (e.target.closest('.tile')) e.preventDefault(); });
+  document.addEventListener('pointerdown', e => { if (!e.target.closest('.tile.show-tip')) hideTips(); }, true);
+  addEventListener('scroll', hideTips, { passive: true });
+  // Escape hides the card until the pointer or focus moves on, so it never covers what someone is reading.
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideTips(); tilesEl.querySelectorAll('.tile').forEach(li => li.classList.add('tip-off')); } });
+  tilesEl.addEventListener('pointerout', e => { const li = e.target.closest('.tile'); if (li && !li.contains(e.relatedTarget)) li.classList.remove('tip-off'); });
+  tilesEl.addEventListener('focusout', e => { const li = e.target.closest('.tile'); if (li) li.classList.remove('tip-off'); });
   function renderHome(home, o = {}) {
     const name = (home && home.name) || '';
     const first = name.trim().split(/\s+/)[0] || '';

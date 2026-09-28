@@ -19,6 +19,8 @@
   --sh-card-hover:0 0 0 .5px rgba(0,0,0,.04),0 2px 4px rgba(16,18,40,.05),0 16px 36px rgba(16,18,40,.1);
   --sh-sheet:0 28px 80px rgba(16,18,40,.3),0 2px 8px rgba(16,18,40,.1);
   --sh-icon:inset 0 0 0 .5px rgba(0,0,0,.08),0 1px 2px rgba(16,18,40,.12);
+  --sh-icon-lift:inset 0 0 0 .5px rgba(0,0,0,.08),0 14px 28px rgba(16,18,40,.22);
+  --mat-tip:rgba(255,255,255,.86); --sh-tip:0 14px 40px rgba(16,18,40,.18),0 0 0 .5px rgba(0,0,0,.06);
   --focus:#1a24a8;
   --font-text:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -44,11 +46,14 @@
     --sh-card-hover:0 0 0 .5px rgba(255,255,255,.12),0 16px 36px rgba(0,0,0,.55);
     --sh-sheet:0 30px 90px rgba(0,0,0,.7),0 0 0 .5px rgba(255,255,255,.08);
     --sh-icon:inset 0 0 0 .5px rgba(255,255,255,.12);
+    --sh-icon-lift:inset 0 0 0 .5px rgba(255,255,255,.12),0 14px 30px rgba(0,0,0,.65);
+    --mat-tip:rgba(44,44,46,.84); --sh-tip:0 16px 44px rgba(0,0,0,.6),0 0 0 .5px rgba(255,255,255,.1);
     --focus:#b3b9ff;
   }
 }
 @media (prefers-contrast:more){
-  :root{ --ink-2:var(--ink); --ink-3:var(--ink); --sep:rgba(60,60,67,.6); --mat:var(--bg); --mat-edge:var(--ink-3); --sh-card:0 0 0 1px var(--ink-3); }
+  :root{ --ink-2:var(--ink); --ink-3:var(--ink); --sep:rgba(60,60,67,.6); --mat:var(--bg); --mat-edge:var(--ink-3); --sh-card:0 0 0 1px var(--ink-3);
+    --mat-tip:var(--raised); --sh-tip:0 0 0 1px var(--ink-3); }
 }
 
 /* ---------------------------------------------------------------- base */
@@ -132,32 +137,54 @@ a{color:var(--tint)}
 .home-head{display:flex;flex-direction:column;gap:2px;margin-bottom:28px}
 .eyebrow{margin:0;color:var(--ink-2);font:600 15px/1.3 var(--font-text);letter-spacing:-.006em}
 .section-label{margin:0 0 12px;color:var(--ink-2);font:600 15px/1.3 var(--font-text);letter-spacing:-.006em}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px;margin:0;padding:0;list-style:none}
-.tile{display:flex;min-width:0}
-.tile-link{position:relative;display:flex;flex-direction:column;gap:14px;width:100%;min-height:188px;padding:20px 20px 18px;border-radius:var(--r-card);
-  background:var(--surface);box-shadow:var(--sh-card);color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent;
-  transition:transform .34s var(--ease-out),box-shadow .25s}
-@media (hover:hover){.tile-link:hover{box-shadow:var(--sh-card-hover)}}
-.tile-link:active{transform:scale(.97);transition-duration:.1s}
-.app-icon{display:grid;place-items:center;width:60px;height:60px;flex:none;border-radius:var(--r-icon);color:#fff;box-shadow:var(--sh-icon);
-  background:linear-gradient(160deg,#8e8e93 0%,#48484a 100%)}
-.app-icon svg{width:32px;height:32px}
+/* Tools as app icons, as on a home screen: the name under each icon, the description in a card that rises from the
+   icon on hover (a long press on touch screens, keyboard focus too). */
+.tiles{display:flex;flex-wrap:wrap;gap:24px 20px;margin:0;padding:0;list-style:none}
+.tile{position:relative;width:112px}
+.tile-link{display:flex;flex-direction:column;align-items:center;gap:10px;padding-block:6px;border-radius:18px;color:inherit;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.tile-link:focus-visible{outline-offset:4px}
+.app-icon{display:grid;place-items:center;width:88px;height:88px;flex:none;border-radius:22.5%;color:#fff;box-shadow:var(--sh-icon);
+  background:linear-gradient(160deg,#8e8e93 0%,#48484a 100%);transition:transform .34s var(--ease-out),box-shadow .3s var(--ease-out)}
+.app-icon svg{width:46px;height:46px}
 .app-icon--estimator{background:linear-gradient(160deg,#3a47e0 0%,#00098b 78%)}
 .app-icon--speeding{background:linear-gradient(160deg,#ff8a3d 0%,#e3122e 78%)}
-.tile-text{display:flex;flex-direction:column;gap:4px;min-width:0}
-.tile-title{font:650 20px/1.25 var(--font-display);letter-spacing:-.017em;color:var(--ink);overflow-wrap:anywhere}
-.tile-sub{font-size:15px;line-height:1.4;color:var(--ink-2)}
-.tile-go{display:inline-flex;align-items:center;gap:3px;margin-top:auto;color:var(--tint);font:600 15px/1.2 var(--font-text);letter-spacing:-.006em}
-.tile-go svg{width:17px;height:17px;transition:transform .34s var(--ease-out)}
-@media (hover:hover){.tile-link:hover .tile-go svg{transform:translateX(2px)}.tile-link[target="_blank"]:hover .tile-go svg{transform:translate(2px,-2px)}}
+@media (hover:hover){.tile-link:hover .app-icon{transform:translateY(-3px) scale(1.04);box-shadow:var(--sh-icon-lift)}}
+.tile-link:active .app-icon{transform:scale(.92);transition-duration:.12s}
+.tile-name{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  font:500 13px/1.25 var(--font-text);letter-spacing:-.004em;color:var(--ink);text-align:center;text-wrap:balance}
+
+.tile-tip{--tip-dx:0px;--tip-y:-6px;--tip-s:.9;position:absolute;z-index:30;top:calc(100% + 10px);left:50%;width:252px;padding:12px 14px 11px;
+  border-radius:14px;background:var(--mat-tip);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--sh-tip);color:var(--ink);
+  transform-origin:calc(50% - var(--tip-dx)) 0;transform:translateX(calc(-50% + var(--tip-dx))) translateY(var(--tip-y)) scale(var(--tip-s));
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .3s var(--ease-out),visibility 0s linear .16s}
+.tile-tip::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}   /* a bridge, so the pointer can move onto the card */
+.tile.tip-up .tile-tip{--tip-y:6px;top:auto;bottom:calc(100% + 10px);transform-origin:calc(50% - var(--tip-dx)) 100%}
+.tile.tip-up .tile-tip::before{top:auto;bottom:-14px}
+@media (hover:hover){
+  .tile:not(.tip-off):hover .tile-tip{--tip-y:0px;--tip-s:1;opacity:1;visibility:visible;pointer-events:auto;
+    transition:opacity .2s ease .35s,transform .34s var(--ease-out) .35s,visibility 0s linear .35s}
+}
+.tile:not(.tip-off):has(.tile-link:focus-visible) .tile-tip,.tile.show-tip .tile-tip{--tip-y:0px;--tip-s:1;opacity:1;visibility:visible;pointer-events:auto;
+  transition:opacity .2s ease,transform .34s var(--ease-out),visibility 0s}
+.tile.tip-off .tile-tip{transition:opacity .12s ease,transform .2s ease,visibility 0s linear .12s}   /* Escape: hide at once, until the pointer or focus moves on */
+.tip-title{margin:0 0 3px;font:600 15px/1.3 var(--font-text);letter-spacing:-.01em}
+.tip-text{margin:0;color:var(--ink-2);font-size:13.5px;line-height:1.4}
+.tip-go{display:flex;align-items:center;gap:3px;margin:9px 0 0;padding-top:8px;border-top:var(--hair) solid var(--sep);color:var(--tint);
+  font:600 13px/1.2 var(--font-text);letter-spacing:-.004em}
+.tip-go svg{width:14px;height:14px}
+@media (max-width:480px){
+  .tiles{gap:20px 4px}
+  .tile{width:104px}
+  .app-icon{width:72px;height:72px}
+  .app-icon svg{width:38px;height:38px}
+}
+
 .tile--loading .tile-link{pointer-events:none}
-.tile--loading .app-icon,.tile--loading .tile-title,.tile--loading .tile-sub,.tile--loading .tile-go{color:transparent;background:var(--skeleton);box-shadow:none;border-radius:8px}
-.tile--loading .app-icon{border-radius:var(--r-icon)}
-.tile--loading .tile-title{width:62%;height:22px}
-.tile--loading .tile-sub{width:88%;height:36px}
-.tile--loading .tile-go{width:34%;height:18px}
+.tile--loading .app-icon{color:transparent;background:var(--skeleton);box-shadow:none}
+.tile--loading .tile-name{width:70%;height:13px;border-radius:5px;background:var(--skeleton)}
 @media (prefers-reduced-motion:no-preference){
-  .tile--loading .app-icon,.tile--loading .tile-title,.tile--loading .tile-sub,.tile--loading .tile-go{
+  .tile--loading .app-icon,.tile--loading .tile-name{
     background:linear-gradient(90deg,var(--skeleton) 30%,var(--skeleton-hi) 50%,var(--skeleton) 70%) 0 0/300% 100%;animation:shimmer 1.4s linear infinite}
 }
 @keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
@@ -210,8 +237,9 @@ a{color:var(--tint)}
 @keyframes flr-pop-in{from{transform:translateX(-30%);filter:brightness(.94)}}
 @media (prefers-reduced-motion:reduce){
   ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
-  .btn,.tile-link,.avatar,.close{transition:none}
+  .btn,.avatar,.close,.app-icon{transition:none}
+  .tile-tip,.tile.tip-up .tile-tip{--tip-y:0px;--tip-s:1}
 }
 @media (prefers-reduced-transparency:reduce){
-  :root{--mat:var(--bg);--blur:none;--toast:#1c1c1e}
+  :root{--mat:var(--bg);--mat-tip:var(--raised);--blur:none;--toast:#1c1c1e}
 }
