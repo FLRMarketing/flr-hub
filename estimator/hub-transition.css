@@ -1,0 +1,10 @@
+/* Added by the FLR Hub (scripts/sync-estimator.sh), not part of the Cost Estimator's own code.
+   Opening the Estimator from the hub slides it in from the right; Back slides the hub in again (hub.css). */
+@view-transition{navigation:auto;types:flr-push}
+@media (prefers-reduced-motion:no-preference){
+  html:active-view-transition-type(flr-push)::view-transition-old(root){animation:.5s cubic-bezier(.32,.72,0,1) both flr-push-out}
+  html:active-view-transition-type(flr-push)::view-transition-new(root){animation:.5s cubic-bezier(.32,.72,0,1) both flr-push-in}
+}
+@keyframes flr-push-out{to{transform:translateX(-30%);filter:brightness(.94)}}
+@keyframes flr-push-in{from{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}

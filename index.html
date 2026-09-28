@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FLR Hub</title>
+<meta name="description" content="Tools for FLR Group staff.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="FLR Hub">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<link rel="icon" href="assets/flr-icon-192.png">
+<link rel="apple-touch-icon" href="assets/flr-icon-192.png">
+<link rel="stylesheet" href="hub.css">
+<script src="flr-config.js"></script>
+<script src="vendor/supabase-2.116.0.js" defer></script>
+<script src="hub.js" defer></script>
+</head>
+<body data-view="boot">
+<svg class="defs" aria-hidden="true" focusable="false">
+  <symbol id="flr-mark" viewBox="4 8 143 164"><path fill="#a7a9ac" fill-rule="evenodd" d="M 13.99 170.7 L 146.26 170.7 L 146.26 16.51 L 13.99 16.51 Z M 13.99 170.7 "/><path fill="#001796" fill-rule="evenodd" d="M 5.39 43.18 L 40.73 9.45 L 76.07 43.18 L 40.73 76.92 Z M 5.39 43.18 "/><path fill="#ffffff" fill-rule="nonzero" d="M 31.05 131.55 L 31.05 142.08 L 53.86 142.08 L 53.86 148.14 L 31.05 148.14 L 31.05 164.14 L 21.23 164.14 L 21.23 125.32 L 55.09 125.32 L 55.09 131.55 Z M 31.05 131.55 "/><path fill="#ffffff" fill-rule="nonzero" d="M 71.25 125.32 L 71.25 157.62 L 94.97 157.62 L 94.97 164.14 L 61.27 164.14 L 61.27 125.32 Z M 71.25 125.32 "/><path fill="#ffffff" fill-rule="nonzero" d="M 100.07 164.14 L 100.07 125.32 L 124.95 125.32 C 130.84 125.36 135.09 126.22 137.7 127.91 C 140.31 129.6 141.61 132.75 141.61 137.37 L 141.61 138.82 C 141.61 139.32 141.56 139.83 141.46 140.34 C 141.36 141.42 141.09 142.49 140.66 143.54 C 140.22 144.59 139.46 145.46 138.39 146.16 C 137.77 146.54 137.1 146.86 136.36 147.09 C 135.61 147.32 134.86 147.52 134.09 147.67 C 133.78 147.71 133.49 147.76 133.21 147.82 C 132.93 147.88 132.63 147.92 132.32 147.96 L 132.32 148.14 C 135.34 148.33 137.54 149.07 138.93 150.35 C 140.31 151.63 141 153.41 141 155.7 L 141 164.14 L 131.1 164.14 L 131.1 157.1 L 131.17 156.23 C 131.12 154.29 130.39 152.96 128.98 152.27 C 127.57 151.57 125.72 151.22 123.42 151.22 L 109.59 151.16 L 109.59 164.14 Z M 109.59 144.93 L 123.42 144.93 C 126.44 144.97 128.55 144.54 129.75 143.62 C 130.95 142.71 131.55 141.17 131.55 139 C 131.55 136.59 131.21 134.8 130.52 133.61 C 129.83 132.43 127.66 131.84 124.03 131.84 L 109.59 131.78 Z M 109.59 144.93 "/></symbol>
+  <symbol id="i-estimator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="2.75" width="14" height="18.5" rx="3.2"/>
+    <rect x="8" y="5.8" width="8" height="3.6" rx="1.1"/>
+    <path stroke-width="2.5" d="M8.6 13.2h.01M12 13.2h.01M15.4 13.2h.01M8.6 17h.01M12 17h.01M15.4 17h.01"/>
+  </symbol>
+  <symbol id="i-speeding" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 16.9A8.5 8.5 0 1 1 20 16.9"/>
+    <path d="M5.9 10.5l1.25.7M12 7v1.4M18.1 10.5l-1.25.7"/>
+    <path d="M12 14l3.8-3.2"/>
+    <circle cx="12" cy="14" r="1.7" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="i-tile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+    <rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/>
+    <rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>
+  </symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16.5 7.5M9.5 7.5h7v7"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.6v5.2"/><path stroke-width="2.6" d="M12 16.4h.01"/></symbol>
+  <symbol id="i-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+    <path d="M12 3.5v3.2"/><path opacity=".18" d="M18 6l-2.25 2.25"/><path opacity=".26" d="M20.5 12h-3.2"/><path opacity=".36" d="M18 18l-2.25-2.25"/>
+    <path opacity=".48" d="M12 20.5v-3.2"/><path opacity=".6" d="M6 18l2.25-2.25"/><path opacity=".72" d="M3.5 12h3.2"/><path opacity=".86" d="M6 6l2.25 2.25"/>
+  </symbol>
+</svg>
+
+<header class="bar" id="bar" hidden>
+  <div class="wrap bar-inner">
+    <p class="brand"><svg class="mark bar-mark" role="img" aria-label="FLR"><use href="#flr-mark"/></svg><span class="brand-name">Hub</span></p>
+    <button class="avatar" id="account-btn" type="button" aria-haspopup="dialog" aria-label="Your account"></button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="signin wrap" id="signin" aria-labelledby="signin-title" hidden>
+    <div class="signin-card">
+      <svg class="mark signin-mark" role="img" aria-label="FLR"><use href="#flr-mark"/></svg>
+      <h1 class="display" id="signin-title">FLR Hub</h1>
+      <p class="lede">Sign in with your FLR account to open your tools.</p>
+      <form class="form" id="signin-form" novalidate>
+        <div class="group">
+          <label class="row" for="si-email"><span class="row-label">Email</span><input id="si-email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="name@flr.co.uk" required></label>
+          <label class="row" for="si-password"><span class="row-label">Password</span><input id="si-password" name="password" type="password" autocomplete="current-password" placeholder="Required" required></label>
+        </div>
+        <p class="form-error" id="signin-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+        <button class="btn btn-primary btn-block" id="signin-submit" type="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Sign in</span></button>
+      </form>
+      <button class="link" type="button" data-sheet="sheet-forgot">Forgotten your password?</button>
+      <p class="signin-foot">New to FLR tools? <button class="link" type="button" data-sheet="sheet-register">Create an account</button></p>
+    </div>
+  </section>
+
+  <section class="home wrap" id="home" aria-labelledby="greeting" hidden>
+    <div class="home-head">
+      <p class="eyebrow" id="today"></p>
+      <h1 class="display" id="greeting">Welcome back</h1>
+    </div>
+    <h2 class="section-label" id="tools-label">Your tools</h2>
+    <ul class="tiles" id="tiles" aria-labelledby="tools-label"></ul>
+    <p class="notice" id="home-notice" role="status" hidden><span></span> <button class="link" type="button" id="home-retry">Try again</button></p>
+  </section>
+
+  <section class="signin wrap" id="setup" aria-labelledby="setup-title" hidden>
+    <div class="signin-card">
+      <svg class="mark signin-mark" role="img" aria-label="FLR"><use href="#flr-mark"/></svg>
+      <h1 class="display" id="setup-title">FLR Hub</h1>
+      <p class="lede">The FLR sign-in isn’t connected to this copy of the hub yet. Add flr-config.js next to index.html.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap"><p>FLR Group · Tools for staff</p></footer>
+
+<noscript><p class="noscript">The FLR Hub needs JavaScript to sign you in.</p></noscript>
+
+<template id="tile-tpl">
+  <li class="tile">
+    <a class="tile-link">
+      <span class="app-icon" aria-hidden="true"><svg><use/></svg></span>
+      <span class="tile-text"><span class="tile-title"></span><span class="tile-sub"></span></span>
+      <span class="tile-go"><span class="tile-go-label"></span><svg aria-hidden="true"><use/></svg></span>
+    </a>
+  </li>
+</template>
+
+<dialog class="sheet" id="sheet-register" aria-labelledby="register-title">
+  <div class="scrim"></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title" id="register-title">Create your FLR account</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <form class="form sheet-body" id="register-form" novalidate>
+      <p class="sheet-lede">One account opens every FLR tool, including the Cost Estimator.</p>
+      <div class="group">
+        <label class="row" for="rg-name"><span class="row-label">Full name</span><input id="rg-name" name="name" type="text" autocomplete="name" placeholder="First and last name" required aria-describedby="rg-name-err"></label>
+        <label class="row" for="rg-email"><span class="row-label">Work email</span><input id="rg-email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="name@flr.co.uk" required aria-describedby="rg-email-err"></label>
+      </div>
+      <p class="field-error" id="rg-name-err" hidden></p><p class="field-error" id="rg-email-err" hidden></p>
+      <div class="group">
+        <label class="row" for="rg-password"><span class="row-label">Password</span><input id="rg-password" name="password" type="password" autocomplete="new-password" placeholder="Required" required aria-describedby="rg-password-hint rg-password-err"></label>
+        <label class="row" for="rg-confirm"><span class="row-label">Confirm</span><input id="rg-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Type it again" required aria-describedby="rg-confirm-err"></label>
+      </div>
+      <p class="hint" id="rg-password-hint">At least 10 characters, with letters and numbers.</p>
+      <p class="field-error" id="rg-password-err" hidden></p><p class="field-error" id="rg-confirm-err" hidden></p>
+      <div class="group">
+        <label class="row" for="rg-code"><span class="row-label">Access code</span><input id="rg-code" name="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="From your FLR administrator" required aria-describedby="rg-code-err"></label>
+      </div>
+      <p class="field-error" id="rg-code-err" hidden></p>
+      <p class="form-error" id="register-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+      <p class="form-ok" id="register-ok" role="status" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Create account</span></button>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="sheet-forgot" aria-labelledby="forgot-title">
+  <div class="scrim"></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title" id="forgot-title">Reset your password</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <form class="form sheet-body" id="forgot-form" novalidate>
+      <p class="sheet-lede">We’ll email you a link. It brings you back here to choose a new password.</p>
+      <div class="group">
+        <label class="row" for="fg-email"><span class="row-label">Email</span><input id="fg-email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="name@flr.co.uk" required></label>
+      </div>
+      <p class="form-error" id="forgot-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+      <p class="form-ok" id="forgot-ok" role="status" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Send reset link</span></button>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="sheet-recover" aria-labelledby="recover-title">
+  <div class="scrim"></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title" id="recover-title">Choose a new password</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <form class="form sheet-body" id="recover-form" novalidate>
+      <div class="group">
+        <label class="row" for="rc-password"><span class="row-label">New</span><input id="rc-password" name="password" type="password" autocomplete="new-password" placeholder="Required" required aria-describedby="rc-hint"></label>
+        <label class="row" for="rc-confirm"><span class="row-label">Confirm</span><input id="rc-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Type it again" required></label>
+      </div>
+      <p class="hint" id="rc-hint">At least 10 characters, with letters and numbers.</p>
+      <p class="form-error" id="recover-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+      <button class="btn btn-primary btn-block" type="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Save password</span></button>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="sheet-account" aria-labelledby="acct-name">
+  <div class="scrim"></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title">Account</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="sheet-body">
+      <div class="who">
+        <span class="avatar avatar-lg" id="acct-initials" aria-hidden="true"></span>
+        <p class="who-name" id="acct-name"></p>
+        <p class="who-email" id="acct-email"></p>
+        <p class="chip" id="acct-role"></p>
+      </div>
+      <div class="group">
+        <button class="row row-button danger" type="button" id="signout">Sign out</button>
+      </div>
+      <p class="hint">Signs you out of the Hub and the Cost Estimator on this device.</p>
+    </div>
+  </div>
+</dialog>
+
+<p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+</body>
+</html>
