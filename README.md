@@ -51,7 +51,8 @@ scripts/sync-estimator.sh --build
 scripts/sync-speeding.py
 ```
 
-Then commit `estimator/` and `speeding/`. The Estimator script refuses the demonstration build, which has pricing data
+Then commit `estimator/` and `speeding/`. When `hub.css` or `hub.js` changes, bump the `?v=` on their links in `index.html`:
+GitHub Pages lets browsers cache files for 10 minutes, and the version keeps a page from mixing old and new files. The Estimator script refuses the demonstration build, which has pricing data
 in it. The Speeding script refuses a page that lists staff photos.
 
 ## Local preview

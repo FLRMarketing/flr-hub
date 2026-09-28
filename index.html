@@ -13,10 +13,11 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="assets/flr-icon-192.png">
 <link rel="apple-touch-icon" href="assets/flr-icon-192.png">
-<link rel="stylesheet" href="hub.css">
+<!-- ?v= changes with every release, so a page never runs with an older cached hub.css or hub.js (GitHub Pages caches for 10 minutes) -->
+<link rel="stylesheet" href="hub.css?v=1.1">
 <script src="flr-config.js"></script>
 <script src="vendor/supabase-2.116.0.js" defer></script>
-<script src="hub.js" defer></script>
+<script src="hub.js?v=1.1" defer></script>
 </head>
 <body data-view="boot">
 <svg class="defs" aria-hidden="true" focusable="false">
