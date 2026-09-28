@@ -1,5 +1,6 @@
-/* Added by the FLR Hub (scripts/sync-estimator.sh), not part of the Cost Estimator's own code.
-   Opening the Estimator from the hub slides it in from the right; Back slides the hub in again (hub.css). */
+/* The slide between the hub and a tool on this site (the Cost Estimator, the Speeding Report), linked from each
+   tool's page by the sync scripts. Opening a tool from the hub slides it in from the right; Back slides the hub in
+   again (hub.css). CSS only: the tools themselves are unchanged. */
 @view-transition{navigation:auto;types:flr-push}
 @media (prefers-reduced-motion:no-preference){
   html:active-view-transition-type(flr-push)::view-transition-old(root){animation:.5s cubic-bezier(.32,.72,0,1) both flr-push-out}

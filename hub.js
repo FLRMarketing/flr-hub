@@ -27,6 +27,8 @@
   };
   // iOS Safari applies :active only when the page listens for touches; press feedback has to start on touch-down.
   document.addEventListener('touchstart', () => {}, { passive: true });
+  // The slide back from a tool is skipped when the page arrives hidden (a background tab): nothing to report.
+  addEventListener('pagereveal', e => { const t = e.viewTransition; if (t) { t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {}); } });
 
   /* ---------------------------------------------------------------- motion: the Speeding Report's spring
      Damping 1 = no overshoot; response = seconds to (roughly) arrive. Motion always starts from the
@@ -217,6 +219,7 @@
       let t;
       // The FLR mark flies between the sign-in screen and the bar; everything else cross-fades.
       try { t = document.startViewTransition({ update: apply, types: ['flr-swap'] }); } catch (e) { t = document.startViewTransition(apply); }
+      t.ready.catch(() => {}); t.finished.catch(() => {});   // skipped when the page is hidden: nothing to report
       return t.updateCallbackDone.catch(() => apply());
     }
     apply();
@@ -229,7 +232,12 @@
     if (w.length === 1) return w[0][0].toUpperCase();
     return (w[0][0] + w[w.length - 1][0]).toUpperCase();
   }
-  const safeTile = t => { try { return !!t && typeof t.title === 'string' && new URL(t.url).protocol === 'https:'; } catch (e) { return false; } };
+  const SAME_SITE = /^[a-z0-9][a-z0-9-]{0,39}\/$/;   // a page of this site, such as speeding/ (opens in the same tab)
+  const safeTile = t => {
+    if (!t || typeof t.title !== 'string' || typeof t.url !== 'string') return false;
+    if (SAME_SITE.test(t.url)) return true;
+    try { return new URL(t.url).protocol === 'https:'; } catch (e) { return false; }
+  };
   function tileEl(t, o = {}) {
     const li = $('#tile-tpl').content.firstElementChild.cloneNode(true);
     const a = li.querySelector('.tile-link');
@@ -292,8 +300,19 @@
       renderHome(home);
       await show('home', { animate: o.animate });
       rise([...$('#tiles').children].slice(fresh ? 0 : 1));
+      goNext(home);
     })().finally(() => { loading = null; });
     return loading;
+  }
+  // A tool on this site sent someone here to sign in (…/?next=speeding): once they're in, carry on to it, but only
+  // to a page of this site that is one of their tiles.
+  function goNext(home) {
+    const next = new URLSearchParams(location.search).get('next');
+    if (!next) return;
+    history.replaceState(null, '', location.pathname + location.hash);   // Back from the tool returns to a plain hub
+    const path = next + '/';
+    const theirs = path === ESTIMATOR.url || ((home && home.tiles) || []).some(t => t && t.url === path);
+    if (/^[a-z0-9-]{1,40}$/.test(next) && theirs) location.assign(path);
   }
   async function failed(err, o) {
     const code = flrCode(err);
