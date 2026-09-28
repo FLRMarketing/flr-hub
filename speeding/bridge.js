@@ -84,7 +84,7 @@
     if (!r.error) return r.data;
     const code = flrCode(r.error), why = detailOf(r.error);
     if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return new Promise(() => {}); }
-    if (code === 'FLR_FORBIDDEN' && why === 'speeding.unlinked') blocked('Your account isn’t linked to a driver yet', 'Fleet Management shows you your own driving once an FLR administrator links your FLR account to your name. Ask them to link it.', { switchAccount: true });
+    if (code === 'FLR_FORBIDDEN' && why === 'speeding.unlinked') blocked('Nothing to show you yet', 'Fleet Management shows each driver their own speeding, driving score and vehicle details. If you drive an FLR vehicle, ask an FLR administrator to link your FLR account to your name.', { switchAccount: true });
     else if (code === 'FLR_FORBIDDEN' && why === 'speeding.off') blocked('Fleet Management is switched off', 'An FLR administrator has turned it off for now. Try again later.');
     else if (code === 'FLR_FORBIDDEN' && why === 'speeding.preview') blocked('Only administrators can preview', 'Previewing another driver’s page is for FLR administrators.', { own: true });
     else if (code === 'FLR_VALIDATION' && PREVIEW) blocked('That driver isn’t in the current report', 'Go back to Fleet Management and choose a driver from the list.', { own: true });
