@@ -15,7 +15,7 @@
   const NAME_KEY = 'flr-hub:name';         // this browser only: greet people by name before the database answers
   const ROLES = { estimator: 'Estimator', admin: 'Administrator', developer: 'Developer' };
   const ESTIMATOR = { id: 'estimator', title: 'Cost Estimator', subtitle: 'Price commercial flooring jobs and build quotes.', url: 'estimator/' };
-  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding' };
+  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const strongEnough = p => p.length >= 10 && /[A-Za-z]/.test(p) && /\d/.test(p);
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -267,18 +267,26 @@
     const tip = li.querySelector('.tile-tip');
     if (!tip) return;
     li.classList.remove('tip-off');
+    // The screen's own width: on phones innerWidth grows with anything that overflows, so it can't be trusted here.
+    const vw = document.documentElement.clientWidth;
     const r = li.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, m = 12;
     const left = r.left + r.width / 2 - w / 2;
-    const dx = left < m ? m - left : left + w > innerWidth - m ? innerWidth - m - (left + w) : 0;
+    const dx = left < m ? m - left : left + w > vw - m ? vw - m - (left + w) : 0;
     tip.style.setProperty('--tip-dx', `${Math.round(dx)}px`);
     li.classList.toggle('tip-up', r.bottom + 10 + h > innerHeight - m && r.top - 10 - h > m);
   }
   const tilesEl = $('#tiles');
   const hideTips = () => document.querySelectorAll('.tile.show-tip').forEach(li => li.classList.remove('show-tip'));
+  // Every card is placed as soon as its icon is on screen (and again when the window changes size), so even a hidden
+  // card never reaches past the screen edge.
+  let placing = 0;
+  const placeAll = () => { if (placing) return; placing = requestAnimationFrame(() => { placing = 0; tilesEl.querySelectorAll('.tile').forEach(placeTip); }); };
+  new MutationObserver(placeAll).observe(tilesEl, { childList: true });
+  addEventListener('resize', placeAll);
   tilesEl.addEventListener('pointerover', e => { const li = e.target.closest('.tile'); if (li && !li.contains(e.relatedTarget)) placeTip(li); });
   tilesEl.addEventListener('focusin', e => { const li = e.target.closest('.tile'); if (li) placeTip(li); });
   // Touch screens have no hover: a long press shows the card and a tap still opens the tool, as on iPhone.
-  let press = null;
+  let press = null, swallowUntil = 0;
   tilesEl.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse') return;
     const li = e.target.closest('.tile:not(.tile--loading)');
@@ -287,10 +295,11 @@
     p.timer = setTimeout(() => { hideTips(); placeTip(li); li.classList.add('show-tip'); p.fired = true; }, 450);
   });
   tilesEl.addEventListener('pointermove', e => { if (press && !press.fired && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) { clearTimeout(press.timer); press = null; } });
-  const endPress = () => { if (press && !press.fired) { clearTimeout(press.timer); press = null; } };
+  // Lifting the finger after a long press must not also open the tool; only that one release is ignored.
+  const endPress = () => { if (!press) return; clearTimeout(press.timer); if (press.fired) swallowUntil = Date.now() + 600; press = null; };
   tilesEl.addEventListener('pointerup', endPress);
   tilesEl.addEventListener('pointercancel', endPress);
-  tilesEl.addEventListener('click', e => { if (press && press.fired) { e.preventDefault(); press = null; } }, true);
+  tilesEl.addEventListener('click', e => { if (Date.now() < swallowUntil) { e.preventDefault(); swallowUntil = 0; } }, true);
   tilesEl.addEventListener('contextmenu', e => { if (e.target.closest('.tile')) e.preventDefault(); });
   document.addEventListener('pointerdown', e => { if (!e.target.closest('.tile.show-tip')) hideTips(); }, true);
   addEventListener('scroll', hideTips, { passive: true });
