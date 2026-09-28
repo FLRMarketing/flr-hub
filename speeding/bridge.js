@@ -1,5 +1,5 @@
 /* ============================================================================
-   FLR Hub: runs FLR Group Fleet Management (the driver speeding report) on the FLR site.
+   FLR Hub: runs Fleet Management (the driver speeding report) on the FLR site.
    The report asks for its database the way it does on Claude
    (window.claude.use('db')). This answers from the FLR database instead,
    after checking the FLR sign-in, and only for the people the Speeding tile
@@ -66,7 +66,7 @@
 
   async function fetchData() {
     const c = client();
-    if (!c) { blocked('FLR Group Fleet Management can’t start', 'This copy of the FLR site has no sign-in settings (flr-config.js).'); return null; }
+    if (!c) { blocked('Fleet Management can’t start', 'This copy of the FLR site has no sign-in settings (flr-config.js).'); return null; }
     let session = null;
     try { session = (await c.auth.getSession()).data.session; } catch (e) { /* treated as signed out */ }
     if (!session) { location.replace(SIGN_IN); return new Promise(() => {}); }   // the hub signs people in, then brings them back
@@ -74,12 +74,12 @@
     if (!r.error) return r.data;
     const code = flrCode(r.error);
     if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return new Promise(() => {}); }
-    if (code === 'FLR_FORBIDDEN') blocked('You don’t have access to FLR Group Fleet Management', 'It’s only open to the people on its list. Ask an FLR administrator if you need it.', { switchAccount: true });
+    if (code === 'FLR_FORBIDDEN') blocked('You don’t have access to Fleet Management', 'It’s only open to the people on its list. Ask an FLR administrator if you need it.', { switchAccount: true });
     else if (code === 'FLR_ACCOUNT_DISABLED') blocked('Your FLR account is switched off', 'Ask an FLR administrator to switch it back on.');
     else if (code === 'FLR_NO_PROFILE') blocked('Your account isn’t set up for FLR tools', 'Ask an FLR administrator to finish setting it up.');
-    else if (missing(r.error)) blocked('FLR Group Fleet Management isn’t set up yet', 'Its data hasn’t been added to the FLR database.');
+    else if (missing(r.error)) blocked('Fleet Management isn’t set up yet', 'Its data hasn’t been added to the FLR database.');
     else if (offline(r.error)) blocked('Can’t reach the FLR database', 'Check your connection, then try again.', { retry: true });
-    else blocked('FLR Group Fleet Management didn’t load', 'Something went wrong on the way. Try again in a moment.', { retry: true });
+    else blocked('Fleet Management didn’t load', 'Something went wrong on the way. Try again in a moment.', { retry: true });
     return null;
   }
   function take(d) {

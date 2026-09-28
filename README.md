@@ -3,7 +3,7 @@
 The front door to FLR's staff tools. One FLR account (the Cost Estimator's sign-in) works for everything on this site.
 
 - **Cost Estimator** opens here, in the same tab (`estimator/`), already signed in.
-- **FLR Group Fleet Management** (the driver speeding report) opens here too (`speeding/`), but only for the people on its list. Its data and staff photos
+- **Fleet Management** (the driver speeding report) opens here too (`speeding/`), but only for the people on its list. Its data and staff photos
   stay in the FLR database and reach the page only after sign-in.
 
 GitHub Pages is public, so nothing private belongs in this repository: no data, no staff photos or names, no links to
@@ -29,7 +29,7 @@ site such as `speeding/` (same tab) or an `https://` address (new tab). Change t
 FLR administrator:
 
 ```sql
-select public.admin_set_hub_tile('speeding', 'FLR Group Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'listed', 20);
+select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'listed', 20);
 select public.admin_set_hub_tile_person('speeding', 'name@flr.co.uk', true);   -- false takes them off the list
 select public.admin_hub_tiles();                                              -- everything, with the lists
 ```
