@@ -421,22 +421,36 @@ tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
   .key-sec.other ul{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
   .key-sec li{white-space:normal}
 }
-/* Once the Colour key has scrolled up under the navigation bar on the Diary, a compact copy of it waits in the bar:
-   one tap away anywhere in the Planner, Calendar or Leave List, and never sitting on the page's dates or names. */
-.keydrop.nb-key{display:none;margin-left:0}
-html.key-docked .keydrop.nb-key{display:block}
-.nb-key>summary{justify-content:center;width:36px;height:36px;padding:0;gap:0}
+/* Once the Colour key button scrolls up under the navigation bar on the Diary, the bar takes over: a compact key
+   button, and, while the key is open, the key itself as a slim strip along the bottom of the bar. It comes along as
+   the page scrolls, the page scrolls beneath it as it does beneath the bar, and it never sits over the grid itself. */
+.nb-key{display:none}
+html.key-docked .nb-key{display:grid}
 .nb-key .kb-dots{gap:2.5px}
 .nb-key .kb-dots i{width:7px;height:7px}
-.nb-key .key-pop{top:calc(100% + 10px)}
-@media (prefers-reduced-motion:no-preference){html.key-docked .nb-key>summary{animation:nbkey-in .34s cubic-bezier(.2,1,.4,1)}}
+.nb-key[aria-expanded="true"]{background:var(--tint-soft);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tint) 45%,transparent)}
+@media (prefers-reduced-motion:no-preference){html.key-docked .nb-key{animation:nbkey-in .34s cubic-bezier(.2,1,.4,1)}}
+@keyframes nbkey-in{from{opacity:0;transform:scale(.6)}}
 @media (min-width:1340px){   /* the bar's buttons drop their labels while the key is in the bar, so the five tabs keep their room */
   html.key-docked .btn.nb-act{width:36px;padding:0}
   html.key-docked .nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
-@keyframes nbkey-in{from{opacity:0;transform:scale(.6)}}
-@media (max-width:560px){
-  .nb-key .key-pop{top:calc(100% + 6px);left:max(var(--gutter),env(safe-area-inset-left,0px));right:max(var(--gutter),env(safe-area-inset-right,0px))}
+.key-strip{position:relative;display:flex;align-items:flex-start;gap:12px;max-width:1296px;margin:0 auto;
+  padding:2px max(var(--gutter),env(safe-area-inset-right,0px)) 10px max(var(--gutter),env(safe-area-inset-left,0px))}
+.ks-scroll{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;flex:1 1 auto;min-width:0;padding-top:4px}
+.ks-group{display:flex;flex-wrap:wrap;align-items:center;gap:5px 14px}
+.ks-group .kh{font:600 11.5px/1.3 var(--font-text);letter-spacing:.01em;color:var(--ink-3)}
+.ks-item{display:inline-flex;align-items:center;gap:6px;font:500 13px/1.3 var(--font-text);color:var(--ink);white-space:nowrap}
+.ks-item .sw{width:18px;height:13px}
+.ks-close{width:28px;height:28px}
+@media (prefers-reduced-motion:no-preference){.key-strip.arrive{animation:strip-in .3s cubic-bezier(.2,1,.4,1)}}
+@keyframes strip-in{from{opacity:0;transform:translateY(-6px)}}
+@media (max-width:760px){   /* phones: one line that swipes sideways, so the strip stays slim */
+  .key-strip{align-items:center;padding-bottom:8px}
+  .ks-scroll{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 20px 2px 0;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  .ks-scroll::-webkit-scrollbar{display:none}
+  .ks-group{flex-wrap:nowrap;flex:none}
 }
 .sw{position:relative;display:inline-block;flex:none;width:16px;height:12px;border-radius:4px;box-shadow:inset 0 0 0 var(--hair) var(--line-2)}
 .sw.acc{background:var(--ok);box-shadow:none}
@@ -721,10 +735,14 @@ html.staff .tabbar,html.staff #copy-form{display:none}
         <p class="nb-title" id="nb-title" aria-hidden="true">Approvals</p>
       </div>
       <div class="nb-trail">
-        <details class="keydrop nb-key" id="nb-key"><summary title="Colour key"><span class="kb-dots" aria-hidden="true"><i style="background:var(--ok)"></i><i style="background:var(--tint-fill)"></i><i style="background:var(--gold)"></i></span><span class="sr">Colour key</span></summary><div class="key-pop" id="nb-key-pop"></div></details>
+        <button class="iconbtn nb-key" type="button" id="nb-key" data-act="key-bar" aria-controls="key-strip" aria-expanded="false" title="Colour key"><span class="kb-dots" aria-hidden="true"><i style="background:var(--ok)"></i><i style="background:var(--tint-fill)"></i><i style="background:var(--gold)"></i></span><span class="sr">Colour key</span></button>
         <button class="btn nb-act" type="button" data-act="copy-form" id="copy-form" title="Copy the staff request form link"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="lbl">Copy form link</span></button>
         <button class="btn nb-act" type="button" data-act="refresh" id="refresh" title="Load the leave boards from monday.com again"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg><span class="lbl">Refresh</span></button>
       </div>
+    </div>
+    <div class="key-strip" id="key-strip" role="region" aria-label="Colour key" hidden>
+      <div class="ks-scroll" id="ks-scroll"></div>
+      <button class="close ks-close" type="button" data-act="key-hide" aria-label="Hide the colour key"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button>
     </div>
   </header>
 
@@ -2117,17 +2135,21 @@ function renderDiaryShell() {
     </div>
     <div id="diary-body"></div>`;
 }
-// Every colour and pattern the Diary uses. The navigation bar's copy uses plain labels rather than headings, so the
-// page's headings still start with its title.
+// Every colour and pattern the Diary uses, in three groups: shown as the dropdown under the Colour key button, and as
+// the strip in the navigation bar once the page has scrolled.
+function keyGroups() {
+  return [
+    ['Annual leave', [['<i class="sw acc"></i>', 'Accepted'], ['<i class="sw new"></i>', 'New request'], ['<i class="sw rev"></i>', 'Review']]],
+    ['Closures', [['<i class="sw closed-bh"></i>', 'Bank holiday'], ['<i class="sw closed-shut"></i>', 'Christmas shutdown'], ['<i class="sw closed-jeff"></i>', 'Jeff Day']]],
+    ['Other leave', Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => [`<i class="sw" style="background:${c}"></i>`, t])],
+  ];
+}
 function colourKeyHtml(tag) {
-  const item = (sw, label) => `<li>${sw}${esc(label)}</li>`;
-  const head = (text) => `<${tag} class="kh">${text}</${tag}>`;
-  return `<div class="key-sec">${head('Annual leave')}<ul>
-        ${item('<i class="sw acc"></i>', 'Accepted')}${item('<i class="sw new"></i>', 'New request')}${item('<i class="sw rev"></i>', 'Review')}</ul></div>
-      <div class="key-sec">${head('Closures')}<ul>
-        ${item('<i class="sw closed-bh"></i>', 'Bank holiday')}${item('<i class="sw closed-shut"></i>', 'Christmas shutdown')}${item('<i class="sw closed-jeff"></i>', 'Jeff Day')}</ul></div>
-      <div class="key-sec other">${head('Other leave')}<ul>
-        ${Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => item(`<i class="sw" style="background:${c}"></i>`, t)).join('')}</ul></div>`;
+  return keyGroups().map(([title, items], i) => `<div class="key-sec${i === 2 ? ' other' : ''}"><${tag} class="kh">${title}</${tag}><ul>
+        ${items.map(([sw, label]) => `<li>${sw}${esc(label)}</li>`).join('')}</ul></div>`).join('');
+}
+function colourKeyStripHtml() {
+  return keyGroups().map(([title, items]) => `<span class="ks-group" role="group" aria-label="${title}"><span class="kh" aria-hidden="true">${title}</span>${items.map(([sw, label]) => `<span class="ks-item">${sw}${esc(label)}</span>`).join('')}</span>`).join('');
 }
 // The month arrows step a month in the Planner and Calendar, and a year in the Leave List, which shows a whole year.
 function diaryNavText(st) {
@@ -2570,6 +2592,8 @@ document.addEventListener('click', async (ev) => {
   switch (act) {
     case 'tab': goTab(id); break;
     case 'refresh': load(); break;
+    case 'key-bar': keyOpen = !(keyOpen && isDocked()); applyKey(true); break;
+    case 'key-hide': keyOpen = false; applyKey(true); document.getElementById('nb-key').focus(); break;
     case 'copy-form': {
       try { await navigator.clipboard.writeText(FORM_URL); showToast(`Form link copied: ${FORM_URL}`); }
       catch (e) { showToast(`Copy this link: ${FORM_URL}`); }
@@ -2627,39 +2651,72 @@ function keyDrop(det, want, focus = false) {
   det._anim = pop.animate([from || { opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.95)' }], { duration: 170, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
   det._anim.onfinish = done;   // closes first, then drops the held fade so the next opening starts clean
 }
+// The key is open or not wherever it is on screen: as the dropdown under its button, or, once that button has scrolled
+// up under the navigation bar, as the strip along the bottom of the bar, so it comes along while the page scrolls.
+let keyOpen = false;
 document.addEventListener('click', (ev) => {
   const sum = ev.target.closest('.keydrop > summary');
   if (!sum) return;
   ev.preventDefault();
-  const det = sum.parentElement;
-  keyDrop(det, !det.open || det.classList.contains('closing'));
+  const det = sum.parentElement, want = !det.open || det.classList.contains('closing');
+  if (det.id === 'diary-key') keyOpen = want;
+  keyDrop(det, want);
 });
 document.addEventListener('pointerdown', (ev) => {
-  for (const det of document.querySelectorAll('.keydrop[open]:not(.closing)')) if (!det.contains(ev.target)) keyDrop(det, false);
+  // A tap elsewhere puts the dropdown away. The strip stays: it's there to compare with while working in the page.
+  for (const det of document.querySelectorAll('.keydrop[open]:not(.closing)')) {
+    if (det.contains(ev.target)) continue;
+    if (det.id === 'diary-key') keyOpen = false;
+    keyDrop(det, false);
+  }
 }, true);
-// On the Diary, when the Colour key button scrolls up under the navigation bar, the bar shows a compact copy of it,
-// and hides it again when the button comes back into view. Only one of the two is ever on screen.
 let keyWatch = null;
+const isDocked = () => document.documentElement.classList.contains('key-docked');
+// Shows the open key in the right place. When the page moves it between its button and the bar, the dropdown opens or
+// closes at once (its button has just gone, or is only just coming back) and the strip glides in.
+function applyKey(animate = false) {
+  const docked = isDocked(), det = document.getElementById('diary-key');
+  if (det) {
+    const want = keyOpen && !docked, now = det.open && !det.classList.contains('closing');
+    if (want !== now) {
+      if (animate) keyDrop(det, want);
+      else { if (det._anim) { det._anim.onfinish = null; det._anim.cancel(); det._anim = null; } det.classList.remove('closing'); det.open = want; }
+    }
+  }
+  const strip = document.getElementById('key-strip'), show = keyOpen && docked;
+  if (strip.hidden === show) { strip.hidden = !show; strip.classList.toggle('arrive', show); }
+  document.getElementById('nb-key').setAttribute('aria-expanded', String(show));
+  if (chrome) chrome.update();
+}
 function dockKey(on) {
-  const root = document.documentElement;
-  if (root.classList.contains('key-docked') === on) return;
-  // The copy that is leaving the screen closes at once: it is out of sight, so there's nothing to animate.
-  const shut = (det) => { if (!det || !det.open) return; if (det._anim) { det._anim.onfinish = null; det._anim.cancel(); det._anim = null; } det.classList.remove('closing'); det.open = false; };
-  shut(document.getElementById(on ? 'diary-key' : 'nb-key'));
-  root.classList.toggle('key-docked', on);
+  if (isDocked() === on) return;
+  document.documentElement.classList.toggle('key-docked', on);
+  applyKey(false);
 }
 function watchDiaryKey() {
   if (keyWatch) { keyWatch.disconnect(); keyWatch = null; }
   const sum = state.tab === 'diary' && !staffView() ? document.querySelector('#diary-key > summary') : null;
-  if (!sum || !('IntersectionObserver' in window)) { dockKey(false); return; }
-  const barBottom = Math.round(document.getElementById('navbar').getBoundingClientRect().bottom);
+  if (!sum) { keyOpen = false; document.documentElement.classList.remove('key-docked'); applyKey(false); return; }
+  // Measured from the bar's own row, so the strip showing or not doesn't move the line.
+  const barBottom = Math.round(document.querySelector('.nb-row').getBoundingClientRect().bottom);
+  document.documentElement.classList.toggle('key-docked', sum.getBoundingClientRect().bottom <= barBottom);
+  applyKey(false);
+  if (!('IntersectionObserver' in window)) return;
   keyWatch = new IntersectionObserver(([e]) => dockKey(!e.isIntersecting && e.boundingClientRect.top < barBottom), { rootMargin: `-${barBottom}px 0px 0px 0px` });
   keyWatch.observe(sum);
 }
 
 document.addEventListener('keydown', (ev) => {
-  const openKey = ev.key === 'Escape' && document.querySelector('.keydrop[open]:not(.closing)');
-  if (openKey && !state.confirm && !state.panel) { keyDrop(openKey, false, openKey.contains(document.activeElement)); return; }
+  if (ev.key === 'Escape' && !state.confirm && !state.panel) {
+    const openKey = document.querySelector('.keydrop[open]:not(.closing)');
+    if (openKey) { if (openKey.id === 'diary-key') keyOpen = false; keyDrop(openKey, false, openKey.contains(document.activeElement)); return; }
+    if (keyOpen && isDocked()) {
+      const inStrip = document.getElementById('key-strip').contains(document.activeElement);
+      keyOpen = false; applyKey(true);
+      if (inStrip) document.getElementById('nb-key').focus();
+      return;
+    }
+  }
   if (ev.key === 'Escape') {
     if (state.confirm) { state.confirm = null; renderOverlay(); }
     else if (state.panel) { state.panel = null; renderOverlay(); }
@@ -2697,7 +2754,7 @@ document.addEventListener('change', (ev) => {
 /* ---------------------------------------------------------------------
    Start
    --------------------------------------------------------------------- */
-document.getElementById('nb-key-pop').innerHTML = colourKeyHtml('p');
+document.getElementById('ks-scroll').innerHTML = colourKeyStripHtml();
 renderChrome();
 tabsCtl = FLRUI.initTabs(document.getElementById('tabs'), (el) => goTab(el.dataset.id));
 chrome = FLRUI.initChrome(document.getElementById('navbar'), () => document.getElementById('lt-title'));
