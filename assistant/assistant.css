@@ -75,7 +75,7 @@ button,input{font:inherit;color:inherit}
 .fab[aria-expanded="true"] .fab-label{opacity:0!important}
 /* a nudge when the page goes quiet (assistant.js decides when): a speech bubble from him */
 .fab-nudge{position:absolute;right:calc(100% - 2px);bottom:calc(50% + 4px);padding:9px 14px 10px;border-radius:18px 18px 5px 18px;background:var(--fa-bubble);
-  color:var(--fa-ink);font:600 14px/1.2 var(--fa-font);letter-spacing:-.01em;white-space:nowrap;box-shadow:0 10px 28px rgba(16,18,40,.2),0 0 0 .5px var(--fa-sep);
+  color:var(--fa-ink);font:600 14px/1.25 var(--fa-font);letter-spacing:-.01em;width:max-content;max-width:min(240px,calc(100vw - 110px));text-wrap:balance;box-shadow:0 10px 28px rgba(16,18,40,.2),0 0 0 .5px var(--fa-sep);
   opacity:0;visibility:hidden;transform:translate(10px,8px) scale(.85);transform-origin:100% 100%;pointer-events:none;
   transition:opacity .18s ease,transform .4s cubic-bezier(.3,1.45,.5,1),visibility 0s .4s}
 .fab.nudge .fab-nudge{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}

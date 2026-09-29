@@ -13,13 +13,14 @@
    He floats and tilts his head now and then, lifts when you reach for him,
    thinks while a look-up takes a moment and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.9"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=2.0"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=1.9';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=2.0';
+import { pickLine, moodFor } from './lines.js?v=2.0';
 
-const V = '1.9';
+const V = '2.0';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -209,15 +210,16 @@ for (const f of faces) f.addEventListener('animationend', ev => { if (ev.animati
   fab.addEventListener('focus', () => { loadFaces(); if (fab.matches(':focus-visible')) look(true); });
   fab.addEventListener('blur', () => look(false));
 }
-/* ---------------------------------------------------------------- a nudge when the page goes quiet: "Ask me for help" */
-// Every time a page goes quiet (10 seconds with no pointer, touch, key or scroll), a speech bubble from him offers help,
-// with his open hand. Once each quiet spell: after it's shown, the person has to do something before it can come again,
-// so someone reading a long page isn't nagged every few seconds. Not while the chat is open, over a page's own sheet or
-// while the page is out of sight. It goes after 8 seconds, or at the next thing the person does anywhere else; a tap on
-// it opens the chat, like the button it's part of. Screen readers aren't told: they don't always pass their keys to the
-// page, so someone listening to it could look idle.
-const QUIET = 10000, SHOWN = 8000;
-let lastStir = Date.now(), armed = true, nudgeTimer = 0;
+/* ---------------------------------------------------------------- his speech bubble: "Ask me for help" */
+// It pops up as soon as a page opens and he's on screen, then again the moment the page goes quiet: a pause of a second
+// with no pointer, touch, key or scroll (any shorter and it would flicker on and off while someone scrolls). Once each
+// pause: after it's shown, the person has to do something before it comes again, so someone reading a long page isn't
+// nagged every few seconds. Not while the chat is open, over a page's own sheet or while the page is out of sight. It
+// goes after 8 seconds, or at the next thing the person does anywhere else; a tap on it opens the chat, like the button
+// it's part of. Screen readers aren't told: they don't always pass their keys to the page, so someone listening to it
+// could look idle.
+const QUIET = 1000, SHOWN = 8000;
+let lastStir = Date.now(), armed = true, opening = true, nudgeTimer = 0;   // opening: the page has only just opened
 function hideNudge() { clearTimeout(nudgeTimer); fab.classList.remove('nudge'); }
 function stir(ev) {
   if (ev && ev.type === 'pointermove' && !ev.movementX && !ev.movementY) return;   // the browser's own, not a person's
@@ -227,15 +229,27 @@ function stir(ev) {
 }
 for (const t of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll']) addEventListener(t, stir, { capture: true, passive: true });
 document.addEventListener('visibilitychange', () => stir());
+const LINE_KEY = 'flr-assist:line', nudgeEl = fab.querySelector('.fab-nudge');
+const quietHere = () => !document.hidden && !panel.open && !host.hasAttribute('data-covered') && !fab.classList.contains('noart');
+// What he says comes from lines.js: for this page, signing in or the time of day, with their first name if the Hub
+// tells it quickly enough; never the line he said last, even on the page before.
+async function nudge(first) {
+  const s = session(), ctx = await Promise.race([context(), wait(600).then(() => null)]).catch(() => null);
+  if (!quietHere() || (!first && Date.now() - lastStir < QUIET)) return;   // they were back before he'd picked his words
+  let last = '';
+  try { last = sessionStorage.getItem(LINE_KEY) || ''; } catch (e) { /* no storage */ }
+  const line = pickLine({ page: PAGE, signedIn: ctx ? ctx.signedIn : !!(s && s.access_token), name: (ctx && ctx.name) || '', last });
+  try { sessionStorage.setItem(LINE_KEY, line); } catch (e) { /* private window */ }
+  nudgeEl.textContent = line;
+  fab.classList.add('nudge');
+  mood(moodFor(line));
+  clearTimeout(nudgeTimer); nudgeTimer = setTimeout(hideNudge, SHOWN);
+}
 (function listen() {
+  if (host.style.display === 'none') { setTimeout(listen, 100); return; }   // not on screen yet: his stylesheets are on their way
   const left = QUIET - (Date.now() - lastStir);
-  if (left <= 0 && armed && !document.hidden && !panel.open && !host.hasAttribute('data-covered') && !fab.classList.contains('noart')) {
-    armed = false;
-    fab.classList.add('nudge');
-    mood('care');
-    clearTimeout(nudgeTimer); nudgeTimer = setTimeout(hideNudge, SHOWN);
-  }
-  setTimeout(listen, left > 0 ? Math.max(300, left) : 1000);
+  if ((opening || left <= 0) && armed && quietHere()) { const first = opening; opening = false; armed = false; setTimeout(() => nudge(first), first ? 400 : 0); }
+  setTimeout(listen, left > 0 ? Math.max(100, left) : 250);
 })();
 
 /* ---------------------------------------------------------------- the conversation: kept for this tab (it follows you between pages), for this person */
@@ -564,7 +578,7 @@ function open(focusInput = true, instant = false) {
   if (narrow()) panel.showModal(); else panel.show();
   fab.setAttribute('aria-expanded', 'true');
   fab.classList.remove('note');
-  hideNudge();                                         // not over the chat
+  hideNudge(); opening = false;                        // not over the chat
   paint();
   loadFaces();
   mood('rest');

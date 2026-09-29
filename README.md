@@ -111,9 +111,9 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 - After changing it, run `node assistant/tests/run.mjs` and `node assistant/tests/run.mjs --heldout`. Both must end with
   no wrong answers and none answered that should have been declined. `heldout.json` was written by someone who never
   saw the help text; `--sweep` shows other thresholds.
-- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.9"></script>`: `index.html` directly,
+- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=2.0"></script>`: `index.html` directly,
   and the tools through their build scripts. On a release, bump `?v=` in those four places and in `assistant.js` (`V`
-  and the `engine.js` import).
+  and the `engine.js` and `lines.js` imports).
 - When a tool changes its buttons or wording, update its answers here too.
 - It also answers from everything the person can see in their tools, read-only (`assistant/records.js`), and nothing
   more: each answer comes from the database function the tool's own page uses (`leave_home`, `speeding_data`,
@@ -130,8 +130,9 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
   CALC block, by `scripts/speeding_core.py`, which `sync-speeding.py` runs). Commit each with its page.
 - Tests: `node assistant/tests/run.mjs`, `--heldout` and `--records` (questions about records, with names and
   registrations, routed as the chat routes them).
-- Every time a page goes quiet (10 seconds with no activity), a speech bubble from him says "Ask me for help": once each
-  quiet spell, not while the chat is open (`listen` in `assistant.js`).
+- A speech bubble from him offers help as soon as a page opens, then again the moment it goes quiet (a second's pause):
+  once each pause, not while the chat is open (`listen` in `assistant.js`). What he says comes from `lines.js`: for the page,
+  signing in, the time of day or their first name, never the same line twice running (`node assistant/tests/lines.mjs`).
 - He's called Likkle Jeff: the button says "Ask Likkle Jeff", the chat's header "Likkle Jeff". His name said to him
   ("Likkle Jeff, how many days have I got left?") is left out of the question (`unaddressed` in `engine.js`); "Jeff"
   on its own is a person (`alsoPeople` in `help.json`), except in the Hub's own "Jeff Day" and "Likkle Jeff".
