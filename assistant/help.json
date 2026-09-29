@@ -1,5 +1,5 @@
 {
-  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). Check changes with: node assistant/tests/run.mjs",
+  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Check changes with: node assistant/tests/run.mjs",
   "version": 1,
   "entries": [
     {
@@ -22,7 +22,7 @@
         "bot",
         "chat"
       ],
-      "answer": "I find answers in the Hub’s own help and link you to the right page. I can’t see your leave, quotations or driving records, and I can’t change anything: booking, approving and editing happen in the tools themselves.\n\nIf the help doesn’t cover something, I’ll say so rather than guess.",
+      "answer": "I find answers in the Hub’s own help and link you to the right page. I can also look up your own records, read-only: your days left and leave requests, who’s off today, your driving and the Estimator’s quotations. I show only what your tools would show you, and I can’t change anything: booking, approving and editing happen in the tools.\n\nIf the help doesn’t cover something, I’ll say so rather than guess.",
       "related": [
         "about-hub"
       ]
@@ -423,7 +423,8 @@
       "related": [
         "estimate-copy",
         "estimate-archive"
-      ]
+      ],
+      "data": "quotes.find"
     },
     {
       "id": "estimate-approve",
@@ -750,7 +751,8 @@
       "related": [
         "fleet-nothing",
         "fleet-privacy"
-      ]
+      ],
+      "data": "fleet.me"
     },
     {
       "id": "fleet-nothing",
@@ -1082,7 +1084,8 @@
       "related": [
         "leave-closures",
         "leave-request"
-      ]
+      ],
+      "data": "leave.balance"
     },
     {
       "id": "leave-status",
@@ -1110,7 +1113,8 @@
       },
       "related": [
         "leave-cancel"
-      ]
+      ],
+      "data": "leave.requests"
     },
     {
       "id": "leave-not-linked",
@@ -1215,7 +1219,8 @@
       },
       "related": [
         "leave-colours"
-      ]
+      ],
+      "data": "leave.today"
     },
     {
       "id": "leave-balances-all",

@@ -12,6 +12,7 @@ It is the same page as on Claude (same look, same leave rules and checks), excep
 Usage: scripts/sync-leave.py      (LEAVE_DIR overrides ../flr-annual-leave)
 """
 import os
+import sys
 
 HUB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.environ.get('LEAVE_DIR') or os.path.join(HUB, '..', 'flr-annual-leave')
@@ -58,7 +59,7 @@ head = """<!doctype html>
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
 <script src="bridge.js"></script>
-<script type="module" src="../assistant/assistant.js?v=1.2"></script>
+<script type="module" src="../assistant/assistant.js?v=1.3"></script>
 </head>
 <body>
 """
@@ -66,3 +67,9 @@ html = head + page + '\n</body>\n</html>\n'
 os.makedirs(OUT, exist_ok=True)
 open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8').write(html)
 print(f"annual-leave/ updated: index.html {len(html):,} bytes (bridge.js is kept by hand)")
+
+# The Hub assistant answers leave questions ("how many days have I got left?") with this page's own leave rules, taken
+# from the page just built, so the two always agree (scripts/leave_core.py). Commit annual-leave/leave-core.js with it.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import leave_core  # noqa: E402
+leave_core.main()

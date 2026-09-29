@@ -2,20 +2,22 @@
    FLR Hub Assistant: "Ask the Hub", a compact help button on every Hub page.
    Version 1 is search, not AI. It finds the best answer in the Hub's approved
    help (help.json) and links straight to the right page, and says so when it
-   can't find one. It is read-only by design: it never fetches or shows leave,
-   quotes or driver data and never changes anything. The one thing it asks the
-   FLR database is which tools the signed-in person has (hub_home), so it can
-   say "that isn't on your Hub" instead of linking somewhere they can't open.
+   can't find one. It changes nothing. Asked about the person's own leave,
+   driving or quotations, it looks them up read-only (records.js) with their own
+   sign-in, through the same database functions the tools' pages use, so it
+   shows exactly what their page would. It also asks the FLR database which tools
+   the person has (hub_home), so it can say "that isn't on your Hub" instead of
+   linking somewhere they can't open.
    Its face is the FLR robot (robot.css): he floats and blinks, looks at you on
    hover, thinks while it searches and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.2"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.3"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, maybes } from './engine.js?v=1.2';
+import { buildIndex, search, maybes } from './engine.js?v=1.3';
 
-const V = '1.2';
+const V = '1.3';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -86,14 +88,14 @@ const root = host.attachShadow({ mode: 'open' });
 root.innerHTML = `<link rel="stylesheet" href="${art('robot.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
 <button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${robot('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
 <dialog class="panel" id="fa-panel" aria-labelledby="fa-title" aria-describedby="fa-sub">
-  <div class="head"><span class="grabber" aria-hidden="true"></span>${robot('mini')}<div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Finds answers in the Hub’s help. It can’t see or change your records.</p></div>
+  <div class="head"><span class="grabber" aria-hidden="true"></span>${robot('mini')}<div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Answers from the Hub’s help and your own records. It can’t change anything.</p></div>
     <button class="x" type="button" aria-label="Close">${ICON.x}</button></div>
   <div class="log" role="log" aria-live="polite"></div>
   <div class="suggest" hidden></div>
   <form class="composer" novalidate><label class="sr" for="fa-q">Your question</label>
     <input id="fa-q" type="text" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" maxlength="200" placeholder="Ask about leave, estimates, fleet…">
     <button class="send" type="submit" aria-label="Ask" disabled>${ICON.send}</button></form>
-  <p class="foot">Answers come from the Hub’s own help. For anything else, ask an FLR administrator.</p>
+  <p class="foot">Answers come from the Hub’s help and your own records, as your tools show them. For anything else, ask an FLR administrator.</p>
 </dialog>`;
 const $ = s => root.querySelector(s);
 const fab = $('.fab'), panel = $('.panel'), logEl = $('.log'), suggestEl = $('.suggest'), form = $('.composer'), input = $('#fa-q'), sendBtn = $('.send');
@@ -201,6 +203,27 @@ function samePerson() {   // someone signed in or out on this page: start their 
 }
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
+/* ---------------------------------------------------------------- your own records (records.js, loaded the first time they're asked about) */
+// A question about your own leave, driving or quotations is answered from the FLR database, as you and read-only. The
+// answers stay on this page: the chat's saved history keeps only the question, so leaving the page forgets them.
+const kept = new Map();   // answers looked up on this page
+let recordsP = null;
+const records = () => recordsP || (recordsP = import(art('records.js')).catch(err => { recordsP = null; throw err; }));
+const QUOTE_REF = /\b(?:[a-z]{1,5}-)?\d{4}-\d{1,5}\b/i;   // Q-2026-041, FLR-2026-0001
+const QUOTE_WORD = /\b(quotes?|quotations?|estimates?)\b/i;
+// soft: a guess that this is a quote search ("the henderson quote"); if nothing matches, answer as usual instead.
+async function lookUpFor(e, q, ctx, soft = false) {
+  if (!e || !e.data || !ctx.signedIn || gate(e, ctx) !== 'ok') return null;
+  const R = await records();
+  if (e.data === 'quotes.find') { const x = R.quoteQuery(q); if (!x.refs.length && !x.terms.length && !x.mine) return null; }   // "how do I find a quote?" is help
+  const s = session();
+  const card = await R.lookUp(e.data, q, { uid: (s && s.user && s.user.id) || '', name: ctx.name });
+  if (!card || (soft && card.empty)) return null;
+  const ref = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  kept.set(ref, card);
+  return { k: 'records', id: e.id, ref, error: !!card.error };
+}
+
 // Where to start, by page (and for Fleet Management, by who's asking).
 function starters(ctx) {
   if (!ctx.signedIn) return ['signin', 'account-new', 'password-forgot'];
@@ -266,9 +289,47 @@ function answerEl(m, H, ctx) {
   if (rel.childElementCount) b.append(el('p', 'label', 'Related'), rel);
   return b;
 }
+function recordsEl(m, H, ctx) {
+  const card = kept.get(m.ref), e = H.byId.get(m.id), b = el('div', 'msg bot rec');
+  if (!card) {             // from an earlier page: not kept, by design
+    b.append(el('p', null, 'Your own records aren’t kept in this chat once you leave a page. Ask again to see them.'));
+    if (e) b.append(chipsFor([e.id], H, ctx));
+    return b;
+  }
+  b.append(el('h3', null, card.title));
+  if (card.sub) b.append(el('p', 'rec-sub', card.sub));
+  if (card.big != null) {
+    const p = el('p', 'rec-big');
+    p.append(el('span', 'rec-num' + (card.neg ? ' neg' : ''), card.big));
+    if (card.unit) p.append(el('span', 'rec-unit', card.unit));
+    b.append(p);
+  }
+  if (card.rows) {
+    const dl = el('dl', 'rec-rows');
+    for (const [k, v] of card.rows) { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); dl.append(d); }
+    b.append(dl);
+  }
+  if (card.list) {
+    const ul = el('ul', 'rec-list');
+    for (const it of card.list) {
+      const li = el('li'), t = el('div', 'rec-li');
+      t.append(el('b', null, it.title));
+      if (it.meta) t.append(el('span', null, it.meta));
+      li.append(t);
+      if (it.pill) li.append(el('span', 'rec-pill' + (it.tone ? ' ' + it.tone : ''), it.pill));
+      ul.append(li);
+    }
+    b.append(ul);
+  }
+  if (card.text) b.append(el('p', null, card.text));
+  if (card.note) b.append(el('p', 'rec-note', card.note));
+  if (card.link) { const a = el('a', 'go', card.link.label); a.href = card.link.href; a.insertAdjacentHTML('beforeend', ICON.chev); b.append(a); }
+  return b;
+}
 function render(m, H, ctx) {
   if (m.k === 'me') return el('div', 'msg me', m.t);
   if (m.k === 'answer') return answerEl(m, H, ctx);
+  if (m.k === 'records') return recordsEl(m, H, ctx);
   const b = el('div', 'msg bot');
   if (m.k === 'intro') {
     const first = (ctx.name || '').trim().split(/\s+/)[0];
@@ -328,15 +389,28 @@ function ask(text) {
   if (!q) return;
   converse(q, async () => {
     const H = await help();
-    const r = search(H.index, q, { page: PAGE }), top = r.results[0];
-    if (!r.terms.length) return { k: 'hello', thanks: /^(thanks|thank you|cheers|ta)\b/i.test(q) };
-    if (r.confident) return { k: 'answer', id: top.entry.id, rel: r.results.slice(1).filter(x => x.score >= top.score * 0.7).slice(0, 2).map(x => x.entry.id) };
+    const r = search(H.index, q, { page: PAGE }), top = r.results[0], ref = QUOTE_REF.test(q);
+    if (!r.terms.length && !ref) return { k: 'hello', thanks: /^(thanks|thank you|cheers|ta)\b/i.test(q) };
+    const id = r.confident ? top.entry.id : ref ? 'estimate-find' : null;   // a quote number is always a look-up
+    if (id) {
+      const got = await lookUpFor(H.byId.get(id), q, await context());
+      if (got) return got;
+      return { k: 'answer', id, rel: r.confident ? r.results.slice(1).filter(x => x.score >= top.score * 0.7).slice(0, 2).map(x => x.entry.id) : [] };
+    }
+    // "The henderson quote": a quote named by words the help doesn't know (a client, a site) is worth looking for.
+    if (QUOTE_WORD.test(q) && r.terms.some(t => !H.index.df.has(t))) {
+      const got = await lookUpFor(H.byId.get('estimate-find'), q, await context(), true);
+      if (got) return got;
+    }
     const maybe = maybes(r).map(x => x.entry.id);
     return maybe.length ? { k: 'unsure', ids: maybe } : { k: 'none' };
   });
 }
 function askId(id) {
-  help().then(H => { const e = H.byId.get(id); if (e) converse(e.title, async () => ({ k: 'answer', id }), 400); }).catch(() => null);
+  help().then(H => {
+    const e = H.byId.get(id);
+    if (e) converse(e.title, async () => (await lookUpFor(e, e.title, await context())) || { k: 'answer', id }, 400);
+  }).catch(() => null);
 }
 // One question at a time: show it, think (dots in the chat, the robot searching, at least a moment so it can be seen),
 // then the reply and his reaction to it: a happy hop for an answer, a head tilt when he isn't sure or has none.
@@ -357,7 +431,7 @@ function converse(q, work, think = 650) {
     try { [m] = await Promise.all([work(), wait(reduced() ? Math.min(think, 250) : think)]); } catch (err) { m = { k: 'error' }; }
     thinking(false);
     await push(m);
-    mood(m.k === 'answer' || m.k === 'hello' ? 'happy' : 'hmm', reduced() ? 700 : 950);
+    mood(m.k === 'answer' || m.k === 'hello' || (m.k === 'records' && !m.error) ? 'happy' : 'hmm', reduced() ? 700 : 950);
   }).catch(() => { thinking(false); mood('rest'); });
 }
 
