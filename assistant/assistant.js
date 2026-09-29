@@ -6,14 +6,16 @@
    quotes or driver data and never changes anything. The one thing it asks the
    FLR database is which tools the signed-in person has (hub_home), so it can
    say "that isn't on your Hub" instead of linking somewhere they can't open.
+   Its face is the FLR robot (robot.css): he floats and blinks, looks at you on
+   hover, thinks while it searches and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.1"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.2"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, maybes } from './engine.js?v=1.1';
+import { buildIndex, search, maybes } from './engine.js?v=1.2';
 
-const V = '1.1';
+const V = '1.2';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -27,8 +29,7 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = () => matchMedia('(pointer: coarse)').matches;
 
 const ICON = {
-  ask: '<svg class="ic-ask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6c-4.8 0-8.5 3.3-8.5 7.5 0 2.2 1 4.1 2.6 5.5l-.8 3.7 3.9-1.9c.9.3 1.8.4 2.8.4 4.8 0 8.5-3.3 8.5-7.7S16.8 3.6 12 3.6z"/><path d="M9.8 9.3a2.25 2.25 0 1 1 3.2 2c-.6.3-1 .8-1 1.5v.3"/><path stroke-width="2.5" d="M12 15.8h.01"/></svg>',
-  close: '<svg class="ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>',
+  ask: '<svg class="fab-fallback" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6c-4.8 0-8.5 3.3-8.5 7.5 0 2.2 1 4.1 2.6 5.5l-.8 3.7 3.9-1.9c.9.3 1.8.4 2.8.4 4.8 0 8.5-3.3 8.5-7.7S16.8 3.6 12 3.6z"/><path d="M9.8 9.3a2.25 2.25 0 1 1 3.2 2c-.6.3-1 .8-1 1.5v.3"/><path stroke-width="2.5" d="M12 15.8h.01"/></svg>',
   x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>',
@@ -73,13 +74,19 @@ function help() {
 }
 
 /* ---------------------------------------------------------------- the button and the panel (built once, in their own shadow root) */
+// The robot: the artwork in layers (his body, and each eye on its own), so robot.css can make him blink, look and react.
+const art = f => new URL(f + '?v=' + V, HERE).href;
+const robot = cls => `<span class="robot${cls ? ' ' + cls : ''}" data-mood="idle" aria-hidden="true"><span class="robot-float"><span class="robot-body">`
+  + `<span class="robot-glow"></span><img class="robot-base" src="${art('robot-base.png')}" alt="" draggable="false"><span class="robot-lamp"></span>`
+  + `<img class="robot-eye l" src="${art('robot-eye-left.png')}" alt="" draggable="false"><img class="robot-eye r" src="${art('robot-eye-right.png')}" alt="" draggable="false">`
+  + `</span></span><span class="robot-shadow"></span></span>`;
 const host = document.createElement('flr-assistant');
-host.style.display = 'none';                         // until its stylesheet has arrived
+host.style.display = 'none';                         // until its stylesheets have arrived
 const root = host.attachShadow({ mode: 'open' });
-root.innerHTML = `<link rel="stylesheet" href="${new URL('assistant.css?v=' + V, HERE).href}">
-<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${ICON.ask}${ICON.close}<span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
+root.innerHTML = `<link rel="stylesheet" href="${art('robot.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
+<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${robot('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
 <dialog class="panel" id="fa-panel" aria-labelledby="fa-title" aria-describedby="fa-sub">
-  <div class="head"><span class="grabber" aria-hidden="true"></span><div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Finds answers in the Hub’s help. It can’t see or change your records.</p></div>
+  <div class="head"><span class="grabber" aria-hidden="true"></span>${robot('mini')}<div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Finds answers in the Hub’s help. It can’t see or change your records.</p></div>
     <button class="x" type="button" aria-label="Close">${ICON.x}</button></div>
   <div class="log" role="log" aria-live="polite"></div>
   <div class="suggest" hidden></div>
@@ -90,7 +97,9 @@ root.innerHTML = `<link rel="stylesheet" href="${new URL('assistant.css?v=' + V,
 </dialog>`;
 const $ = s => root.querySelector(s);
 const fab = $('.fab'), panel = $('.panel'), logEl = $('.log'), suggestEl = $('.suggest'), form = $('.composer'), input = $('#fa-q'), sendBtn = $('.send');
-root.querySelector('link').addEventListener('load', () => { host.style.display = ''; });
+{ let n = 0; for (const l of root.querySelectorAll('link')) l.addEventListener('load', () => { if (++n === 2) host.style.display = ''; }); }
+// If his picture can't load, the button falls back to a plain round one, so it's never an invisible button.
+fab.querySelector('.robot-base').addEventListener('error', () => fab.classList.add('noart'));
 document.body.appendChild(host);
 
 // Follow a page's own light/dark switch (the Fleet page's data-mode, others' data-theme), otherwise the device; and step
@@ -141,6 +150,43 @@ if (window.visualViewport) {
   };
   vv.addEventListener('resize', fit);
   vv.addEventListener('scroll', fit);
+}
+
+/* ---------------------------------------------------------------- the robot: what he's doing (robot.css draws each mood) */
+const bots = [...root.querySelectorAll('.robot')], fabBot = fab.querySelector('.robot');
+let moodTimer = 0;
+// Moods: think, happy, hmm, land; "rest" is where he settles: idle, or looking up at the chat while it's open.
+function mood(m, ms = 0) {
+  clearTimeout(moodTimer);
+  for (const b of bots) b.dataset.mood = m === 'rest' ? (b === fabBot && panel.open ? 'open' : 'idle') : m;
+  if (ms) moodTimer = setTimeout(() => mood('rest'), ms);
+}
+// A blink every few seconds (sometimes two), only while he's at rest.
+function blink(b, twice) {
+  b.classList.remove('blink'); void b.offsetWidth; b.classList.add('blink');
+  setTimeout(() => { b.classList.remove('blink'); if (twice) setTimeout(() => blink(b, false), 110); }, 200);
+}
+(function blinkLater() {
+  setTimeout(() => {
+    const twice = Math.random() < 0.2;
+    if (!reduced() && !document.hidden) for (const b of bots) if (b.dataset.mood === 'idle' || b.dataset.mood === 'open') blink(b, twice);
+    blinkLater();
+  }, 3500 + Math.random() * 5000);
+})();
+// Hover or keyboard focus: he looks towards you (his eyes follow the pointer across him) and brightens.
+{
+  const clamp = v => Math.max(-1, Math.min(1, v));
+  const look = on => { if (on) fabBot.dataset.look = ''; else { delete fabBot.dataset.look; fabBot.style.removeProperty('--lx'); fabBot.style.removeProperty('--ly'); } };
+  fab.addEventListener('pointerenter', ev => { if (ev.pointerType !== 'touch') look(true); });
+  fab.addEventListener('pointermove', ev => {
+    if (ev.pointerType === 'touch') return;
+    const r = fabBot.getBoundingClientRect();
+    fabBot.style.setProperty('--lx', clamp((ev.clientX - r.left - r.width / 2) / 28).toFixed(2));
+    fabBot.style.setProperty('--ly', clamp((ev.clientY - r.top - r.height * 0.6) / 28).toFixed(2));
+  });
+  fab.addEventListener('pointerleave', () => look(fab.matches(':focus-visible')));
+  fab.addEventListener('focus', () => { if (fab.matches(':focus-visible')) look(true); });
+  fab.addEventListener('blur', () => look(false));
 }
 
 /* ---------------------------------------------------------------- the conversation: kept for this tab (it follows you between pages), for this person */
@@ -269,29 +315,50 @@ async function push(...ms) {
   try { H = await help(); } catch (err) { logEl.append(render({ k: 'error' })); return; }
   const added = ms.map(m => render(m, H, ctx)).filter(Boolean);
   logEl.append(...added);
-  // Bring the new question to the top of the conversation, so a long answer is read from its start.
-  if (added.length) logEl.scrollTo({ top: Math.max(0, added[0].offsetTop - 12), behavior: reduced() ? 'instant' : 'smooth' });
+  toQuestion();
+}
+// Bring the latest question to the top of the conversation, so its answer is read from the start.
+function toQuestion() {
+  const qs = logEl.querySelectorAll('.msg.me'), q = qs[qs.length - 1];
+  if (q) logEl.scrollTo({ top: Math.max(0, q.offsetTop - 12), behavior: reduced() ? 'instant' : 'smooth' });
 }
 
-async function ask(text) {
+function ask(text) {
   const q = String(text || '').trim().slice(0, 200);
   if (!q) return;
-  let H;
-  try { H = await help(); } catch (err) { return push({ k: 'me', t: q }, { k: 'error' }); }
-  const r = search(H.index, q, { page: PAGE });
-  const top = r.results[0];
-  if (!r.terms.length) return push({ k: 'me', t: q }, { k: 'hello', thanks: /^(thanks|thank you|cheers|ta)\b/i.test(q) });
-  if (r.confident) {
-    const rel = r.results.slice(1).filter(x => x.score >= top.score * 0.7).slice(0, 2).map(x => x.entry.id);
-    return push({ k: 'me', t: q }, { k: 'answer', id: top.entry.id, rel });
-  }
-  const maybe = maybes(r).map(x => x.entry.id);
-  push({ k: 'me', t: q }, maybe.length ? { k: 'unsure', ids: maybe } : { k: 'none' });
+  converse(q, async () => {
+    const H = await help();
+    const r = search(H.index, q, { page: PAGE }), top = r.results[0];
+    if (!r.terms.length) return { k: 'hello', thanks: /^(thanks|thank you|cheers|ta)\b/i.test(q) };
+    if (r.confident) return { k: 'answer', id: top.entry.id, rel: r.results.slice(1).filter(x => x.score >= top.score * 0.7).slice(0, 2).map(x => x.entry.id) };
+    const maybe = maybes(r).map(x => x.entry.id);
+    return maybe.length ? { k: 'unsure', ids: maybe } : { k: 'none' };
+  });
 }
-async function askId(id) {
-  const H = await help().catch(() => null);
-  const e = H && H.byId.get(id);
-  if (e) push({ k: 'me', t: e.title }, { k: 'answer', id });
+function askId(id) {
+  help().then(H => { const e = H.byId.get(id); if (e) converse(e.title, async () => ({ k: 'answer', id }), 400); }).catch(() => null);
+}
+// One question at a time: show it, think (dots in the chat, the robot searching, at least a moment so it can be seen),
+// then the reply and his reaction to it: a happy hop for an answer, a head tilt when he isn't sure or has none.
+let queue = Promise.resolve();
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function thinking(on) {
+  const t = logEl.querySelector('.typing');
+  if (!on) { if (t) t.remove(); return; }
+  if (t) return;
+  const d = el('div', 'msg bot typing'); d.setAttribute('aria-hidden', 'true'); d.append(el('i'), el('i'), el('i'));
+  logEl.append(d);
+}
+function converse(q, work, think = 650) {
+  queue = queue.then(async () => {
+    await push({ k: 'me', t: q });
+    mood('think'); thinking(true);
+    let m;
+    try { [m] = await Promise.all([work(), wait(reduced() ? Math.min(think, 250) : think)]); } catch (err) { m = { k: 'error' }; }
+    thinking(false);
+    await push(m);
+    mood(m.k === 'answer' || m.k === 'hello' ? 'happy' : 'hmm', reduced() ? 700 : 950);
+  }).catch(() => { thinking(false); mood('rest'); });
 }
 
 /* ---------------------------------------------------------------- typing: suggestions as you go */
@@ -328,12 +395,17 @@ function open(focusInput = true, instant = false) {
   fab.setAttribute('aria-expanded', 'true');
   fab.classList.remove('note');
   paint();
+  mood('rest');                                         // he looks up at the chat
   if (anim) anim.cancel();
+  if (!narrow()) {                                     // grow out of the robot: his centre is the panel's origin
+    const p = panel.getBoundingClientRect(), f = fabBot.getBoundingClientRect();
+    panel.style.transformOrigin = `${Math.round(f.left + f.width / 2 - p.left)}px ${Math.round(f.top + f.height / 2 - p.top)}px`;
+  }
   if (!instant) {
     anim = panel.animate(reduced() ? [{ opacity: 0 }, { opacity: 1 }]
       : narrow() ? [{ transform: 'translateY(100%)' }, { transform: 'none' }]
-      : [{ opacity: 0, transform: 'translateY(12px) scale(.92)' }, { opacity: 1, transform: 'none' }],
-    { duration: reduced() ? 150 : narrow() ? 420 : 380, easing: EASE_OUT });
+      : [{ opacity: 0, transform: 'scale(.3)', offset: 0 }, { opacity: 1, offset: 0.45 }, { transform: 'none' }],
+    { duration: reduced() ? 150 : narrow() ? 420 : 460, easing: 'cubic-bezier(.2,.95,.3,1.04)' });
   }
   if (focusInput && !coarse()) input.focus({ preventScroll: true });
 }
@@ -344,13 +416,15 @@ function close(velocity = 0) {
   const done = () => {
     panel.close(); panel.style.transform = ''; anim = null;
     fab.setAttribute('aria-expanded', 'false');
+    thinking(false);
+    mood('land', 450);                                 // back in his corner: a small settle
     if (!coarse()) fab.focus({ preventScroll: true });
   };
   if (reduced()) { anim = panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' }); anim.onfinish = done; return; }
   anim = narrow()
     ? panel.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(100%)' }],
       { duration: Math.max(180, 320 - Math.min(velocity, 2000) / 10), easing: EASE_IN, fill: 'forwards' })
-    : panel.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(10px) scale(.94)' }], { duration: 200, easing: EASE_IN, fill: 'forwards' });
+    : panel.animate([{ opacity: 1, transform: 'none' }, { opacity: 1, offset: 0.4 }, { opacity: 0, transform: 'scale(.3)' }], { duration: 260, easing: EASE_IN, fill: 'forwards' });
   anim.onfinish = done;
 }
 fab.addEventListener('click', () => (panel.open ? close() : open()));
@@ -406,5 +480,5 @@ mqNarrow.addEventListener('change', () => {           // turned a tablet, or res
   const ctx = await context();
   if (gate(e, ctx) !== 'ok') return;
   log.push({ k: 'guide', id: e.id }); saveLog();
-  if (narrow()) fab.classList.add('note'); else open(false);
+  if (narrow()) fab.classList.add('note'); else { open(false); mood('happy', 950); }
 })();

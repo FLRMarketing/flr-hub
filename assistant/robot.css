@@ -1,0 +1,80 @@
+/* ============================================================================
+   FLR Hub Assistant: the robot. Built from layers of the artwork (art/make-layers.mjs):
+   his body with the eyes painted out, and each eye on its own, so he can blink,
+   look about and react without being redrawn. Only transform, opacity and filter
+   move, so the animation stays cheap.
+   <span class="robot" data-mood="…"> sets what he's doing:
+     idle   floats gently; blinks now and then (class "blink", from assistant.js)
+     open   the chat is open above him: he looks up at it
+     think  looking for an answer: eyes search, the antenna lights and pulses
+     happy  found one: a little hop with smiling eyes
+     hmm    didn't: a small head tilt
+     land   back from the chat: a small settle
+   data-look (on hover or keyboard focus): he looks towards you and brightens; --lx and
+   --ly (-1…1) steer his eyes.
+   ========================================================================== */
+.robot{position:relative;display:block;flex:none;width:var(--robot-w,60px);aspect-ratio:895/831;--lx:0;--ly:0;pointer-events:none;user-select:none;-webkit-user-select:none}
+.robot img{display:block;-webkit-user-drag:none}
+.robot-float{position:absolute;inset:0;animation:robot-float 6s ease-in-out infinite}
+.robot-body{position:absolute;inset:0;transform-origin:50% 90%;
+  transition:rotate .5s cubic-bezier(.3,1.35,.5,1),scale .35s cubic-bezier(.3,1.35,.5,1),filter .25s ease}
+.robot-base{position:absolute;inset:0;width:100%;height:100%}
+
+/* the eyes: positions measured from the artwork */
+.robot-eye{position:absolute;top:53.67%;width:14.3%;height:20.34%;clip-path:inset(0 0 0 0);
+  translate:calc(var(--lx) * 24%) calc(var(--ly) * 15%);
+  transition:translate .3s cubic-bezier(.3,.7,.4,1),scale .16s ease,clip-path .22s cubic-bezier(.3,.7,.4,1)}
+.robot-eye.l{left:29.16%}
+.robot-eye.r{left:56.87%}
+
+/* the antenna light: a glow round the ball and the ball itself tinted, both off until he's thinking */
+.robot-glow{position:absolute;left:49.89%;top:7.34%;width:34%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(40,130,255,.75),rgba(40,130,255,.28) 55%,rgba(40,130,255,0));opacity:0;transition:opacity .3s ease}
+.robot-lamp{position:absolute;left:49.89%;top:7.34%;width:12.6%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#dbeaff 0 16%,#5d9eff 58%,#1f72f5);mix-blend-mode:multiply;opacity:0;transition:opacity .3s ease}
+
+/* his shadow on the "floor", which shrinks as he rises */
+.robot-shadow{position:absolute;left:22%;right:22%;top:98%;height:9%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(8,16,48,.26),rgba(8,16,48,0));animation:robot-shadow 6s ease-in-out infinite}
+
+@keyframes robot-float{0%,100%{translate:0 0}50%{translate:0 -4.5%}}
+@keyframes robot-shadow{0%,100%{scale:1;opacity:1}50%{scale:.84;opacity:.65}}
+@keyframes robot-blink{0%,100%{scale:1 1}40%,60%{scale:1 .08}}
+@keyframes robot-search{0%,100%{translate:32% -42%}50%{translate:-24% -46%}}
+@keyframes robot-pulse{from{opacity:.35;scale:.9}to{opacity:1;scale:1.12}}
+@keyframes robot-hop{0%{translate:0 0;scale:1}28%{translate:0 -12%;scale:1.03 .98}52%{translate:0 0;scale:1.05 .93}72%{scale:.98 1.03}100%{translate:0 0;scale:1}}
+@keyframes robot-land{0%{scale:1}35%{scale:1.05 .93}70%{scale:.98 1.02}100%{scale:1}}
+
+.robot.blink .robot-eye{animation:robot-blink .19s ease-in-out}
+
+/* hover or keyboard focus: looks towards you, a touch brighter and closer */
+.robot[data-look] .robot-body{scale:1.05;filter:brightness(1.07) saturate(1.08)}
+
+.robot[data-mood="open"]{--lx:-.35;--ly:-.8}
+
+.robot[data-mood="think"] .robot-eye{animation:robot-search 2.2s ease-in-out infinite}
+.robot[data-mood="think"] .robot-glow{opacity:1;animation:robot-pulse .9s ease-in-out infinite alternate}
+.robot[data-mood="think"] .robot-lamp{opacity:.9}
+
+.robot[data-mood="happy"] .robot-body{animation:robot-hop .62s cubic-bezier(.3,.7,.4,1)}
+.robot[data-mood="happy"] .robot-eye{clip-path:inset(0 0 56% 0);translate:0 16%}   /* just the top of each eye: a smiling arch */
+
+.robot[data-mood="hmm"] .robot-body{rotate:-8deg}
+.robot[data-mood="hmm"] .robot-eye{translate:-30% 12%}
+
+.robot[data-mood="land"] .robot-body{animation:robot-land .4s cubic-bezier(.3,.7,.4,1)}
+
+/* the small one in the chat's header: no float, no shadow */
+.robot.mini .robot-float,.robot.mini .robot-shadow{animation:none}
+.robot.mini .robot-shadow{display:none}
+
+/* reduced motion: he keeps still. What he's doing still shows, as a pose without movement: the antenna lit while
+   thinking, smiling eyes when he has an answer. */
+@media (prefers-reduced-motion:reduce){
+  .robot-float,.robot-shadow,.robot.blink .robot-eye,.robot[data-mood="happy"] .robot-body,.robot[data-mood="land"] .robot-body{animation:none}
+  .robot-body,.robot-eye,.robot-glow,.robot-lamp{transition:none}
+  .robot[data-look] .robot-body{scale:1}
+  .robot[data-mood="think"] .robot-eye{animation:none;translate:30% -42%}
+  .robot[data-mood="think"] .robot-glow{animation:none;opacity:.8}
+  .robot[data-mood="hmm"] .robot-body{rotate:0deg}
+}
