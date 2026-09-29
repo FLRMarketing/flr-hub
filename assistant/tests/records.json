@@ -28,5 +28,13 @@
  {"q": "how do I claim mileage for my car", "expect": null},
  {"q": "can you approve my holiday for next week", "expect": null, "alt": ["leave-approve", "leave-request", "assistant-about"]},
  {"q": "what's the weather in Birmingham", "expect": null},
- {"q": "tell Sarah her holiday is approved", "expect": null, "alt": ["leave-approve", "leave-status"]}
+ {"q": "tell Sarah her holiday is approved", "expect": null, "alt": ["leave-approve", "leave-status"]},
+ {"q": "How many days has Jeff got left?", "expect": "leave-balance", "names": ["jeff"]},
+ {"q": "What's Jeff's holiday balance?", "expect": "leave-balance", "names": ["jeff"]},
+ {"q": "How is Jeff's driving?", "expect": "fleet-my-driving", "names": ["jeff"]},
+ {"q": "how many days has Faye got left", "expect": "leave-balance", "names": ["faye"]},
+ {"q": "Likkle Jeff, how many days have I got left?", "expect": "leave-balance", "names": []},
+ {"q": "Hey Likkle Jeff, where do I book leave?", "expect": "leave-request"},
+ {"q": "how many days have I got left, Likkle Jeff?", "expect": "leave-balance", "names": []},
+ {"q": "Likkle Jeff, how is Faye's driving?", "expect": "fleet-my-driving", "names": ["faye"]}
 ]

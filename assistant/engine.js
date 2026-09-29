@@ -237,6 +237,51 @@ export function searchSlots(index, query, ctx = {}) {
   return second.confident ? { ...second, slots } : { ...first, slots: [] };
 }
 
+// The Hub's own capitalised words (Fleet Management, Annual Leave, Open, Approvals), so that a capitalised word in a
+// question can be told from a person's name. A word in help.json's "alsoPeople" is a first name as well ("Jeff"): it
+// counts as the Hub's only inside one of the help's own names that contain it ("the Jeff Day", "Likkle Jeff").
+export function hubWords(help) {
+  const text = help.entries.flatMap(e => [e.title, e.answer, ...(e.steps || []), (e.link && e.link.label) || '']).join('\n');
+  const people = new Set((help.alsoPeople || []).map(w => w.toLowerCase()));
+  const proper = new Set((text.match(/\b[A-Z][a-z]+\b/g) || []).map(w => w.toLowerCase()).filter(w => !people.has(w)));
+  const phrases = new Set([...text.matchAll(/\b(?=([A-Z][a-z]+ [A-Z][a-z]+)\b)/g)].map(m => m[1].toLowerCase())
+    .filter(p => p.split(' ').some(w => people.has(w))));
+  return { proper, phrases };
+}
+
+// People's names in a question: capitalised words that aren't the Hub's own (hubWords), so "how is Mark driving?" is
+// about Mark, not about marking costs as reviewed. First in a sentence, a single capitalised word is just a capital
+// ("Where…"), unless it's "Faye's".
+export function properNames(q, { proper, phrases }) {
+  const out = [], ws = String(q).split(/\s+/);
+  const clean = raw => raw.replace(/^[^A-Za-z]+|[^A-Za-z’']+$/g, '');
+  let run = [], starts = false, skip = false;
+  ws.forEach((raw, i) => {
+    if (skip) { skip = false; return; }
+    const w = clean(raw), bare = w.replace(/[’']s$/, '');
+    const sentenceStart = i === 0 || /[.!?]$/.test(ws[i - 1] || '');
+    if (w === bare && phrases.has((bare + ' ' + clean(ws[i + 1] || '').replace(/[’']s$/, '')).toLowerCase())) { flush(); skip = true; return; }   // "Jeff Day"
+    if (/^[A-Z][a-z][a-z’'-]*$/.test(bare) && !proper.has(bare.toLowerCase())) {
+      if (!run.length) starts = sentenceStart;
+      run.push(bare);
+      if (/[’']s$/.test(w)) { run.possessive = true; flush(); }
+    } else flush();
+  });
+  flush();
+  return out;
+  function flush() { if (run.length && (!starts || run.length > 1 || run.possessive)) out.push(run.join(' ')); run = []; }
+}
+
+// His name said to him rather than asked about is left out of the question: "Likkle Jeff, how many days have I got
+// left?" and "…got left, Likkle Jeff?" ask about leave, "Thanks Likkle Jeff!" is thanks. "Who is Likkle Jeff?" keeps it.
+export function unaddressed(q, name = 'Likkle Jeff') {
+  const n = name.trim().split(/\s+/).join('\\s+'), hi = '(?:hi|hiya|hey|hello|yo|oi|ok|okay|morning|afternoon|thanks|thank you|cheers|ta)';
+  return String(q)
+    .replace(new RegExp(`^\\s*(?:${hi}[\\s,!]+)?${n}\\s*[,:;!.\\-–—]+\\s*(?=\\S)`, 'i'), '')
+    .replace(new RegExp(`^\\s*(${hi})[\\s,!]+${n}\\W*$`, 'i'), '$1')
+    .replace(new RegExp(`\\s*[,;\\-–—]+\\s*${n}\\s*([?!.]*)\\s*$`, 'i'), '$1');
+}
+
 function rank(index, all, ctx) {
   const q = [...new Set(all)];
   if (!q.length) return { terms: q, confident: false, results: [] };

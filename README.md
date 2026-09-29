@@ -98,7 +98,7 @@ To try it all locally, add `LEAVE=1 LEAVE_APPROVERS=you@example.com` to the prev
 monday.com with made-up staff, the real function, and webhooks between them. `/__mock/monday/edit?item=402&col=color_mm7m6q47&value=Denied`
 changes something "in monday.com".
 
-## Ask the Hub (the help button)
+## Likkle Jeff (the help button, first called Ask the Hub)
 
 A round button, bottom right on the Hub, the Estimator, Fleet Management and Annual Leave. People ask where to find
 something or how to do it, and get a short answer and a link. It is search, not AI: `assistant/engine.js` matches
@@ -111,7 +111,7 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 - After changing it, run `node assistant/tests/run.mjs` and `node assistant/tests/run.mjs --heldout`. Both must end with
   no wrong answers and none answered that should have been declined. `heldout.json` was written by someone who never
   saw the help text; `--sweep` shows other thresholds.
-- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.5"></script>`: `index.html` directly,
+- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.6"></script>`: `index.html` directly,
   and the tools through their build scripts. On a release, bump `?v=` in those four places and in `assistant.js` (`V`
   and the `engine.js` import).
 - When a tool changes its buttons or wording, update its answers here too.
@@ -130,7 +130,10 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
   CALC block, by `scripts/speeding_core.py`, which `sync-speeding.py` runs). Commit each with its page.
 - Tests: `node assistant/tests/run.mjs`, `--heldout` and `--records` (questions about records, with names and
   registrations, routed as the chat routes them).
-- Its face is the FLR character: six drawings of him, one per mood, in `face/` (thumbs up by default; thinking,
+- He's called Likkle Jeff: the button says "Ask Likkle Jeff", the chat's header "Likkle Jeff". His name said to him
+  ("Likkle Jeff, how many days have I got left?") is left out of the question (`unaddressed` in `engine.js`); "Jeff"
+  on its own is a person (`alsoPeople` in `help.json`), except in the Hub's own "Jeff Day" and "Likkle Jeff".
+- His face is the FLR character: six drawings of him, one per mood, in `face/` (thumbs up by default; thinking,
   celebrating, reassuring, unsure, and playfully angry for the Hub's own faults only). `face.css` fades from one drawing
   to the next and keeps him still for people who ask for reduced motion; `reaction()` in `assistant.js` picks his mood
   for each reply, helped by `care` in `help.json` and the `unsure`, `care` and `fault` marks on records cards. The

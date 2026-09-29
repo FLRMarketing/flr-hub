@@ -4,7 +4,7 @@
 // A question with "expect": null must NOT get a confident answer: the assistant should say it doesn't know.
 // Exits 1 on any problem in help.json, any confident wrong answer, or any confident answer that should have been "I don't know".
 import { readFileSync } from 'node:fs';
-import { buildIndex, search, searchSlots, maybes, MIN_SCORE, MIN_COVERAGE } from '../engine.js';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed, MIN_SCORE, MIN_COVERAGE } from '../engine.js';
 
 const help = JSON.parse(readFileSync(new URL('../help.json', import.meta.url), 'utf8'));
 // questions.json is the tuning set; heldout.json was written by someone who never saw the help text (run with --heldout).
@@ -45,10 +45,17 @@ for (const id of ['about-estimator', 'about-leave', 'about-fleet', 'about-fitter
 const index = buildIndex(help.entries);
 const PLATE = /\b[a-z]{2}\d{2}\s?[a-z]{3}\b|\b[a-z]\d{1,3}\s?[a-z]{3}\b/gi;
 const byId = new Map(help.entries.map(e => [e.id, e]));
-// As assistant.js: a registration reads as "registration"; an answer found only by setting names aside counts only when
-// that answer looks records up (the records then check the names).
-const route = (q, page) => {
-  const asked = q.replace(PLATE, ' registration '), r = searchSlots(index, asked, { page });
+const words = hubWords(help);
+// As assistant.js (ask): his name said to him is left out; a registration reads as "registration"; people named with a
+// capital are set aside, and stay names only if what's left is a question about records; an answer found only by setting
+// names aside counts only when that answer looks records up (the records then check the names).
+const route = (said, page) => {
+  const q = unaddressed(said) || said, asked = q.replace(PLATE, ' registration '), people = properNames(q, words);
+  if (people.length) {
+    const r = searchSlots(index, people.reduce((t, n) => t.replace(n, ' '), asked), { page });
+    if (r.confident && byId.get(r.results[0].entry.id).data) return { ...r, slots: [...people.flatMap(n => n.toLowerCase().split(' ')), ...r.slots] };
+  }
+  const r = searchSlots(index, asked, { page });
   return r.slots.length && !r.confident ? search(index, asked, { page }) : r;
 };
 const runs = cases.map(c => ({ c, r: setName === 'records.json' ? route(c.q, c.page || 'hub') : search(index, c.q, { page: c.page || 'hub' }) }));
@@ -57,7 +64,9 @@ function grade(minScore, minCov) {
   for (const { c, r } of runs) {
     const top = r.results[0];
     const confident = !!top && top.score >= minScore && top.coverage >= minCov;
-    const ok = top && (top.entry.id === c.expect || (c.alt || []).includes(top.entry.id));
+    // "names": the names that must reach the records look-up ([] for none: the question is about the person asking)
+    const named = r.slots || [], namesOk = !c.names || (c.names.length ? c.names.every(n => named.includes(n)) : !named.length);
+    const ok = top && (top.entry.id === c.expect || (c.alt || []).includes(top.entry.id)) && namesOk;
     // A confident answer that rests on names set aside is only given when the look-up finds those names in the person's
     // own records (records.js); a question that should be declined names no one, so it's declined there.
     if (c.expect == null) { if (confident && !ok && !(r.slots && r.slots.length)) out.leaked.push({ c, top }); else out.held++; continue; }
@@ -69,7 +78,7 @@ function grade(minScore, minCov) {
 }
 const g = grade(MIN_SCORE, MIN_COVERAGE);
 const answerable = cases.filter(c => c.expect != null).length, unanswerable = cases.length - answerable;
-const show = x => `  "${x.c.q}"${x.c.page ? ` [on ${x.c.page}]` : ''} -> ${x.top ? `${x.top.entry.id} (${x.top.score}, cover ${x.top.coverage})` : 'nothing'}${x.c.expect ? `, wanted ${x.c.expect}` : ''}`;
+const show = x => `  "${x.c.q}"${x.c.page ? ` [on ${x.c.page}]` : ''} -> ${x.top ? `${x.top.entry.id} (${x.top.score}, cover ${x.top.coverage})` : 'nothing'}${x.c.expect ? `, wanted ${x.c.expect}` : ''}${x.c.names ? ` with names [${x.c.names}]` : ''}`;
 
 if (problems.length) { console.log('HELP LIBRARY PROBLEMS'); for (const p of problems) console.log('  ' + p); console.log(); }
 console.log(`${setName}: ${help.entries.length} answers, ${cases.length} questions (${answerable} answerable, ${unanswerable} it should decline)`);

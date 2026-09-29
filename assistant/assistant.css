@@ -1,5 +1,5 @@
 /* ============================================================================
-   FLR Hub Assistant: the "Ask the Hub" button and panel. Lives in its own shadow
+   FLR Hub Assistant: the "Likkle Jeff" button and panel. Lives in its own shadow
    root, so no page's styles reach it and it reaches no page. The Hub look:
    system type, grouped greys, FLR navy as the tint; light and dark follow the
    device (or a page's own light/dark switch, via :host([data-scheme])).

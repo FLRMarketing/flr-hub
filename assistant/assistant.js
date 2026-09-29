@@ -1,5 +1,6 @@
 /* ============================================================================
-   FLR Hub Assistant: "Ask the Hub", a compact help button on every Hub page.
+   FLR Hub Assistant: "Likkle Jeff" (first called "Ask the Hub"), a compact help
+   button on every Hub page.
    Version 1 is search, not AI. It finds the best answer in the Hub's approved
    help (help.json) and links straight to the right page, and says so when it
    can't find one. It changes nothing. Asked about the person's own leave,
@@ -12,13 +13,13 @@
    He floats and tilts his head now and then, lifts when you reach for him,
    thinks while a look-up takes a moment and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.5"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.6"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes } from './engine.js?v=1.5';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=1.6';
 
-const V = '1.5';
+const V = '1.6';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -75,8 +76,8 @@ function help() {
     return r.json();
   }).then(h => ({
     index: buildIndex(h.entries), byId: new Map(h.entries.map(e => [e.id, e])),
-    // Words the help writes with a capital (Fleet Management, Annual Leave, Open, Approvals): never taken for a person's name.
-    proper: new Set(h.entries.flatMap(e => [e.title, e.answer, ...(e.steps || []), (e.link && e.link.label) || '']).join(' ').match(/\b[A-Z][a-z]+\b/g).map(w => w.toLowerCase())),
+    // Words the help writes with a capital (Fleet Management, Annual Leave, the Jeff Day): not taken for a person's name.
+    words: hubWords(h),
   })).catch(err => { helpP = null; throw Object.assign(err instanceof Error ? err : new Error(String(err)), { help: true }); }));
 }
 
@@ -92,9 +93,9 @@ const host = document.createElement('flr-assistant');
 host.style.display = 'none';                         // until its stylesheets have arrived
 const root = host.attachShadow({ mode: 'open' });
 root.innerHTML = `<link rel="stylesheet" href="${art('face.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
-<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${face('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
+<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask Likkle Jeff">${face('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask Likkle Jeff</span></button>
 <dialog class="panel" id="fa-panel" aria-labelledby="fa-title" aria-describedby="fa-sub">
-  <div class="head"><span class="grabber" aria-hidden="true"></span><span class="head-face">${face('mini')}</span><div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Answers from the Hub’s help and from what your tools show you. It can’t change anything.</p></div>
+  <div class="head"><span class="grabber" aria-hidden="true"></span><span class="head-face">${face('mini')}</span><div class="head-text"><h2 id="fa-title">Likkle Jeff</h2><p id="fa-sub">Answers from the Hub’s help and from what your tools show you. He can’t change anything.</p></div>
     <button class="x" type="button" aria-label="Close">${ICON.x}</button></div>
   <div class="log" role="log" aria-live="polite"></div>
   <div class="suggest" hidden></div>
@@ -222,27 +223,6 @@ function samePerson() {   // someone signed in or out on this page: start their 
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
 const tokensUnknown = (H, q) => search(H.index, q, {}).terms.some(t => !H.index.df.has(t));
-// People's names written with a capital, not first in the sentence and not one of the Hub's own words: "how is Mark
-// driving?" is about Mark, not about marking costs as reviewed.
-function properNames(q, H) {
-  const out = [];
-  let run = [];
-  const ws = String(q).split(/\s+/);
-  let starts = false;                                     // does the current run start the sentence?
-  ws.forEach((raw, i) => {
-    const w = raw.replace(/^[^A-Za-z]+|[^A-Za-z’']+$/g, ''), bare = w.replace(/[’']s$/, '');
-    const sentenceStart = i === 0 || /[.!?]$/.test(ws[i - 1] || '');
-    if (/^[A-Z][a-z][a-z’'-]*$/.test(bare) && !H.proper.has(bare.toLowerCase())) {
-      if (!run.length) starts = sentenceStart;
-      run.push(bare);
-      // First in the sentence, a single capitalised word is just a capital ("Where…"), unless it's "Faye's".
-      if (/[’']s$/.test(w)) { run.possessive = true; flush(); }
-    } else flush();
-  });
-  flush();
-  return out;
-  function flush() { if (run.length && (!starts || run.length > 1 || run.possessive)) out.push(run.join(' ')); run = []; }
-}
 /* ---------------------------------------------------------------- your own records (records.js, loaded the first time they're asked about) */
 // A question about your own leave, driving or quotations is answered from the FLR database, as you and read-only. The
 // answers stay on this page: the chat's saved history keeps only the question, so leaving the page forgets them.
@@ -429,14 +409,15 @@ function toQuestion() {
 }
 
 function ask(text) {
-  const q = String(text || '').trim().slice(0, 200);
-  if (!q) return;
-  converse(q, async () => {
+  const said = String(text || '').trim().slice(0, 200);
+  if (!said) return;
+  converse(said, async () => {
+    const q = unaddressed(said) || said;                 // "Likkle Jeff, …": his name said to him isn't part of the question
     const H = await help(), ctx = await context();
     // A registration reads as "registration" to the search; the records look for the plate itself.
     const plates = q.match(PLATE) || [], plain = plates.length ? q.replace(PLATE, ' registration ') : q;
     // A person named with a capital is set aside first; if the rest isn't a question about records, it goes back in.
-    const people = properNames(q, H);
+    const people = properNames(q, H.words);
     let asked = plain, r = null, slots = [];
     if (people.length) {
       asked = people.reduce((t, n) => t.replace(n, ' '), plain);

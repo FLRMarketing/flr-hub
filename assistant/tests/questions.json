@@ -529,5 +529,25 @@
    "fleet-my-driving",
    "fleet-find"
   ]
+ },
+ {
+  "q": "Who is Likkle Jeff?",
+  "expect": "assistant-about"
+ },
+ {
+  "q": "what can likkle jeff do",
+  "expect": "assistant-about"
+ },
+ {
+  "q": "Is Likkle Jeff an AI?",
+  "expect": "assistant-about"
+ },
+ {
+  "q": "What is the Jeff Day?",
+  "expect": "leave-closures"
+ },
+ {
+  "q": "does Jeff day come out of my holiday",
+  "expect": "leave-closures"
  }
 ]
