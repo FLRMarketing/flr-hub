@@ -45,7 +45,7 @@ head = """<!doctype html>
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
 <script src="bridge.js?v=1.2"></script>
-<script type="module" src="../assistant/assistant.js?v=1.3"></script>
+<script type="module" src="../assistant/assistant.js?v=1.4"></script>
 </head>
 <body>
 """
@@ -60,3 +60,10 @@ if os.path.isdir(maps):
     shutil.rmtree(maps)
 shutil.copytree(os.path.join(SRC, 'map'), maps, ignore=shutil.ignore_patterns('.DS_Store'))
 print(f"speeding/ updated: index.html {len(html):,} bytes, {len(os.listdir(maps))} map packs")
+
+# The Hub assistant answers questions about drivers with this report's own rules (its CALC block), taken from the page
+# just built, so the two always agree (scripts/speeding_core.py). Commit speeding/speeding-core.js with it.
+import sys  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import speeding_core  # noqa: E402
+speeding_core.main()

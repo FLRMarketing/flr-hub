@@ -388,4 +388,4 @@ function mapData(raw) {
   return { requests, staff, groups, bankHolidays, closureTypes, other, today };
 }
 
-export { FIRST_LEAVE_YEAR, BOARD_NAMES, todayInLondon, isWeekend, yearOf, fmtDate, fmtRange, fmtNum, plural, normaliseName, isPending, leaveDays, buildContext, balanceFor, whoIsOff, whoIsOffOther, mapData };
+export { FIRST_LEAVE_YEAR, BOARD_NAMES, todayInLondon, isWeekend, yearOf, fmtDate, fmtRange, fmtNum, plural, normaliseName, isPending, leaveDays, buildContext, balanceFor, whoIsOff, whoIsOffOther, mapData, evaluateRequest };

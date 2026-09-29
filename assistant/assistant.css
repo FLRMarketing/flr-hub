@@ -147,9 +147,9 @@ button,input{font:inherit;color:inherit}
 .rec-num{font:700 34px/1 var(--fa-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--fa-ink)}
 .rec-num.neg{color:#d70015}
 .rec-unit{color:var(--fa-ink-2);font-weight:600}
-.rec-rows{display:grid;grid-template-columns:1fr auto;gap:0;margin:0 0 6px;padding:0}
+.rec-rows{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:10px;margin:0 0 6px;padding:0}
 .rec-rows div{display:contents}
-.rec-rows dt,.rec-rows dd{margin:0;padding:6px 0;border-top:.5px solid var(--fa-sep);font-size:14px}
+.rec-rows dt,.rec-rows dd{margin:0;padding:6px 0;border-top:.5px solid var(--fa-sep);font-size:14px;overflow-wrap:break-word;word-break:normal}
 .rec-rows dt{color:var(--fa-ink-2)}
 .rec-rows dd{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
 .rec-list{list-style:none;margin:4px 0 6px;padding:0}
@@ -161,11 +161,20 @@ button,input{font:inherit;color:inherit}
 .rec-pill.accepted{background:rgba(52,199,89,.16);color:#1c7c36}
 .rec-pill.denied{background:rgba(255,59,48,.14);color:#c4221b}
 .rec-pill.review,.rec-pill.new{background:rgba(255,159,10,.18);color:#9a5b00}
+.rec-pill.ok{background:rgba(52,199,89,.16);color:#1c7c36}
+.rec-pill.over{background:rgba(255,59,48,.14);color:#c4221b}
+.rec-pill.soon{background:rgba(255,159,10,.18);color:#9a5b00}
+.rec-rows dd.tone-over{color:#c4221b}
+.rec-rows dd.tone-soon{color:#9a5b00}
 @media (prefers-color-scheme:dark){ :host(:not([data-scheme="light"])) .rec-pill.accepted{color:#5ee27f} :host(:not([data-scheme="light"])) .rec-pill.denied{color:#ff8a82} :host(:not([data-scheme="light"])) .rec-pill.review,:host(:not([data-scheme="light"])) .rec-pill.new{color:#ffc15e} :host(:not([data-scheme="light"])) .rec-num.neg{color:#ff6961} }
 :host([data-scheme="dark"]) .rec-pill.accepted{color:#5ee27f}
 :host([data-scheme="dark"]) .rec-pill.denied{color:#ff8a82}
 :host([data-scheme="dark"]) .rec-pill.review,:host([data-scheme="dark"]) .rec-pill.new{color:#ffc15e}
 :host([data-scheme="dark"]) .rec-num.neg{color:#ff6961}
+@media (prefers-color-scheme:dark){ :host(:not([data-scheme="light"])) .rec-pill.ok{color:#5ee27f} :host(:not([data-scheme="light"])) .rec-pill.over,:host(:not([data-scheme="light"])) .rec-rows dd.tone-over{color:#ff8a82} :host(:not([data-scheme="light"])) .rec-pill.soon,:host(:not([data-scheme="light"])) .rec-rows dd.tone-soon{color:#ffc15e} }
+:host([data-scheme="dark"]) .rec-pill.ok{color:#5ee27f}
+:host([data-scheme="dark"]) .rec-pill.over,:host([data-scheme="dark"]) .rec-rows dd.tone-over{color:#ff8a82}
+:host([data-scheme="dark"]) .rec-pill.soon,:host([data-scheme="dark"]) .rec-rows dd.tone-soon{color:#ffc15e}
 .rec-note{margin-top:6px!important;color:var(--fa-ink-3);font-size:12.5px;line-height:1.35}
 
 /* thinking: three dots in the chat while the robot searches */

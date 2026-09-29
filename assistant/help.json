@@ -407,13 +407,19 @@
         "search for a quotation",
         "look up a quote by client",
         "open a previous estimate",
-        "where are my quotes"
+        "where are my quotes",
+        "show the draft quotes",
+        "approved quotes this month",
+        "quotes by an estimator"
       ],
       "keys": [
         "find",
         "search",
         "existing",
-        "previous"
+        "previous",
+        "draft",
+        "approved",
+        "quotestate"
       ],
       "answer": "On the Cost Estimator’s Projects page, search by quote ID, client or site, or pick a group: “All”, “Recently edited”, “Drafts”, “Ready to quote”, “Approved” or “Archived”. Choose yourself under “All estimators” to see only yours, then press “Open” or the quote ID.",
       "link": {
@@ -736,7 +742,12 @@
         "my speeding incidents",
         "how is my driving",
         "my driving score",
-        "see my own report"
+        "see my own report",
+        "how is a driver doing",
+        "a driver's speeding",
+        "speeding for registration",
+        "someone's speeding",
+        "speeding for someone"
       ],
       "keys": [
         "my driving",
@@ -819,7 +830,8 @@
       "keys": [
         "review",
         "priority",
-        "drivers"
+        "drivers",
+        "most"
       ],
       "answer": "The “Drivers” page lists drivers in review order, most urgent first. Narrow it with the status chips (“Needs review”, “Priority”, “Above average”, “At or below”, “Limited evidence”), the search, vehicle type, period and sort.",
       "link": {
@@ -828,7 +840,8 @@
       },
       "related": [
         "fleet-rules"
-      ]
+      ],
+      "data": "fleet.review"
     },
     {
       "id": "fleet-rules",
@@ -856,6 +869,34 @@
         "href": "speeding/#report",
         "label": "Open Drivers"
       }
+    },
+    {
+      "id": "fleet-serious",
+      "tool": "speeding",
+      "title": "See the worst speeding incidents",
+      "ask": [
+        "worst speeding incidents",
+        "the fastest speeds",
+        "serious incidents this month",
+        "top speeding incidents",
+        "the highest speeds recorded"
+      ],
+      "keys": [
+        "worst",
+        "fastest",
+        "serious",
+        "top"
+      ],
+      "answer": "Fleet Management lists each serious incident: 20 mph or more over the limit. Administrators see the whole fleet’s on the map and each driver’s page; a linked driver sees their own. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
+      "data": "fleet.serious",
+      "link": {
+        "href": "speeding/#map",
+        "label": "Open the map"
+      },
+      "related": [
+        "fleet-review",
+        "fleet-incident"
+      ]
     },
     {
       "id": "fleet-incident",
@@ -916,19 +957,28 @@
         "which vans need an mot",
         "when is the road tax due",
         "vehicle details",
-        "overdue services"
+        "overdue services",
+        "when is the mot due on registration",
+        "vehicle details for registration",
+        "who drives the van with registration",
+        "which vans need an mot this month",
+        "what's overdue on the vehicles",
+        "service history of a van"
       ],
       "keys": [
         "mot",
         "tax",
         "service",
-        "vehicle"
+        "vehicle",
+        "registration",
+        "overdue"
       ],
       "answer": "Administrators: the “Vehicles” page lists MOT, tax and service due in the next 60 days, and anything overdue, under “Coming up”; each vehicle opens its details, with “Open in Monday”. Linked drivers: your vehicle’s dates are on “My vehicle”.",
       "link": {
         "href": "speeding/#vehicles",
         "label": "Open Fleet Management"
-      }
+      },
+      "data": "fleet.vehicles"
     },
     {
       "id": "fleet-updated",
@@ -1068,7 +1118,9 @@
         "remaining holiday",
         "what's my allowance",
         "days left this year",
-        "who can see my leave balance"
+        "who can see my leave balance",
+        "how many days does someone have left",
+        "someone's leave balance"
       ],
       "keys": [
         "balance",
@@ -1098,7 +1150,9 @@
         "the status of my holiday request",
         "where are my requests",
         "is my holiday request accepted",
-        "has my leave request been approved"
+        "has my leave request been approved",
+        "has someone's holiday been approved",
+        "show someone's leave requests"
       ],
       "keys": [
         "status",
@@ -1160,6 +1214,32 @@
       }
     },
     {
+      "id": "leave-pending",
+      "tool": "annual-leave",
+      "title": "See what’s waiting for approval",
+      "ask": [
+        "what's waiting for a decision",
+        "pending leave requests",
+        "requests waiting for a decision",
+        "how many requests are waiting",
+        "leave still waiting to be decided"
+      ],
+      "keys": [
+        "pending",
+        "waiting"
+      ],
+      "answer": "Leave approvers see every request waiting for a decision on the “Approvals” tab, each with Annual Leave’s own suggestion: accept, review or deny. Everyone else sees their own requests on My Leave.",
+      "data": "leave.pending",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-approve",
+        "leave-status"
+      ]
+    },
+    {
       "id": "leave-approve",
       "tool": "annual-leave",
       "who": "approver",
@@ -1203,7 +1283,11 @@
         "team holiday calendar",
         "the leave planner",
         "see everyone's leave",
-        "who's off"
+        "who's off",
+        "who is off next week",
+        "who's off on friday",
+        "who is on holiday on a date",
+        "who's off tomorrow"
       ],
       "keys": [
         "diary",
@@ -1220,7 +1304,7 @@
       "related": [
         "leave-colours"
       ],
-      "data": "leave.today"
+      "data": "leave.off"
     },
     {
       "id": "leave-balances-all",
@@ -1231,18 +1315,22 @@
         "everyone's holiday balances",
         "how much leave has the team got left",
         "staff allowances",
-        "balances for all staff"
+        "balances for all staff",
+        "who has the most leave left",
+        "who has the least holiday left"
       ],
       "keys": [
         "balances",
         "allowances",
-        "team"
+        "team",
+        "most"
       ],
       "answer": "Leave approvers can see every member of staff’s allowance and days left under “Balances” in Annual Leave.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"
-      }
+      },
+      "data": "leave.balances"
     },
     {
       "id": "leave-colours",

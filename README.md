@@ -111,18 +111,25 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 - After changing it, run `node assistant/tests/run.mjs` and `node assistant/tests/run.mjs --heldout`. Both must end with
   no wrong answers and none answered that should have been declined. `heldout.json` was written by someone who never
   saw the help text; `--sweep` shows other thresholds.
-- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.3"></script>`: `index.html` directly,
+- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.4"></script>`: `index.html` directly,
   and the tools through their build scripts. On a release, bump `?v=` in those four places and in `assistant.js` (`V`
   and the `engine.js` import).
 - When a tool changes its buttons or wording, update its answers here too.
-- It also answers questions about the person's own records, read-only (`assistant/records.js`): their days left and
-  leave requests, who's off today (names only, never the kind of leave), their driving (administrators: the fleet's
-  totals) and quotation look-ups. Each comes from the database function the tool's own page uses (`leave_home`,
-  `speeding_data`, `list_projects`), called with their own sign-in, so they see exactly what their page would show them.
-  An answer marks which look-up it uses with `"data"` in `help.json`. The answers aren't kept in the chat's saved
-  history: leaving the page forgets them.
-- Leave figures use the Annual Leave page's own rules: `annual-leave/leave-core.js`, cut from the built page by
-  `scripts/leave_core.py`, which `sync-leave.py` runs after every build. Commit `leave-core.js` with the page.
+- It also answers from everything the person can see in their tools, read-only (`assistant/records.js`), and nothing
+  more: each answer comes from the database function the tool's own page uses (`leave_home`, `speeding_data`,
+  `list_projects`), called with their own sign-in. So administrators can ask about any vehicle ("when is the MOT due
+  on AB12 CDE?", "which vans need an MOT this month?", "what does Dan drive?"), any driver ("how is Owen driving?"),
+  the review order and the worst incidents; a linked driver gets only their own vehicle and driving. Leave approvers can
+  ask about anyone's balance and requests, what's waiting for a decision and who's off on any day or week (with the
+  kind of leave, as their Diary shows it); everyone else gets their own leave and who's off today, names only. Anyone
+  with the Estimator can look quotations up by number, client, site, estimator or state. An answer marks which
+  look-up it uses with `"data"` in `help.json`; names the help doesn't know are only ever used if they're found in
+  the person's own records. The answers aren't kept in the chat's saved history: leaving the page forgets them.
+- The figures use the pages' own rules, cut from the built pages: `annual-leave/leave-core.js` (by
+  `scripts/leave_core.py`, which `sync-leave.py` runs after every build) and `speeding/speeding-core.js` (the report's
+  CALC block, by `scripts/speeding_core.py`, which `sync-speeding.py` runs). Commit each with its page.
+- Tests: `node assistant/tests/run.mjs`, `--heldout` and `--records` (questions about records, with names and
+  registrations, routed as the chat routes them).
 - Its face is the FLR robot. `robot.css` has his moods (idle, looking at you, thinking, happy, not sure) and keeps him
   still for people who ask for reduced motion. `robot-base.png` and the two `robot-eye-*.png` are layers cut from the
   artwork in `art/robot-source.webp` by `art/make-layers.mjs`; if the artwork changes, re-run that script rather than

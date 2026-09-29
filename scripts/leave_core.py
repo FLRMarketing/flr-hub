@@ -18,7 +18,7 @@ PAGE = os.path.join(HUB, 'annual-leave', 'index.html')
 OUT = os.path.join(HUB, 'annual-leave', 'leave-core.js')
 EXPORTS = ['FIRST_LEAVE_YEAR', 'BOARD_NAMES', 'todayInLondon', 'isWeekend', 'yearOf', 'fmtDate', 'fmtRange', 'fmtNum',
            'plural', 'normaliseName', 'isPending', 'leaveDays', 'buildContext', 'balanceFor', 'whoIsOff', 'whoIsOffOther',
-           'mapData']
+           'mapData', 'evaluateRequest']
 
 
 def section(page, start, end, what):

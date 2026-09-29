@@ -11,13 +11,13 @@
    Its face is the FLR robot (robot.css): he floats and blinks, looks at you on
    hover, thinks while it searches and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.3"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.4"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, maybes } from './engine.js?v=1.3';
+import { buildIndex, search, searchSlots, maybes } from './engine.js?v=1.4';
 
-const V = '1.3';
+const V = '1.4';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -72,7 +72,11 @@ function help() {
   return helpP || (helpP = fetch(new URL('help.json?v=' + V, HERE), { cache: 'no-cache' }).then(r => {
     if (!r.ok) throw new Error('help ' + r.status);
     return r.json();
-  }).then(h => ({ index: buildIndex(h.entries), byId: new Map(h.entries.map(e => [e.id, e])) })).catch(err => { helpP = null; throw err; }));
+  }).then(h => ({
+    index: buildIndex(h.entries), byId: new Map(h.entries.map(e => [e.id, e])),
+    // Words the help writes with a capital (Fleet Management, Annual Leave, Open, Approvals): never taken for a person's name.
+    proper: new Set(h.entries.flatMap(e => [e.title, e.answer, ...(e.steps || []), (e.link && e.link.label) || '']).join(' ').match(/\b[A-Z][a-z]+\b/g).map(w => w.toLowerCase())),
+  })).catch(err => { helpP = null; throw err; }));
 }
 
 /* ---------------------------------------------------------------- the button and the panel (built once, in their own shadow root) */
@@ -88,14 +92,14 @@ const root = host.attachShadow({ mode: 'open' });
 root.innerHTML = `<link rel="stylesheet" href="${art('robot.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
 <button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${robot('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
 <dialog class="panel" id="fa-panel" aria-labelledby="fa-title" aria-describedby="fa-sub">
-  <div class="head"><span class="grabber" aria-hidden="true"></span>${robot('mini')}<div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Answers from the Hub’s help and your own records. It can’t change anything.</p></div>
+  <div class="head"><span class="grabber" aria-hidden="true"></span>${robot('mini')}<div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Answers from the Hub’s help and from what your tools show you. It can’t change anything.</p></div>
     <button class="x" type="button" aria-label="Close">${ICON.x}</button></div>
   <div class="log" role="log" aria-live="polite"></div>
   <div class="suggest" hidden></div>
   <form class="composer" novalidate><label class="sr" for="fa-q">Your question</label>
     <input id="fa-q" type="text" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" maxlength="200" placeholder="Ask about leave, estimates, fleet…">
     <button class="send" type="submit" aria-label="Ask" disabled>${ICON.send}</button></form>
-  <p class="foot">Answers come from the Hub’s help and your own records, as your tools show them. For anything else, ask an FLR administrator.</p>
+  <p class="foot">Answers come from the Hub’s help and from what your tools show you, and nothing more. For anything else, ask an FLR administrator.</p>
 </dialog>`;
 const $ = s => root.querySelector(s);
 const fab = $('.fab'), panel = $('.panel'), logEl = $('.log'), suggestEl = $('.suggest'), form = $('.composer'), input = $('#fa-q'), sendBtn = $('.send');
@@ -203,6 +207,28 @@ function samePerson() {   // someone signed in or out on this page: start their 
 }
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
+const tokensUnknown = (H, q) => search(H.index, q, {}).terms.some(t => !H.index.df.has(t));
+// People's names written with a capital, not first in the sentence and not one of the Hub's own words: "how is Mark
+// driving?" is about Mark, not about marking costs as reviewed.
+function properNames(q, H) {
+  const out = [];
+  let run = [];
+  const ws = String(q).split(/\s+/);
+  let starts = false;                                     // does the current run start the sentence?
+  ws.forEach((raw, i) => {
+    const w = raw.replace(/^[^A-Za-z]+|[^A-Za-z’']+$/g, ''), bare = w.replace(/[’']s$/, '');
+    const sentenceStart = i === 0 || /[.!?]$/.test(ws[i - 1] || '');
+    if (/^[A-Z][a-z][a-z’'-]*$/.test(bare) && !H.proper.has(bare.toLowerCase())) {
+      if (!run.length) starts = sentenceStart;
+      run.push(bare);
+      // First in the sentence, a single capitalised word is just a capital ("Where…"), unless it's "Faye's".
+      if (/[’']s$/.test(w)) { run.possessive = true; flush(); }
+    } else flush();
+  });
+  flush();
+  return out;
+  function flush() { if (run.length && (!starts || run.length > 1 || run.possessive)) out.push(run.join(' ')); run = []; }
+}
 /* ---------------------------------------------------------------- your own records (records.js, loaded the first time they're asked about) */
 // A question about your own leave, driving or quotations is answered from the FLR database, as you and read-only. The
 // answers stay on this page: the chat's saved history keeps only the question, so leaving the page forgets them.
@@ -211,13 +237,15 @@ let recordsP = null;
 const records = () => recordsP || (recordsP = import(art('records.js')).catch(err => { recordsP = null; throw err; }));
 const QUOTE_REF = /\b(?:[a-z]{1,5}-)?\d{4}-\d{1,5}\b/i;   // Q-2026-041, FLR-2026-0001
 const QUOTE_WORD = /\b(quotes?|quotations?|estimates?)\b/i;
-// soft: a guess that this is a quote search ("the henderson quote"); if nothing matches, answer as usual instead.
-async function lookUpFor(e, q, ctx, soft = false) {
+const PLATE = /\b[a-z]{2}\d{2}\s?[a-z]{3}\b|\b[a-z]\d{1,3}\s?[a-z]{3}\b/gi;   // AB12 CDE, A123 BCD: a vehicle registration
+// slots: names in the question the help doesn't know ("Sarah", "Faye's van"). soft: the answer rests on a guess (a name,
+// or that this is a quote search), so if the records don't know it, answer as if there were no look-up.
+async function lookUpFor(e, q, ctx, { slots = [], soft = false } = {}) {
   if (!e || !e.data || !ctx.signedIn || gate(e, ctx) !== 'ok') return null;
   const R = await records();
-  if (e.data === 'quotes.find') { const x = R.quoteQuery(q); if (!x.refs.length && !x.terms.length && !x.mine) return null; }   // "how do I find a quote?" is help
+  if (e.data === 'quotes.find') { const x = R.quoteQuery(q); if (!x.refs.length && !x.terms.length && !x.mine && !x.state && !x.month) return null; }   // "how do I find a quote?" is help
   const s = session();
-  const card = await R.lookUp(e.data, q, { uid: (s && s.user && s.user.id) || '', name: ctx.name });
+  const card = await R.lookUp(e.data, q, { uid: (s && s.user && s.user.id) || '', name: ctx.name }, slots);
   if (!card || (soft && card.empty)) return null;
   const ref = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   kept.set(ref, card);
@@ -292,7 +320,7 @@ function answerEl(m, H, ctx) {
 function recordsEl(m, H, ctx) {
   const card = kept.get(m.ref), e = H.byId.get(m.id), b = el('div', 'msg bot rec');
   if (!card) {             // from an earlier page: not kept, by design
-    b.append(el('p', null, 'Your own records aren’t kept in this chat once you leave a page. Ask again to see them.'));
+    b.append(el('p', null, 'Records aren’t kept in this chat once you leave a page. Ask again to see them.'));
     if (e) b.append(chipsFor([e.id], H, ctx));
     return b;
   }
@@ -306,7 +334,7 @@ function recordsEl(m, H, ctx) {
   }
   if (card.rows) {
     const dl = el('dl', 'rec-rows');
-    for (const [k, v] of card.rows) { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); dl.append(d); }
+    for (const [k, v, tone] of card.rows) { const d = el('div'); d.append(el('dt', null, k), el('dd', tone ? 'tone-' + tone : null, v)); dl.append(d); }
     b.append(dl);
   }
   if (card.list) {
@@ -388,20 +416,34 @@ function ask(text) {
   const q = String(text || '').trim().slice(0, 200);
   if (!q) return;
   converse(q, async () => {
-    const H = await help();
-    const r = search(H.index, q, { page: PAGE }), top = r.results[0], ref = QUOTE_REF.test(q);
-    if (!r.terms.length && !ref) return { k: 'hello', thanks: /^(thanks|thank you|cheers|ta)\b/i.test(q) };
+    const H = await help(), ctx = await context();
+    // A registration reads as "registration" to the search; the records look for the plate itself.
+    const plates = q.match(PLATE) || [], plain = plates.length ? q.replace(PLATE, ' registration ') : q;
+    // A person named with a capital is set aside first; if the rest isn't a question about records, it goes back in.
+    const people = properNames(q, H);
+    let asked = plain, r = null, slots = [];
+    if (people.length) {
+      asked = people.reduce((t, n) => t.replace(n, ' '), plain);
+      r = searchSlots(H.index, asked, { page: PAGE });
+      if (r.confident && H.byId.get(r.results[0].entry.id).data) slots = [...people.flatMap(n => n.toLowerCase().split(' ')), ...r.slots];
+      else { asked = plain; r = null; }
+    }
+    if (!r) { r = searchSlots(H.index, asked, { page: PAGE }); slots = r.slots; }
+    const top = r.results[0], ref = QUOTE_REF.test(q);
+    if (!r.terms.length && !ref && !people.length) return { k: 'hello', thanks: /^(thanks|thank you|cheers|ta)\b/i.test(q) };
+    const named = slots.length > 0;                         // understood only once the names were set aside
     const id = r.confident ? top.entry.id : ref ? 'estimate-find' : null;   // a quote number is always a look-up
-    if (id) {
-      const got = await lookUpFor(H.byId.get(id), q, await context());
+    if (id && !(named && !H.byId.get(id).data)) {           // a guess about names needs records to check it against
+      const got = await lookUpFor(H.byId.get(id), q, ctx, { slots, soft: named });
       if (got) return got;
-      return { k: 'answer', id, rel: r.confident ? r.results.slice(1).filter(x => x.score >= top.score * 0.7).slice(0, 2).map(x => x.entry.id) : [] };
+      if (!named) return { k: 'answer', id, rel: r.confident ? r.results.slice(1).filter(x => x.score >= top.score * 0.7).slice(0, 2).map(x => x.entry.id) : [] };
     }
     // "The henderson quote": a quote named by words the help doesn't know (a client, a site) is worth looking for.
-    if (QUOTE_WORD.test(q) && r.terms.some(t => !H.index.df.has(t))) {
-      const got = await lookUpFor(H.byId.get('estimate-find'), q, await context(), true);
+    if (QUOTE_WORD.test(q) && tokensUnknown(H, q)) {
+      const got = await lookUpFor(H.byId.get('estimate-find'), q, ctx, { soft: true });
       if (got) return got;
     }
+    if (named) { const first = search(H.index, asked, { page: PAGE }); const maybe = maybes(first).map(x => x.entry.id); return maybe.length ? { k: 'unsure', ids: maybe } : { k: 'none' }; }
     const maybe = maybes(r).map(x => x.entry.id);
     return maybe.length ? { k: 'unsure', ids: maybe } : { k: 'none' };
   });

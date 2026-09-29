@@ -12,6 +12,7 @@
 const PHRASES = [
   [/\bhow (much|many) (days? (of )?)?(annual leave|holidays?|leave|time off|days?( off)?)\b/g, ' balance leave '],
   [/\bbank (holidays?|hols?)\b/g, ' closure '],
+  [/\b(approved|draft|drafted|archived)\s+(quotes?|quotations?|estimates?)\b/g, ' quotestate estimate '],   // a list, not a task
   [/\b(book|take|have|get|put) (me |myself |us |some |a |the |in )?(days? |time )?off\b/g, ' request leave '],
   [/\b(who is|whos|who are) (off|away|out|absent|on (annual leave|holidays?|leave|vacation))\b/g, ' whosoff leave '],
   [/\b(annual leave|time off|days? off|holidays?|vacations?|annual holidays?)\b/g, ' leave '],
@@ -38,14 +39,14 @@ const STOP = new Set(('a an the i im ive id me my mine we weve our us you youre 
   'do does did done doing to of in on for and or but is are was were be been being am can could would should will shall may might must ' +
   'cant dont doesnt didnt isnt arent wasnt werent wont wouldnt couldnt shouldnt havent hasnt ill ' +
   'how what where when which who whom why whats wheres hows whos there theres here with at from as by into onto about up out over if so just ' +
-  'get got have has had please want wanted need needed any some much many more most very really also still then than too yet already ' +
+  'get got have has had please want wanted need needed any some much many more very really also still then than too yet already ' +
   'find see show look looking go going thing things way ok okay hi hello hey thanks thank cheers able let lets tell know help put enter fill ' +
   'today tomorrow yesterday tonight morning afternoon week weeks month months year years ' +
   'actually literally basically only even ever again another one ones other others someone somebody anyone anybody everyone everybody ' +
   'something anything everything come came comes coming keep keeps kept say says said saying use using used made take took taken ' +
   'give gave given try tried trying bit lot lots loads stuff sort kind info information lads lad guys mate lol pls plz thx ta oh um erm ' +
   'like right sure maybe guess think sorry quick quickly now currently soon later anymore never since until till while during via per etc ' +
-  'difference different between mistake mistakes accident accidentally problem problems issue issues almost nearly exactly ' +
+  'difference different between mistake mistakes accident accidentally problem problems issue issues almost nearly exactly next ' +
   'monday tuesday wednesday thursday friday saturday sunday').split(/\s+/));
 
 // Words that only break ties: a match adds a little, a miss costs nothing.
@@ -60,6 +61,7 @@ const SYN = new Map(Object.entries({
   client: 'client', clients: 'client', customer: 'client', customers: 'client',
   reassign: 'reassign', move: 'reassign', moving: 'reassign', moved: 'reassign', transfer: 'reassign',
   similar: 'similar', identical: 'similar', template: 'similar',
+  most: 'most', least: 'most', fewest: 'most', highest: 'most', lowest: 'most',
   leave: 'leave', holiday: 'leave', holidays: 'leave', hol: 'leave', hols: 'leave', absence: 'leave', absences: 'leave', vacation: 'leave',
   closure: 'closure', closures: 'closure', shutdown: 'closure', christmas: 'closure',
   sick: 'sickness', sickness: 'sickness', illness: 'sickness',
@@ -219,6 +221,22 @@ export function search(index, query, ctx = {}) {
   return best;
 }
 
+// Questions about someone or something by name ("how many days has Sarah got left?", "Faye's van"): names are words
+// the help has never seen, which make a question look like it's about something else. When the question isn't clear
+// with them, it's tried again without them, and they come back as slots. A slot answer is only ever used by a look-up
+// that finds the name in the person's own records (records.js); otherwise the question is answered as if it had no
+// second try, so "who is the managing director?" still gets "I couldn't find that".
+export function searchSlots(index, query, ctx = {}) {
+  const first = search(index, query, ctx);
+  if (first.confident) return { ...first, slots: [] };
+  const ws = words(query).map(([raw, w]) => [raw, understood(index, raw, w)]);
+  const known = ws.filter(([, w]) => index.df.has(w) || SOFT.has(w)).map(([, w]) => w);
+  const slots = ws.filter(([, w]) => !index.df.has(w) && !SOFT.has(w)).map(([raw]) => raw);
+  if (!slots.length || !known.length) return { ...first, slots: [] };
+  const second = rank(index, known, { ...ctx, onlyData: true });   // only answers that can look a name up
+  return second.confident ? { ...second, slots } : { ...first, slots: [] };
+}
+
 function rank(index, all, ctx) {
   const q = [...new Set(all)];
   if (!q.length) return { terms: q, confident: false, results: [] };
@@ -226,6 +244,7 @@ function rank(index, all, ctx) {
   const total = q.reduce((n, t) => n + (SOFT.has(t) ? 0 : idfOf(index, t)), 0);
   const results = [];
   for (const d of index.docs) {
+    if (ctx.onlyData && !d.e.data) continue;
     let s = 0, hit = 0;
     for (const t of q) {
       // [how much it scores, how much it counts as "covering" the question]: a word only in the answer text covers less
