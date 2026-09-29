@@ -1,5 +1,5 @@
 {
-  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Check changes with: node assistant/tests/run.mjs",
+  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'care' marks a topic that's a worry or about privacy, which the assistant answers with a reassuring face rather than a celebration. 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Check changes with: node assistant/tests/run.mjs",
   "version": 1,
   "entries": [
     {
@@ -138,6 +138,7 @@
       "id": "password-forgot",
       "tool": "hub",
       "title": "Reset a forgotten password",
+      "care": true,
       "ask": [
         "I forgot my password",
         "reset my password",
@@ -210,6 +211,7 @@
       "id": "tools-missing",
       "tool": "hub",
       "title": "A tool is missing from your Hub",
+      "care": true,
       "ask": [
         "a tool is missing from my hub",
         "I can't see a tool on the hub",
@@ -234,6 +236,7 @@
       "id": "account-off",
       "tool": "hub",
       "title": "Your account is switched off",
+      "care": true,
       "ask": [
         "my account is switched off",
         "my account has been disabled",
@@ -769,6 +772,7 @@
       "id": "fleet-nothing",
       "tool": "speeding",
       "title": "Fleet Management shows nothing",
+      "care": true,
       "ask": [
         "fleet management says nothing to show you yet",
         "why can't I see anything in fleet management",
@@ -902,6 +906,7 @@
       "id": "fleet-incident",
       "tool": "speeding",
       "title": "Look at a speeding incident",
+      "care": true,
       "ask": [
         "how do I see where an incident happened",
         "open a speeding event",
@@ -1007,6 +1012,7 @@
       "id": "fleet-privacy",
       "tool": "speeding",
       "title": "Who can see your driving",
+      "care": true,
       "ask": [
         "who can see my driving",
         "can other drivers see my speeding",
@@ -1028,6 +1034,7 @@
       "id": "fleet-wrong-driver",
       "tool": "speeding",
       "title": "An incident that wasn’t you",
+      "care": true,
       "ask": [
         "it wasn't me driving",
         "someone else was driving my van",
@@ -1174,6 +1181,7 @@
       "id": "leave-not-linked",
       "tool": "annual-leave",
       "title": "Annual Leave says you aren’t linked",
+      "care": true,
       "ask": [
         "my account isn't linked to a staff record",
         "annual leave says I'm not linked",

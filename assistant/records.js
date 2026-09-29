@@ -141,10 +141,10 @@ function leaveWho(L, slots, q) {
   return { people, own: people.length === 1 && people[0] === L.me, unknown: !people.length && !nameLike(q, slots) };
 }
 const notLinked = L => ({
-  title: 'Your leave isn’t linked yet', link: leaveOpen,
+  title: 'Your leave isn’t linked yet', link: leaveOpen, care: true,
   text: `Your FLR account isn’t linked to a staff record, so there’s no leave to show. Ask a leave approver to add ${L.email || 'your work email'} to your record on the FLR - Leave Allowances board.`,
 });
-const onlyYours = { title: 'Only your own leave', text: 'Leave approvers can see everyone’s leave. You can see your own: ask “how many days have I got left?”.', link: leaveOpen };
+const onlyYours = { care: true, title: 'Only your own leave', text: 'Leave approvers can see everyone’s leave. You can see your own: ask “how many days have I got left?”.', link: leaveOpen };
 
 function balanceCard(L, s, own) {
   const year = L.ctx.currentYear, b = L.core.balanceFor(L.ctx, s, year), f = L.core.fmtNum;
@@ -175,9 +175,9 @@ async function leave(kind, q, slots) {
     const w = leaveWho(L, slots, q);
     if (w.refused) return onlyYours;
     if (w.unknown) return { empty: true };
-    if (!w.people.length) return slots.length ? { title: 'No one by that name', text: `I couldn’t find “${asWritten(q, slots)}” on the FLR - Leave Allowances board.`, link: leaveOpen } : notLinked(L);
+    if (!w.people.length) return slots.length ? { unsure: true, title: 'No one by that name', text: `I couldn’t find “${asWritten(q, slots)}” on the FLR - Leave Allowances board.`, link: leaveOpen } : notLinked(L);
     if (w.people.length > 1) {
-      return { title: 'Which person?', list: w.people.slice(0, 8).map(s => { const b = L.core.balanceFor(L.ctx, s, L.ctx.currentYear); return { title: s.name, meta: `${L.core.fmtNum(b.remaining)} days left in ${L.ctx.currentYear}` }; }), note: 'Ask again with their full name.', link: leaveOpen };
+      return { unsure: true, title: 'Which person?', list: w.people.slice(0, 8).map(s => { const b = L.core.balanceFor(L.ctx, s, L.ctx.currentYear); return { title: s.name, meta: `${L.core.fmtNum(b.remaining)} days left in ${L.ctx.currentYear}` }; }), note: 'Ask again with their full name.', link: leaveOpen };
     }
     const s = w.people[0];
     if (kind === 'balance') return balanceCard(L, s, w.own);
@@ -257,8 +257,8 @@ async function leave(kind, q, slots) {
 async function fleetData() {
   let d;
   try { d = await read('speeding_data'); } catch (e) {
-    if (e.code === 'FLR_FORBIDDEN' && /unlinked/.test(e.detail)) return { card: { title: 'Nothing to show you yet', text: 'Your FLR account isn’t linked to your FleetView driver name. Ask an FLR administrator to link it; then you can see your own driving and vehicle.' } };
-    if (e.code === 'FLR_FORBIDDEN' && /off/.test(e.detail)) return { card: { title: 'Fleet Management is switched off', text: 'Ask an FLR administrator if you need it.' } };
+    if (e.code === 'FLR_FORBIDDEN' && /unlinked/.test(e.detail)) return { card: { care: true, title: 'Nothing to show you yet', text: 'Your FLR account isn’t linked to your FleetView driver name. Ask an FLR administrator to link it; then you can see your own driving and vehicle.' } };
+    if (e.code === 'FLR_FORBIDDEN' && /off/.test(e.detail)) return { card: { care: true, title: 'Fleet Management is switched off', text: 'Ask an FLR administrator if you need it.' } };
     throw e;
   }
   const core = await import(new URL('../speeding/speeding-core.js?v=' + V, HERE).href);
@@ -368,16 +368,16 @@ function driverCard(rs, F, own) {
     link: own ? hubLink('speeding/', 'Open My driving') : hubLink(`speeding/#driver/${slug(rs[0].reg)}`, 'Open driver'),
   };
 }
-const onlyYourDriving = { title: 'Only your own driving', text: 'Fleet Management shows you your own driving and vehicle. FLR administrators see every driver.' };
+const onlyYourDriving = { care: true, title: 'Only your own driving', text: 'Fleet Management shows you your own driving and vehicle. FLR administrators see every driver.' };
 
 async function fleet(kind, q, slots) {
   const F = await fleetData();
   if (F.card) return F.card;
-  if (!F.rep || !F.rep.fleet) return { title: 'No driving data yet', text: 'The speeding report hasn’t been loaded yet. It updates every morning.', link: hubLink('speeding/', 'Open Fleet Management') };
+  if (!F.rep || !F.rep.fleet) return { care: true, title: 'No driving data yet', text: 'The speeding report hasn’t been loaded yet. It updates every morning.', link: hubLink('speeding/', 'Open Fleet Management') };
   const plate = PLATE.test(q), named = slots.length || plate;
   // Nothing by that name or registration: say so when the question clearly named something, else no answer at all.
   const notFound = what => plate || nameLike(q, slots)
-    ? (F.admin ? { title: `No ${what} found`, text: `I couldn’t find “${(q.match(PLATE) || [asWritten(q, slots)])[0]}” in Fleet Management.` } : onlyYourDriving)
+    ? (F.admin ? { unsure: true, title: `No ${what} found`, text: `I couldn’t find “${(q.match(PLATE) || [asWritten(q, slots)])[0]}” in Fleet Management.` } : onlyYourDriving)
     : { empty: true };
 
   if (kind === 'me' && /\bwhat\b[^?]*\bdrives?\b|\bwhich (van|vehicle|car)\b/i.test(q) && !/\bdriving\b|\bspeed/i.test(q)) kind = 'vehicles';   // "what does Dan drive?"
@@ -391,7 +391,7 @@ async function fleet(kind, q, slots) {
     if (!F.admin) {   // a driver: their own vehicle, which shows every date and how soon it's due
       const mine = F.vehicles.filter(v => v.kind === 'current');
       if (mine.length === 1) return vehicleCard(mine[0], F);
-      if (!mine.length) return { title: 'No vehicle details for you yet', text: 'The Monday fleet board doesn’t match a vehicle to you at the moment. Ask your fleet manager.', link: hubLink('speeding/', 'Open My vehicle') };
+      if (!mine.length) return { care: true, title: 'No vehicle details for you yet', text: 'The Monday fleet board doesn’t match a vehicle to you at the moment. Ask your fleet manager.', link: hubLink('speeding/', 'Open My vehicle') };
     }
     return dueList(q, F);
   }
@@ -403,7 +403,7 @@ async function fleet(kind, q, slots) {
       if (!F.admin) return driverCard(rs, F, true);
       const drivers = [...new Set(rs.map(r => r.d))];
       if (drivers.length === 1) return driverCard(rs, F, false);
-      return { title: 'Which driver?', list: drivers.slice(0, 8).map(d => ({ title: d, meta: F.rows.filter(r => r.d === d).map(r => r.reg).join(', ') })), note: 'Ask again with their full name or registration.' };
+      return { unsure: true, title: 'Which driver?', list: drivers.slice(0, 8).map(d => ({ title: d, meta: F.rows.filter(r => r.d === d).map(r => r.reg).join(', ') })), note: 'Ask again with their full name or registration.' };
     }
     if (F.admin) {
       return {
@@ -502,7 +502,13 @@ const WHY = {
   MISSING: 'That isn’t set up in the FLR database yet.',
   OFFLINE: 'The FLR database didn’t answer. Check your connection, then try again.',
 };
+// Why a look-up can stop that isn't anything wrong: who's asking, and what they may see. Anything else (no connection, the
+// server, a function the database hasn't got, a mistake in this file) is a fault on the Hub's side, and the card says so
+// (fault), so the assistant can react to it as one; its face never blames the person for these.
+const ACCESS = new Set(['FLR_SIGN_IN_REQUIRED', 'EXPIRED', 'FLR_ACCOUNT_DISABLED', 'FLR_NO_PROFILE', 'FLR_FORBIDDEN']);
 // kind: what to look up (from help.json's "data"); slots: names the question mentions that the help doesn't know.
+// Besides what to show, a card can say how it lands: unsure (not found, or which one?), care (privacy, not linked, no data
+// yet), error (it couldn't be looked up) and fault (because something broke).
 export async function lookUp(kind, q, who, slots = []) {
   once.clear();
   try {
@@ -511,7 +517,7 @@ export async function lookUp(kind, q, who, slots = []) {
     if (tool === 'fleet') return await fleet(what, q, slots);
     if (tool === 'quotes') return await quotations(q, who);
   } catch (e) {
-    return { title: 'I couldn’t look that up', text: WHY[e.code] || 'The FLR database didn’t answer as expected. Try again in a moment.', error: true };
+    return { title: 'I couldn’t look that up', text: WHY[e.code] || 'The FLR database didn’t answer as expected. Try again in a moment.', error: true, fault: !(e instanceof Refusal && ACCESS.has(e.code)) };
   }
   return null;
 }

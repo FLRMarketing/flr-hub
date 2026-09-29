@@ -111,7 +111,7 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 - After changing it, run `node assistant/tests/run.mjs` and `node assistant/tests/run.mjs --heldout`. Both must end with
   no wrong answers and none answered that should have been declined. `heldout.json` was written by someone who never
   saw the help text; `--sweep` shows other thresholds.
-- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.4"></script>`: `index.html` directly,
+- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.5"></script>`: `index.html` directly,
   and the tools through their build scripts. On a release, bump `?v=` in those four places and in `assistant.js` (`V`
   and the `engine.js` import).
 - When a tool changes its buttons or wording, update its answers here too.
@@ -130,10 +130,12 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
   CALC block, by `scripts/speeding_core.py`, which `sync-speeding.py` runs). Commit each with its page.
 - Tests: `node assistant/tests/run.mjs`, `--heldout` and `--records` (questions about records, with names and
   registrations, routed as the chat routes them).
-- Its face is the FLR robot. `robot.css` has his moods (idle, looking at you, thinking, happy, not sure) and keeps him
-  still for people who ask for reduced motion. `robot-base.png` and the two `robot-eye-*.png` are layers cut from the
-  artwork in `art/robot-source.webp` by `art/make-layers.mjs`; if the artwork changes, re-run that script rather than
-  drawing new layers.
+- Its face is the FLR character: six drawings of him, one per mood, in `face/` (thumbs up by default; thinking,
+  celebrating, reassuring, unsure, and playfully angry for the Hub's own faults only). `face.css` fades from one drawing
+  to the next and keeps him still for people who ask for reduced motion; `reaction()` in `assistant.js` picks his mood
+  for each reply, helped by `care` in `help.json` and the `unsure`, `care` and `fault` marks on records cards. The
+  drawings are made from the originals by `art/make-faces.mjs`, which crops all six to one box so he never moves
+  between moods. The full-size originals are kept off this public repository.
 
 ## Publishing checklist
 

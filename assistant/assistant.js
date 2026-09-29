@@ -8,16 +8,17 @@
    shows exactly what their page would. It also asks the FLR database which tools
    the person has (hub_home), so it can say "that isn't on your Hub" instead of
    linking somewhere they can't open.
-   Its face is the FLR robot (robot.css): he floats and blinks, looks at you on
-   hover, thinks while it searches and reacts to what it finds.
+   Its face is the FLR character (face.css): six drawings of him, one per mood.
+   He floats and tilts his head now and then, lifts when you reach for him,
+   thinks while a look-up takes a moment and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.4"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.5"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes } from './engine.js?v=1.4';
+import { buildIndex, search, searchSlots, maybes } from './engine.js?v=1.5';
 
-const V = '1.4';
+const V = '1.5';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -76,23 +77,24 @@ function help() {
     index: buildIndex(h.entries), byId: new Map(h.entries.map(e => [e.id, e])),
     // Words the help writes with a capital (Fleet Management, Annual Leave, Open, Approvals): never taken for a person's name.
     proper: new Set(h.entries.flatMap(e => [e.title, e.answer, ...(e.steps || []), (e.link && e.link.label) || '']).join(' ').match(/\b[A-Z][a-z]+\b/g).map(w => w.toLowerCase())),
-  })).catch(err => { helpP = null; throw err; }));
+  })).catch(err => { helpP = null; throw Object.assign(err instanceof Error ? err : new Error(String(err)), { help: true }); }));
 }
 
 /* ---------------------------------------------------------------- the button and the panel (built once, in their own shadow root) */
-// The robot: the artwork in layers (his body, and each eye on its own), so robot.css can make him blink, look and react.
+// His face: a drawing of him for each mood (face/*.webp), stacked in one box so face.css can fade from one to the next.
+// Only the thumbs-up comes with the page; the rest follow once the page has settled, or as soon as you reach for him.
 const art = f => new URL(f + '?v=' + V, HERE).href;
-const robot = cls => `<span class="robot${cls ? ' ' + cls : ''}" data-mood="idle" aria-hidden="true"><span class="robot-float"><span class="robot-body">`
-  + `<span class="robot-glow"></span><img class="robot-base" src="${art('robot-base.png')}" alt="" draggable="false"><span class="robot-lamp"></span>`
-  + `<img class="robot-eye l" src="${art('robot-eye-left.png')}" alt="" draggable="false"><img class="robot-eye r" src="${art('robot-eye-right.png')}" alt="" draggable="false">`
-  + `</span></span><span class="robot-shadow"></span></span>`;
+const MOODS = { idle: 'default', think: 'thinking', cheer: 'celebrating', care: 'reassuring', unsure: 'unsure', grr: 'angry' };
+const face = cls => `<span class="face${cls ? ' ' + cls : ''}" data-mood="idle" aria-hidden="true"><span class="face-float"><span class="face-body">`
+  + Object.values(MOODS).map(n => `<img class="f-${n}" ${n === 'default' ? 'src' : 'data-src'}="${art('face/' + n + '.webp')}" alt="" draggable="false" decoding="async">`).join('')
+  + `</span></span><span class="face-shadow"></span></span>`;
 const host = document.createElement('flr-assistant');
 host.style.display = 'none';                         // until its stylesheets have arrived
 const root = host.attachShadow({ mode: 'open' });
-root.innerHTML = `<link rel="stylesheet" href="${art('robot.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
-<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${robot('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
+root.innerHTML = `<link rel="stylesheet" href="${art('face.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
+<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask the Hub">${face('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask the Hub</span></button>
 <dialog class="panel" id="fa-panel" aria-labelledby="fa-title" aria-describedby="fa-sub">
-  <div class="head"><span class="grabber" aria-hidden="true"></span>${robot('mini')}<div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Answers from the Hub’s help and from what your tools show you. It can’t change anything.</p></div>
+  <div class="head"><span class="grabber" aria-hidden="true"></span><span class="head-face">${face('mini')}</span><div class="head-text"><h2 id="fa-title">Ask the Hub</h2><p id="fa-sub">Answers from the Hub’s help and from what your tools show you. It can’t change anything.</p></div>
     <button class="x" type="button" aria-label="Close">${ICON.x}</button></div>
   <div class="log" role="log" aria-live="polite"></div>
   <div class="suggest" hidden></div>
@@ -105,7 +107,7 @@ const $ = s => root.querySelector(s);
 const fab = $('.fab'), panel = $('.panel'), logEl = $('.log'), suggestEl = $('.suggest'), form = $('.composer'), input = $('#fa-q'), sendBtn = $('.send');
 { let n = 0; for (const l of root.querySelectorAll('link')) l.addEventListener('load', () => { if (++n === 2) host.style.display = ''; }); }
 // If his picture can't load, the button falls back to a plain round one, so it's never an invisible button.
-fab.querySelector('.robot-base').addEventListener('error', () => fab.classList.add('noart'));
+fab.querySelector('.f-default').addEventListener('error', () => fab.classList.add('noart'));
 document.body.appendChild(host);
 
 // Follow a page's own light/dark switch (the Fleet page's data-mode, others' data-theme), otherwise the device; and step
@@ -158,40 +160,52 @@ if (window.visualViewport) {
   vv.addEventListener('scroll', fit);
 }
 
-/* ---------------------------------------------------------------- the robot: what he's doing (robot.css draws each mood) */
-const bots = [...root.querySelectorAll('.robot')], fabBot = fab.querySelector('.robot');
-let moodTimer = 0;
-// Moods: think, happy, hmm, land; "rest" is where he settles: idle, or looking up at the chat while it's open.
-function mood(m, ms = 0) {
-  clearTimeout(moodTimer);
-  for (const b of bots) b.dataset.mood = m === 'rest' ? (b === fabBot && panel.open ? 'open' : 'idle') : m;
-  if (ms) moodTimer = setTimeout(() => mood('rest'), ms);
+/* ---------------------------------------------------------------- his mood (face.css draws each one) */
+const faces = [...root.querySelectorAll('.face')], fabFace = fab.querySelector('.face');
+// The other five drawings: once the page has settled, or straight away if you reach for him first.
+let facesAsked = false;
+function loadFaces() {
+  if (facesAsked) return;
+  facesAsked = true;
+  for (const img of root.querySelectorAll('.face img[data-src]')) { img.src = img.dataset.src; img.removeAttribute('data-src'); img.decode().catch(() => null); }
 }
-// A blink every few seconds (sometimes two), only while he's at rest.
-function blink(b, twice) {
-  b.classList.remove('blink'); void b.offsetWidth; b.classList.add('blink');
-  setTimeout(() => { b.classList.remove('blink'); if (twice) setTimeout(() => blink(b, false), 110); }, 200);
-}
-(function blinkLater() {
-  setTimeout(() => {
-    const twice = Math.random() < 0.2;
-    if (!reduced() && !document.hidden) for (const b of bots) if (b.dataset.mood === 'idle' || b.dataset.mood === 'open') blink(b, twice);
-    blinkLater();
-  }, 3500 + Math.random() * 5000);
-})();
-// Hover or keyboard focus: he looks towards you (his eyes follow the pointer across him) and brightens.
 {
-  const clamp = v => Math.max(-1, Math.min(1, v));
-  const look = on => { if (on) fabBot.dataset.look = ''; else { delete fabBot.dataset.look; fabBot.style.removeProperty('--lx'); fabBot.style.removeProperty('--ly'); } };
-  fab.addEventListener('pointerenter', ev => { if (ev.pointerType !== 'touch') look(true); });
-  fab.addEventListener('pointermove', ev => {
-    if (ev.pointerType === 'touch') return;
-    const r = fabBot.getBoundingClientRect();
-    fabBot.style.setProperty('--lx', clamp((ev.clientX - r.left - r.width / 2) / 28).toFixed(2));
-    fabBot.style.setProperty('--ly', clamp((ev.clientY - r.top - r.height * 0.6) / 28).toFixed(2));
-  });
+  const settle = () => ('requestIdleCallback' in window ? requestIdleCallback(loadFaces, { timeout: 5000 }) : setTimeout(loadFaces, 2000));
+  if (document.readyState === 'complete') settle(); else addEventListener('load', settle, { once: true });
+}
+// A mood shows only once its drawing is here (until then he stays as he is), and the passing ones last a moment, then
+// he's back to his thumbs-up; "then" is the mood to go on to instead (after a fault: a reassuring one, as it's explained).
+const HOLD = { cheer: 1400, care: 2400, unsure: 2400, grr: 1300, land: 450 };
+const drawn = m => { const img = fabFace.querySelector('.f-' + MOODS[m]); return !MOODS[m] || (img.complete && img.naturalWidth > 0); };
+const whenDrawn = (m, ms = 1500) => new Promise(done => {   // for a mood straight after the page opens, when it may still be on its way
+  if (drawn(m)) return done(true);
+  const img = fabFace.querySelector('.f-' + MOODS[m]), t = setTimeout(() => done(false), ms);
+  img.addEventListener('load', () => { clearTimeout(t); done(true); }, { once: true });
+});
+let moodTimer = 0;
+function mood(m, then) {
+  clearTimeout(moodTimer);
+  if (m === 'rest' || !drawn(m)) m = 'idle';
+  for (const f of faces) {
+    if (f.dataset.mood === m && HOLD[m]) { f.dataset.mood = ''; void f.offsetWidth; }   // the same again: replay its movement
+    f.dataset.mood = m;
+  }
+  if (HOLD[m]) moodTimer = setTimeout(() => mood(then || 'idle'), HOLD[m]);
+}
+// Now and then, while he's idle, a small tilt of the head.
+(function tiltLater() {
+  setTimeout(() => {
+    if (!reduced() && !document.hidden) for (const f of faces) if (f.dataset.mood === 'idle' && !f.hasAttribute('data-look')) { f.classList.remove('tilt'); void f.offsetWidth; f.classList.add('tilt'); }
+    tiltLater();
+  }, 6000 + Math.random() * 8000);
+})();
+for (const f of faces) f.addEventListener('animationend', ev => { if (ev.animationName === 'face-tilt') f.classList.remove('tilt'); });
+// Hover or keyboard focus: he lifts a little towards you.
+{
+  const look = on => { fabFace.toggleAttribute('data-look', on); if (on) loadFaces(); };
+  fab.addEventListener('pointerenter', ev => { if (ev.pointerType !== 'touch') look(true); else loadFaces(); });
   fab.addEventListener('pointerleave', () => look(fab.matches(':focus-visible')));
-  fab.addEventListener('focus', () => { if (fab.matches(':focus-visible')) look(true); });
+  fab.addEventListener('focus', () => { loadFaces(); if (fab.matches(':focus-visible')) look(true); });
   fab.addEventListener('blur', () => look(false));
 }
 
@@ -380,7 +394,9 @@ function render(m, H, ctx) {
     b.append(el('p', null, `Next, in ${toolName(e.tool, ctx)}:`));
     const ol = el('ol'); for (const s of (e.steps || []).filter((x, i) => !(i === 0 && /^Open /.test(x)))) ol.append(el('li', null, s)); b.append(ol);
   } else if (m.k === 'error') {
-    b.append(el('p', null, 'The Hub’s help didn’t load. Check your connection, then try again.'));
+    b.append(el('p', null, m.help === false
+      ? 'Something went wrong on the Hub’s side while I was looking, not with what you asked. Try again in a moment; if it keeps happening, tell an FLR administrator.'
+      : 'The Hub’s help didn’t load, so I can’t answer just now. Check your connection, then try again.'));
   }
   return b;
 }
@@ -390,7 +406,7 @@ async function draw() {
   samePerson();
   const ctx = await context();
   let H = null;
-  try { H = await help(); } catch (err) { logEl.replaceChildren(render({ k: 'error' })); return; }
+  try { H = await help(); } catch (err) { await grumble(); logEl.replaceChildren(render({ k: 'error' })); return; }
   if (!log.length) log.push({ k: 'intro' });
   logEl.replaceChildren(...log.map(m => render(m, H, ctx)).filter(Boolean));
   logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'instant' });
@@ -401,7 +417,7 @@ async function push(...ms) {
   log.push(...ms); saveLog();
   const ctx = await context();
   let H = null;
-  try { H = await help(); } catch (err) { logEl.append(render({ k: 'error' })); return; }
+  try { H = await help(); } catch (err) { if (!ms.some(m => m.k === 'error')) await grumble(); logEl.append(render({ k: 'error' })); return; }
   const added = ms.map(m => render(m, H, ctx)).filter(Boolean);
   logEl.append(...added);
   toQuestion();
@@ -451,11 +467,11 @@ function ask(text) {
 function askId(id) {
   help().then(H => {
     const e = H.byId.get(id);
-    if (e) converse(e.title, async () => (await lookUpFor(e, e.title, await context())) || { k: 'answer', id }, 400);
+    if (e) converse(e.title, async () => (await lookUpFor(e, e.title, await context())) || { k: 'answer', id });
   }).catch(() => null);
 }
-// One question at a time: show it, think (dots in the chat, the robot searching, at least a moment so it can be seen),
-// then the reply and his reaction to it: a happy hop for an answer, a head tilt when he isn't sure or has none.
+// One question at a time: show it, then the reply as soon as it's ready, never held back for effect. Only if it takes
+// longer than a blink (a look-up in the FLR database, or the help's first load) does he think, with dots in the chat.
 let queue = Promise.resolve();
 const wait = ms => new Promise(r => setTimeout(r, ms));
 function thinking(on) {
@@ -464,17 +480,41 @@ function thinking(on) {
   if (t) return;
   const d = el('div', 'msg bot typing'); d.setAttribute('aria-hidden', 'true'); d.append(el('i'), el('i'), el('i'));
   logEl.append(d);
+  toQuestion();                                        // they come a moment after the question: bring them into view too
 }
-function converse(q, work, think = 650) {
+function converse(q, work) {
   queue = queue.then(async () => {
     await push({ k: 'me', t: q });
-    mood('think'); thinking(true);
+    const slow = setTimeout(() => { mood('think'); thinking(true); }, 180);
     let m;
-    try { [m] = await Promise.all([work(), wait(reduced() ? Math.min(think, 250) : think)]); } catch (err) { m = { k: 'error' }; }
-    thinking(false);
+    try { m = await work(); } catch (err) { m = { k: 'error', help: !!(err && err.help) }; }
+    clearTimeout(slow); thinking(false);
+    const r = await reaction(m);
+    if (r === 'grr') await grumble();
     await push(m);
-    mood(m.k === 'answer' || m.k === 'hello' || (m.k === 'records' && !m.error) ? 'happy' : 'hmm', reduced() ? 700 : 950);
+    if (r !== 'grr') mood(r);
   }).catch(() => { thinking(false); mood('rest'); });
+}
+// Something broke on the Hub's side: a moment's playful grump, then the explanation (which the caller shows), and he
+// turns reassuring while you read it. Never for what someone asked or got wrong: that's the unsure or reassuring face.
+async function grumble() { mood('grr', 'care'); await wait(reduced() ? 250 : 450); }
+// How he takes a reply. Found it: a celebration. Privacy, sign-in, someone's own leave or driving, or bad news (a date
+// overdue, a request declined): reassuring. Nothing found, or which one: unsure. A fault on the Hub's side: the grump.
+const CARE_DATA = /^(leave\.|fleet\.(me|review|serious)$)/;
+const badNews = card => [...(card.list || []), ...(card.rows || []).map(r => ({ tone: r[2] }))].some(x => x.tone === 'over');
+async function reaction(m) {
+  if (m.k === 'error') return 'grr';
+  if (m.k === 'unsure' || m.k === 'none') return 'unsure';
+  if (m.k === 'hello') return 'care';
+  const H = await help().catch(() => null), ctx = await context(), e = H && H.byId.get(m.id);
+  if (m.k === 'answer') return e && gate(e, ctx) === 'ok' && !e.care && !CARE_DATA.test(e.data || '') ? 'cheer' : 'care';
+  if (m.k === 'records') {
+    const card = kept.get(m.ref) || {};
+    if (card.fault) return 'grr';
+    if (card.unsure || card.empty) return 'unsure';
+    return card.error || card.care || (e && CARE_DATA.test(e.data || '')) || badNews(card) ? 'care' : 'cheer';
+  }
+  return 'idle';
 }
 
 /* ---------------------------------------------------------------- typing: suggestions as you go */
@@ -511,10 +551,11 @@ function open(focusInput = true, instant = false) {
   fab.setAttribute('aria-expanded', 'true');
   fab.classList.remove('note');
   paint();
-  mood('rest');                                         // he looks up at the chat
+  loadFaces();
+  mood('rest');
   if (anim) anim.cancel();
-  if (!narrow()) {                                     // grow out of the robot: his centre is the panel's origin
-    const p = panel.getBoundingClientRect(), f = fabBot.getBoundingClientRect();
+  if (!narrow()) {                                     // grow out of him: his centre is the panel's origin
+    const p = panel.getBoundingClientRect(), f = fabFace.getBoundingClientRect();
     panel.style.transformOrigin = `${Math.round(f.left + f.width / 2 - p.left)}px ${Math.round(f.top + f.height / 2 - p.top)}px`;
   }
   if (!instant) {
@@ -533,7 +574,7 @@ function close(velocity = 0) {
     panel.close(); panel.style.transform = ''; anim = null;
     fab.setAttribute('aria-expanded', 'false');
     thinking(false);
-    mood('land', 450);                                 // back in his corner: a small settle
+    mood('land');                                      // back in his corner: a small settle
     if (!coarse()) fab.focus({ preventScroll: true });
   };
   if (reduced()) { anim = panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' }); anim.onfinish = done; return; }
@@ -596,5 +637,7 @@ mqNarrow.addEventListener('change', () => {           // turned a tablet, or res
   const ctx = await context();
   if (gate(e, ctx) !== 'ok') return;
   log.push({ k: 'guide', id: e.id }); saveLog();
-  if (narrow()) fab.classList.add('note'); else { open(false); mood('happy', 950); }
+  if (narrow()) { fab.classList.add('note'); return; }
+  open(false);
+  if (await whenDrawn('cheer')) mood('cheer');          // you got there: here are the next steps
 })();
