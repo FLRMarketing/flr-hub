@@ -1,0 +1,533 @@
+[
+ {
+  "q": "Where do I request annual leave?",
+  "expect": "leave-request"
+ },
+ {
+  "q": "How do I start a new estimate?",
+  "expect": "estimate-new"
+ },
+ {
+  "q": "Where can I find the driver speeding report?",
+  "expect": "fleet-find"
+ },
+ {
+  "q": "how do i log on",
+  "expect": "signin"
+ },
+ {
+  "q": "cant sign in to the hub",
+  "expect": "signin"
+ },
+ {
+  "q": "I've forgotten my password",
+  "expect": "password-forgot"
+ },
+ {
+  "q": "password reset",
+  "expect": "password-forgot"
+ },
+ {
+  "q": "new starter, need an account",
+  "expect": "account-new"
+ },
+ {
+  "q": "how do i register",
+  "expect": "account-new"
+ },
+ {
+  "q": "where do I get the code to sign up",
+  "expect": "access-code",
+  "alt": [
+   "account-new"
+  ]
+ },
+ {
+  "q": "whats the access code",
+  "expect": "access-code"
+ },
+ {
+  "q": "how do I log out",
+  "expect": "signout"
+ },
+ {
+  "q": "change my password please",
+  "expect": "password-change"
+ },
+ {
+  "q": "I can't see the fitter schedule on my hub",
+  "expect": "tools-missing",
+  "alt": [
+   "about-fitters"
+  ]
+ },
+ {
+  "q": "my account has been switched off",
+  "expect": "account-off"
+ },
+ {
+  "q": "how do I get back to the home page",
+  "expect": "back-to-hub"
+ },
+ {
+  "q": "how do I change my name on the estimator",
+  "expect": "name-change"
+ },
+ {
+  "q": "can I use dark mode",
+  "expect": "appearance"
+ },
+ {
+  "q": "what can this chat do",
+  "expect": "assistant-about"
+ },
+ {
+  "q": "can you book my holiday for me",
+  "expect": "leave-request",
+  "alt": [
+   "assistant-about"
+  ]
+ },
+ {
+  "q": "what is on the hub",
+  "expect": "about-hub"
+ },
+ {
+  "q": "how do I create a quotation",
+  "expect": "estimate-new"
+ },
+ {
+  "q": "new quote please",
+  "expect": "estimate-new"
+ },
+ {
+  "q": "start pricing a job",
+  "expect": "estimate-new"
+ },
+ {
+  "q": "add a room",
+  "expect": "estimate-rooms"
+ },
+ {
+  "q": "how do I put in the room sizes",
+  "expect": "estimate-rooms"
+ },
+ {
+  "q": "find a quote from last month",
+  "expect": "estimate-find"
+ },
+ {
+  "q": "search quotes by site",
+  "expect": "estimate-find"
+ },
+ {
+  "q": "where are the quotes I did",
+  "expect": "estimate-find",
+  "alt": [
+   "about-estimator"
+  ]
+ },
+ {
+  "q": "approve my estimate",
+  "expect": "estimate-approve"
+ },
+ {
+  "q": "how do I sign off a quote",
+  "expect": "estimate-approve"
+ },
+ {
+  "q": "print a quote",
+  "expect": "estimate-print"
+ },
+ {
+  "q": "can I get the quote as a pdf",
+  "expect": "estimate-print"
+ },
+ {
+  "q": "edit an approved quotation",
+  "expect": "estimate-revise"
+ },
+ {
+  "q": "copy an existing quote",
+  "expect": "estimate-copy"
+ },
+ {
+  "q": "archive a quote",
+  "expect": "estimate-archive"
+ },
+ {
+  "q": "delete an estimate",
+  "expect": "estimate-archive"
+ },
+ {
+  "q": "why is review costs locked",
+  "expect": "estimate-stages"
+ },
+ {
+  "q": "why can't I make a new quote",
+  "expect": "estimate-roles",
+  "alt": [
+   "estimate-new"
+  ]
+ },
+ {
+  "q": "change catalogue prices",
+  "expect": "estimate-admin"
+ },
+ {
+  "q": "reassign a quotation to a colleague",
+  "expect": "estimate-reassign"
+ },
+ {
+  "q": "explain the terms on review costs",
+  "expect": "estimate-terms"
+ },
+ {
+  "q": "what is the estimator",
+  "expect": "about-estimator"
+ },
+ {
+  "q": "speeding report",
+  "expect": "fleet-find"
+ },
+ {
+  "q": "where's the fleet report",
+  "expect": "fleet-find",
+  "alt": [
+   "about-fleet"
+  ]
+ },
+ {
+  "q": "how do I check my own speeding",
+  "expect": "fleet-my-driving"
+ },
+ {
+  "q": "see my driving",
+  "expect": "fleet-my-driving"
+ },
+ {
+  "q": "fleet management is empty",
+  "expect": "fleet-nothing"
+ },
+ {
+  "q": "it says nothing to show you yet",
+  "expect": "fleet-nothing"
+ },
+ {
+  "q": "link a driver",
+  "expect": "fleet-link"
+ },
+ {
+  "q": "how do I give someone access to their driving",
+  "expect": "fleet-link"
+ },
+ {
+  "q": "which drivers need a review",
+  "expect": "fleet-review"
+ },
+ {
+  "q": "what's the speed threshold",
+  "expect": "fleet-rules"
+ },
+ {
+  "q": "what is a serious incident",
+  "expect": "fleet-rules"
+ },
+ {
+  "q": "what does limited evidence mean",
+  "expect": "fleet-rules"
+ },
+ {
+  "q": "where did the speeding happen",
+  "expect": "fleet-incident"
+ },
+ {
+  "q": "open it in google maps",
+  "expect": "fleet-incident"
+ },
+ {
+  "q": "speeding map",
+  "expect": "fleet-map"
+ },
+ {
+  "q": "hotspots map",
+  "expect": "fleet-map"
+ },
+ {
+  "q": "when is my van's mot",
+  "expect": "fleet-vehicles"
+ },
+ {
+  "q": "service due dates",
+  "expect": "fleet-vehicles"
+ },
+ {
+  "q": "how often does the fleet data update",
+  "expect": "fleet-updated"
+ },
+ {
+  "q": "is the speeding report up to date",
+  "expect": "fleet-updated"
+ },
+ {
+  "q": "who can see my speeding",
+  "expect": "fleet-privacy"
+ },
+ {
+  "q": "can other people see my driving",
+  "expect": "fleet-privacy"
+ },
+ {
+  "q": "book a holiday",
+  "expect": "leave-request"
+ },
+ {
+  "q": "how do i request time off",
+  "expect": "leave-request"
+ },
+ {
+  "q": "holiday form",
+  "expect": "leave-request",
+  "alt": [
+   "leave-form-link"
+  ]
+ },
+ {
+  "q": "how many holidays have I got left",
+  "expect": "leave-balance"
+ },
+ {
+  "q": "leave balance",
+  "expect": "leave-balance"
+ },
+ {
+  "q": "how much holiday do I have",
+  "expect": "leave-balance"
+ },
+ {
+  "q": "has my leave been approved",
+  "expect": "leave-status"
+ },
+ {
+  "q": "is my holiday request accepted yet",
+  "expect": "leave-status"
+ },
+ {
+  "q": "my leave is not showing",
+  "expect": "leave-not-linked"
+ },
+ {
+  "q": "cancel my annual leave",
+  "expect": "leave-cancel"
+ },
+ {
+  "q": "I want to change the dates of my holiday",
+  "expect": "leave-cancel"
+ },
+ {
+  "q": "approve holiday requests",
+  "expect": "leave-approve"
+ },
+ {
+  "q": "how do I decline leave",
+  "expect": "leave-approve"
+ },
+ {
+  "q": "who is on holiday tomorrow",
+  "expect": "leave-diary"
+ },
+ {
+  "q": "team leave calendar",
+  "expect": "leave-diary"
+ },
+ {
+  "q": "what does the colour key mean",
+  "expect": "leave-colours"
+ },
+ {
+  "q": "are bank holidays included in my allowance",
+  "expect": "leave-closures"
+ },
+ {
+  "q": "christmas shutdown",
+  "expect": "leave-closures"
+ },
+ {
+  "q": "copy the leave form link",
+  "expect": "leave-form-link"
+ },
+ {
+  "q": "what is annual leave",
+  "expect": "about-leave"
+ },
+ {
+  "q": "who's free to fit tomorrow",
+  "expect": "fitters-free"
+ },
+ {
+  "q": "find a fitter who's available on friday",
+  "expect": "fitters-free"
+ },
+ {
+  "q": "fitter schedule passcode",
+  "expect": "fitters-passcode"
+ },
+ {
+  "q": "what's the passcode",
+  "expect": "fitters-passcode"
+ },
+ {
+  "q": "jobs needing a fitter",
+  "expect": "fitters-jobs"
+ },
+ {
+  "q": "show a fitter's two weeks",
+  "expect": "fitters-views"
+ },
+ {
+  "q": "show weekends",
+  "expect": "fitters-settings"
+ },
+ {
+  "q": "where is the fitter schedule",
+  "expect": "about-fitters"
+ },
+ {
+  "q": "fitter rota",
+  "expect": "about-fitters"
+ },
+ {
+  "q": "how do I add a room",
+  "page": "estimator",
+  "expect": "estimate-rooms"
+ },
+ {
+  "q": "approve",
+  "page": "annual-leave",
+  "expect": "leave-approve"
+ },
+ {
+  "q": "approve",
+  "page": "estimator",
+  "expect": "estimate-approve"
+ },
+ {
+  "q": "map",
+  "page": "speeding",
+  "expect": "fleet-map"
+ },
+ {
+  "q": "print",
+  "page": "estimator",
+  "expect": "estimate-print"
+ },
+ {
+  "q": "what's the weather like",
+  "expect": null
+ },
+ {
+  "q": "tell me a joke",
+  "expect": null
+ },
+ {
+  "q": "how do I claim expenses",
+  "expect": null
+ },
+ {
+  "q": "where is my payslip",
+  "expect": null
+ },
+ {
+  "q": "how do I report sickness",
+  "expect": null
+ },
+ {
+  "q": "who won the football",
+  "expect": null
+ },
+ {
+  "q": "what's the wifi password",
+  "expect": null
+ },
+ {
+  "q": "how do I book a van",
+  "expect": null
+ },
+ {
+  "q": "order more carpet",
+  "expect": null
+ },
+ {
+  "q": "what time does the office open",
+  "expect": null
+ },
+ {
+  "q": "how do I contact IT",
+  "expect": null
+ },
+ {
+  "q": "timesheet",
+  "expect": null
+ },
+ {
+  "q": "pension",
+  "expect": null
+ },
+ {
+  "q": "who is the managing director",
+  "expect": null
+ },
+ {
+  "q": "asdfgh",
+  "expect": null
+ },
+ {
+  "q": "hello",
+  "expect": null
+ },
+ {
+  "q": "can I work from home",
+  "expect": null
+ },
+ {
+  "q": "how do I get a new phone",
+  "expect": null
+ },
+ {
+  "q": "who approves expenses",
+  "expect": null
+ },
+ {
+  "q": "where is the car park",
+  "expect": null
+ },
+ {
+  "q": "how do I request a new van",
+  "expect": null
+ },
+ {
+  "q": "what is the speed limit on the M6",
+  "expect": null,
+  "alt": [
+   "fleet-rules",
+   "fleet-incident"
+  ]
+ },
+ {
+  "q": "how many days does John have left",
+  "expect": null,
+  "alt": [
+   "leave-balances-all",
+   "leave-balance"
+  ]
+ },
+ {
+  "q": "show me Dave's speeding",
+  "expect": null,
+  "alt": [
+   "fleet-review",
+   "fleet-my-driving",
+   "fleet-find"
+  ]
+ }
+]

@@ -27,6 +27,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `estimator/` | The Estimator's production page (no pricing data), copied by `scripts/sync-estimator.sh`. |
 | `speeding/` | The Speeding Report page, built by `scripts/sync-speeding.py` from `../flr-speeding-report` with no photos or names; `bridge.js`, which answers the page's data requests from the FLR database; and `map/`, the OpenStreetMap road and place packs (public map data). |
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database and sends decisions to the `flr-leave` function. |
+| `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
 ## Tiles
@@ -96,6 +97,24 @@ Everyone else is matched to their staff record by the Email column on FLR - Leav
 To try it all locally, add `LEAVE=1 LEAVE_APPROVERS=you@example.com` to the preview command below: a stand-in
 monday.com with made-up staff, the real function, and webhooks between them. `/__mock/monday/edit?item=402&col=color_mm7m6q47&value=Denied`
 changes something "in monday.com".
+
+## Ask the Hub (the help button)
+
+A round button, bottom right on the Hub, the Estimator, Fleet Management and Annual Leave. People ask where to find
+something or how to do it, and get a short answer and a link. It is search, not AI: `assistant/engine.js` matches
+the question against the approved answers in `assistant/help.json`, in the browser, and says so when nothing fits
+instead of guessing. It never reads leave, quotes or driver data and changes nothing; its only database call is
+`hub_home()`, so it can say "that isn't on your Hub" instead of linking to a tool someone doesn't have.
+
+- `help.json` is public like everything here: how-to text only. Quote labels exactly as the pages show them. A link is
+  `{"href": "annual-leave/"}` (relative to the Hub) or `{"tile": "fitters"}` (that tool's address from the database).
+- After changing it, run `node assistant/tests/run.mjs` and `node assistant/tests/run.mjs --heldout`. Both must end with
+  no wrong answers and none answered that should have been declined. `heldout.json` was written by someone who never
+  saw the help text; `--sweep` shows other thresholds.
+- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=1.1"></script>`: `index.html` directly,
+  and the tools through their build scripts. On a release, bump `?v=` in those four places and in `assistant.js` (`V`
+  and the `engine.js` import).
+- When a tool changes its buttons or wording, update its answers here too.
 
 ## Publishing checklist
 

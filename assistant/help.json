@@ -1,0 +1,1479 @@
+{
+  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). Check changes with: node assistant/tests/run.mjs",
+  "version": 1,
+  "entries": [
+    {
+      "id": "assistant-about",
+      "tool": "hub",
+      "title": "What this assistant can do",
+      "ask": [
+        "what can you do",
+        "what can the assistant help with",
+        "are you an AI",
+        "is this a chatbot",
+        "what can this chat do",
+        "how does this assistant work",
+        "can the assistant do things for me"
+      ],
+      "keys": [
+        "assistant",
+        "chatbot",
+        "ai",
+        "bot",
+        "chat"
+      ],
+      "answer": "I find answers in the Hub’s own help and link you to the right page. I can’t see your leave, quotations or driving records, and I can’t change anything: booking, approving and editing happen in the tools themselves.\n\nIf the help doesn’t cover something, I’ll say so rather than guess.",
+      "related": [
+        "about-hub"
+      ]
+    },
+    {
+      "id": "about-hub",
+      "tool": "hub",
+      "title": "What’s on the Hub",
+      "ask": [
+        "what is the hub",
+        "what tools are on the hub",
+        "what can I do on the hub",
+        "which apps are there",
+        "what is the flr hub for",
+        "what can I use the hub for"
+      ],
+      "keys": [
+        "hub",
+        "tools",
+        "apps",
+        "home screen"
+      ],
+      "answer": "The FLR Hub is the home for FLR’s staff tools: the Cost Estimator, Fleet Management, Annual Leave and the Fitter Schedule. It shows the tools your account can use. Hover over an icon, or press and hold it on a phone, to see what it does.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "tools-missing",
+        "assistant-about"
+      ]
+    },
+    {
+      "id": "signin",
+      "tool": "hub",
+      "title": "Sign in",
+      "ask": [
+        "how do I sign in",
+        "how do I log in to the hub",
+        "where do I log in",
+        "I can't log in",
+        "login isn't working",
+        "problems signing in"
+      ],
+      "keys": [
+        "signin",
+        "email",
+        "password"
+      ],
+      "answer": "Sign in on the Hub with your FLR email address and password. One sign-in opens the Hub’s tools on that device, including the Cost Estimator; the Fitter Schedule also asks for a team passcode.\n\nIf your password isn’t accepted, use “Forgotten your password?” below the “Sign in” button.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "password-forgot",
+        "account-new"
+      ]
+    },
+    {
+      "id": "account-new",
+      "tool": "hub",
+      "title": "Create an FLR account",
+      "ask": [
+        "how do I create an account",
+        "how do I sign up",
+        "I don't have an account",
+        "I'm new, how do I get access",
+        "register for the hub",
+        "make an account for the hub"
+      ],
+      "keys": [
+        "account",
+        "new starter"
+      ],
+      "answer": "On the Hub’s sign-in screen, choose “Create an account”. You’ll need your full name, your work email, a password of at least 10 characters with letters and numbers, and the access code from your FLR administrator.",
+      "steps": [
+        "Open the Hub and choose “Create an account”, below “Sign in”.",
+        "Enter your full name and work email, then a password and the same password again under “Confirm”.",
+        "Enter the access code from your FLR administrator.",
+        "Press “Create account”."
+      ],
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "access-code",
+        "signin"
+      ]
+    },
+    {
+      "id": "access-code",
+      "tool": "hub",
+      "title": "Get the access code",
+      "ask": [
+        "what is the access code",
+        "where do I get the access code",
+        "I need the access code",
+        "the access code isn't working",
+        "my code isn't accepted when I sign up"
+      ],
+      "keys": [
+        "access code",
+        "code"
+      ],
+      "answer": "You only need the access code to create an account. Ask your FLR administrator for it: it isn’t written anywhere on the Hub, and I don’t know it.\n\nIf it isn’t accepted, check it with your administrator, as it may have changed.",
+      "related": [
+        "account-new"
+      ]
+    },
+    {
+      "id": "password-forgot",
+      "tool": "hub",
+      "title": "Reset a forgotten password",
+      "ask": [
+        "I forgot my password",
+        "reset my password",
+        "forgotten password",
+        "password reset link",
+        "I'm locked out of my account",
+        "I can't remember my password"
+      ],
+      "keys": [
+        "forgot",
+        "password",
+        "reset"
+      ],
+      "answer": "On the Hub’s sign-in screen, choose “Forgotten your password?”, enter your email and press “Send reset link”. The link in the email opens “Choose a new password”; enter it twice and press “Save password”.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "signin",
+        "password-change"
+      ]
+    },
+    {
+      "id": "password-change",
+      "tool": "estimator",
+      "title": "Change your password",
+      "ask": [
+        "how do I change my password",
+        "update my password",
+        "set a new password",
+        "change password"
+      ],
+      "keys": [
+        "password",
+        "change"
+      ],
+      "answer": "In the Cost Estimator, press your name at the top, then “Change password…”. You can also set a new one from the Hub’s sign-in screen with “Forgotten your password?”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "password-forgot"
+      ]
+    },
+    {
+      "id": "signout",
+      "tool": "hub",
+      "title": "Sign out",
+      "ask": [
+        "how do I sign out",
+        "log out",
+        "sign out of the hub",
+        "switch to a different account",
+        "use another account",
+        "sign out on a shared computer"
+      ],
+      "keys": [
+        "signout",
+        "switch account"
+      ],
+      "answer": "On the Hub, press the round button with your initials at the top, then “Sign out”. It signs you out of the Hub and its tools on this device.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      }
+    },
+    {
+      "id": "tools-missing",
+      "tool": "hub",
+      "title": "A tool is missing from your Hub",
+      "ask": [
+        "a tool is missing from my hub",
+        "I can't see a tool on the hub",
+        "how do I get access to a tool",
+        "where has my app gone",
+        "some of my tools didn't load",
+        "why is an icon missing",
+        "why can't I see the same tools as my manager"
+      ],
+      "keys": [
+        "missing",
+        "access",
+        "icon"
+      ],
+      "answer": "Your Hub shows the tools your account can use. If one you need isn’t there, ask an FLR administrator for access.\n\nIf the Hub says “Some of your tools didn’t load”, press “Try again”.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      }
+    },
+    {
+      "id": "account-off",
+      "tool": "hub",
+      "title": "Your account is switched off",
+      "ask": [
+        "my account is switched off",
+        "my account has been disabled",
+        "it says my FLR account is switched off",
+        "my account is blocked"
+      ],
+      "keys": [
+        "disabled",
+        "switched off",
+        "blocked"
+      ],
+      "answer": "If a page says your FLR account is switched off, only an FLR administrator can switch it back on. Ask one to check it."
+    },
+    {
+      "id": "back-to-hub",
+      "tool": "hub",
+      "title": "Get back to the Hub",
+      "ask": [
+        "how do I get back to the hub",
+        "go back to the home page",
+        "return to the hub",
+        "where is the home screen"
+      ],
+      "keys": [
+        "back",
+        "home",
+        "return"
+      ],
+      "answer": "The tools don’t have their own Hub button: use your browser’s Back button, or the link below.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      }
+    },
+    {
+      "id": "name-change",
+      "tool": "estimator",
+      "title": "Change the name on your account",
+      "ask": [
+        "how do I change my name",
+        "my name is spelt wrong",
+        "update my display name",
+        "change the name on my quotes"
+      ],
+      "keys": [
+        "name",
+        "display name",
+        "spelling"
+      ],
+      "answer": "In the Cost Estimator, press your name at the top, change “Your name (as shown on quotations and in the change log)” and press “Save”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "appearance",
+      "tool": "hub",
+      "title": "Switch between light and dark",
+      "ask": [
+        "dark mode",
+        "how do I turn on dark mode",
+        "change the theme",
+        "light mode",
+        "the screen is too dark"
+      ],
+      "keys": [
+        "dark",
+        "light",
+        "theme",
+        "appearance"
+      ],
+      "answer": "The Hub follows your device’s light or dark setting. In the Cost Estimator, press your name at the top, then “Appearance”. Fleet Management has its own light and dark button at the top, and the Fitter Schedule has “Switch theme”."
+    },
+    {
+      "id": "about-estimator",
+      "tool": "estimator",
+      "title": "About the Cost Estimator",
+      "ask": [
+        "what is the cost estimator",
+        "what does the estimator do",
+        "where do I do quotes",
+        "open the estimator"
+      ],
+      "keys": [
+        "estimate",
+        "quotation",
+        "estimator"
+      ],
+      "answer": "The Cost Estimator builds FLR’s flooring quotations in four stages: “Project details”, “Rooms”, “Review costs” and “Client quotation”. It opens from the Hub already signed in.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-new",
+        "estimate-find"
+      ]
+    },
+    {
+      "id": "estimate-new",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Start a new estimate",
+      "ask": [
+        "how do I start a new estimate",
+        "create a new quote",
+        "new quotation",
+        "make an estimate",
+        "start a quote for a new job",
+        "how do I price up a new job"
+      ],
+      "keys": [
+        "new",
+        "estimate",
+        "quotation"
+      ],
+      "answer": "In the Cost Estimator, press “Create new quotation” on the Projects page, then use the next FLR number or type an existing FLR reference.",
+      "steps": [
+        "Open the Cost Estimator. It opens on Projects.",
+        "Press “Create new quotation”. If it asks you to complete your profile, add your name and press “Save and continue”.",
+        "Press “Create with the next FLR number”, or type a reference such as Q-2026-041 under “Or use an existing FLR reference” and press “Create with this reference”.",
+        "Fill in “Project details”, then press “Continue to rooms”."
+      ],
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-rooms",
+        "estimate-stages"
+      ]
+    },
+    {
+      "id": "estimate-rooms",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Add rooms to an estimate",
+      "ask": [
+        "how do I add a room",
+        "add another room to a quote",
+        "add areas to an estimate",
+        "enter room measurements",
+        "duplicate a room",
+        "save a room",
+        "enter the room sizes"
+      ],
+      "keys": [
+        "room",
+        "area",
+        "floorcovering",
+        "measurements"
+      ],
+      "answer": "On the “Rooms” stage, press “Add first room”, fill in the room or area name, project type, who measured it and the specified floorcovering, then press “Save room” or “Save and add another”. Saved rooms have “Edit”, “Duplicate”, “Copy ×…” and “Delete”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-stages",
+        "estimate-approve"
+      ]
+    },
+    {
+      "id": "estimate-find",
+      "tool": "estimator",
+      "title": "Find a quotation",
+      "ask": [
+        "where can I find an old quote",
+        "find an existing estimate",
+        "search for a quotation",
+        "look up a quote by client",
+        "open a previous estimate",
+        "where are my quotes"
+      ],
+      "keys": [
+        "find",
+        "search",
+        "existing",
+        "previous"
+      ],
+      "answer": "On the Cost Estimator’s Projects page, search by quote ID, client or site, or pick a group: “All”, “Recently edited”, “Drafts”, “Ready to quote”, “Approved” or “Archived”. Choose yourself under “All estimators” to see only yours, then press “Open” or the quote ID.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-copy",
+        "estimate-archive"
+      ]
+    },
+    {
+      "id": "estimate-approve",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Approve a quotation",
+      "ask": [
+        "how do I approve a quote",
+        "approve an estimate",
+        "sign off a quotation",
+        "finish a quote",
+        "the quotation is ready, what next"
+      ],
+      "keys": [
+        "approve",
+        "quotation",
+        "sign off"
+      ],
+      "answer": "Once the rooms are saved, mark the costs as reviewed, check the client quotation and approve it. Approving prints it.",
+      "steps": [
+        "On “Review costs”, press “Mark costs as reviewed”, then “Review client quotation”.",
+        "Check the quotation. “Full-screen preview” helps.",
+        "Tick “I have reviewed this quotation and its wording”.",
+        "Press “Approve and print quotation”."
+      ],
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-print",
+        "estimate-revise"
+      ]
+    },
+    {
+      "id": "estimate-print",
+      "tool": "estimator",
+      "title": "Print or save a quotation as PDF",
+      "ask": [
+        "how do I print a quote",
+        "save a quotation as a pdf",
+        "download the quote",
+        "print a quotation again",
+        "get a pdf of an estimate"
+      ],
+      "keys": [
+        "print",
+        "pdf",
+        "download"
+      ],
+      "answer": "A quotation prints when you approve it with “Approve and print quotation”. After that, open it and press “Print again”. For a PDF, choose “Save as PDF” as the printer.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-approve"
+      ]
+    },
+    {
+      "id": "estimate-revise",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Change an approved quotation",
+      "ask": [
+        "how do I change an approved quote",
+        "edit a quote after it's approved",
+        "revise a quotation",
+        "make a revision",
+        "update a quote that's already been sent",
+        "add a room to a quote that's already approved"
+      ],
+      "keys": [
+        "revision",
+        "revise",
+        "approved"
+      ],
+      "answer": "An approved quotation stays as it was approved. Open it and press “Create revision” to make a new version you can change.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-copy",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Copy a quotation",
+      "ask": [
+        "how do I copy a quote",
+        "duplicate an estimate",
+        "use an old quote as a template",
+        "clone a quotation",
+        "copy an existing quotation",
+        "make a copy of a quote"
+      ],
+      "keys": [
+        "duplicate",
+        "copy",
+        "template",
+        "clone",
+        "similar"
+      ],
+      "answer": "On the Projects page, open the quotation’s “More” menu and choose “Duplicate”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-archive",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Archive or delete a quotation",
+      "ask": [
+        "how do I delete a quote",
+        "archive an estimate",
+        "remove an old quotation",
+        "restore an archived quote",
+        "get rid of a test quote"
+      ],
+      "keys": [
+        "archive",
+        "delete",
+        "restore"
+      ],
+      "answer": "On the Projects page, open the quotation’s “More” menu and choose “Archive”. Archived quotations are under “Archived”, where “Restore” brings them back. Only FLR administrators can delete a quotation.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-stages",
+      "tool": "estimator",
+      "title": "The four stages of a quotation",
+      "ask": [
+        "what are the stages of a quote",
+        "why is a stage locked",
+        "why can't I open the client quotation",
+        "it says save a room first",
+        "it says resolve the blocking issues first"
+      ],
+      "keys": [
+        "stage",
+        "locked",
+        "blocking"
+      ],
+      "answer": "Every quotation goes through “Project details”, “Rooms”, “Review costs” and “Client quotation”. A stage stays locked until the one before is done: it tells you why, for example “Save a room first” or “Resolve the blocking issues first”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-roles",
+      "tool": "estimator",
+      "title": "What your Estimator role allows",
+      "ask": [
+        "why can't I create a quote",
+        "what can an estimator do",
+        "what does the developer role do",
+        "it says my role can view quotations but not create them",
+        "what's the difference between admin and estimator"
+      ],
+      "keys": [
+        "role",
+        "developer",
+        "permission"
+      ],
+      "answer": "Estimators can create, edit, approve and archive quotations. Administrators can also delete and reassign them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-admin",
+      "tool": "estimator",
+      "who": "admin",
+      "title": "Change prices, rules or quotation wording",
+      "ask": [
+        "how do I change the prices",
+        "update the price list",
+        "edit the commercial rules",
+        "change the quotation wording",
+        "add a product to the catalogue",
+        "price overrides"
+      ],
+      "keys": [
+        "catalogue",
+        "rules",
+        "overrides",
+        "settings",
+        "wording"
+      ],
+      "answer": "FLR administrators set prices, rules and wording on the Cost Estimator’s Admin page: “Catalogue”, “Commercial rules”, “Price overrides” and “Quotation settings”.",
+      "steps": [
+        "Open the Cost Estimator and choose “Admin” at the top.",
+        "Pick “Catalogue”, “Commercial rules”, “Price overrides” or “Quotation settings”."
+      ],
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-reassign",
+      "tool": "estimator",
+      "who": "admin",
+      "title": "Give a quotation to another estimator",
+      "ask": [
+        "how do I reassign a quote",
+        "change the estimator on a quote",
+        "hand a quote over to someone else",
+        "transfer a quotation"
+      ],
+      "keys": [
+        "reassign",
+        "transfer",
+        "hand over"
+      ],
+      "answer": "FLR administrators can move a quotation to another estimator with “Reassign…” on the quotation.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-terms",
+      "tool": "estimator",
+      "title": "What the cost terms mean",
+      "ask": [
+        "what do the terms mean",
+        "what does materials mean in the costs",
+        "explain the cost review",
+        "is there a glossary"
+      ],
+      "keys": [
+        "terms",
+        "glossary",
+        "meaning"
+      ],
+      "answer": "On the “Review costs” stage, open “What the terms mean” for an explanation of each figure.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "about-fleet",
+      "tool": "speeding",
+      "title": "About Fleet Management",
+      "ask": [
+        "what is fleet management",
+        "what does fleet management show",
+        "what is the fleet report",
+        "who can use fleet management"
+      ],
+      "keys": [
+        "fleet",
+        "speed",
+        "report"
+      ],
+      "answer": "Fleet Management shows speeding by driver and vehicle from FleetView, covering the last 30 days and updated every morning. FLR administrators see every driver and vehicle. A driver whose FLR account is linked to their FleetView name sees only their own driving; anyone else sees nothing until an administrator links them.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-my-driving",
+        "fleet-privacy"
+      ]
+    },
+    {
+      "id": "fleet-find",
+      "tool": "speeding",
+      "title": "Find the driver speeding report",
+      "ask": [
+        "where can I find the driver speeding report",
+        "where is the speeding report",
+        "open the speeding report",
+        "driver speed reports",
+        "where do I see speeding"
+      ],
+      "keys": [
+        "speed",
+        "report",
+        "fleet"
+      ],
+      "answer": "The driver speeding report is Fleet Management on the Hub. Administrators see every driver; a driver linked to their FLR account sees their own driving.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-my-driving",
+        "fleet-nothing"
+      ]
+    },
+    {
+      "id": "fleet-my-driving",
+      "tool": "speeding",
+      "who": "driver",
+      "title": "See your own driving",
+      "ask": [
+        "how do I see my driving",
+        "check my speeding",
+        "my speeding incidents",
+        "how is my driving",
+        "my driving score",
+        "see my own report"
+      ],
+      "keys": [
+        "my driving",
+        "own",
+        "incidents"
+      ],
+      "answer": "Open Fleet Management. If your FLR account is linked to your FleetView name, it opens on “My driving”, with your incidents and FleetView performance, then “Map” for where they happened and “My vehicle” for your vehicle’s dates. Only you and FLR administrators can see your page.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-nothing",
+        "fleet-privacy"
+      ]
+    },
+    {
+      "id": "fleet-nothing",
+      "tool": "speeding",
+      "title": "Fleet Management shows nothing",
+      "ask": [
+        "fleet management says nothing to show you yet",
+        "why can't I see anything in fleet management",
+        "the speeding report is empty",
+        "my account isn't linked to a driver",
+        "nothing to show"
+      ],
+      "keys": [
+        "nothing",
+        "empty",
+        "linked"
+      ],
+      "answer": "“Nothing to show you yet” means your FLR account isn’t linked to your FleetView driver name. Ask an FLR administrator to link it; then you’ll see your own driving.",
+      "related": [
+        "fleet-privacy"
+      ]
+    },
+    {
+      "id": "fleet-link",
+      "tool": "speeding",
+      "who": "admin",
+      "title": "Link a driver to an FLR account",
+      "ask": [
+        "how do I link a driver to an account",
+        "connect a driver to their sign in",
+        "give a driver access to their report",
+        "manage driver sign ins",
+        "unlink a driver"
+      ],
+      "keys": [
+        "link",
+        "sign-ins",
+        "driver"
+      ],
+      "answer": "FLR administrators link each FleetView driver to their FLR account in Fleet Management. A linked driver sees only their own page.",
+      "steps": [
+        "Open Fleet Management on the “Drivers” page.",
+        "Under “Driver sign-ins”, press “Manage sign-ins”.",
+        "Find the driver, choose their FLR account and press “Link” (or “Unlink”).",
+        "Use “Preview” to see exactly what they’ll see."
+      ],
+      "link": {
+        "href": "speeding/#report",
+        "label": "Open Drivers"
+      }
+    },
+    {
+      "id": "fleet-review",
+      "tool": "speeding",
+      "who": "admin",
+      "title": "Review drivers",
+      "ask": [
+        "which drivers need reviewing",
+        "who are the worst drivers",
+        "the review order",
+        "priority drivers",
+        "drivers needing review"
+      ],
+      "keys": [
+        "review",
+        "priority",
+        "drivers"
+      ],
+      "answer": "The “Drivers” page lists drivers in review order, most urgent first. Narrow it with the status chips (“Needs review”, “Priority”, “Above average”, “At or below”, “Limited evidence”), the search, vehicle type, period and sort.",
+      "link": {
+        "href": "speeding/#report",
+        "label": "Open Drivers"
+      },
+      "related": [
+        "fleet-rules"
+      ]
+    },
+    {
+      "id": "fleet-rules",
+      "tool": "speeding",
+      "who": "admin",
+      "title": "How the speeding report works",
+      "ask": [
+        "what counts as an incident",
+        "what is the speeding threshold",
+        "what does priority review mean",
+        "what is limited evidence",
+        "how are drivers ranked",
+        "what is a serious incident"
+      ],
+      "keys": [
+        "threshold",
+        "status",
+        "serious",
+        "limited evidence",
+        "above average",
+        "ranked"
+      ],
+      "answer": "An incident is a recorded speed at or above the limit plus 10% plus 2 mph, such as 35 in a 30. It isn’t an allowance. Serious incidents are 20 mph or more over. Drivers are grouped by incidents per 100 miles against the fleet rate, and under 150 miles is “Limited evidence”.\n\n“How this report works” on the Drivers page explains it all.",
+      "link": {
+        "href": "speeding/#report",
+        "label": "Open Drivers"
+      }
+    },
+    {
+      "id": "fleet-incident",
+      "tool": "speeding",
+      "title": "Look at a speeding incident",
+      "ask": [
+        "how do I see where an incident happened",
+        "open a speeding event",
+        "incident details",
+        "see an incident on google maps",
+        "where was I speeding"
+      ],
+      "keys": [
+        "incident",
+        "google maps",
+        "where"
+      ],
+      "answer": "Open an incident to see when and where it happened, with “Open in Google Maps”. Administrators also get “Open in FleetView” and the driver and vehicle details. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-map"
+      ]
+    },
+    {
+      "id": "fleet-map",
+      "tool": "speeding",
+      "title": "Use the speeding map",
+      "ask": [
+        "show the speeding map",
+        "where are the speeding hotspots",
+        "map of incidents",
+        "see incidents on a map",
+        "all events on the map"
+      ],
+      "keys": [
+        "map",
+        "hotspot"
+      ],
+      "answer": "Open “Map” in Fleet Management. Choose “Incidents” or “All events”, narrow it with “Filters”, and press “Fit all” to see everything. The “Incident list” shows the same incidents as a list.",
+      "link": {
+        "href": "speeding/#map",
+        "label": "Open the map"
+      },
+      "related": [
+        "fleet-incident"
+      ]
+    },
+    {
+      "id": "fleet-vehicles",
+      "tool": "speeding",
+      "title": "Check MOT, tax and service dates",
+      "ask": [
+        "when is the mot due",
+        "vehicle service dates",
+        "which vans need an mot",
+        "when is the road tax due",
+        "vehicle details",
+        "overdue services"
+      ],
+      "keys": [
+        "mot",
+        "tax",
+        "service",
+        "vehicle"
+      ],
+      "answer": "Administrators: the “Vehicles” page lists MOT, tax and service due in the next 60 days, and anything overdue, under “Coming up”; each vehicle opens its details, with “Open in Monday”. Linked drivers: your vehicle’s dates are on “My vehicle”.",
+      "link": {
+        "href": "speeding/#vehicles",
+        "label": "Open Fleet Management"
+      }
+    },
+    {
+      "id": "fleet-updated",
+      "tool": "speeding",
+      "title": "When the fleet data updates",
+      "ask": [
+        "how often is the speeding report updated",
+        "when does fleet management refresh",
+        "it says data is out of date",
+        "is the report live",
+        "why is yesterday missing"
+      ],
+      "keys": [
+        "updated",
+        "refresh",
+        "out of date",
+        "live"
+      ],
+      "answer": "Fleet Management covers the 30 days up to each morning’s refresh from FleetView. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page; let an FLR administrator know if it stays.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      }
+    },
+    {
+      "id": "fleet-privacy",
+      "tool": "speeding",
+      "title": "Who can see your driving",
+      "ask": [
+        "who can see my driving",
+        "can other drivers see my speeding",
+        "is my driving private",
+        "can my manager see my speeding",
+        "who sees the speeding report"
+      ],
+      "keys": [
+        "privacy",
+        "private"
+      ],
+      "answer": "Only you and FLR administrators can see your page. Drivers never see other drivers or the review order.",
+      "related": [
+        "fleet-my-driving",
+        "fleet-wrong-driver"
+      ]
+    },
+    {
+      "id": "fleet-wrong-driver",
+      "tool": "speeding",
+      "title": "An incident that wasn’t you",
+      "ask": [
+        "it wasn't me driving",
+        "someone else was driving my van",
+        "this speeding isn't mine",
+        "the report shows a journey I didn't do",
+        "wrong driver on an incident"
+      ],
+      "keys": [
+        "otherdriver",
+        "wrong driver",
+        "not me"
+      ],
+      "answer": "FleetView records events against a vehicle, so the name shown is the vehicle’s assigned driver, who may not have been driving at the time. If an incident wasn’t you, tell an FLR administrator which one.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-privacy",
+        "fleet-incident"
+      ]
+    },
+    {
+      "id": "about-leave",
+      "tool": "annual-leave",
+      "title": "About Annual Leave",
+      "ask": [
+        "what is the annual leave page",
+        "what does annual leave show",
+        "where is the holiday calendar",
+        "the annual leave tool"
+      ],
+      "keys": [
+        "leave",
+        "annual"
+      ],
+      "answer": "Annual Leave shows who’s off today, your days left and your leave requests, with the “Request leave” button. Leave approvers also get “Approvals”, “Diary”, “Balances” and “All requests”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-request",
+        "leave-balance"
+      ]
+    },
+    {
+      "id": "leave-request",
+      "tool": "annual-leave",
+      "title": "Request annual leave",
+      "ask": [
+        "where do I request annual leave",
+        "how do I book a holiday",
+        "request time off",
+        "book some days off",
+        "apply for leave",
+        "the holiday request form"
+      ],
+      "keys": [
+        "request",
+        "leave",
+        "form",
+        "book"
+      ],
+      "answer": "In Annual Leave, choose “My Leave” and press “Request leave”: the leave form opens in a new tab. Your request then shows under “Your requests” once it reaches monday.com, and a leave approver decides.\n\nIf there’s no “Request leave” button, ask a leave approver for the form.",
+      "steps": [
+        "Open Annual Leave and choose “My Leave”.",
+        "Press “Request leave” and fill in the leave form.",
+        "Check “Your requests” for the decision. “Refresh” updates it."
+      ],
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-balance",
+        "leave-status"
+      ]
+    },
+    {
+      "id": "leave-balance",
+      "tool": "annual-leave",
+      "title": "See how many days you have left",
+      "ask": [
+        "how many days holiday do I have left",
+        "what's my leave balance",
+        "how much annual leave have I got",
+        "remaining holiday",
+        "what's my allowance",
+        "days left this year",
+        "who can see my leave balance"
+      ],
+      "keys": [
+        "balance",
+        "allowance",
+        "days left",
+        "remaining"
+      ],
+      "answer": "In Annual Leave, choose “My Leave”. The big number under “Days left in …” is your balance for that leave year, with “Bookable”, “Accepted”, “Waiting for a decision” and “Left if accepted”. Use “Leave year” to switch years. Only you and leave approvers can see it.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-closures",
+        "leave-request"
+      ]
+    },
+    {
+      "id": "leave-status",
+      "tool": "annual-leave",
+      "title": "Check on a leave request",
+      "ask": [
+        "has my holiday been approved",
+        "check my leave request",
+        "is my time off accepted",
+        "the status of my holiday request",
+        "where are my requests",
+        "is my holiday request accepted",
+        "has my leave request been approved"
+      ],
+      "keys": [
+        "status",
+        "approved",
+        "decision",
+        "pending"
+      ],
+      "answer": "In Annual Leave, choose “My Leave” and look under “Your requests”: each request shows its decision. A new request can take a few minutes to appear; press “Refresh” to check again.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-cancel"
+      ]
+    },
+    {
+      "id": "leave-not-linked",
+      "tool": "annual-leave",
+      "title": "Annual Leave says you aren’t linked",
+      "ask": [
+        "my account isn't linked to a staff record",
+        "annual leave says I'm not linked",
+        "I can't see my leave",
+        "my leave isn't showing",
+        "annual leave is empty"
+      ],
+      "keys": [
+        "linked",
+        "staff record",
+        "not showing"
+      ],
+      "answer": "Your leave appears once your work email is on your record in the “FLR - Leave Allowances” board. Ask a leave approver to add it.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-cancel",
+      "tool": "annual-leave",
+      "title": "Cancel or change booked leave",
+      "ask": [
+        "how do I cancel my holiday",
+        "cancel a leave request",
+        "change my holiday dates",
+        "withdraw a leave request",
+        "I don't need the day off any more"
+      ],
+      "keys": [
+        "cancel",
+        "withdraw"
+      ],
+      "answer": "Ask a leave approver. They can cancel accepted leave, which puts the days back into your allowance, or re-open a request.\n\nApprovers: open the request, then “Cancel leave” or “Re-open”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-approve",
+      "tool": "annual-leave",
+      "who": "approver",
+      "title": "Approve or decline leave",
+      "ask": [
+        "how do I approve a holiday request",
+        "accept a leave request",
+        "decline a leave request",
+        "deny a holiday",
+        "where are the leave approvals",
+        "approve time off for my team"
+      ],
+      "keys": [
+        "approve",
+        "decline",
+        "deny",
+        "approvals"
+      ],
+      "answer": "Leave approvers use “Approvals” in Annual Leave. Each request has a suggestion; press “Accept”, “Review” or “Deny”, with an optional note. Accepting against the suggestion asks you to confirm. If you don’t see “Approvals”, you aren’t a leave approver.",
+      "steps": [
+        "Open Annual Leave and choose “Approvals”.",
+        "Open “Details” to check the request and the suggestion.",
+        "Add a note if you like, then press “Accept”, “Review” or “Deny”."
+      ],
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-cancel",
+        "leave-diary"
+      ]
+    },
+    {
+      "id": "leave-diary",
+      "tool": "annual-leave",
+      "title": "See who’s off",
+      "ask": [
+        "who is off today",
+        "who's on holiday this week",
+        "team holiday calendar",
+        "the leave planner",
+        "see everyone's leave",
+        "who's off"
+      ],
+      "keys": [
+        "diary",
+        "calendar",
+        "planner",
+        "who is off",
+        "today"
+      ],
+      "answer": "“Today” in Annual Leave shows who’s off today, for everyone. Staff see names, groups and whether it’s all day or half, not the kind of leave. Leave approvers also see the kind of leave and when people are back, and can look further ahead in the “Diary”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-colours"
+      ]
+    },
+    {
+      "id": "leave-balances-all",
+      "tool": "annual-leave",
+      "who": "approver",
+      "title": "See everyone’s balances",
+      "ask": [
+        "everyone's holiday balances",
+        "how much leave has the team got left",
+        "staff allowances",
+        "balances for all staff"
+      ],
+      "keys": [
+        "balances",
+        "allowances",
+        "team"
+      ],
+      "answer": "Leave approvers can see every member of staff’s allowance and days left under “Balances” in Annual Leave.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-colours",
+      "tool": "annual-leave",
+      "who": "approver",
+      "title": "What the diary colours mean",
+      "ask": [
+        "what do the colours mean in the diary",
+        "where is the colour key",
+        "legend for the planner",
+        "what do the colours in the calendar mean"
+      ],
+      "keys": [
+        "colour",
+        "key",
+        "legend"
+      ],
+      "answer": "In the “Diary”, press “Colour key” to see what each colour means, including bank holidays, the Christmas shutdown and the Jeff Day.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-closures",
+      "tool": "annual-leave",
+      "title": "Bank holidays and the Christmas shutdown",
+      "ask": [
+        "do bank holidays come out of my allowance",
+        "is the christmas shutdown taken from my holiday",
+        "bank holidays",
+        "company closure days",
+        "does the jeff day count as holiday"
+      ],
+      "keys": [
+        "closure",
+        "christmas",
+        "jeff day",
+        "shutdown"
+      ],
+      "answer": "Bank holidays and the Jeff Day are on top of your allowance. Days for the Christmas shutdown are set aside from it, and My Leave shows how many.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-balance"
+      ]
+    },
+    {
+      "id": "leave-form-link",
+      "tool": "annual-leave",
+      "title": "Share the leave form",
+      "ask": [
+        "how do I share the leave form",
+        "copy the holiday form link",
+        "send someone the leave form",
+        "where is the leave form link"
+      ],
+      "keys": [
+        "form",
+        "link",
+        "share",
+        "copy"
+      ],
+      "answer": "Leave approvers can press “Copy form link” at the top of Annual Leave and send it on. Everyone else opens the form with “Request leave”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "about-fitters",
+      "tool": "fitters",
+      "title": "About the Fitter Schedule",
+      "ask": [
+        "what is the fitter schedule",
+        "what does the fitter schedule show",
+        "the fitter rota",
+        "installer schedule",
+        "where is the fitter planner",
+        "how far ahead does it go"
+      ],
+      "keys": [
+        "fitter",
+        "schedule"
+      ],
+      "answer": "The Fitter Schedule shows which fitters are working, free or off over the next 14 days, and which jobs still need a fitter. It opens in a new tab and asks for the team passcode.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      },
+      "related": [
+        "fitters-free",
+        "fitters-passcode"
+      ]
+    },
+    {
+      "id": "fitters-free",
+      "tool": "fitters",
+      "title": "Find a free fitter",
+      "ask": [
+        "which fitters are free",
+        "who is available tomorrow",
+        "find an available fitter",
+        "is anyone free next week",
+        "fitter availability"
+      ],
+      "keys": [
+        "free",
+        "available",
+        "availability"
+      ],
+      "answer": "In the Fitter Schedule’s “Day” tab, pick a date in the 14-day strip, then choose “Free”. Each day is split into “Needs a fitter”, “Working”, “Free” and “Unavailable”, and “Search fitter or job” finds someone quickly.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      },
+      "related": [
+        "fitters-jobs",
+        "fitters-views"
+      ]
+    },
+    {
+      "id": "fitters-passcode",
+      "tool": "fitters",
+      "title": "The Fitter Schedule passcode",
+      "ask": [
+        "what's the passcode for the fitter schedule",
+        "fitter schedule passcode",
+        "the passcode was not accepted",
+        "change the passcode",
+        "team passcode",
+        "do I need to log in for the fitter schedule"
+      ],
+      "keys": [
+        "passcode"
+      ],
+      "answer": "The Fitter Schedule opens with the team passcode, not your Hub sign-in. Ask the office for it: it isn’t on the Hub, and I don’t know it. If you’re also signed in to the Hub on that device, it shows fitters’ photos and number plates. “Change passcode” is at the foot of the schedule.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "fitters-statuses",
+      "tool": "fitters",
+      "title": "What Working, Free, Off and Clash mean",
+      "ask": [
+        "what does off mean on the fitter schedule",
+        "what do the colours mean on the fitter schedule",
+        "what does clash mean",
+        "why is a fitter showing as off",
+        "what does unavailable mean"
+      ],
+      "keys": [
+        "working",
+        "off",
+        "clash",
+        "unavailable"
+      ],
+      "answer": "A fitter is “Working” on a day if a job overlaps it, “Off” (under “Unavailable”) if they’re on leave, off sick, at an appointment or not working, and “Free” otherwise. “Clash” means work and leave on the same day. Jobs with no fitter are under “Needs a fitter”.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      },
+      "related": [
+        "fitters-free"
+      ]
+    },
+    {
+      "id": "fitters-views",
+      "tool": "fitters",
+      "title": "See one fitter’s fortnight",
+      "ask": [
+        "show one fitter's schedule",
+        "what is a fitter doing this week",
+        "a fitter's next two weeks",
+        "choose a fitter"
+      ],
+      "keys": [
+        "fitter tab",
+        "fortnight",
+        "two weeks"
+      ],
+      "answer": "Open the “Fitter” tab in the Fitter Schedule and use “Choose a fitter” to see their next two weeks.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "fitters-jobs",
+      "tool": "fitters",
+      "title": "Find jobs that need a fitter",
+      "ask": [
+        "which jobs need a fitter",
+        "unassigned jobs",
+        "jobs without a fitter",
+        "find a job by postcode",
+        "open a job in monday.com"
+      ],
+      "keys": [
+        "jobs",
+        "needs fitter",
+        "postcode",
+        "unassigned"
+      ],
+      "answer": "In the Fitter Schedule’s “Jobs” tab, choose “Needs fitter”, or search by job, postcode or fitter. Tapping a job opens it in monday.com.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "fitters-settings",
+      "tool": "fitters",
+      "title": "Show weekends, subcontractors or completed jobs",
+      "ask": [
+        "show weekends on the fitter schedule",
+        "use the weekend rota",
+        "show subcontractors",
+        "include completed jobs",
+        "fitter schedule settings"
+      ],
+      "keys": [
+        "weekend",
+        "subcontractors",
+        "completed",
+        "settings"
+      ],
+      "answer": "Open “Settings” in the Fitter Schedule: “Show weekends”, “Use the weekend rota”, “Show FLR staff and subcontractors” and “Include jobs already marked Completed”.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    }
+  ]
+}

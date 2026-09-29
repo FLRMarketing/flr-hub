@@ -45,6 +45,7 @@ head = """<!doctype html>
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
 <script src="bridge.js?v=1.2"></script>
+<script type="module" src="../assistant/assistant.js?v=1.1"></script>
 </head>
 <body>
 """
