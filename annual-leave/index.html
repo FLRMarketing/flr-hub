@@ -12,6 +12,7 @@
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
 <script src="bridge.js"></script>
+<script type="module" src="../assistant/assistant.js?v=1"></script>
 </head>
 <body>
 <title>FLR Annual Leave</title>
@@ -143,12 +144,11 @@ a{color:var(--tint)}
 .nb-act.busy:disabled{opacity:1}
 .nb-act.busy .ico{animation:spin 1s linear infinite}
 @media (min-width:721px){:root{--gutter:28px}}
-@media (min-width:960px){.nb-title{display:none}}   /* the tab bar sits in the middle of the bar from here up */
+@media (min-width:1040px){.nb-title{display:none}}   /* the tab bar sits in the middle of the bar from here up */
 @media (max-width:1099px){.brand-name{display:none}}
-@media (max-width:1339px){   /* five tabs need the room: the bar's buttons show icons only */
-  .btn.nb-act{width:36px;padding:0}
-  .nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-}
+/* Six tabs need the room: the bar's buttons show icons only (their names stay as tooltips and for screen readers) */
+.btn.nb-act{width:36px;padding:0}
+.nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------------------------------------------------------------- tab bar: a floating capsule, top centre on wide screens, bottom on phones */
 .tabbar{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + (var(--nav-h) - 42px) / 2);left:50%;transform:translateX(-50%);display:flex;padding:3px;
@@ -163,7 +163,7 @@ a{color:var(--tint)}
 .tab:focus-visible{outline-offset:-2px}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;
   font:700 12px/1 var(--font-text);letter-spacing:0;font-variant-numeric:tabular-nums}
-@media (max-width:959px){   /* phones and tablets: a floating bar at the bottom, as on iPhone */
+@media (max-width:1039px){   /* phones and tablets: a floating bar at the bottom, as on iPhone */
   :root{--tabbar-h:78px}
   .tabbar{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));transform:none;padding:4px}
   .tab{flex:1 1 0;flex-direction:column;justify-content:center;gap:3px;min-width:0;height:56px;padding:0 2px;font-size:11px;letter-spacing:0}
@@ -431,10 +431,6 @@ html.key-docked .nb-key{display:grid}
 .nb-key[aria-expanded="true"]{background:var(--tint-soft);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tint) 45%,transparent)}
 @media (prefers-reduced-motion:no-preference){html.key-docked .nb-key{animation:nbkey-in .34s cubic-bezier(.2,1,.4,1)}}
 @keyframes nbkey-in{from{opacity:0;transform:scale(.6)}}
-@media (min-width:1340px){   /* the bar's buttons drop their labels while the key is in the bar, so the five tabs keep their room */
-  html.key-docked .btn.nb-act{width:36px;padding:0}
-  html.key-docked .nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-}
 .key-strip{position:relative;display:flex;align-items:flex-start;gap:12px;max-width:1296px;margin:0 auto;
   padding:2px max(var(--gutter),env(safe-area-inset-right,0px)) 10px max(var(--gutter),env(safe-area-inset-left,0px))}
 .ks-scroll{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;flex:1 1 auto;min-width:0;padding-top:4px}
@@ -547,6 +543,34 @@ button.lv-entry:focus-visible{outline:2px solid var(--focus);outline-offset:-2px
   .lv-none{padding-inline:16px}
 }
 
+/* ---------------------------------------------------------------- today: who is off today */
+.td{display:grid;gap:22px}
+.td-sum{display:grid;gap:4px;padding:18px 20px}
+.td-big{display:flex;align-items:baseline;gap:10px}
+.td-big .big{font:700 52px/1 var(--font-num);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.td-person{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:start;padding:12px 12px 12px 16px}
+.td-person+.td-person{box-shadow:inset 0 var(--hair) 0 var(--sep)}
+.td-person .avatar{width:36px;height:36px;font-size:13px}
+.td-main{min-width:0}
+.td-name{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding-top:1px;font:600 15px/1.3 var(--font-text);letter-spacing:-.012em}
+.td-part{margin-top:1px;font-size:13.5px;color:var(--ink-2)}
+.td-lines{display:grid;gap:2px;margin:3px 0 0 -8px}
+.td-line{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:36px;padding:5px 8px;border:0;border-radius:9px;background:none;color:inherit;font:inherit;text-align:left}
+.td-line .sw{width:18px;height:13px;margin-top:3px}
+.td-when .nw{white-space:nowrap}
+.td-txt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px;flex:1 1 auto;min-width:0;font-size:14px;line-height:1.4;color:var(--ink-2)}
+.td-what b{font-weight:600;color:var(--ink)}
+.td-when{font-variant-numeric:tabular-nums}
+.td-go{align-self:center;width:14px;height:14px;flex:none;color:var(--ink-3)}
+button.td-line{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s,transform .25s var(--ease)}
+button.td-line:active{background:var(--fill);transform:scale(.985);transition-duration:.08s}
+@media (hover:hover){button.td-line:hover{background:var(--row-hover)}}
+button.td-line:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.lv-head .limit.td-over{font-weight:600;color:var(--red-ink)}
+.td-closed{display:grid;gap:6px;padding:20px 22px;box-shadow:var(--sh-card),inset 4px 0 0 var(--cl,var(--bh))}
+.td-closed-label{display:flex;align-items:center;gap:8px;font:600 13px/1.3 var(--font-text);color:var(--ink-2)}
+.td-closed h2{font:700 24px/1.2 var(--font-display);letter-spacing:-.018em;text-wrap:balance}
+
 /* ---------------------------------------------------------------- tables: a sortable table on wide screens, list rows on phones */
 .table-wrap{border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow-x:auto}
 table.data{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;font-variant-numeric:tabular-nums}
@@ -650,8 +674,7 @@ pre.details{margin:0;padding:12px 14px;border-radius:12px;background:var(--surfa
   font:600 14.5px/1.35 var(--font-text);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.2);pointer-events:auto}
 
 /* ---------------------------------------------------------------- My Leave (all staff on the FLR Hub, and approvers' own tab): one person's requests and balance */
-html.staff{--tabbar-h:0px}
-html.staff .tabbar,html.staff #copy-form{display:none}
+html.staff #copy-form{display:none}
 .mine{display:grid;gap:22px}
 .mine-top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:760px){.mine-top{grid-template-columns:minmax(0,1fr)}}
@@ -702,6 +725,9 @@ html.staff .tabbar,html.staff #copy-form{display:none}
   <symbol id="i-requests" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9 6.5h11M9 12h11M9 17.5h11"/><path stroke-width="2.6" d="M4.6 6.5h.01M4.6 12h.01M4.6 17.5h.01"/>
   </symbol>
+  <symbol id="i-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5l1.5 1.5M17 17l1.5 1.5M5.5 18.5 7 17M17 7l1.5-1.5"/>
+  </symbol>
   <symbol id="i-mine" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="8.3" r="3.7"/><path d="M4.7 19.8a7.3 7.3 0 0 1 14.6 0"/>
   </symbol>
@@ -748,6 +774,7 @@ html.staff .tabbar,html.staff #copy-form{display:none}
 
   <nav class="tabbar" id="tabs" role="tablist" aria-label="Sections">
     <span class="tb-thumb" aria-hidden="true"></span>
+    <button class="tab" type="button" role="tab" id="tab-today" data-act="tab" data-id="today" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg><span>Today</span></button>
     <button class="tab" type="button" role="tab" id="tab-approvals" data-act="tab" data-id="approvals" aria-selected="true" aria-controls="view"><svg class="ico" aria-hidden="true"><use href="#i-approvals"/></svg><span>Approvals</span><span class="badge" id="tab-badge" hidden></span></button>
     <button class="tab" type="button" role="tab" id="tab-diary" data-act="tab" data-id="diary" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-diary"/></svg><span>Diary</span></button>
     <button class="tab" type="button" role="tab" id="tab-balances" data-act="tab" data-id="balances" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-balances"/></svg><span>Balances</span></button>
@@ -1439,7 +1466,7 @@ const state = {
 };
 try {
   const t = localStorage.getItem('flr-leave-tab');
-  if (['approvals', 'diary', 'balances', 'requests', 'mine'].includes(t)) state.tab = t;   // 'mine' only sticks for approvers on the Hub
+  if (['today', 'approvals', 'diary', 'balances', 'requests', 'mine'].includes(t)) state.tab = t;   // renderChrome() moves it on if this viewer doesn't have that tab
 } catch (e) { /* storage unavailable */ }
 
 /* ---------------------------------------------------------------------
@@ -1837,10 +1864,10 @@ function cellHtml(cell, dateLabel) {
    Rendering
    --------------------------------------------------------------------- */
 const TABS = [
-  { id: 'approvals', label: 'Approvals' }, { id: 'diary', label: 'Diary' },
+  { id: 'today', label: 'Today' }, { id: 'approvals', label: 'Approvals' }, { id: 'diary', label: 'Diary' },
   { id: 'balances', label: 'Balances' }, { id: 'requests', label: 'All requests' }, { id: 'mine', label: 'My Leave' },
 ];
-const VIEW_TITLES = { approvals: 'Approvals', diary: 'Leave diary', balances: 'Balances', requests: 'All requests', mine: 'My Leave' };
+const VIEW_TITLES = { today: 'Today', approvals: 'Approvals', diary: 'Leave diary', balances: 'Balances', requests: 'All requests', mine: 'My Leave' };
 let tabsCtl = null;
 let chrome = null;
 let lastView = null;
@@ -1851,6 +1878,10 @@ const onHub = () => Boolean(window.__FLR_LEAVE);
 const staffView = () => Boolean(window.__FLR_LEAVE && window.__FLR_LEAVE.access === 'staff');
 // Leave approvers on the FLR Hub also get a My Leave tab: their own card, as staff see it.
 const adminView = () => Boolean(window.__FLR_LEAVE && window.__FLR_LEAVE.access === 'approver');
+function tabsFor() {
+  if (staffView()) return ['today', 'mine'];
+  return adminView() ? TABS.map((t) => t.id) : TABS.map((t) => t.id).filter((id) => id !== 'mine');
+}
 let mineYear = null;
 
 function icon(name, cls = 'ico') { return `<svg class="${cls}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`; }
@@ -1911,8 +1942,9 @@ function renderAll() { renderChrome(); renderView(); renderOverlay(); }
 
 function renderChrome() {
   document.documentElement.classList.toggle('staff', staffView());
-  document.getElementById('tab-mine').hidden = !adminView();
-  if (state.data && state.tab === 'mine' && !adminView()) state.tab = 'approvals';
+  // Everyone has Today. Staff on the FLR Hub have it and My Leave; approvers have every tab; on Claude there's no My Leave.
+  for (const t of document.querySelectorAll('#tabs .tab')) t.hidden = !tabsFor().includes(t.dataset.id);
+  if (state.data && !tabsFor().includes(state.tab)) state.tab = staffView() ? 'today' : 'approvals';
   const open = state.data ? state.data.requests.filter(isPending).length : 0;
   for (const t of document.querySelectorAll('#tabs .tab')) {
     const on = t.dataset.id === state.tab;
@@ -1974,8 +2006,13 @@ function renderView() {
     watchDiaryKey();
     return;
   }
-  if (staffView()) { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); lastView = 'mine'; restoreFocus(focus); watchDiaryKey(); return; }
-  if (state.tab === 'approvals') view.innerHTML = renderApprovals();
+  if (staffView()) {
+    if (state.tab === 'today') view.innerHTML = renderToday();
+    else { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); }
+    lastView = state.tab; restoreFocus(focus); watchDiaryKey(); return;
+  }
+  if (state.tab === 'today') view.innerHTML = renderToday();
+  else if (state.tab === 'approvals') view.innerHTML = renderApprovals();
   else if (state.tab === 'diary') { view.innerHTML = renderDiaryShell(); FLRUI.initSeg(document.getElementById('diary-mode')); renderDiaryBody(); }
   else if (state.tab === 'balances') { view.innerHTML = renderBalancesShell(); renderBalancesBody(); }
   else if (state.tab === 'mine') { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); }
@@ -1984,6 +2021,107 @@ function renderView() {
   lastView = state.tab;
   restoreFocus(focus);
   watchDiaryKey();
+}
+
+/* ---------- Today: who is off today ---------- */
+// Approvers (and the page on Claude) work it out from all the boards, as the diary does: who is off and why, their
+// dates and when they're back, how full each leave group is, and requests for today still waiting for a decision.
+// Staff on the FLR Hub get the FLR database's list instead: names, groups and all day or half, never the kind of leave.
+const PART = { all: 'All day', am: 'Morning', pm: 'Afternoon' };
+function nextWorkingDay(d) {
+  let x = addDays(d, 1);
+  for (let i = 0; i < 60 && (isWeekend(x) || state.ctx.bankHolidays.has(x)); i++) x = addDays(x, 1);
+  return x;
+}
+function backText(line, day) {
+  if (line.part === 'am' && line.to === day) return 'back this afternoon';
+  const b = nextWorkingDay(line.to);
+  return b === addDays(day, 1) ? 'back tomorrow' : `back ${fmtDate(b, yearOf(b) !== yearOf(day))}`;
+}
+function closedCard(name, kind) {
+  const cl = /shutdown/i.test(kind || '') ? 'shut' : /jeff/i.test(kind || '') ? 'jeff' : 'bh';
+  return `<section class="card td-closed" style="--cl:var(--${cl})"><p class="td-closed-label"><i class="sw closed-${cl}"></i>Closed today</p>
+    <h2>${esc(name)}</h2><p class="subtle">No one is working today, so no one is listed as off.</p></section>`;
+}
+function renderToday() {
+  const day = todayInLondon();
+  const dt = new Date(toUTC(day)), part = (o) => dt.toLocaleDateString('en-GB', { ...o, timeZone: 'UTC' });
+  setHead('Today', `${part({ weekday: 'long' })} ${dt.getUTCDate()} ${part({ month: 'long' })} ${dt.getUTCFullYear()}`);
+  return staffView() ? renderTodayStaff() : renderTodayFull(day);
+}
+function renderTodayFull(day) {
+  const ctx = state.ctx, closure = state.data.bankHolidays.get(day);
+  if (closure) return closedCard(closure, state.data.closureTypes.get(day));
+  if (isWeekend(day)) return emptyHtml('It’s the weekend', 'No one is working today. The week ahead is in the Diary.', 'diary');
+  const off = new Map(), waiting = [];
+  const add = (staff, name, line) => {
+    const k = staff ? `s${staff.id}` : `n${normaliseName(name)}`;
+    if (!off.has(k)) off.set(k, { staff, name: staff ? staff.name : name, lines: [] });
+    off.get(k).lines.push(line);
+  };
+  for (const e of whoIsOff(ctx, day, { includePending: true })) {
+    const r = e.request, d = ctx.daysOf(r);
+    const line = { kind: 'annual', part: e.amount === 0.5 ? (r.halfDay === 'pm' ? 'pm' : 'am') : 'all', from: d.from, to: d.to, request: r };
+    if (r.decision === 'accepted') add(e.staff, displayName(r), line);
+    else waiting.push({ staff: e.staff, name: e.staff ? e.staff.name : displayName(r), line });
+  }
+  for (const e of whoIsOffOther(ctx, day)) {
+    const d = ctx.otherDaysOf(e.entry);
+    add(e.staff, e.entry.employeeName, { kind: 'other', type: e.type, part: e.amount === 0.5 ? (e.entry.halfDay === 'pm' ? 'pm' : 'am') : 'all', from: d.from, to: d.to });
+  }
+  const y = yearOf(day);
+  const lineHtml = (l) => {
+    const sw = l.kind === 'annual' ? `<i class="sw ${l.request.decision === 'accepted' ? 'acc' : l.request.decision === 'review' ? 'rev' : 'new'}"></i>`
+      : `<i class="sw" style="background:${OTHER_TYPE_COLOURS[l.type] || '#c4c4c4'}"></i>`;
+    const what = l.kind === 'annual' ? 'Annual leave' : l.type;
+    const text = `<span class="td-what"><b>${esc(what)}</b> · ${PART[l.part]}</span><span class="td-when"><span class="nw">${esc(lvRange(l.from, l.to, y))}</span> · <span class="nw">${esc(backText(l, day))}</span></span>`;
+    return l.kind === 'annual'
+      ? `<button class="td-line" type="button" data-act="open" data-id="${esc(l.request.id)}">${sw}<span class="td-txt">${text}</span>${icon('chev-r', 'ico td-go')}</button>`
+      : `<div class="td-line">${sw}<span class="td-txt">${text}</span></div>`;
+  };
+  const person = (p) => `<li class="td-person">${avatar(p.name)}<div class="td-main"><p class="td-name">${esc(p.name)}</p><div class="td-lines">${p.lines.map(lineHtml).join('')}</div></div></li>`;
+  // Leave groups in name order, each with how many are on annual leave against its limit; people in two groups show in both.
+  const people = [...off.values()].sort((a, z) => a.name.localeCompare(z.name));
+  const secs = [];
+  for (const g of [...state.data.groups].sort((a, z) => a.name.localeCompare(z.name))) {
+    const ids = ctx.membersByGroup.get(String(g.id)) || new Set();
+    const inGroup = people.filter((p) => p.staff && ids.has(String(p.staff.id)));
+    if (!inGroup.length) continue;
+    const annual = inGroup.filter((p) => p.lines.some((l) => l.kind === 'annual')).length, limit = maxOffOf(g);
+    secs.push({ title: g.name, note: `${annual} on annual leave · max ${limit}`, over: annual > limit, people: inGroup });
+  }
+  const loose = people.filter((p) => p.staff && !(ctx.groupsByStaff.get(String(p.staff.id)) || new Set()).size);
+  if (loose.length) secs.push({ title: 'No group', note: '', people: loose });
+  const unknown = people.filter((p) => !p.staff);
+  if (unknown.length) secs.push({ title: 'Not on the allowance board', note: '', people: unknown });
+  const annualN = people.filter((p) => p.lines.some((l) => l.kind === 'annual')).length, otherN = people.filter((p) => p.lines.some((l) => l.kind === 'other')).length;
+  const bits = [annualN ? `${annualN} on annual leave` : '', otherN ? `${otherN} on other leave` : '', waiting.length ? `${waiting.length} waiting for a decision` : ''].filter(Boolean);
+  const summary = people.length
+    ? `<section class="card td-sum"><p class="td-big"><span class="big num">${people.length}</span><span class="mb-unit">${people.length === 1 ? 'person' : 'people'} off today</span></p>
+        <p class="subtle">${esc(bits.join(' · '))}</p></section>`
+    : emptyHtml('Everyone’s in today', waiting.length ? 'No one has leave booked for today.' : 'No one has leave booked for today, and nothing for today is waiting for a decision.', 'done');
+  const groups = secs.map((s) => `<section class="lv-sec"><h3 class="lv-head">${esc(s.title)}${s.note ? `<span class="limit${s.over ? ' td-over' : ''}">${esc(s.note)}</span>` : ''}</h3>
+      <ul class="lv-card">${s.people.map(person).join('')}</ul></section>`).join('');
+  const wait = waiting.length ? `<section class="lv-sec"><h3 class="lv-head">Waiting for a decision<span class="limit">asked for today, not decided yet</span></h3>
+      <ul class="lv-card">${waiting.sort((a, z) => a.name.localeCompare(z.name)).map((w) => `<li class="td-person">${avatar(w.name)}<div class="td-main"><p class="td-name">${esc(w.name)}${pillFor(w.line.request.decision)}</p>
+        <div class="td-lines"><button class="td-line" type="button" data-act="open" data-id="${esc(w.line.request.id)}"><i class="sw ${w.line.request.decision === 'review' ? 'rev' : 'new'}"></i>
+        <span class="td-txt"><span class="td-what"><b>Annual leave</b> · ${PART[w.line.part]}</span><span class="td-when"><span class="nw">${esc(lvRange(w.line.from, w.line.to, y))}</span></span></span>${icon('chev-r', 'ico td-go')}</button></div></div></li>`).join('')}</ul></section>` : '';
+  return `<div class="td">${summary}${groups}${wait}</div>
+    <p class="foot">Accepted annual leave and other leave on the leave boards. Everyone signed in to the FLR Hub sees who is off today, with names only: not the kind of leave, its dates or notes.</p>`;
+}
+function renderTodayStaff() {
+  const t = window.__FLR_LEAVE && window.__FLR_LEAVE.today;
+  if (!t) return emptyHtml('Today isn’t available yet', 'The FLR server hasn’t been updated for this yet. Try again later.', 'diary');
+  if (t.closure) return closedCard(t.closure.name, t.closure.kind);
+  if (t.weekend) return emptyHtml('It’s the weekend', 'No one is working today.', 'diary');
+  if (!t.off.length) return emptyHtml('Everyone’s in today', 'No one has leave booked for today.', 'done');
+  const byGroup = new Map();
+  for (const p of t.off) for (const g of (p.groups && p.groups.length ? p.groups : ['No group'])) { if (!byGroup.has(g)) byGroup.set(g, []); byGroup.get(g).push(p); }
+  const names = [...byGroup.keys()].sort((a, z) => (a === 'No group') - (z === 'No group') || a.localeCompare(z));
+  const person = (p) => `<li class="td-person">${avatar(p.name)}<div class="td-main"><p class="td-name">${esc(p.name)}</p><p class="td-part">${PART[p.part] || PART.all}</p></div></li>`;
+  return `<div class="td"><section class="card td-sum"><p class="td-big"><span class="big num">${t.off.length}</span><span class="mb-unit">${t.off.length === 1 ? 'person' : 'people'} off today</span></p></section>
+    ${names.map((g) => `<section class="lv-sec"><h3 class="lv-head">${esc(g)}</h3><ul class="lv-card">${byGroup.get(g).map(person).join('')}</ul></section>`).join('')}</div>
+    <p class="foot">Who is off today, from the leave boards. It shows names only, not the kind of leave.</p>`;
 }
 
 /* ---------- Approvals ---------- */

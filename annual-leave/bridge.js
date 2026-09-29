@@ -93,7 +93,7 @@
   }
 
   function take(h) {
-    window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null };
+    window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null, today: h.today || null };
     try { FORM_URL = h.formUrl || ''; } catch (e) { /* the page keeps its own */ }   // eslint-disable-line no-undef
     version = h.version;
   }
