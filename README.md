@@ -9,7 +9,9 @@ The front door to FLR's staff tools. One FLR account (the Cost Estimator's sign-
   everyone else sees only their own requests and days left. monday.com stays the source of truth: the `flr-leave`
   function keeps the database's copy in step with it and writes decisions back.
 - **Fitter Schedule** opens the fitter schedule site in a new tab: who is free, who is working and which jobs still need a
-  fitter. Its link lives in the database like the others, and the site still asks for the team passcode.
+  fitter. Its link lives in the database like the others, and the site still asks for the team passcode. With a Hub sign-in it also shows
+  each fitter's photo and number plate from `public.fitter_faces()`, using this site's `flr-config.js` and
+  `vendor/supabase-2.116.0.js`: if either moves or is renamed, update `FLR_HUB` in the Fitter Schedule too.
 
 GitHub Pages is public, so nothing private belongs in this repository: no data, no staff photos or names, no links to
 private tools, no writer key and never the Supabase `service_role` key.
