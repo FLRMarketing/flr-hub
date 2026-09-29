@@ -93,7 +93,8 @@
   }
 
   function take(h) {
-    window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null, today: h.today || null };
+    window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null, today: h.today || null,
+      wpIssues: Array.isArray(h.wpIssues) ? h.wpIssues : [] };
     try { FORM_URL = h.formUrl || ''; } catch (e) { /* the page keeps its own */ }   // eslint-disable-line no-undef
     version = h.version;
   }
