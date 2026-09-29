@@ -233,6 +233,8 @@
     return (w[0][0] + w[w.length - 1][0]).toUpperCase();
   }
   const SAME_SITE = /^[a-z0-9][a-z0-9-]{0,39}\/$/;   // a page of this site, such as speeding/ (opens in the same tab)
+  // A full address on this same web address (another FLR site such as the Fitter Schedule) opens in the same tab too.
+  const sameOrigin = u => { try { return new URL(u).origin === location.origin; } catch (e) { return false; } };
   const safeTile = t => {
     if (!t || typeof t.title !== 'string' || typeof t.url !== 'string') return false;
     if (SAME_SITE.test(t.url)) return true;
@@ -242,7 +244,7 @@
     const li = $('#tile-tpl').content.firstElementChild.cloneNode(true);
     const a = li.querySelector('.tile-link'), tip = li.querySelector('.tile-tip');
     if (o.loading) { li.classList.add('tile--loading'); li.setAttribute('aria-hidden', 'true'); a.tabIndex = -1; tip.remove(); return li; }
-    const external = /^https:/i.test(t.url);
+    const external = /^https:/i.test(t.url) && !sameOrigin(t.url);
     a.href = t.url;
     if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
     const icon = li.querySelector('.app-icon');
