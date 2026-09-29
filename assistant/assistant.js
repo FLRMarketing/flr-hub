@@ -13,13 +13,13 @@
    He floats and tilts his head now and then, lifts when you reach for him,
    thinks while a look-up takes a moment and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.7"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.8"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=1.7';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=1.8';
 
-const V = '1.7';
+const V = '1.8';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -93,7 +93,7 @@ const host = document.createElement('flr-assistant');
 host.style.display = 'none';                         // until its stylesheets have arrived
 const root = host.attachShadow({ mode: 'open' });
 root.innerHTML = `<link rel="stylesheet" href="${art('face.css')}"><link rel="stylesheet" href="${art('assistant.css')}">
-<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask Likkle Jeff">${face('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask Likkle Jeff</span></button>
+<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fa-panel" aria-label="Ask Likkle Jeff">${face('')}${ICON.ask}<span class="fab-x" aria-hidden="true">${ICON.x}</span><span class="fab-label" aria-hidden="true">Ask Likkle Jeff</span><span class="fab-nudge" aria-hidden="true">Ask me for help</span></button>
 <dialog class="panel" id="fa-panel" aria-labelledby="fa-title" aria-describedby="fa-sub">
   <div class="head"><span class="grabber" aria-hidden="true"></span><span class="head-face">${face('mini')}</span><div class="head-text"><h2 id="fa-title">Likkle Jeff</h2><p id="fa-sub">Answers from the Hub’s help and from what your tools show you. He can’t change anything.</p></div>
     <button class="x" type="button" aria-label="Close">${ICON.x}</button></div>
@@ -209,6 +209,36 @@ for (const f of faces) f.addEventListener('animationend', ev => { if (ev.animati
   fab.addEventListener('focus', () => { loadFaces(); if (fab.matches(':focus-visible')) look(true); });
   fab.addEventListener('blur', () => look(false));
 }
+/* ---------------------------------------------------------------- a nudge when the page goes quiet: "Ask me for help" */
+// After 10 seconds with no sign of anyone (no pointer, touch, key or scroll), a speech bubble from him offers help, with
+// his open hand. Once per visit (this tab), and never once the chat has been opened, over a page's own sheet or while
+// the page is out of sight. It goes after 8 seconds, or at the next thing the person does anywhere else; a tap on it
+// opens the chat, like the button it's part of. Screen readers aren't told: they don't always pass their keys to the
+// page, so someone listening to it could look idle.
+const NUDGED = 'flr-assist:nudged', QUIET = 10000, SHOWN = 8000;
+const wasNudged = () => { try { return !!sessionStorage.getItem(NUDGED); } catch (e) { return true; } };   // no storage: no nudge
+const noteNudged = () => { try { sessionStorage.setItem(NUDGED, '1'); } catch (e) { /* private window */ } };
+let lastStir = Date.now(), nudgeTimer = 0;
+function hideNudge() { clearTimeout(nudgeTimer); fab.classList.remove('nudge'); }
+function stir(ev) {
+  if (ev && ev.composedPath && ev.composedPath().includes(fab)) return;   // reaching for him isn't moving on
+  lastStir = Date.now();
+  if (fab.classList.contains('nudge') && !(ev && ev.type === 'pointermove')) hideNudge();   // a pointer may be on its way to him
+}
+for (const t of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll']) addEventListener(t, stir, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => stir());
+(function listen() {
+  if (wasNudged()) return;
+  const left = QUIET - (Date.now() - lastStir);
+  if (left <= 0 && !document.hidden && !panel.open && !host.hasAttribute('data-covered') && !fab.classList.contains('noart')) {
+    noteNudged();
+    fab.classList.add('nudge');
+    mood('care');
+    nudgeTimer = setTimeout(hideNudge, SHOWN);
+    return;
+  }
+  setTimeout(listen, Math.max(300, left));
+})();
 
 /* ---------------------------------------------------------------- the conversation: kept for this tab (it follows you between pages), for this person */
 const uid = () => { const s = session(); return (s && s.user && s.user.id) || ''; };
@@ -536,6 +566,7 @@ function open(focusInput = true, instant = false) {
   if (narrow()) panel.showModal(); else panel.show();
   fab.setAttribute('aria-expanded', 'true');
   fab.classList.remove('note');
+  noteNudged(); hideNudge();                           // they've found him: no nudge now
   paint();
   loadFaces();
   mood('rest');
