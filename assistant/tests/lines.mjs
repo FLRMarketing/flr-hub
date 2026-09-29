@@ -1,7 +1,7 @@
 // Checks what Likkle Jeff says in his speech bubble (lines.js): short enough for a phone, the right lines in the right
 // places at the right times, never the same line twice running, and about half the time one for the page he's on.
 //   node assistant/tests/lines.mjs
-import { ANYWHERE, ON_PAGE, SIGNED_OUT, MORNING, AFTERNOON, FRIDAY, named, pickLine, moodFor } from '../lines.js';
+import { ANYWHERE, ON_PAGE, SIGNED_OUT, OWN_ACCESS, MORNING, AFTERNOON, FRIDAY, named, pickLine, moodFor } from '../lines.js';
 
 const problems = [];
 const MAX = 30;   // one line on a phone
@@ -40,8 +40,15 @@ for (const [page, mine] of Object.entries(ON_PAGE)) {
   if (!named('Faye').every(l => seen.has(l))) problems.push(`${page}: never used her first name`);
 }
 
+// The Fitter Schedule has its own passcode: signed out of the Hub there, its own lines, not the Hub's about signing in.
+for (const page of OWN_ACCESS) {
+  const own = run({ page, signedIn: false, name: 'Faye Turner', now: monday10 });
+  if (!ON_PAGE[page].every(l => own.has(l))) problems.push(`${page}, signed out of the Hub: its own lines never came`);
+  for (const l of own.keys()) if (SIGNED_OUT.includes(l) || /Faye/.test(l)) problems.push(`${page}, signed out of the Hub: he said "${l}"`);
+}
+
 // A page without lines of its own, and nobody's name: lines from anywhere and for the time only.
-const bare = run({ page: 'fitters', signedIn: true, name: '', now: monday10 });
+const bare = run({ page: 'elsewhere', signedIn: true, name: '', now: monday10 });
 for (const l of bare.keys()) if (![...ANYWHERE, MORNING].includes(l)) problems.push(`no page lines and no name, yet he said "${l}"`);
 
 // The time of day and week.

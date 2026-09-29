@@ -10,13 +10,17 @@ export const ANYWHERE = [
   'Go on, ask me anything', 'Questions? I’ve got answers',
   'The boss is in. Ask away', 'Thumbs up, or need a hand?', 'I don’t bite. Ask away', 'Two heads are better than one',
 ];
-// For the page he's on (assistant.js's PAGE), once signed in. Signed out, every page is about signing in.
+// For the page he's on (assistant.js's PAGE), once signed in. Signed out, a page is about signing in, unless it has its
+// own way in.
 export const ON_PAGE = {
   hub: ['Not sure where to start?', 'Which tool do you need?'],
   'annual-leave': ['Planning time off? Ask me', 'Days left? Just ask me'],
   speeding: ['When’s your MOT due? Ask me', 'Want to check your driving?'],
   estimator: ['Need a hand with a quote?', 'Stuck on an estimate?'],
+  fitters: ['Looking for a free fitter?', 'Jobs need a fitter? Ask me', 'Want one fitter’s fortnight?', 'What does Clash mean? Ask me'],
 };
+// Pages with their own way in (the Fitter Schedule's passcode) keep their lines for people not signed in to the Hub.
+export const OWN_ACCESS = new Set(['fitters']);
 export const SIGNED_OUT = ['Can’t sign in? Ask me', 'Forgotten your password?'];
 export const MORNING = 'Morning! Need anything?', AFTERNOON = 'Afternoon! Stuck on something?', FRIDAY = 'Happy Friday! Need a hand?';
 export const named = first => [`Need a hand, ${first}?`, `Alright ${first}? Need anything?`];
@@ -25,7 +29,7 @@ export const named = first => [`Need a hand, ${first}?`, `Alright ${first}? Need
 // their first name or for the time of day or week, otherwise one from anywhere. Never the line he said last.
 export function pickLine({ page = 'hub', signedIn = false, name = '', now = new Date(), last = '', random = Math.random } = {}) {
   const first = signedIn ? String(name).trim().split(/\s+/)[0] : '';
-  const mine = signedIn ? ON_PAGE[page] || [] : SIGNED_OUT;
+  const mine = signedIn || OWN_ACCESS.has(page) ? ON_PAGE[page] || [] : SIGNED_OUT;
   const extra = [];
   const h = now.getHours();
   if (h >= 5 && h < 12) extra.push(MORNING); else if (h >= 12 && h < 18) extra.push(AFTERNOON);

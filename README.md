@@ -111,9 +111,10 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 - After changing it, run `node assistant/tests/run.mjs` and `node assistant/tests/run.mjs --heldout`. Both must end with
   no wrong answers and none answered that should have been declined. `heldout.json` was written by someone who never
   saw the help text; `--sweep` shows other thresholds.
-- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=2.0"></script>`: `index.html` directly,
-  and the tools through their build scripts. On a release, bump `?v=` in those four places and in `assistant.js` (`V`
-  and the `engine.js` and `lines.js` imports).
+- Pages load it with `<script type="module" src="(../)assistant/assistant.js?v=2.1"></script>`: `index.html` directly,
+  and the tools through their build scripts. The Fitter Schedule (FLRMarketing/fitter-schedule) loads
+  `/flr-hub/assistant/assistant.js` from the head that `flr-fitter-schedule/dev/assemble.py` writes. On a release, bump
+  `?v=` in all five and in `assistant.js` (`V` and the `engine.js` and `lines.js` imports).
 - When a tool changes its buttons or wording, update its answers here too.
 - It also answers from everything the person can see in their tools, read-only (`assistant/records.js`), and nothing
   more: each answer comes from the database function the tool's own page uses (`leave_home`, `speeding_data`,

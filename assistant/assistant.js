@@ -13,14 +13,14 @@
    He floats and tilts his head now and then, lifts when you reach for him,
    thinks while a look-up takes a moment and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=2.0"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=2.1"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=2.0';
-import { pickLine, moodFor } from './lines.js?v=2.0';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=2.1';
+import { pickLine, moodFor } from './lines.js?v=2.1';
 
-const V = '2.0';
+const V = '2.1';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -28,6 +28,9 @@ const LOG_KEY = 'flr-assist:log', GUIDE_KEY = 'flr-assist:guide';
 const NAMES = { hub: 'the Hub', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule' };
 const PAGE = location.pathname.includes('/fitter-schedule/') ? 'fitters'
   : (location.pathname.startsWith(HUB.pathname) ? location.pathname.slice(HUB.pathname.length).split('/')[0] : '') || 'hub';
+// The Fitter Schedule has its own way in (a team passcode) and lives outside the Hub's folder: people use it without
+// signing in to the Hub, so on it the assistant doesn't send them to sign in first, or link them to the page they're on.
+const OWN_ACCESS = PAGE === 'fitters';
 const mqNarrow = matchMedia('(max-width: 699px)');
 const narrow = () => mqNarrow.matches;
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -45,14 +48,24 @@ const ICON = {
 // This decides which links to offer, nothing more. What anyone can actually open or read is decided by the FLR database
 // on each page; the assistant never fetches leave, quotes or driver data, so it has none to show.
 const session = () => { try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch (e) { return null; } };
+// The Hub's settings (where the FLR sign-in is). Hub pages load them; a page outside the Hub's folder (the Fitter
+// Schedule) may not have yet, so the first time they're needed they come from the Hub.
+let configP = null;
+const hubConfig = () => configP || (configP = window.FLR_CONFIG ? Promise.resolve() : new Promise(done => {
+  const sc = document.createElement('script');
+  sc.src = new URL('flr-config.js', HUB).href;
+  sc.onload = sc.onerror = () => done();
+  document.head.append(sc);
+}));
 let ctxMemo = null;
 function context() {
   const s = session(), token = (s && s.access_token) || '';
   if (ctxMemo && ctxMemo.token === token) return ctxMemo.p;   // asked again after signing in or out: look again
   const p = (async () => {
-    const cfg = window.FLR_CONFIG || {};
     const unknown = { signedIn: true, name: '', role: '', tools: null, urls: {}, titles: {} };   // offer every link; pages still check
     if (!token) return { ...unknown, signedIn: false };
+    await hubConfig();
+    const cfg = window.FLR_CONFIG || {};
     if (!cfg.supabaseUrl || !cfg.supabaseAnonKey || (s.expires_at && s.expires_at * 1000 < Date.now())) return unknown;
     try {
       const r = await fetch(cfg.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/hub_home', {
@@ -290,7 +303,7 @@ async function lookUpFor(e, q, ctx, { slots = [], soft = false } = {}) {
 
 // Where to start, by page (and for Fleet Management, by who's asking).
 function starters(ctx) {
-  if (!ctx.signedIn) return ['signin', 'account-new', 'password-forgot'];
+  if (!ctx.signedIn && !OWN_ACCESS) return ['signin', 'account-new', 'password-forgot'];
   switch (PAGE) {
     case 'estimator': return ['estimate-new', 'estimate-find', 'estimate-approve', 'estimate-print'];
     case 'speeding': return ctx.role === 'admin' ? ['fleet-review', 'fleet-link', 'fleet-map', 'fleet-vehicles'] : ['fleet-my-driving', 'fleet-incident', 'fleet-nothing', 'fleet-privacy'];
@@ -310,7 +323,7 @@ function chipsFor(ids, H, ctx) {   // with ctx: leave out tools that aren't on t
   return box;
 }
 function gate(e, ctx) {
-  if (!ctx.signedIn && e.link && e.link.tile) return 'signin';
+  if (!ctx.signedIn && e.link && e.link.tile && !(OWN_ACCESS && e.tool === PAGE)) return 'signin';
   if (!e.tool || e.tool === 'hub' || !ctx.tools) return 'ok';
   if (!ctx.tools.has(e.tool)) return 'missing';
   if (e.who === 'admin' && ctx.role && ctx.role !== 'admin') return 'admin';
@@ -322,7 +335,7 @@ function linkFor(e, ctx) {
   if (!href) return null;
   const url = new URL(href, HUB);
   if (!/^https?:$/.test(url.protocol)) return null;
-  const onSite = url.origin === location.origin && url.pathname.startsWith(HUB.pathname);
+  const onSite = url.origin === location.origin;          // the Hub and the Fitter Schedule: this tab, and the next steps follow
   const a = el('a', 'go', e.link.label || `Open ${toolName(e.tool, ctx)}`);
   a.href = url.href;
   a.insertAdjacentHTML('beforeend', onSite ? ICON.chev : ICON.ext);
@@ -348,7 +361,7 @@ function answerEl(m, H, ctx) {
     b.append(el('p', 'note', `Sign in to the Hub first, then open ${toolName(e.tool, ctx)} from there.`));
     const a = el('a', 'go', 'Go to the Hub'); a.href = HUB.href; a.insertAdjacentHTML('beforeend', ICON.chev); b.append(a);
   }
-  if (e.link && (g === 'ok' || g === 'viewonly')) { const a = linkFor(e, ctx); if (a) b.append(a); }
+  if (e.link && (g === 'ok' || g === 'viewonly') && !(OWN_ACCESS && e.tool === PAGE)) { const a = linkFor(e, ctx); if (a) b.append(a); }
   const rel = chipsFor([...new Set([...(e.related || []), ...(m.rel || [])])].filter(id => id !== e.id).slice(0, 3), H, ctx);
   if (rel.childElementCount) b.append(el('p', 'label', 'Related'), rel);
   return b;
@@ -398,7 +411,7 @@ function render(m, H, ctx) {
   if (m.k === 'intro') {
     const first = (ctx.name || '').trim().split(/\s+/)[0];
     b.append(el('p', null, `Hi${first ? ' ' + first : ''}. Ask me where to find something on the Hub, or how to do it.`));
-    if (!ctx.signedIn) b.append(el('p', 'note', 'You’re signed out. Sign in to use the Hub’s tools; I can help with that too.'));
+    if (!ctx.signedIn && !OWN_ACCESS) b.append(el('p', 'note', 'You’re signed out. Sign in to use the Hub’s tools; I can help with that too.'));
     b.append(chipsFor(starters(ctx), H, ctx));
   } else if (m.k === 'hello') {
     b.append(el('p', null, m.thanks ? 'You’re welcome.' : 'Ask me about a tool or a task, for example:'));
