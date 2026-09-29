@@ -142,9 +142,10 @@ a{color:var(--tint)}
 .btn.nb-act{flex:none}
 .nb-act.busy:disabled{opacity:1}
 .nb-act.busy .ico{animation:spin 1s linear infinite}
-@media (min-width:721px){:root{--gutter:28px}.nb-title{display:none}}
-@media (max-width:1099px){
-  .brand-name{display:none}
+@media (min-width:721px){:root{--gutter:28px}}
+@media (min-width:960px){.nb-title{display:none}}   /* the tab bar sits in the middle of the bar from here up */
+@media (max-width:1099px){.brand-name{display:none}}
+@media (max-width:1339px){   /* five tabs need the room: the bar's buttons show icons only */
   .btn.nb-act{width:36px;padding:0}
   .nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
@@ -162,7 +163,7 @@ a{color:var(--tint)}
 .tab:focus-visible{outline-offset:-2px}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;
   font:700 12px/1 var(--font-text);letter-spacing:0;font-variant-numeric:tabular-nums}
-@media (max-width:720px){
+@media (max-width:959px){   /* phones and tablets: a floating bar at the bottom, as on iPhone */
   :root{--tabbar-h:78px}
   .tabbar{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));transform:none;padding:4px}
   .tab{flex:1 1 0;flex-direction:column;justify-content:center;gap:3px;min-width:0;height:56px;padding:0 2px;font-size:11px;letter-spacing:0}
@@ -409,7 +410,7 @@ tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
   width:max-content;max-width:calc(100vw - 2 * var(--gutter));padding:16px 20px 18px;border-radius:16px;
   background:var(--mat-alert);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--sh-float)}
 .key-sec{display:grid;align-content:start;gap:9px;min-width:0}
-.key-sec h3{font:600 12.5px/1.3 var(--font-text);color:var(--ink-3)}
+.key-sec .kh{margin:0;font:600 12.5px/1.3 var(--font-text);color:var(--ink-3)}
 .key-sec ul{display:grid;gap:8px;padding:0;margin:0;list-style:none}
 .key-sec li{display:flex;align-items:center;gap:9px;font:500 13.5px/1.3 var(--font-text);color:var(--ink);white-space:nowrap}
 .key-sec .sw{width:20px;height:14px}
@@ -419,6 +420,23 @@ tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
   .key-pop{left:0;right:0;width:auto;max-width:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
   .key-sec.other ul{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
   .key-sec li{white-space:normal}
+}
+/* Once the Colour key has scrolled up under the navigation bar on the Diary, a compact copy of it waits in the bar:
+   one tap away anywhere in the Planner, Calendar or Leave List, and never sitting on the page's dates or names. */
+.keydrop.nb-key{display:none;margin-left:0}
+html.key-docked .keydrop.nb-key{display:block}
+.nb-key>summary{justify-content:center;width:36px;height:36px;padding:0;gap:0}
+.nb-key .kb-dots{gap:2.5px}
+.nb-key .kb-dots i{width:7px;height:7px}
+.nb-key .key-pop{top:calc(100% + 10px)}
+@media (prefers-reduced-motion:no-preference){html.key-docked .nb-key>summary{animation:nbkey-in .34s cubic-bezier(.2,1,.4,1)}}
+@media (min-width:1340px){   /* the bar's buttons drop their labels while the key is in the bar, so the five tabs keep their room */
+  html.key-docked .btn.nb-act{width:36px;padding:0}
+  html.key-docked .nb-act .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+@keyframes nbkey-in{from{opacity:0;transform:scale(.6)}}
+@media (max-width:560px){
+  .nb-key .key-pop{top:calc(100% + 6px);left:max(var(--gutter),env(safe-area-inset-left,0px));right:max(var(--gutter),env(safe-area-inset-right,0px))}
 }
 .sw{position:relative;display:inline-block;flex:none;width:16px;height:12px;border-radius:4px;box-shadow:inset 0 0 0 var(--hair) var(--line-2)}
 .sw.acc{background:var(--ok);box-shadow:none}
@@ -617,7 +635,7 @@ pre.details{margin:0;padding:12px 14px;border-radius:12px;background:var(--surfa
 .toast{max-width:560px;padding:11px 18px;border-radius:20px;background:var(--toast);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);color:var(--on-toast);
   font:600 14.5px/1.35 var(--font-text);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.2);pointer-events:auto}
 
-/* ---------------------------------------------------------------- My leave (staff on the FLR Hub): their own requests and balance only */
+/* ---------------------------------------------------------------- My Leave (all staff on the FLR Hub, and approvers' own tab): one person's requests and balance */
 html.staff{--tabbar-h:0px}
 html.staff .tabbar,html.staff #copy-form{display:none}
 .mine{display:grid;gap:22px}
@@ -670,6 +688,9 @@ html.staff .tabbar,html.staff #copy-form{display:none}
   <symbol id="i-requests" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9 6.5h11M9 12h11M9 17.5h11"/><path stroke-width="2.6" d="M4.6 6.5h.01M4.6 12h.01M4.6 17.5h.01"/>
   </symbol>
+  <symbol id="i-mine" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8.3" r="3.7"/><path d="M4.7 19.8a7.3 7.3 0 0 1 14.6 0"/>
+  </symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.8 4.2v4.3h-4.3"/>
   </symbol>
@@ -700,6 +721,7 @@ html.staff .tabbar,html.staff #copy-form{display:none}
         <p class="nb-title" id="nb-title" aria-hidden="true">Approvals</p>
       </div>
       <div class="nb-trail">
+        <details class="keydrop nb-key" id="nb-key"><summary title="Colour key"><span class="kb-dots" aria-hidden="true"><i style="background:var(--ok)"></i><i style="background:var(--tint-fill)"></i><i style="background:var(--gold)"></i></span><span class="sr">Colour key</span></summary><div class="key-pop" id="nb-key-pop"></div></details>
         <button class="btn nb-act" type="button" data-act="copy-form" id="copy-form" title="Copy the staff request form link"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="lbl">Copy form link</span></button>
         <button class="btn nb-act" type="button" data-act="refresh" id="refresh" title="Load the leave boards from monday.com again"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg><span class="lbl">Refresh</span></button>
       </div>
@@ -712,6 +734,7 @@ html.staff .tabbar,html.staff #copy-form{display:none}
     <button class="tab" type="button" role="tab" id="tab-diary" data-act="tab" data-id="diary" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-diary"/></svg><span>Diary</span></button>
     <button class="tab" type="button" role="tab" id="tab-balances" data-act="tab" data-id="balances" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-balances"/></svg><span>Balances</span></button>
     <button class="tab" type="button" role="tab" id="tab-requests" data-act="tab" data-id="requests" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-requests"/></svg><span>All requests</span></button>
+    <button class="tab" type="button" role="tab" id="tab-mine" data-act="tab" data-id="mine" aria-selected="false" aria-controls="view" tabindex="-1" hidden><svg class="ico" aria-hidden="true"><use href="#i-mine"/></svg><span>My Leave</span></button>
   </nav>
 
   <main class="page">
@@ -882,7 +905,7 @@ const FLRUI = (() => {
   // Tab bar: the selection slides between tabs, and can be dragged from the current tab.
   function initTabs(nav, onPick) {
     const T = Thumb(nav.querySelector('.tb-thumb'));
-    const tabs = () => [...nav.querySelectorAll('.tab')];
+    const tabs = () => [...nav.querySelectorAll('.tab:not([hidden])')];
     const cur = () => tabs().find((t) => t.getAttribute('aria-selected') === 'true');
     let pending = null;
     const sync = (instant) => { const v = pending; pending = null; T.to(cur(), v ? { velocity: v, bounce: true } : { instant }); };
@@ -1068,7 +1091,7 @@ const REQ = {
 };
 const ALW = {
   group: 'board_relation_mm7ms80n', allowance: 'numeric_mm7mkptt', shutdown: 'numeric_mm7m8qs9',
-  carried: 'numeric_mm7m314', booked: 'numeric_mm7mnq70', pending: 'numeric_mm7mb56e',
+  carried: 'numeric_mm7m314', booked: 'numeric_mm7mnq70', pending: 'numeric_mm7mb56e', email: 'email_mm7mfw2y',
 };
 const GRP = { members: 'board_relation_mm7ms65q', maxOff: 'numeric_mm7m80jy', rules: 'long_text_mm7mjg7b' };
 const CLO = { date: 'date_mm7mny6j', type: 'color_mm7m8tgx' };
@@ -1398,7 +1421,7 @@ const state = {
 };
 try {
   const t = localStorage.getItem('flr-leave-tab');
-  if (['approvals', 'diary', 'balances', 'requests'].includes(t)) state.tab = t;
+  if (['approvals', 'diary', 'balances', 'requests', 'mine'].includes(t)) state.tab = t;   // 'mine' only sticks for approvers on the Hub
 } catch (e) { /* storage unavailable */ }
 
 /* ---------------------------------------------------------------------
@@ -1508,6 +1531,7 @@ function mapData(raw) {
       id: String(it.id), name: it.name || '', groupIds: links(c[ALW.group]), allowance: num(c[ALW.allowance]),
       shutdownReserve: num(c[ALW.shutdown]), carriedOver: num(c[ALW.carried]), takenBefore: null,
       savedBooked: num(c[ALW.booked]), savedPending: num(c[ALW.pending]),
+      email: ((c[ALW.email] && (c[ALW.email].email || txt(c[ALW.email]))) || '').trim().toLowerCase() || null,
     };
   });
   const groups = raw.items.grp.map((it) => {
@@ -1796,9 +1820,9 @@ function cellHtml(cell, dateLabel) {
    --------------------------------------------------------------------- */
 const TABS = [
   { id: 'approvals', label: 'Approvals' }, { id: 'diary', label: 'Diary' },
-  { id: 'balances', label: 'Balances' }, { id: 'requests', label: 'All requests' },
+  { id: 'balances', label: 'Balances' }, { id: 'requests', label: 'All requests' }, { id: 'mine', label: 'My Leave' },
 ];
-const VIEW_TITLES = { approvals: 'Approvals', diary: 'Leave diary', balances: 'Balances', requests: 'All requests' };
+const VIEW_TITLES = { approvals: 'Approvals', diary: 'Leave diary', balances: 'Balances', requests: 'All requests', mine: 'My Leave' };
 let tabsCtl = null;
 let chrome = null;
 let lastView = null;
@@ -1807,6 +1831,8 @@ const scrollByTab = {};
 // leave or only see their own. On Claude it is never set, and the page works as it always has.
 const onHub = () => Boolean(window.__FLR_LEAVE);
 const staffView = () => Boolean(window.__FLR_LEAVE && window.__FLR_LEAVE.access === 'staff');
+// Leave approvers on the FLR Hub also get a My Leave tab: their own card, as staff see it.
+const adminView = () => Boolean(window.__FLR_LEAVE && window.__FLR_LEAVE.access === 'approver');
 let mineYear = null;
 
 function icon(name, cls = 'ico') { return `<svg class="${cls}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`; }
@@ -1867,6 +1893,8 @@ function renderAll() { renderChrome(); renderView(); renderOverlay(); }
 
 function renderChrome() {
   document.documentElement.classList.toggle('staff', staffView());
+  document.getElementById('tab-mine').hidden = !adminView();
+  if (state.data && state.tab === 'mine' && !adminView()) state.tab = 'approvals';
   const open = state.data ? state.data.requests.filter(isPending).length : 0;
   for (const t of document.querySelectorAll('#tabs .tab')) {
     const on = t.dataset.id === state.tab;
@@ -1925,16 +1953,19 @@ function renderView() {
     }
     lastView = null;
     restoreFocus(focus);
+    watchDiaryKey();
     return;
   }
-  if (staffView()) { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); lastView = 'mine'; restoreFocus(focus); return; }
+  if (staffView()) { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); lastView = 'mine'; restoreFocus(focus); watchDiaryKey(); return; }
   if (state.tab === 'approvals') view.innerHTML = renderApprovals();
   else if (state.tab === 'diary') { view.innerHTML = renderDiaryShell(); FLRUI.initSeg(document.getElementById('diary-mode')); renderDiaryBody(); }
   else if (state.tab === 'balances') { view.innerHTML = renderBalancesShell(); renderBalancesBody(); }
+  else if (state.tab === 'mine') { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); }
   else { view.innerHTML = renderRequestsShell(); renderRequestsBody(); }
   playFlip(view, flip);
   lastView = state.tab;
   restoreFocus(focus);
+  watchDiaryKey();
 }
 
 /* ---------- Approvals ---------- */
@@ -2057,13 +2088,7 @@ function renderDiaryShell() {
   const st = state.diary;
   setHead('Leave diary', 'Who is off, and how much cover each group has left.');
   const groupOpts = [`<option value="all">All leave groups</option>`, ...[...state.data.groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => `<option value="${esc(g.id)}" ${st.group === g.id ? 'selected' : ''}>${esc(g.name)}</option>`), `<option value="none" ${st.group === 'none' ? 'selected' : ''}>No group</option>`].join('');
-  const item = (sw, label) => `<li>${sw}${esc(label)}</li>`;
-  const key = `<div class="key-sec"><h3>Annual leave</h3><ul>
-        ${item('<i class="sw acc"></i>', 'Accepted')}${item('<i class="sw new"></i>', 'New request')}${item('<i class="sw rev"></i>', 'Review')}</ul></div>
-      <div class="key-sec"><h3>Closures</h3><ul>
-        ${item('<i class="sw closed-bh"></i>', 'Bank holiday')}${item('<i class="sw closed-shut"></i>', 'Christmas shutdown')}${item('<i class="sw closed-jeff"></i>', 'Jeff Day')}</ul></div>
-      <div class="key-sec other"><h3>Other leave</h3><ul>
-        ${Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => item(`<i class="sw" style="background:${c}"></i>`, t)).join('')}</ul></div>`;
+  const key = colourKeyHtml('h3');
   const nav = diaryNavText(st);
   return `<div class="toolbar diary-nav">
       <div class="monthnav">
@@ -2091,6 +2116,18 @@ function renderDiaryShell() {
       </details>
     </div>
     <div id="diary-body"></div>`;
+}
+// Every colour and pattern the Diary uses. The navigation bar's copy uses plain labels rather than headings, so the
+// page's headings still start with its title.
+function colourKeyHtml(tag) {
+  const item = (sw, label) => `<li>${sw}${esc(label)}</li>`;
+  const head = (text) => `<${tag} class="kh">${text}</${tag}>`;
+  return `<div class="key-sec">${head('Annual leave')}<ul>
+        ${item('<i class="sw acc"></i>', 'Accepted')}${item('<i class="sw new"></i>', 'New request')}${item('<i class="sw rev"></i>', 'Review')}</ul></div>
+      <div class="key-sec">${head('Closures')}<ul>
+        ${item('<i class="sw closed-bh"></i>', 'Bank holiday')}${item('<i class="sw closed-shut"></i>', 'Christmas shutdown')}${item('<i class="sw closed-jeff"></i>', 'Jeff Day')}</ul></div>
+      <div class="key-sec other">${head('Other leave')}<ul>
+        ${Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => item(`<i class="sw" style="background:${c}"></i>`, t)).join('')}</ul></div>`;
 }
 // The month arrows step a month in the Planner and Calendar, and a year in the Leave List, which shows a whole year.
 function diaryNavText(st) {
@@ -2370,25 +2407,35 @@ function renderRequestsBody() {
   host.innerHTML = `<div class="table-wrap"><table class="data reqs"><thead><tr><th>Employee</th><th>Dates</th><th class="r">Days</th><th>Decision</th><th>Suggested</th><th>Checks</th><th>Decided on</th><th class="go"><span class="sr">Open</span></th></tr></thead><tbody>${tr}</tbody></table></div>`;
 }
 
-/* ---------- My leave: staff on the FLR Hub who don't approve leave see only their own ---------- */
+/* ---------- My Leave: all staff see only this on the FLR Hub; leave approvers have it as a tab of their own ---------- */
+// Whose card it is comes from the FLR sign-in. Staff only ever receive their own record; an approver's is the one with
+// their sign-in email in its Email column, and their requests are the ones linked (or named) to that record.
+function mineFor() {
+  const hub = window.__FLR_LEAVE || {}, email = String((hub.me && hub.me.email) || '').trim().toLowerCase();
+  if (staffView()) return { me: state.data.staff[0] || null, requests: state.data.requests, email };
+  const me = (email && state.data.staff.find((s) => s.email === email)) || null;
+  const requests = me ? state.data.requests.filter((r) => { const s = state.ctx.staffOf(r); return Boolean(s) && String(s.id) === String(me.id); }) : [];
+  return { me, requests, email };
+}
 function renderMine() {
-  const hub = window.__FLR_LEAVE, ctx = state.ctx, me = state.data.staff[0] || null;
+  const ctx = state.ctx, { me, requests, email } = mineFor();
   const form = FORM_URL ? `<a class="btn primary lg" href="${esc(FORM_URL)}" target="_blank" rel="noopener">${icon('plus')}Request leave</a>` : '';
   if (!me) {
-    setHead('My leave', 'Your leave requests and the days you have left.');
+    setHead('My Leave', 'Your leave requests and the days you have left.');
+    const fix = staffView() ? 'Ask a leave approver to add it.' : 'Add it to the Email column of your record there.';
     return `<div class="empty"><span class="em-ico">${icon('diary')}</span><h3>Your FLR account isn’t linked to a staff record yet</h3>
-      <p>Your leave appears here once ${esc((hub.me && hub.me.email) || 'your email address')} is on the FLR - Leave Allowances board. Ask a leave approver to add it.</p>
+      <p>Your leave appears here once ${esc(email || 'your email address')} is on the FLR - Leave Allowances board. ${fix}</p>
       ${form ? `<p class="empty-act">${form}</p>` : ''}</div>`;
   }
   const years = [];
   for (let y = FIRST_LEAVE_YEAR; y <= ctx.currentYear + 1; y++) years.push(y);
   const year = years.includes(mineYear) ? mineYear : ctx.currentYear;
   const b = balanceFor(ctx, me, year);
-  setHead('My leave', `${me.name}: your leave requests and the days you have left.`);
+  setHead('My Leave', `${me.name}: your leave requests and the days you have left.`);
   const sum = [`${fmtNum(b.allowance)} days’ allowance`];
   if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for the Christmas shutdown`);
   if (b.carried) sum.push(`+ ${fmtNum(b.carried)} carried over`);
-  const mine = state.data.requests.slice().sort((x, z) => (z.from || '').localeCompare(x.from || ''));
+  const mine = requests.slice().sort((x, z) => (z.from || '').localeCompare(x.from || ''));
   const rows = mine.map((r) => {
     const d = ctx.daysOf(r), start = d.from || r.from;
     const bits = [plural(d.total, 'working day')];
@@ -2551,7 +2598,7 @@ document.addEventListener('click', async (ev) => {
 });
 document.getElementById('tabs').addEventListener('keydown', (ev) => {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
-  const list = [...document.querySelectorAll('#tabs .tab')];
+  const list = [...document.querySelectorAll('#tabs .tab:not([hidden])')];
   const i = list.findIndex((t) => t.dataset.id === state.tab);
   const j = ev.key === 'Home' ? 0 : ev.key === 'End' ? list.length - 1 : (i + (ev.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length;
   ev.preventDefault();
@@ -2590,6 +2637,25 @@ document.addEventListener('click', (ev) => {
 document.addEventListener('pointerdown', (ev) => {
   for (const det of document.querySelectorAll('.keydrop[open]:not(.closing)')) if (!det.contains(ev.target)) keyDrop(det, false);
 }, true);
+// On the Diary, when the Colour key button scrolls up under the navigation bar, the bar shows a compact copy of it,
+// and hides it again when the button comes back into view. Only one of the two is ever on screen.
+let keyWatch = null;
+function dockKey(on) {
+  const root = document.documentElement;
+  if (root.classList.contains('key-docked') === on) return;
+  // The copy that is leaving the screen closes at once: it is out of sight, so there's nothing to animate.
+  const shut = (det) => { if (!det || !det.open) return; if (det._anim) { det._anim.onfinish = null; det._anim.cancel(); det._anim = null; } det.classList.remove('closing'); det.open = false; };
+  shut(document.getElementById(on ? 'diary-key' : 'nb-key'));
+  root.classList.toggle('key-docked', on);
+}
+function watchDiaryKey() {
+  if (keyWatch) { keyWatch.disconnect(); keyWatch = null; }
+  const sum = state.tab === 'diary' && !staffView() ? document.querySelector('#diary-key > summary') : null;
+  if (!sum || !('IntersectionObserver' in window)) { dockKey(false); return; }
+  const barBottom = Math.round(document.getElementById('navbar').getBoundingClientRect().bottom);
+  keyWatch = new IntersectionObserver(([e]) => dockKey(!e.isIntersecting && e.boundingClientRect.top < barBottom), { rootMargin: `-${barBottom}px 0px 0px 0px` });
+  keyWatch.observe(sum);
+}
 
 document.addEventListener('keydown', (ev) => {
   const openKey = ev.key === 'Escape' && document.querySelector('.keydrop[open]:not(.closing)');
@@ -2631,6 +2697,7 @@ document.addEventListener('change', (ev) => {
 /* ---------------------------------------------------------------------
    Start
    --------------------------------------------------------------------- */
+document.getElementById('nb-key-pop').innerHTML = colourKeyHtml('p');
 renderChrome();
 tabsCtl = FLRUI.initTabs(document.getElementById('tabs'), (el) => goTab(el.dataset.id));
 chrome = FLRUI.initChrome(document.getElementById('navbar'), () => document.getElementById('lt-title'));
