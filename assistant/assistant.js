@@ -13,13 +13,13 @@
    He floats and tilts his head now and then, lifts when you reach for him,
    thinks while a look-up takes a moment and reacts to what it finds.
    Add it to a page with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=1.6"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=1.7"></script>
    On a release, bump ?v= in the pages AND in V and the engine import below
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=1.6';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=1.7';
 
-const V = '1.6';
+const V = '1.7';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
@@ -525,8 +525,13 @@ form.addEventListener('submit', ev => {
 let anim = null;
 const EASE_OUT = 'cubic-bezier(.2,.9,.25,1)', EASE_IN = 'cubic-bezier(.3,0,.8,.15)';
 const ty = () => { const t = getComputedStyle(panel).transform; return t && t !== 'none' ? new DOMMatrix(t).m42 : 0; };
+// Stop every animation on the panel. A closing one holds its end (faded and shrunk, or slid off the screen) until it's
+// stopped: left holding, it hid the panel again the moment the next opening finished, so the chat opened unseen (on
+// phones, behind a dimmed page) until the page was reloaded.
+const letGo = () => { for (const a of panel.getAnimations()) a.cancel(); anim = null; };
 function open(focusInput = true, instant = false) {
   if (panel.open) return;
+  letGo();
   help().catch(() => null);                            // start loading while the panel moves
   if (narrow()) panel.showModal(); else panel.show();
   fab.setAttribute('aria-expanded', 'true');
@@ -534,7 +539,6 @@ function open(focusInput = true, instant = false) {
   paint();
   loadFaces();
   mood('rest');
-  if (anim) anim.cancel();
   if (!narrow()) {                                     // grow out of him: his centre is the panel's origin
     const p = panel.getBoundingClientRect(), f = fabFace.getBoundingClientRect();
     panel.style.transformOrigin = `${Math.round(f.left + f.width / 2 - p.left)}px ${Math.round(f.top + f.height / 2 - p.top)}px`;
@@ -550,9 +554,9 @@ function open(focusInput = true, instant = false) {
 function close(velocity = 0) {
   if (!panel.open) return;
   const from = ty();                                   // wherever it is now, even mid-animation
-  if (anim) anim.cancel();
+  letGo();
   const done = () => {
-    panel.close(); panel.style.transform = ''; anim = null;
+    panel.close(); panel.style.transform = ''; letGo();    // closed first, so letting go of its end shows nothing
     fab.setAttribute('aria-expanded', 'false');
     thinking(false);
     mood('land');                                      // back in his corner: a small settle
@@ -572,7 +576,6 @@ panel.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !panel.matc
 panel.addEventListener('click', ev => { if (ev.target === panel && narrow()) close(); });   // a tap on the dimmed page closes the sheet
 mqNarrow.addEventListener('change', () => {           // turned a tablet, or resized the window: a sheet on phones, a panel otherwise
   if (!panel.open) return;
-  if (anim) anim.cancel();
   panel.close(); panel.style.transform = '';
   open(false, true);
 });
