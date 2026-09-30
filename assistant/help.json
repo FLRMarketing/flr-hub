@@ -1438,7 +1438,7 @@
         "fitter",
         "schedule"
       ],
-      "answer": "The Fitter Schedule shows which fitters are working, free or off over the next 14 days, and which jobs still need a fitter. It opens in a new tab and asks for the team passcode.",
+      "answer": "The Fitter Schedule shows which fitters are working, free or off over the next 14 days, and which jobs still need a fitter. It opens from its tile on the Hub and asks for the team passcode.",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
@@ -1551,7 +1551,9 @@
         "unassigned jobs",
         "jobs without a fitter",
         "find a job by postcode",
-        "open a job in monday.com"
+        "open a job in monday.com",
+        "see all the fitters on a job",
+        "which fitters are booked on a job"
       ],
       "keys": [
         "jobs",
@@ -1559,7 +1561,7 @@
         "postcode",
         "unassigned"
       ],
-      "answer": "In the Fitter Schedule’s “Jobs” tab, choose “Needs fitter”, or search by job, postcode or fitter. Tapping a job opens it in monday.com.",
+      "answer": "In the Fitter Schedule’s “Jobs” tab each job shows once with all its fitters. Choose “Needs fitter” for jobs still missing one, or search by job, postcode or fitter. Tap a job to see each person’s dates, whether they’re Scheduled or TBC and, for administrators, today’s arrival, with “Open in monday.com”.",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
