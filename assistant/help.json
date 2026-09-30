@@ -1383,7 +1383,9 @@
         "is the christmas shutdown taken from my holiday",
         "bank holidays",
         "company closure days",
-        "does the jeff day count as holiday"
+        "does the jeff day count as holiday",
+        "when are the bank holidays this year",
+        "what are the christmas shutdown dates"
       ],
       "keys": [
         "closure",
@@ -1391,7 +1393,7 @@
         "jeff day",
         "shutdown"
       ],
-      "answer": "Bank holidays and the Jeff Day are on top of your allowance. Days for the Christmas shutdown are set aside from it, and My Leave shows how many.",
+      "answer": "Bank holidays and the Jeff Day are on top of your allowance. Days for the Christmas shutdown are set aside from it, and My Leave shows how many. My Leave also lists the year’s bank holidays and Christmas shutdown dates under “Request leave”; switch the year to see next year’s.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"

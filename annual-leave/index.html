@@ -716,6 +716,15 @@ html.staff #copy-form{display:none}
 .mb-grid dd.neg{color:var(--red-ink)}
 .mine-request p{font-size:14.5px;color:var(--ink-2)}
 .mine-request .btn{justify-self:start}
+/* The days FLR is closed in the chosen year, under the button: bank holidays, then the Christmas shutdown. The dots are
+   the Diary's closure colours; the first column is one width in both lists so they line up. */
+.mine-closed{display:grid;gap:14px;margin-top:4px;padding-top:16px;box-shadow:inset 0 var(--hair) 0 var(--sep)}
+.mine-closed h3{font:600 14px/1.3 var(--font-text);letter-spacing:-.006em;color:var(--ink)}
+.cl-list{display:grid;gap:6px;margin:7px 0 0;padding:0;list-style:none}
+.cl-list li{display:grid;grid-template-columns:8px 6.3em minmax(0,1fr);column-gap:10px;align-items:start;font-size:14px;line-height:1.35}
+.cl-list .sw{width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--cl);box-shadow:none}
+.cl-when{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cl-what{min-width:0;color:var(--ink-2);overflow-wrap:anywhere}
 .mine-sect{margin:0 4px 10px;font:600 17px/1.3 var(--font-display);letter-spacing:-.016em}
 .mine-rows{padding:0;list-style:none;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
 .mine-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px}
@@ -2645,6 +2654,32 @@ function mineFor() {
   const requests = me ? state.data.requests.filter((r) => { const s = state.ctx.staffOf(r); return Boolean(s) && String(s.id) === String(me.id); }) : [];
   return { me, requests, email };
 }
+// What's closed in a leave year, from the FLR - Leave Closures board: its bank holidays (and a Jeff Day once it has a date),
+// then the Christmas shutdowns that reach into it. A shutdown runs on over the weekends and bank holidays between its days,
+// so 24 Dec 2027 and 4 Jan 2028 are one shutdown, "2027/28".
+function closedInHtml(year) {
+  const types = state.data.closureTypes, names = state.data.bankHolidays;
+  const all = [...types.keys()].sort();
+  const kind = (d) => { const t = types.get(d) || ''; return /shutdown/i.test(t) ? 'shut' : /jeff/i.test(t) ? 'jeff' : 'bh'; };
+  const day = (d) => fmtDate(d, yearOf(d) !== year);
+  const bare = (n) => String(n || '').replace(/\s+\d{4}(?:\/\d{2})?(?=\s*(?:\(|$))/, '').trim();   // "Good Friday 2027" → "Good Friday"
+  const row = (cl, when, what) => `<li><i class="sw closed-${cl}" aria-hidden="true"></i><span class="cl-when">${esc(when)}</span><span class="cl-what">${esc(what)}</span></li>`;
+  const bank = all.filter((d) => yearOf(d) === year && kind(d) === 'bh').map((d) => row('bh', day(d), bare(names.get(d)) || 'Bank holiday'));
+  const jeff = all.filter((d) => yearOf(d) === year && kind(d) === 'jeff').map((d) => row('jeff', day(d), 'Jeff Day'));
+  const runs = [];
+  for (const d of all.filter((x) => kind(x) === 'shut')) {
+    const last = runs[runs.length - 1];
+    let next = last ? addDays(last.to, 1) : null;
+    for (let i = 0; last && i < 14 && next < d && (isWeekend(next) || types.has(next)); i++) next = addDays(next, 1);
+    if (last && next === d) last.to = d; else runs.push({ from: d, to: d });
+  }
+  const season = (r) => { const y = Number(r.from.slice(5, 7)) === 12 ? yearOf(r.from) : yearOf(r.from) - 1; return `${y}/${String((y + 1) % 100).padStart(2, '0')}`; };
+  const shut = runs.filter((r) => yearOf(r.from) <= year && yearOf(r.to) >= year)
+    .map((r) => row('shut', season(r), r.from === r.to ? day(r.from) : `${day(r.from)} – ${day(r.to)}`));
+  if (!runs.some((r) => r.from.slice(0, 7) === `${year}-12`)) shut.push(row('shut', season({ from: `${year}-12-01` }), 'Dates to follow'));
+  const list = (h, rows) => rows.length ? `<div><h3>${h}</h3><ul class="cl-list">${rows.join('')}</ul></div>` : '';
+  return `<div class="mine-closed">${list(`Bank holidays in ${year}`, bank)}${list('Jeff Day', jeff)}${list('Christmas shutdown', shut)}</div>`;
+}
 function renderMine() {
   const ctx = state.ctx, { me, requests, email } = mineFor();
   const form = FORM_URL ? `<a class="btn primary lg" href="${esc(FORM_URL)}" target="_blank" rel="noopener">${icon('plus')}Request leave</a>` : '';
@@ -2692,6 +2727,7 @@ function renderMine() {
         <h2 id="mine-req-h">Need time off?</h2>
         <p>Send a request with the leave form. It shows here as soon as it reaches monday.com, and a leave approver decides.</p>
         ${form}
+        ${closedInHtml(year)}
       </section>
     </div>
     <section aria-labelledby="mine-list-h">
