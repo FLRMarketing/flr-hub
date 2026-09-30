@@ -23,6 +23,7 @@
   const CHECK_MS = 60 * 1000;
   window.__FLR_LEAVE = {};                      // tells the page it's on the Hub before it first draws
   let sb = null, version = null, refreshWanted = false, reloadTimer = 0, liveStarted = false;
+  let faces = {}, facesAsked = false;           // approvers' staff photos for the Diary, fetched once per visit
   // The slide in from the hub is skipped when the page arrives hidden (a background tab): nothing to report.
   addEventListener('pagereveal', e => { const t = e.viewTransition; if (t) { t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {}); } });
 
@@ -92,9 +93,14 @@
     throw { code: 'server_error', message: 'The FLR database didn’t answer as expected. Try again in a moment.' };
   }
 
+  // Staff photos, by staff record, for approvers. Without them (or before the database has them) the page shows initials.
+  async function readFaces() {
+    try { const r = await client().rpc('leave_faces'); return !r.error && r.data && typeof r.data === 'object' && !Array.isArray(r.data) ? r.data : {}; }
+    catch (e) { return {}; }
+  }
   function take(h) {
     window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null, today: h.today || null,
-      wpIssues: Array.isArray(h.wpIssues) ? h.wpIssues : [] };
+      wpIssues: Array.isArray(h.wpIssues) ? h.wpIssues : [], faces };
     try { FORM_URL = h.formUrl || ''; } catch (e) { /* the page keeps its own */ }   // eslint-disable-line no-undef
     version = h.version;
   }
@@ -144,6 +150,7 @@
       if (/next_items_page/.test(query)) return { payload: { next_items_page: { cursor: null, items: [] } } };
       if (refreshWanted) { refreshWanted = false; await post({ op: 'sync' }).catch(() => {}); }
       const h = await readHome();
+      if (h.access === 'approver' && !facesAsked) { facesAsked = true; faces = await readFaces(); }
       take(h);
       live();
       return { payload: boards(h) };

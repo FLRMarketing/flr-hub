@@ -34,6 +34,7 @@
   --gold:#dda44d; --gold-ink:#7a4a00; --gold-soft:rgba(221,164,77,.22);
   --red:#d70015; --red-ink:#b3000f; --red-soft:rgba(215,0,21,.1);
   --bh:#8e8e93; --shut:#2f7bc0; --jeff:#8944ab;
+  --av-a:#b4b9c5; --av-b:#8b91a0;
   --mat:rgba(246,246,249,.74); --mat-solid:#f6f6f9; --mat-edge:rgba(0,0,0,.07); --blur:saturate(180%) blur(22px);
   --mat-alert:rgba(242,242,247,.9);
   --scrim:rgba(8,10,24,.32);
@@ -66,7 +67,7 @@
     --accept:#1f7a36; --accept-hover:#248a3d;
     --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
     --red:#ff453a; --red-ink:#ff6b61; --red-soft:rgba(255,69,58,.2);
-    --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2;
+    --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2; --av-a:#6f7482; --av-b:#545865;
     --mat:rgba(28,28,30,.72); --mat-solid:#1c1c1e; --mat-edge:rgba(255,255,255,.08);
     --mat-alert:rgba(44,44,46,.9);
     --scrim:rgba(0,0,0,.5);
@@ -92,7 +93,7 @@
   --accept:#1f7a36; --accept-hover:#248a3d;
   --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
   --red:#ff453a; --red-ink:#ff6b61; --red-soft:rgba(255,69,58,.2);
-  --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2;
+  --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2; --av-a:#6f7482; --av-b:#545865;
   --mat:rgba(28,28,30,.72); --mat-solid:#1c1c1e; --mat-edge:rgba(255,255,255,.08);
   --mat-alert:rgba(44,44,46,.9);
   --scrim:rgba(0,0,0,.5);
@@ -364,6 +365,10 @@ table.plan tr>:last-child{border-right:0}
 table.plan tbody tr:last-child>*{border-bottom:0}
 table.plan .name{position:sticky;left:0;z-index:2;min-width:168px;max-width:220px;padding:7px 12px;background-color:var(--surface);text-align:left;font-size:13px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:var(--hair) solid var(--line-2)}
+table.plan .name .pn{display:flex;align-items:center;gap:7px;min-width:0}
+table.plan .name .pn .av{--av:20px;margin-block:-1px}   /* a 20px photo; rows keep their height */
+table.plan .name .pt{min-width:0;overflow:hidden;text-overflow:ellipsis}
+table.plan .name .ws{display:none}
 table.plan thead th{position:sticky;top:0;z-index:3;background-color:var(--surface)}
 table.plan thead th.weekend{background-color:var(--weekend)}
 table.plan thead th.name{z-index:4;font:600 12px/1.3 var(--font-text);color:var(--ink-3)}
@@ -393,7 +398,7 @@ tr.section th{padding:9px 0;background-color:var(--surface-2);text-align:left}
 tr.count td{height:24px;font:600 11.5px/1 var(--font-text);font-variant-numeric:tabular-nums;color:var(--ink-3)}
 tr.count td.over{background-color:var(--red-soft);color:var(--red-ink);font-weight:700}
 tr.count .name{font:500 12px/1.3 var(--font-text);color:var(--ink-3)}
-@media (max-width:640px){table.plan .name{min-width:116px;max-width:140px;padding-inline:10px;font-size:12.5px}}
+@media (max-width:640px){table.plan .name{min-width:116px;max-width:140px;padding-inline:10px;font-size:12.5px}table.plan .name .wf{display:none}table.plan .name .ws{display:inline}}
 /* The colour key pulls down from its button at the end of the filters, anchored to it, and is out of the way otherwise */
 .diary-filters{position:relative}
 .keydrop{position:relative;flex:none;margin-left:auto}
@@ -476,11 +481,23 @@ html.key-docked .nb-key{display:grid}
 .cal .closure{align-self:stretch;margin-top:1px;padding:4px 7px 4px 9px;border-radius:7px;background:color-mix(in srgb,var(--cl,var(--bh)) 14%,var(--surface));
   box-shadow:inset 3px 0 0 var(--cl,var(--bh)),0 0 0 var(--hair) color-mix(in srgb,var(--cl,var(--bh)) 32%,transparent);
   font:600 12px/1.32 var(--font-text);letter-spacing:-.004em;color:var(--ink);overflow-wrap:anywhere}
-.who{display:flex;align-items:center;gap:5px;width:100%;min-width:0;padding:2px 6px;border:0;border-radius:6px;background:none;font:500 12px/1.35 var(--font-text);color:var(--ink);text-align:left;white-space:nowrap}
+.who{display:flex;align-items:center;gap:5px;width:100%;min-width:0;padding:2px 7px 2px 2px;border:0;border-radius:999px;background:none;font:500 12px/1.35 var(--font-text);color:var(--ink);text-align:left;white-space:nowrap}
 .who .wn{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .who.accepted{background:var(--green-soft)}
-.who.pending{padding:1px 5px;border:1px dashed color-mix(in srgb,var(--tint) 60%,transparent);background:var(--tint-soft)}
-.who .dot{width:8px;height:8px;flex:none;border-radius:50%}
+.who.pending{padding:1px 6px 1px 1px;border:1px dashed color-mix(in srgb,var(--tint) 60%,transparent);background:var(--tint-soft)}
+.who .av{--av:18px;margin-block:-1px}   /* an 18px photo in the 20px entry: entries keep their height */
+/* Narrower day cells (tablets) shorten the name so the photo doesn't squeeze it: "Richard W.", then "Richard".
+   Phones get the day list instead, with whole names. */
+.cal .cell{container-type:inline-size}
+.who .ws,.who .wt{display:none}
+@container (max-width:150px){.who .wf{display:none}.who .ws{display:inline}}
+@container (max-width:112px){.who .ws{display:none}.who .wt{display:inline}}
+/* Staff photos: a small circle beside each name, or the person's initials in the same circle. The ring is the
+   page's surface, or the colour of the leave type for other leave. */
+.av{flex:none;display:inline-grid;place-items:center;width:var(--av,20px);height:var(--av,20px);border-radius:50%;overflow:hidden;
+  background:linear-gradient(180deg,var(--av-a),var(--av-b));color:#fff;font:600 calc(var(--av,20px) * .44)/1 var(--font-text);letter-spacing:.02em;
+  box-shadow:0 0 0 1.5px var(--ring,var(--surface));user-select:none;-webkit-user-select:none}
+img.av{display:block;object-fit:cover;background:var(--fill)}
 button.who{cursor:pointer;transition:transform .2s var(--ease),filter .15s}
 button.who:active{transform:scale(.96);transition-duration:.08s}
 @media (hover:hover){button.who:hover{filter:brightness(.97)}}
@@ -495,8 +512,9 @@ button.who:active{transform:scale(.96);transition-duration:.08s}
 .ag-day.today .ag-date{background:var(--tint-fill);color:var(--on-tint)}
 .ag-day.today .ag-date small{color:inherit;opacity:.85}
 .ag-main{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;padding-top:3px}
-.ag-main .who{width:auto;max-width:100%;padding:5px 10px;border-radius:999px;font-size:13px}
-.ag-main .who.pending{padding:4px 9px}
+.ag-main .who{width:auto;max-width:100%;padding:5px 11px 5px 4px;border-radius:999px;font-size:13px}
+.ag-main .who.pending{padding:4px 10px 4px 3px}
+.ag-main .who .av{--av:20px;margin-block:-1.5px}   /* 20px on phones, in a chip of the same height as before */
 .ag-closure{display:flex;align-items:center;gap:8px;flex-basis:100%;font:600 13.5px/1.3 var(--font-text);color:var(--ink)}
 
 /* ---------------------------------------------------------------- leave list: each person's leave for the year, in date order */
@@ -507,7 +525,9 @@ button.who:active{transform:scale(.96);transition-duration:.08s}
 .lv-card{padding:0;margin:0;list-style:none;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
 .lv-person{display:grid;grid-template-columns:minmax(140px,210px) minmax(0,1fr);gap:4px 16px;padding:8px 10px 8px 18px}
 .lv-person+.lv-person,.lv-none{box-shadow:inset 0 var(--hair) 0 var(--sep)}
-.lv-who{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:9px}
+.lv-who{display:flex;align-items:flex-start;gap:10px;min-width:0;padding-top:6px}
+.lv-who .av{--av:28px}   /* the person's photo, level with their first entry */
+.lv-wt{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:3px}
 .lv-who b{font:600 15px/1.3 var(--font-text);letter-spacing:-.012em;overflow-wrap:anywhere}
 .lv-who small{font-size:12.5px;line-height:1.35;color:var(--ink-3)}
 .lv-entries{display:grid;gap:2px;padding:0;margin:0;list-style:none;min-width:0}
@@ -530,7 +550,8 @@ button.lv-entry:focus-visible{outline:2px solid var(--focus);outline-offset:-2px
 .lv-none b{font-weight:600;color:var(--ink-3)}
 @media (max-width:1040px){   /* tablets: the name above the entries, each entry still on one line */
   .lv-person{grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 8px 8px 18px}
-  .lv-who{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;padding:2px 10px 4px 0}
+  .lv-who{align-items:center;padding:2px 10px 4px 0}
+  .lv-wt{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;padding-top:0}
 }
 @media (max-width:640px){
   .lv{gap:18px}
@@ -1759,6 +1780,35 @@ function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 const esc = escapeHtml;
+// A person's photo (from the FLR server, on the Hub) in a small circle, or their initials in the same circle.
+const FACE_SRC = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
+function faceOf(id) {
+  const faces = window.__FLR_LEAVE && window.__FLR_LEAVE.faces, src = faces && id != null ? faces[String(id)] : null;
+  return typeof src === 'string' && FACE_SRC.test(src) ? src : null;
+}
+function initialsOf(name) {
+  let n = String(name || '').trim();
+  const known = /\(([^)]+)\)/.exec(n);            // "William (Scott) Duncan" is known as Scott
+  if (known) n = `${known[1]} ${n.replace(/\([^)]*\)/, ' ').trim().split(/\s+/).slice(1).join(' ')}`;
+  const w = n.split(/\s+/).filter(Boolean);
+  return w.length ? (w[0][0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase() : '?';
+}
+// "Richard W.": the first name (or the name someone is known by) and the last initial, for narrow calendar cells.
+function shortName(name) {
+  let n = String(name || '').trim();
+  const known = /\(([^)]+)\)/.exec(n);
+  if (known) n = `${known[1]} ${n.replace(/\([^)]*\)/, ' ').trim().split(/\s+/).slice(1).join(' ')}`;
+  const w = n.split(/\s+/).filter(Boolean);
+  return w.length > 1 ? `${w[0]} ${w[w.length - 1][0].toUpperCase()}.` : n;
+}
+const SHORT_TYPE = { 'Sick leave': 'Sick', 'Unpaid leave': 'Unpaid', 'Study leave': 'Study', 'Compassionate leave': 'Compassionate', 'Medical appointment': 'Medical', 'Maternity / paternity': 'Parental' };
+// The name in a calendar entry: whole, shorter and shortest (CSS shows the one that fits the day cell).
+const whoName = (full, short, tiny) => `<span class="wf">${esc(full)}</span><span class="ws">${esc(short)}</span><span class="wt">${esc(tiny)}</span>`;
+const firstName = (name) => shortName(name).split(' ')[0];
+function avatarHtml(id, name) {
+  const face = faceOf(id);
+  return face ? `<img class="av" src="${esc(face)}" alt="" decoding="async">` : `<span class="av" aria-hidden="true">${esc(initialsOf(name))}</span>`;
+}
 function displayName(r) {
   if (r.employeeName) return r.employeeName;
   return isPlaceholder(r.name) ? 'Unnamed request' : r.name;
@@ -2366,7 +2416,8 @@ function renderPlanner(dates, map, sections) {
     }
     for (const s of sec.staff) {
       const row = map.get(String(s.id)) || new Map();
-      body += `<tr><td class="name" title="${esc(s.name)}">${esc(s.name)}</td>${dates.map((d) => `<td class="day ${dayClass(d)}">${cellHtml(row.get(d), d)}</td>`).join('')}</tr>`;
+      const nm = `<span class="pn">${avatarHtml(s.id, s.name)}<span class="pt"><span class="wf">${esc(s.name)}</span><span class="ws">${esc(shortName(s.name))}</span></span></span>`;
+      body += `<tr><td class="name" title="${esc(s.name)}">${nm}</td>${dates.map((d) => `<td class="day ${dayClass(d)}">${cellHtml(row.get(d), d)}</td>`).join('')}</tr>`;
     }
   }
   return `<div class="grid-wrap"><table class="plan"><thead><tr><th class="name">Staff</th>${head}</tr></thead><tbody>${body}</tbody></table></div>
@@ -2388,10 +2439,10 @@ function renderCalendar(dates, map, sections) {
       const s = ctx.staffById.get(id);
       if (c.kind === 'annual') {
         const pending = c.request.decision !== 'accepted';
-        people.push({ sort: s.name, html: `<button class="who ${pending ? 'pending' : 'accepted'}" type="button" data-act="open" data-id="${esc(c.request.id)}" title="${esc(`${s.name} · annual leave · ${pending ? 'pending' : 'accepted'}`)}"><span class="wn">${esc(s.name)}${c.amount === 0.5 ? ' ½' : ''}</span></button>` });
+        people.push({ sort: s.name, html: `<button class="who ${pending ? 'pending' : 'accepted'}" type="button" data-act="open" data-id="${esc(c.request.id)}" title="${esc(`${s.name} · annual leave · ${pending ? 'pending' : 'accepted'}`)}">${avatarHtml(s.id, s.name)}<span class="wn">${whoName(s.name, shortName(s.name), firstName(s.name))}${c.amount === 0.5 ? ' ½' : ''}</span></button>` });
       } else {
         const colour = OTHER_TYPE_COLOURS[c.type] || '#c4c4c4';
-        people.push({ sort: s.name, html: `<span class="who" title="${esc(`${s.name} · ${c.type}`)}"><i class="dot" style="background:${colour}"></i><span class="wn">${esc(s.name)} · ${esc(c.type)}</span></span>` });
+        people.push({ sort: s.name, html: `<span class="who" title="${esc(`${s.name} · ${c.type}`)}" style="--ring:${colour}">${avatarHtml(s.id, s.name)}<span class="wn">${whoName(`${s.name} · ${SHORT_TYPE[c.type] || c.type}`, `${shortName(s.name)} · ${SHORT_TYPE[c.type] || c.type}`, firstName(s.name))}</span></span>` });
       }
     }
     people.sort((a, b) => a.sort.localeCompare(b.sort));
@@ -2467,7 +2518,7 @@ function renderLeaveList(y, sections) {
       const total = (kind) => list.filter((e) => e.kind === kind).reduce((n, e) => n + e.inYear, 0);
       const annual = total('annual'), other = total('other');
       const sum = [annual ? `${lvDays(annual)} annual leave` : '', other ? `${lvDays(other)} other leave` : ''].filter(Boolean).join(' · ');
-      return `<li class="lv-person"><div class="lv-who"><b>${esc(s.name)}</b>${sum ? `<small>${esc(sum)}</small>` : ''}</div>
+      return `<li class="lv-person"><div class="lv-who">${avatarHtml(s.id, s.name)}<div class="lv-wt"><b>${esc(s.name)}</b>${sum ? `<small>${esc(sum)}</small>` : ''}</div></div>
         <ol class="lv-entries">${list.map(entry).join('')}</ol></li>`;
     }).join('');
     const noneHtml = none.length ? `<li class="lv-none"><b>No leave in ${y}</b><span>${none.map((s) => esc(s.name)).join(', ')}</span></li>` : '';

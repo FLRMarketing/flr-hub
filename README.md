@@ -7,7 +7,8 @@ The front door to FLR's staff tools. One FLR account (the Cost Estimator's sign-
   stay in the FLR database and reach the page only after sign-in.
 - **Annual Leave** opens here (`annual-leave/`). Leave approvers (a list in the database) see and decide everyone's leave;
   everyone else sees only their own requests and days left. monday.com stays the source of truth: the `flr-leave`
-  function keeps the database's copy in step with it and writes decisions back.
+  function keeps the database's copy in step with it and writes decisions back. Approvers also see staff photos beside
+  names, from `public.leave_faces()` after sign-in; anyone without a photo gets their initials.
 - **Fitter Schedule** opens the fitter schedule site in a new tab: who is free, who is working and which jobs still need a
   fitter. Its link lives in the database like the others, and the site still asks for the team passcode. With a Hub sign-in it also shows
   each fitter's photo and number plate from `public.fitter_faces()`, using this site's `flr-config.js` and
@@ -26,7 +27,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `tool-transition.css` | The slide between the hub and a tool, linked from each tool's page. |
 | `estimator/` | The Estimator's production page (no pricing data), copied by `scripts/sync-estimator.sh`. |
 | `speeding/` | The Speeding Report page, built by `scripts/sync-speeding.py` from `../flr-speeding-report` with no photos or names; `bridge.js`, which answers the page's data requests from the FLR database; and `map/`, the OpenStreetMap road and place packs (public map data). |
-| `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database and sends decisions to the `flr-leave` function. |
+| `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
