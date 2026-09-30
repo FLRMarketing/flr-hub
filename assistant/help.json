@@ -267,14 +267,17 @@
         "how do I get back to the hub",
         "go back to the home page",
         "return to the hub",
-        "where is the home screen"
+        "where is the home screen",
+        "what does the flr logo do",
+        "is the logo a link to the hub"
       ],
       "keys": [
         "back",
         "home",
-        "return"
+        "return",
+        "logo"
       ],
-      "answer": "The tools don’t have their own Hub button: use your browser’s Back button, or the link below.",
+      "answer": "Press the FLR logo at the top of any tool, or use your browser’s Back button. The link below goes there too.",
       "link": {
         "href": "./",
         "label": "Go to the Hub"

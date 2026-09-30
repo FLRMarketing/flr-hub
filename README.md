@@ -134,6 +134,8 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 - A speech bubble from him offers help as soon as a page opens, then again the moment it goes quiet (a second's pause):
   once each pause, not while the chat is open (`listen` in `assistant.js`). What he says comes from `lines.js`: for the page,
   signing in, the time of day or their first name, never the same line twice running (`node assistant/tests/lines.mjs`).
+- On a tool, the FLR logo at the top goes back to the Hub (`LOGO` in `assistant.js`, done there because every tool
+  loads it): a step back through the tab's history when it came from the Hub, the Hub opened when not.
 - He's called Likkle Jeff: the button says "Ask Likkle Jeff", the chat's header "Likkle Jeff". His name said to him
   ("Likkle Jeff, how many days have I got left?") is left out of the question (`unaddressed` in `engine.js`); "Jeff"
   on its own is a person (`alsoPeople` in `help.json`), except in the Hub's own "Jeff Day" and "Likkle Jeff".
