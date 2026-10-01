@@ -185,7 +185,7 @@
         "password",
         "change"
       ],
-      "answer": "In the Cost Estimator, press your name at the top, then “Change password…”. You can also set a new one from the Hub’s sign-in screen with “Forgotten your password?”.",
+      "answer": "In the Cost Estimator, press your name at the top right (your initials on a phone), then “Change password…”. You can also set a new one from the Hub’s sign-in screen with “Forgotten your password?”.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"
@@ -298,7 +298,7 @@
         "display name",
         "spelling"
       ],
-      "answer": "In the Cost Estimator, press your name at the top, change “Your name (as shown on quotations and in the change log)” and press “Save”.",
+      "answer": "In the Cost Estimator, press your name at the top right (your initials on a phone), change “Your name (as shown on quotations and in the change log)” and press “Save”.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"
@@ -321,7 +321,7 @@
         "theme",
         "appearance"
       ],
-      "answer": "The Hub follows your device’s light or dark setting. In the Cost Estimator, press your name at the top, then “Appearance”. Fleet Management has its own light and dark button at the top, and the Fitter Schedule has “Switch theme”."
+      "answer": "The Hub and the Cost Estimator follow your device’s light or dark setting. To choose one for the Cost Estimator, press your name at the top right (your initials on a phone), then “Appearance”. Fleet Management has its own light and dark button at the top, and the Fitter Schedule has “Switch theme”."
     },
     {
       "id": "about-estimator",
@@ -644,7 +644,7 @@
       ],
       "answer": "FLR administrators set prices, rules and wording on the Cost Estimator’s Admin page: “Catalogue”, “Commercial rules”, “Price overrides” and “Quotation settings”.",
       "steps": [
-        "Open the Cost Estimator and choose “Admin” at the top.",
+        "Open the Cost Estimator and choose “Admin” in the bar at the top (at the bottom on a phone).",
         "Pick “Catalogue”, “Commercial rules”, “Price overrides” or “Quotation settings”."
       ],
       "link": {
