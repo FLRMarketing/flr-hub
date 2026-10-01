@@ -1440,7 +1440,7 @@
         "fitter",
         "schedule"
       ],
-      "answer": "The Fitter Schedule shows which fitters are working, free or off over the next 14 days, and which jobs still need a fitter. It opens from its tile on the Hub and asks for the team passcode.",
+      "answer": "The Fitter Schedule shows which fitters are working, free or off on each day from 30 days ago to 30 days ahead, and which jobs still need a fitter. It opens from its tile on the Hub and asks for the team passcode.",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
@@ -1466,7 +1466,7 @@
         "available",
         "availability"
       ],
-      "answer": "In the Fitter Schedule’s “Day” tab, pick a date in the 14-day strip, then choose “Free”. Each day is split into “Needs a fitter”, “Working”, “Free” and “Unavailable”, and “Search fitter or job” finds someone quickly.",
+      "answer": "In the Fitter Schedule’s “Day” tab, pick a date in the day strip (30 days back to 30 ahead; “Today” comes back), then choose “Free”. Each day is split into “Needs a fitter”, “Working”, “Free” and “Unavailable”, and “Search fitter or job” finds someone quickly.",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
@@ -1526,19 +1526,21 @@
     {
       "id": "fitters-views",
       "tool": "fitters",
-      "title": "See one fitter’s fortnight",
+      "title": "See one fitter’s days",
       "ask": [
         "show one fitter's schedule",
         "what is a fitter doing this week",
         "a fitter's next two weeks",
-        "choose a fitter"
+        "choose a fitter",
+        "what did a fitter do last week",
+        "see a fitter's past jobs"
       ],
       "keys": [
         "fitter tab",
         "fortnight",
         "two weeks"
       ],
-      "answer": "Open the “Fitter” tab in the Fitter Schedule and use “Choose a fitter” to see their next two weeks.",
+      "answer": "Open the “Fitter” tab in the Fitter Schedule and use “Choose a fitter” to see their days from today to 30 days ahead. Their last 30 days are under “Earlier”.",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
