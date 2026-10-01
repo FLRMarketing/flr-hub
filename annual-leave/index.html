@@ -178,6 +178,14 @@ a{color:var(--tint)}
   padding-block:var(--nav-h) calc(var(--tabbar-h) + 48px)}
 .lt{display:flex;flex-direction:column;gap:4px;padding-block:14px 20px}
 .lt-eyebrow{font:600 13px/1.3 var(--font-text);letter-spacing:-.003em;color:var(--ink-3)}
+/* A person's record: the way back to the tab it was opened from, where the eyebrow was (as a back button on iPhone) */
+.lt-back{display:inline-flex;align-items:center;align-self:flex-start;gap:1px;min-height:32px;margin:-8px 0 -7px -9px;padding:0 12px 0 3px;border:0;border-radius:999px;
+  background:none;font:600 15px/1 var(--font-text);letter-spacing:-.01em;color:var(--tint);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color .15s,transform .25s var(--ease)}
+.lt-back .ico{width:20px;height:20px}
+@media (hover:hover){.lt-back:hover{background:var(--tint-soft)}}
+.lt-back:active{transform:scale(.96);transition-duration:.08s}
+.lt-back:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 .lt-title{font:700 clamp(32px,4.2vw,40px)/1.08 var(--font-display);letter-spacing:-.022em;text-wrap:balance}
 .lt-title:focus{outline:none}
 .lt-sub{max-width:70ch;font-size:15px;color:var(--ink-2);text-wrap:pretty}
@@ -265,12 +273,9 @@ label.lbl{display:grid;gap:6px}
 .fchip:active{transform:scale(.95);transition-duration:.08s}
 @media (hover:hover){.fchip:not(:has(input:checked)):hover{background:var(--fill-2)}}
 .chiprow{display:flex;flex-wrap:wrap;gap:8px}
-.sortpick{display:none;align-items:center;gap:6px}
 @media (max-width:560px){
   .toolbar .grow{flex-basis:100%}
   .toolbar select.input{flex:1 1 150px}
-  .sortpick{flex:1 1 100%}
-  .sortpick select.input{flex:1 1 auto}
 }
 
 /* ---------------------------------------------------------------- alerts, empty states, loading */
@@ -342,6 +347,13 @@ img.avatar{display:block;object-fit:cover;background:var(--fill);box-shadow:0 0 
 .stat+.stat{background:linear-gradient(var(--sep),var(--sep)) 12px 0/calc(100% - 12px) var(--hair) no-repeat}
 .stat>span{color:var(--ink-2)}
 .stat b{font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+button.stat{align-items:center;width:100%;border:0;background-color:transparent;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background-color .15s}
+button.stat b{display:inline-flex;align-items:center;gap:2px;color:var(--tint)}
+button.stat b .ico{width:15px;height:15px;margin-right:-4px}
+@media (hover:hover){button.stat:hover{background-color:var(--row-hover)}}
+button.stat:active{background-color:var(--fill);transition-duration:.08s}
+button.stat:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .left-after{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px 12px;border-top:var(--hair) solid var(--sep)}
 .left-after>span:first-child{font:600 14px/1.3 var(--font-text)}
 .left-after .big{font:700 32px/1 var(--font-num);letter-spacing:-.02em}
@@ -370,6 +382,12 @@ table.plan tbody tr:last-child>*{border-bottom:0}
 table.plan .name{position:sticky;left:0;z-index:2;min-width:168px;max-width:220px;padding:7px 12px;background-color:var(--surface);text-align:left;font-size:13px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:var(--hair) solid var(--line-2)}
 table.plan .name .pn{display:flex;align-items:center;gap:7px;min-width:0}
+/* each name is a button to that person's record, filling its cell */
+table.plan button.pn{width:calc(100% + 24px);margin:-7px -12px;padding:7px 12px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background-color .15s}
+@media (hover:hover){table.plan button.pn:hover{background:var(--row-hover)}table.plan button.pn:hover .pt{color:var(--tint)}}
+table.plan button.pn:active{background:var(--fill);transition-duration:.08s}
+table.plan button.pn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 table.plan .name .pn .av{--av:20px;margin-block:-1px}   /* a 20px photo; rows keep their height */
 table.plan .name .pt{min-width:0;overflow:hidden;text-overflow:ellipsis}
 table.plan .name .ws{display:none}
@@ -534,6 +552,14 @@ button.who:active{transform:scale(.96);transition-duration:.08s}
 .lv-wt{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:3px}
 .lv-who b{font:600 15px/1.3 var(--font-text);letter-spacing:-.012em;overflow-wrap:anywhere}
 .lv-who small{font-size:12.5px;line-height:1.35;color:var(--ink-3)}
+button.lv-who{align-self:start;justify-self:start;max-width:100%;margin:0 0 0 -8px;padding:6px 10px 6px 8px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;
+  text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s,transform .25s var(--ease)}
+@media (hover:hover){button.lv-who:hover{background:var(--row-hover)}button.lv-who:hover b{color:var(--tint)}}
+button.lv-who:active{background:var(--fill);transform:scale(.985);transition-duration:.08s}
+button.lv-who:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+button.lv-nm{display:inline;padding:0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+@media (hover:hover){button.lv-nm:hover{color:var(--tint);text-decoration:underline;text-underline-offset:2px}}
+button.lv-nm:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .lv-entries{display:grid;gap:2px;padding:0;margin:0;list-style:none;min-width:0}
 .lv-entry{display:grid;grid-template-columns:minmax(min-content,14.5em) minmax(min-content,7.8em) minmax(min-content,13em) auto minmax(0,1fr) 14px;
   align-items:center;gap:12px;width:100%;min-height:40px;padding:6px 10px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:left}
@@ -555,6 +581,7 @@ button.lv-entry:focus-visible{outline:2px solid var(--focus);outline-offset:-2px
 @media (max-width:1040px){   /* tablets: the name above the entries, each entry still on one line */
   .lv-person{grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 8px 8px 18px}
   .lv-who{align-items:center;padding:2px 10px 4px 0}
+  button.lv-who{margin:0 0 2px -8px;padding:4px 12px 4px 8px}
   .lv-wt{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px;padding-top:0}
 }
 @media (max-width:640px){
@@ -609,12 +636,6 @@ table.data tbody tr:first-child td{border-top:0}
 table.data th:first-child,table.data td:first-child{padding-left:16px}
 table.data th:last-child,table.data td:last-child{padding-right:16px}
 table.data .r{text-align:right}
-table.data th button{display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:inherit;cursor:pointer}
-table.data.bal th{white-space:normal}   /* eleven columns: headings wrap so the table fits a laptop screen */
-table.data.bal td.c-name{white-space:normal;min-width:150px}
-table.data th[aria-sort] button{color:var(--tint)}
-@media (hover:hover){table.data th button:hover{color:var(--ink)}}
-.arr{min-width:.7em;font-size:11px}
 table.data tr.click{cursor:pointer;transition:background-color .15s}
 @media (hover:hover){table.data tr.click:hover{background:var(--row-hover)}}
 table.data tr.click:active{background:var(--fill-2);transition-duration:0s}
@@ -622,25 +643,15 @@ table.data tr.click:focus-visible{outline:2px solid var(--focus);outline-offset:
 table.data .go{width:30px;padding-left:0}
 .chev{display:block;width:8px;height:8px;margin:0 auto;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);opacity:.6}
 .c-name b{font-weight:600}
-td.hl{font:700 16px/1.2 var(--font-num)}
 .warn{color:var(--gold-ink);font-weight:700}
 .neg{color:var(--red-ink);font-weight:700}
-.breakdown{display:block;margin-top:2px;font-size:11.5px;color:var(--ink-3)}
-.x{display:block;margin-top:2px;font-size:12.5px;color:var(--ink-3)}
-.narrow-only-b{display:none}
 @media (max-width:820px){
-  .sortpick{display:inline-flex}
   table.data thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   table.data,table.data tbody,table.data tr,table.data td{display:block}
   table.data tbody tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;padding:13px 16px}
   table.data tbody tr+tr{border-top:var(--hair) solid var(--sep)}
   table.data td{padding:0!important;border:0!important;white-space:normal;text-align:left!important}
   table.data td[data-label]::before{content:attr(data-label);display:block;margin-bottom:2px;font:500 11.5px/1.3 var(--font-text);color:var(--ink-3)}
-  .narrow-only-b{display:block}
-  .bal td.c-name{grid-column:1/-1;order:-2}
-  .bal td.c-groups{display:none}
-  .bal td.c-book,.bal td.c-rem,.bal td.c-ifp{order:-1}
-  .bal td.c-book::before,.bal td.c-rem::before,.bal td.c-ifp::before{min-height:2.6em}   /* the key figures line up even when a label wraps */
   table.data.reqs tbody tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name dec" "dates days" "sug when" "chk chk";gap:8px 14px}
   .reqs td.c-name{grid-area:name}
   .reqs td.c-dec{grid-area:dec;justify-self:end}
@@ -737,6 +748,26 @@ html.staff #copy-form{display:none}
 .mr-main{min-width:0}
 .empty-act{margin-top:12px}
 @media (max-width:420px){.mine-row{grid-template-columns:46px minmax(0,1fr)}.mr-status{grid-column:2}}
+/* A person's record (approvers): the same parts, with "When FLR is closed" beside the days left, each request opening
+   the request, and their other leave with its type's Diary colour */
+.rec-closed .mine-closed{margin-top:0;padding-top:0;box-shadow:none}
+.mine-rows>li+li>.mine-row{box-shadow:inset 0 var(--hair) 0 var(--sep)}
+button.mine-row{grid-template-columns:46px minmax(0,1fr) auto 14px;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background-color .15s}
+button.mine-row .mr-main>span{display:block}
+.mr-go{width:14px;height:14px;color:var(--ink-3)}
+@media (hover:hover){button.mine-row:hover{background:var(--row-hover)}}
+button.mine-row:active{background:var(--fill);transition-duration:.08s}
+button.mine-row:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+@media (max-width:420px){
+  button.mine-row{grid-template-columns:46px minmax(0,1fr) 14px}
+  button.mine-row .mr-go{grid-column:3;grid-row:1/span 2}
+}
+.ol-type{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+.ol-type .sw{width:9px;height:9px;border-radius:50%;box-shadow:none}
+.sect-sum{max-width:80ch;margin:-4px 4px 10px;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.sect-sum b{font-weight:600;color:var(--ink)}
+.mine-none{padding:14px 18px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);font-size:14px;color:var(--ink-2)}
 
 /* ---------------------------------------------------------------- motion preferences: springs jump, slides become fades (see FLRUI) */
 @media (prefers-reduced-motion:reduce){
@@ -755,9 +786,6 @@ html.staff #copy-form{display:none}
     <rect x="3.5" y="5" width="17" height="15.5" rx="3.2"/>
     <path d="M3.5 9.6h17M8 3.2v3.6M16 3.2v3.6"/>
     <path stroke-width="2.4" d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/>
-  </symbol>
-  <symbol id="i-balances" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 20h16"/><rect x="5.3" y="11.2" width="3.4" height="5.8" rx="1.1"/><rect x="10.3" y="5.5" width="3.4" height="11.5" rx="1.1"/><rect x="15.3" y="8.6" width="3.4" height="8.4" rx="1.1"/>
   </symbol>
   <symbol id="i-requests" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9 6.5h11M9 12h11M9 17.5h11"/><path stroke-width="2.6" d="M4.6 6.5h.01M4.6 12h.01M4.6 17.5h.01"/>
@@ -780,8 +808,6 @@ html.staff #copy-form{display:none}
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 12.6 4.1 4.1 8.9-9.3"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.6 4.6"/></symbol>
-  <symbol id="i-sort-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5.5M6.5 11 12 5.5l5.5 5.5"/></symbol>
-  <symbol id="i-sort-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13.5M6.5 13 12 18.5l5.5-5.5"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></symbol>
   <symbol id="i-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
     <path d="M12 3.5v3.2"/><path opacity=".18" d="M18 6l-2.25 2.25"/><path opacity=".26" d="M20.5 12h-3.2"/><path opacity=".36" d="M18 18l-2.25-2.25"/>
@@ -814,14 +840,14 @@ html.staff #copy-form{display:none}
     <button class="tab" type="button" role="tab" id="tab-today" data-act="tab" data-id="today" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-today"/></svg><span>Today</span></button>
     <button class="tab" type="button" role="tab" id="tab-approvals" data-act="tab" data-id="approvals" aria-selected="true" aria-controls="view"><svg class="ico" aria-hidden="true"><use href="#i-approvals"/></svg><span>Approvals</span><span class="badge" id="tab-badge" hidden></span></button>
     <button class="tab" type="button" role="tab" id="tab-diary" data-act="tab" data-id="diary" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-diary"/></svg><span>Diary</span></button>
-    <button class="tab" type="button" role="tab" id="tab-balances" data-act="tab" data-id="balances" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-balances"/></svg><span>Balances</span></button>
     <button class="tab" type="button" role="tab" id="tab-requests" data-act="tab" data-id="requests" aria-selected="false" aria-controls="view" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-requests"/></svg><span>All requests</span></button>
     <button class="tab" type="button" role="tab" id="tab-mine" data-act="tab" data-id="mine" aria-selected="false" aria-controls="view" tabindex="-1" hidden><svg class="ico" aria-hidden="true"><use href="#i-mine"/></svg><span>My Leave</span></button>
   </nav>
 
   <main class="page">
     <header class="lt">
-      <p class="lt-eyebrow">FLR Annual Leave</p>
+      <button class="lt-back" type="button" id="lt-back" data-act="person-back" hidden><svg class="ico" aria-hidden="true"><use href="#i-chev-l"/></svg><span id="lt-back-label">Diary</span></button>
+      <p class="lt-eyebrow" id="lt-eyebrow">FLR Annual Leave</p>
       <h1 class="lt-title" id="lt-title" tabindex="-1">Approvals</h1>
       <p class="lt-sub" id="lt-sub">Loading from monday.com. If Claude asks, allow monday.com for this page.</p>
       <div class="meta-row">
@@ -1496,14 +1522,14 @@ const state = {
   busy: null,
   notes: {},
   panel: null,
+  person: null,           // the staff record whose leave record is open (approvers), as a string id
   confirm: null,
   diary: { y: startMonth.y, m: startMonth.m, group: 'all', search: '', pending: true, other: true, mode: 'planner' },
-  bal: { year: Math.max(yearOf(today), FIRST_LEAVE_YEAR), search: '', group: 'all', sort: 'name', dir: 1 },
   all: { search: '', decision: 'any', year: 'any' },
 };
 try {
   const t = localStorage.getItem('flr-leave-tab');
-  if (['today', 'approvals', 'diary', 'balances', 'requests', 'mine'].includes(t)) state.tab = t;   // renderChrome() moves it on if this viewer doesn't have that tab
+  if (['today', 'approvals', 'diary', 'requests', 'mine'].includes(t)) state.tab = t;   // renderChrome() moves it on if this viewer doesn't have that tab
 } catch (e) { /* storage unavailable */ }
 
 /* ---------------------------------------------------------------------
@@ -1744,6 +1770,7 @@ async function load() {
   } finally {
     state.loading = false;
     renderAll();
+    if (state.data && !addressRead) { readAddress(); addressRead = true; }
   }
   if (state.data && !state.error && !staffView()) saveChecks();   // staff on the FLR Hub only see their own leave: nothing to check
 }
@@ -1931,9 +1958,9 @@ function cellHtml(cell, dateLabel) {
    --------------------------------------------------------------------- */
 const TABS = [
   { id: 'today', label: 'Today' }, { id: 'approvals', label: 'Approvals' }, { id: 'diary', label: 'Diary' },
-  { id: 'balances', label: 'Balances' }, { id: 'requests', label: 'All requests' }, { id: 'mine', label: 'My Leave' },
+  { id: 'requests', label: 'All requests' }, { id: 'mine', label: 'My Leave' },
 ];
-const VIEW_TITLES = { today: 'Today', approvals: 'Approvals', diary: 'Leave diary', balances: 'Balances', requests: 'All requests', mine: 'My Leave' };
+const VIEW_TITLES = { today: 'Today', approvals: 'Approvals', diary: 'Leave diary', requests: 'All requests', mine: 'My Leave' };
 let tabsCtl = null;
 let chrome = null;
 let lastView = null;
@@ -1948,7 +1975,9 @@ function tabsFor() {
   if (staffView()) return ['today', 'mine'];
   return adminView() ? TABS.map((t) => t.id) : TABS.map((t) => t.id).filter((id) => id !== 'mine');
 }
-let mineYear = null;
+// The leave year chosen on My Leave or on a person's record. It stays chosen from one record to the next, as the old
+// Balances table's year did, until the page is reloaded.
+let recordYear = null;
 
 function icon(name, cls = 'ico') { return `<svg class="${cls}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`; }
 function initials(name) {
@@ -2078,6 +2107,8 @@ function renderView() {
   const view = document.getElementById('view');
   const focus = rememberFocus();
   const flip = captureFlip(view);
+  const rec = recordPerson();
+  setBack(rec ? TABS.find((t) => t.id === state.tab).label : '');
   if (!state.data) {
     const title = VIEW_TITLES[state.tab];
     if (state.loading || state.mcp === undefined) {
@@ -2085,7 +2116,7 @@ function renderView() {
       view.innerHTML = '<div class="skeleton" aria-hidden="true"><div></div><div></div></div>';
     } else {
       setHead(title, '');
-      view.innerHTML = emptyHtml('No leave data yet', 'Once monday.com is connected, requests, balances and the diary appear here.', 'diary');
+      view.innerHTML = emptyHtml('No leave data yet', 'Once monday.com is connected, requests, days left and the diary appear here.', 'diary');
     }
     lastView = null;
     restoreFocus(focus);
@@ -2097,10 +2128,13 @@ function renderView() {
     else { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); }
     lastView = state.tab; restoreFocus(focus); watchDiaryKey(); return;
   }
+  if (rec) {
+    view.innerHTML = renderRecord(rec); FLRUI.initSeg(document.getElementById('mine-year'));
+    lastView = 'person'; restoreFocus(focus); watchDiaryKey(); return;
+  }
   if (state.tab === 'today') view.innerHTML = renderToday();
   else if (state.tab === 'approvals') view.innerHTML = renderApprovals();
   else if (state.tab === 'diary') { view.innerHTML = renderDiaryShell(); FLRUI.initSeg(document.getElementById('diary-mode')); renderDiaryBody(); }
-  else if (state.tab === 'balances') { view.innerHTML = renderBalancesShell(); renderBalancesBody(); }
   else if (state.tab === 'mine') { view.innerHTML = renderMine(); FLRUI.initSeg(document.getElementById('mine-year')); }
   else { view.innerHTML = renderRequestsShell(); renderRequestsBody(); }
   playFlip(view, flip);
@@ -2215,7 +2249,7 @@ function renderApprovals() {
   const open = state.data.requests.filter(isPending).sort((a, b) => (a.from || '9999').localeCompare(b.from || '9999'));
   setHead('Approvals', open.length ? `${open.length} request${open.length === 1 ? '' : 's'} waiting, soonest leave first` : 'Nothing waiting on you');
   if (!open.length) {
-    return emptyHtml('All caught up', 'New requests from the staff form appear here. Use the Diary to see who is off, or Balances for days left.', 'done');
+    return emptyHtml('All caught up', 'New requests from the staff form appear here. Use the Diary to see who is off, and select a name there for their days left.', 'done');
   }
   return `<div class="cards">${open.map(renderCard).join('')}</div>`;
 }
@@ -2435,12 +2469,12 @@ function renderPlanner(dates, map, sections) {
     }
     for (const s of sec.staff) {
       const row = map.get(String(s.id)) || new Map();
-      const nm = `<span class="pn">${avatarHtml(s.id, s.name)}<span class="pt"><span class="wf">${esc(s.name)}</span><span class="ws">${esc(shortName(s.name))}</span></span></span>`;
+      const nm = `<button class="pn" type="button" data-act="person" data-id="${esc(s.id)}">${avatarHtml(s.id, s.name)}<span class="pt"><span class="wf">${esc(s.name)}</span><span class="ws">${esc(shortName(s.name))}</span></span></button>`;
       body += `<tr><td class="name" title="${esc(s.name)}">${nm}</td>${dates.map((d) => `<td class="day ${dayClass(d)}">${cellHtml(row.get(d), d)}</td>`).join('')}</tr>`;
     }
   }
   return `<div class="grid-wrap"><table class="plan"><thead><tr><th class="name">Staff</th>${head}</tr></thead><tbody>${body}</tbody></table></div>
-    <p class="foot">The “Annual leave off” line counts annual leave only (accepted, and pending when shown). It turns red when a group goes over its limit. Other leave is shown for information and does not count.</p>`;
+    <p class="foot">Select a name for that person’s leave record. The “Annual leave off” line counts annual leave only (accepted, and pending when shown). It turns red when a group goes over its limit. Other leave is shown for information and does not count.</p>`;
 }
 function renderCalendar(dates, map, sections) {
   const ctx = state.ctx;
@@ -2461,7 +2495,7 @@ function renderCalendar(dates, map, sections) {
         people.push({ sort: s.name, html: `<button class="who ${pending ? 'pending' : 'accepted'}" type="button" data-act="open" data-id="${esc(c.request.id)}" title="${esc(`${s.name} · annual leave · ${pending ? 'pending' : 'accepted'}`)}">${avatarHtml(s.id, s.name)}<span class="wn">${whoName(s.name, shortName(s.name), firstName(s.name))}${c.amount === 0.5 ? ' ½' : ''}</span></button>` });
       } else {
         const colour = OTHER_TYPE_COLOURS[c.type] || '#c4c4c4';
-        people.push({ sort: s.name, html: `<span class="who" title="${esc(`${s.name} · ${c.type}`)}" style="--ring:${colour}">${avatarHtml(s.id, s.name)}<span class="wn">${whoName(`${s.name} · ${SHORT_TYPE[c.type] || c.type}`, `${shortName(s.name)} · ${SHORT_TYPE[c.type] || c.type}`, firstName(s.name))}</span></span>` });
+        people.push({ sort: s.name, html: `<button class="who" type="button" data-act="person" data-id="${esc(s.id)}" title="${esc(`${s.name} · ${c.type}`)}" style="--ring:${colour}">${avatarHtml(s.id, s.name)}<span class="wn">${whoName(`${s.name} · ${SHORT_TYPE[c.type] || c.type}`, `${shortName(s.name)} · ${SHORT_TYPE[c.type] || c.type}`, firstName(s.name))}</span></button>` });
       }
     }
     people.sort((a, b) => a.sort.localeCompare(b.sort));
@@ -2474,7 +2508,8 @@ function renderCalendar(dates, map, sections) {
   while ((cells.length) % 7) cells.push('<div class="cell out" aria-hidden="true"></div>');
   const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((x) => `<div class="dow">${x}</div>`).join('');
   const list = agenda.length ? `<ul class="ag-list">${agenda.join('')}</ul>` : emptyHtml('No one is off', `No one in this view is off in ${monthName(state.diary.y, state.diary.m)}.`, 'diary');
-  return `<div class="cal">${dows}${cells.join('')}</div><div class="agenda">${list}</div>`;
+  return `<div class="cal">${dows}${cells.join('')}</div><div class="agenda">${list}</div>
+    <p class="foot">Select annual leave to see the request, or other leave for that person’s leave record.</p>`;
 }
 
 /* ---------- Leave List: each person's leave for the year, in date order ---------- */
@@ -2537,84 +2572,16 @@ function renderLeaveList(y, sections) {
       const total = (kind) => list.filter((e) => e.kind === kind).reduce((n, e) => n + e.inYear, 0);
       const annual = total('annual'), other = total('other');
       const sum = [annual ? `${lvDays(annual)} annual leave` : '', other ? `${lvDays(other)} other leave` : ''].filter(Boolean).join(' · ');
-      return `<li class="lv-person"><div class="lv-who">${avatarHtml(s.id, s.name)}<div class="lv-wt"><b>${esc(s.name)}</b>${sum ? `<small>${esc(sum)}</small>` : ''}</div></div>
+      return `<li class="lv-person"><button class="lv-who" type="button" data-act="person" data-id="${esc(s.id)}">${avatarHtml(s.id, s.name)}<span class="lv-wt"><b>${esc(s.name)}</b>${sum ? `<small>${esc(sum)}</small>` : ''}</span></button>
         <ol class="lv-entries">${list.map(entry).join('')}</ol></li>`;
     }).join('');
-    const noneHtml = none.length ? `<li class="lv-none"><b>No leave in ${y}</b><span>${none.map((s) => esc(s.name)).join(', ')}</span></li>` : '';
+    const noneHtml = none.length ? `<li class="lv-none"><b>No leave in ${y}</b><span>${none.map((s) => `<button class="lv-nm" type="button" data-act="person" data-id="${esc(s.id)}">${esc(s.name)}</button>`).join(', ')}</span></li>` : '';
     return `<section class="lv-sec"><h3 class="lv-head">${esc(sec.title)}${sec.limit ? `<span class="limit">max ${sec.limit} off at once</span>` : ''}</h3>
       <ul class="lv-card">${people}${noneHtml}</ul></section>`;
   }).join('');
   if (!listed) return emptyHtml(`No leave in ${y}`, `No one in this view has leave in ${y}. Try another year, name or leave group.`, 'diary');
   return `<div class="lv">${html}</div>
-    <p class="foot">Each person’s leave in ${y}, in date order. Annual leave shows accepted requests, and new and review ones while “Show pending” is on; denied and cancelled requests aren’t listed. Select annual leave to see the request.</p>`;
-}
-
-/* ---------- Balances ---------- */
-const BAL_COLS = [
-  ['name', 'Name', false], ['groups', 'Leave group', false], ['allowance', 'Allowance', true], ['reserved', 'Shutdown', true],
-  ['entitlement', 'Bookable', true], ['carried', 'Carried over', true], ['booked', 'Booked', true], ['pending', 'Pending', true],
-  ['other', 'Other leave', true], ['remaining', 'Remaining', true], ['remainingIfPending', 'If pending accepted', true],
-];
-function renderBalancesShell() {
-  const st = state.bal, ctx = state.ctx;
-  setHead('Balances', 'Days left per person for the chosen leave year.');
-  const years = [];
-  for (let y = FIRST_LEAVE_YEAR; y <= ctx.currentYear + 1; y++) years.push(y);
-  const groupOpts = [`<option value="all">All leave groups</option>`, ...[...state.data.groups].sort((a, b) => a.name.localeCompare(b.name)).map((g) => `<option value="${esc(g.id)}" ${st.group === g.id ? 'selected' : ''}>${esc(g.name)}</option>`), `<option value="none" ${st.group === 'none' ? 'selected' : ''}>No group</option>`].join('');
-  const sortOpts = BAL_COLS.map(([k, label]) => `<option value="${k}" ${st.sort === k ? 'selected' : ''}>${label}</option>`).join('');
-  return `<div class="toolbar">
-      <input class="input grow" id="bal-search" type="search" placeholder="Find a name" value="${esc(st.search)}" aria-label="Find a name">
-      <select class="input" id="bal-group" aria-label="Leave group">${groupOpts}</select>
-      <select class="input" id="bal-year" aria-label="Leave year">${years.map((y) => `<option value="${y}" ${st.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select>
-      <span class="sortpick"><select class="input" id="bal-sort" aria-label="Sort by">${sortOpts}</select><button class="iconbtn" type="button" id="bal-dir" data-act="sort-dir"></button></span>
-    </div>
-    <div id="bal-body"></div>
-    <p class="foot">20 days' allowance with 5 held back for the Christmas shutdown leaves 15 bookable days. Bank holidays and the Jeff Day are on top. Booked and Pending are saved to FLR - Leave Allowances automatically.</p>`;
-}
-function syncBalSort() {
-  const sel = document.getElementById('bal-sort'), dir = document.getElementById('bal-dir');
-  if (sel && sel.value !== state.bal.sort) sel.value = state.bal.sort;
-  if (dir) {
-    const up = state.bal.dir > 0;
-    dir.innerHTML = icon(up ? 'sort-up' : 'sort-down');
-    dir.setAttribute('aria-label', `Reverse the order (now ${up ? 'ascending' : 'descending'})`);
-  }
-}
-function renderBalancesBody() {
-  const host = document.getElementById('bal-body');
-  if (!host) return;
-  syncBalSort();
-  const st = state.bal, ctx = state.ctx, q = normaliseName(st.search);
-  let rows = state.data.staff.map((s) => {
-    const b = balanceFor(ctx, s, st.year);
-    const groups = ctx.groupsOf(s).filter(Boolean).map((g) => g.name).sort();
-    const totals = otherTotalsFor(ctx, s, st.year);
-    const other = Object.values(totals).reduce((a, n) => a + n, 0);
-    return { s, b, groups, totals, other };
-  });
-  rows = rows.filter((r) => (!q || normaliseName(r.s.name).includes(q)) &&
-    (st.group === 'all' || (st.group === 'none' ? r.groups.length === 0 : (ctx.groupsByStaff.get(String(r.s.id)) || new Set()).has(st.group))));
-  const key = st.sort, dir = st.dir;
-  rows.sort((a, z) => {
-    if (key === 'name') return a.s.name.localeCompare(z.s.name) * dir;
-    if (key === 'groups') return (a.groups.join(', ') || '~').localeCompare(z.groups.join(', ') || '~') * dir;
-    const av = key === 'other' ? a.other : a.b[key], zv = key === 'other' ? z.other : z.b[key];
-    return ((av || 0) - (zv || 0)) * dir || a.s.name.localeCompare(z.s.name);
-  });
-  const tone = (n) => (n < 0 ? 'neg' : n < 3 ? 'warn' : '');
-  const th = BAL_COLS.map(([k, label, right]) => `<th class="${right ? 'r' : ''}"${st.sort === k ? ` aria-sort="${st.dir > 0 ? 'ascending' : 'descending'}"` : ''}><button type="button" data-act="sort" data-id="${k}">${label}<span class="arr" aria-hidden="true">${st.sort === k ? (st.dir > 0 ? '↑' : '↓') : ''}</span></button></th>`).join('');
-  const tr = rows.map(({ s, b, groups, totals, other }) => {
-    const breakdown = Object.entries(totals).map(([t, n]) => `${t.split(' ')[0]} ${fmtNum(n)}`).join(' · ');
-    return `<tr><td class="c-name"><b>${esc(s.name)}</b>${b.allowanceMissing ? ' <span class="neg">no allowance set</span>' : ''}<span class="x narrow-only-b">${groups.length ? esc(groups.join(', ')) : 'No leave group'}</span></td>
-      <td class="c-groups">${groups.length ? esc(groups.join(', ')) : '<span class="subtle">—</span>'}</td>
-      <td class="r num" data-label="Allowance">${fmtNum(b.allowance)}</td><td class="r num" data-label="Shutdown">${fmtNum(b.reserved)}</td><td class="r num c-book" data-label="Bookable"><b>${fmtNum(b.entitlement)}</b></td>
-      <td class="r num" data-label="Carried over">${fmtNum(b.carried)}</td><td class="r num" data-label="Booked">${fmtNum(b.booked)}</td><td class="r num" data-label="Pending">${fmtNum(b.pending)}</td>
-      <td class="r num" data-label="Other leave">${fmtNum(other)}${breakdown ? `<span class="breakdown">${esc(breakdown)}</span>` : ''}</td>
-      <td class="r num hl c-rem ${tone(b.remaining)}" data-label="Remaining">${fmtNum(b.remaining)}</td><td class="r num c-ifp ${tone(b.remainingIfPending)}" data-label="If pending accepted">${fmtNum(b.remainingIfPending)}</td></tr>`;
-  }).join('');
-  host.innerHTML = rows.length
-    ? `<div class="table-wrap"><table class="data bal"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`
-    : emptyHtml('No one matches', 'Try another name or leave group.', 'search');
+    <p class="foot">Each person’s leave in ${y}, in date order. Annual leave shows accepted requests, and new and review ones while “Show pending” is on; denied and cancelled requests aren’t listed. Select a name for that person’s leave record, or annual leave to see the request.</p>`;
 }
 
 /* ---------- All requests ---------- */
@@ -2690,8 +2657,58 @@ function closedInHtml(year) {
   const list = (h, rows) => rows.length ? `<div><h3>${h}</h3><ul class="cl-list">${rows.join('')}</ul></div>` : '';
   return `<div class="mine-closed">${list(`Bank holidays in ${year}`, bank)}${list('Jeff Day', jeff)}${list('Christmas shutdown', shut)}</div>`;
 }
+// The leave years there are to look at: from the first on this tracker to next year.
+function leaveYears() {
+  const years = [];
+  for (let y = FIRST_LEAVE_YEAR; y <= state.ctx.currentYear + 1; y++) years.push(y);
+  return years;
+}
+const shownYear = (years) => (years.includes(recordYear) ? recordYear : state.ctx.currentYear);
+// Days left in a leave year, with every figure the Balances table had, from the same balanceFor(): the allowance less
+// the days held back for the Christmas shutdown, plus any carried over, is what's bookable; Accepted and Waiting are the
+// working days requested in that year.
+function balanceCardHtml(s, year, years, own) {
+  const b = balanceFor(state.ctx, s, year);
+  const sum = [`${fmtNum(b.allowance)} days’ allowance`];
+  if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for the Christmas shutdown`);
+  if (b.carried) sum.push(`+ ${fmtNum(b.carried)} carried over`);
+  const unset = !b.allowanceMissing ? '' : own ? 'Your record has no allowance set yet. Ask a leave approver.' : 'No allowance is set on their FLR - Leave Allowances record.';
+  return `<section class="card mine-balance" aria-labelledby="mine-h">
+      <div class="mb-head"><h2 id="mine-h">Days left in ${year}</h2>
+        ${years.length > 1 ? `<fieldset class="seg" id="mine-year"><legend>Leave year</legend>${years.map((y) => `<label><input type="radio" name="mine-year" value="${y}" ${y === year ? 'checked' : ''}>${y}</label>`).join('')}</fieldset>` : ''}</div>
+      <p class="mb-big"><span class="big num${b.remaining < 0 ? ' neg' : ''}">${fmtNum(b.remaining)}</span><span class="mb-unit">days</span></p>
+      <dl class="mb-grid">
+        <div><dt>Bookable</dt><dd class="num">${fmtNum(b.entitlement)}</dd></div>
+        <div><dt>Accepted</dt><dd class="num">${fmtNum(b.booked)}</dd></div>
+        <div><dt>Waiting for a decision</dt><dd class="num">${fmtNum(b.pending)}</dd></div>
+        <div><dt>Left if accepted</dt><dd class="num${b.remainingIfPending < 0 ? ' neg' : ''}">${fmtNum(b.remainingIfPending)}</dd></div>
+      </dl>
+      <p class="subtle">${esc(sum.join(' '))} = ${fmtNum(b.entitlement)} bookable. Bank holidays and the Jeff Day are on top.</p>${unset ? `
+      <p class="subtle neg">${esc(unset)}</p>` : ''}
+    </section>`;
+}
+// A request as a row: its first day, its dates, its working days and the decision. On a person's record (given the
+// year) the row is a button that opens the request, and leave running over New Year says how much falls in that year.
+function requestRowHtml(r, year = null) {
+  const d = state.ctx.daysOf(r), start = d.from || r.from;
+  const bits = [plural(d.total, 'working day')];
+  if (year && d.from && (d.byYear[year] || 0) !== d.total) bits.push(`${fmtNum(d.byYear[year] || 0)} in ${year}`);
+  if (r.halfDay !== 'none') bits.push(r.halfDay === 'am' ? 'morning off' : 'afternoon off');
+  if (r.cur.decidedOn && !isPending(r)) bits.push(`decided ${fmtDate(r.cur.decidedOn)}`);
+  const badge = start ? `<b>${Number(start.slice(8))}</b><small>${MON[Number(start.slice(5, 7)) - 1]}</small>` : '<b>?</b>';
+  if (!year) {
+    return `<li class="mine-row">
+      <div class="ag-date">${badge}</div>
+      <div class="mr-main"><p class="mr-dates">${esc(fmtRange(d.from, d.to))}</p><p class="subtle">${esc(bits.join(' · '))}</p></div>
+      <div class="mr-status">${pillFor(r.decision)}</div></li>`;
+  }
+  return `<li><button class="mine-row" type="button" data-act="open" data-id="${esc(r.id)}">
+      <span class="ag-date">${badge}</span>
+      <span class="mr-main"><span class="mr-dates">${esc(fmtRange(d.from, d.to))}</span><span class="subtle">${esc(bits.join(' · '))}</span></span>
+      <span class="mr-status">${pillFor(r.decision)}</span>${icon('chev-r', 'ico mr-go')}</button></li>`;
+}
 function renderMine() {
-  const ctx = state.ctx, { me, requests, email } = mineFor();
+  const { me, requests, email } = mineFor();
   const form = FORM_URL ? `<a class="btn primary lg" href="${esc(FORM_URL)}" target="_blank" rel="noopener">${icon('plus')}Request leave</a>` : '';
   if (!me) {
     setHead('My Leave', 'Your leave requests and the days you have left.');
@@ -2700,40 +2717,13 @@ function renderMine() {
       <p>Your leave appears here once ${esc(email || 'your email address')} is on the FLR - Leave Allowances board. ${fix}</p>
       ${form ? `<p class="empty-act">${form}</p>` : ''}</div>`;
   }
-  const years = [];
-  for (let y = FIRST_LEAVE_YEAR; y <= ctx.currentYear + 1; y++) years.push(y);
-  const year = years.includes(mineYear) ? mineYear : ctx.currentYear;
-  const b = balanceFor(ctx, me, year);
+  const years = leaveYears(), year = shownYear(years);
   setHead('My Leave', `${me.name}: your leave requests and the days you have left.`,
     `${avatar(me.name, me.id)}<span><b>${esc(me.name)}</b>: your leave requests and the days you have left.</span>`);
-  const sum = [`${fmtNum(b.allowance)} days’ allowance`];
-  if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for the Christmas shutdown`);
-  if (b.carried) sum.push(`+ ${fmtNum(b.carried)} carried over`);
-  const mine = requests.slice().sort((x, z) => (z.from || '').localeCompare(x.from || ''));
-  const rows = mine.map((r) => {
-    const d = ctx.daysOf(r), start = d.from || r.from;
-    const bits = [plural(d.total, 'working day')];
-    if (r.halfDay !== 'none') bits.push(r.halfDay === 'am' ? 'morning off' : 'afternoon off');
-    if (r.cur.decidedOn && !isPending(r)) bits.push(`decided ${fmtDate(r.cur.decidedOn)}`);
-    return `<li class="mine-row">
-      <div class="ag-date">${start ? `<b>${Number(start.slice(8))}</b><small>${MON[Number(start.slice(5, 7)) - 1]}</small>` : '<b>?</b>'}</div>
-      <div class="mr-main"><p class="mr-dates">${esc(fmtRange(d.from, d.to))}</p><p class="subtle">${esc(bits.join(' · '))}</p></div>
-      <div class="mr-status">${pillFor(r.decision)}</div></li>`;
-  }).join('');
+  const rows = requests.slice().sort((x, z) => (z.from || '').localeCompare(x.from || '')).map((r) => requestRowHtml(r)).join('');
   return `<div class="mine">
     <div class="mine-top">
-      <section class="card mine-balance" aria-labelledby="mine-h">
-        <div class="mb-head"><h2 id="mine-h">Days left in ${year}</h2>
-          ${years.length > 1 ? `<fieldset class="seg" id="mine-year"><legend>Leave year</legend>${years.map((y) => `<label><input type="radio" name="mine-year" value="${y}" ${y === year ? 'checked' : ''}>${y}</label>`).join('')}</fieldset>` : ''}</div>
-        <p class="mb-big"><span class="big num${b.remaining < 0 ? ' neg' : ''}">${fmtNum(b.remaining)}</span><span class="mb-unit">days</span></p>
-        <dl class="mb-grid">
-          <div><dt>Bookable</dt><dd class="num">${fmtNum(b.entitlement)}</dd></div>
-          <div><dt>Accepted</dt><dd class="num">${fmtNum(b.booked)}</dd></div>
-          <div><dt>Waiting for a decision</dt><dd class="num">${fmtNum(b.pending)}</dd></div>
-          <div><dt>Left if accepted</dt><dd class="num${b.remainingIfPending < 0 ? ' neg' : ''}">${fmtNum(b.remainingIfPending)}</dd></div>
-        </dl>
-        <p class="subtle">${esc(sum.join(' '))} = ${fmtNum(b.entitlement)} bookable. Bank holidays and the Jeff Day are on top.</p>
-      </section>
+      ${balanceCardHtml(me, year, years, true)}
       <section class="card mine-request" aria-labelledby="mine-req-h">
         <h2 id="mine-req-h">Need time off?</h2>
         <p>Send a request with the leave form. It shows here as soon as it reaches monday.com, and a leave approver decides.</p>
@@ -2744,6 +2734,65 @@ function renderMine() {
     <section aria-labelledby="mine-list-h">
       <h2 class="mine-sect" id="mine-list-h">Your requests</h2>
       ${rows ? `<ul class="mine-rows">${rows}</ul>` : emptyHtml('No requests yet', 'Requests you send with the leave form appear here.', 'diary')}
+    </section>
+  </div>`;
+}
+
+/* ---------- A person's leave record: leave approvers open it from a name in the Diary ---------- */
+// My Leave's layout for anyone on FLR - Leave Allowances, one leave year at a time: their days left, the days FLR is
+// closed, their annual leave requests (each opens the request) and their other leave. It replaced the Balances table,
+// so its figures are that table's: balanceFor() above, and otherTotalsFor() for other leave.
+function otherLeaveOf(s, year) {
+  const ctx = state.ctx, first = `${year}-01-01`, last = `${year}-12-31`;
+  return ctx.otherLeave.filter((e) => {
+    const owner = ctx.otherStaffOf(e), d = ctx.otherDaysOf(e);
+    return owner && String(owner.id) === String(s.id) && d.from && d.from <= last && d.to >= first;
+  }).sort((x, z) => ctx.otherDaysOf(z).from.localeCompare(ctx.otherDaysOf(x).from));
+}
+// Other leave (sick, unpaid, study and the rest) is recorded rather than requested, so it has no decision: its status is
+// whether it's been taken. None of it comes out of annual leave.
+function otherRowHtml(e, year) {
+  const d = state.ctx.otherDaysOf(e), now = state.ctx.today;
+  const half = d.days.length === 1 && d.days[0].amount === 0.5;
+  const bits = [half ? `½ day, ${e.halfDay === 'pm' ? 'afternoon' : 'morning'}` : plural(d.total, 'working day')];
+  if (!half && (d.byYear[year] || 0) !== d.total) bits.push(`${fmtNum(d.byYear[year] || 0)} in ${year}`);   // runs over New Year
+  bits.push('not taken from annual leave');
+  const [tone, status] = d.to < now ? ['grey', 'Taken'] : d.from > now ? ['new', 'Upcoming'] : ['ok', 'On now'];
+  return `<li class="mine-row">
+      <div class="ag-date"><b>${Number(d.from.slice(8))}</b><small>${MON[Number(d.from.slice(5, 7)) - 1]}</small></div>
+      <div class="mr-main"><p class="mr-dates">${esc(fmtRange(d.from, d.to))}</p>
+        <p class="subtle"><span class="ol-type"><i class="sw" style="background:${OTHER_TYPE_COLOURS[e.type] || '#c4c4c4'}" aria-hidden="true"></i>${esc(e.type)}</span> · ${esc(bits.join(' · '))}</p></div>
+      <div class="mr-status"><span class="pill ${tone}">${status}</span></div></li>`;
+}
+function renderRecord(s) {
+  const ctx = state.ctx, years = leaveYears(), year = shownYear(years);
+  const groups = ctx.groupsOf(s).filter(Boolean).map((g) => g.name).sort();
+  const where = groups.length ? groups.join(', ') : 'No leave group';
+  setHead(s.name, `Leave record · ${where}`, `${avatar(s.name, s.id)}<span>Leave record · ${esc(where)}</span>`);
+  const first = `${year}-01-01`, last = `${year}-12-31`;
+  const requests = ctx.requests.filter((r) => {
+    const owner = ctx.staffOf(r), d = ctx.daysOf(r);
+    return owner && String(owner.id) === String(s.id) && (!d.from || (d.from <= last && d.to >= first));
+  }).sort((x, z) => (ctx.daysOf(z).from || '').localeCompare(ctx.daysOf(x).from || ''));
+  const other = otherLeaveOf(s, year), totals = otherTotalsFor(ctx, s, year);
+  const otherDays = Object.values(totals).reduce((a, n) => a + n, 0);
+  const byType = Object.entries(totals).sort((x, z) => z[1] - x[1] || x[0].localeCompare(z[0])).map(([t, n]) => `${t} ${fmtNum(n)}`).join(', ');
+  return `<div class="mine record">
+    <div class="mine-top">
+      ${balanceCardHtml(s, year, years, false)}
+      <section class="card rec-closed" aria-labelledby="rec-closed-h">
+        <h2 id="rec-closed-h">When FLR is closed</h2>
+        ${closedInHtml(year)}
+      </section>
+    </div>
+    <section aria-labelledby="rec-annual-h">
+      <h2 class="mine-sect" id="rec-annual-h">Annual leave in ${year}</h2>
+      ${requests.length ? `<ul class="mine-rows">${requests.map((r) => requestRowHtml(r, year)).join('')}</ul>` : `<p class="mine-none">No annual leave requests in ${year}.</p>`}
+    </section>
+    <section aria-labelledby="rec-other-h">
+      <h2 class="mine-sect" id="rec-other-h">Other leave in ${year}</h2>
+      <p class="sect-sum">${otherDays ? `<b>${esc(lvDays(otherDays))}</b>: ${esc(byType)}. ` : ''}Other leave isn’t taken from annual leave, so it doesn’t change the days left.</p>
+      ${other.length ? `<ul class="mine-rows">${other.map((e) => otherRowHtml(e, year)).join('')}</ul>` : `<p class="mine-none">No other leave in ${year}.</p>`}
     </section>
   </div>`;
 }
@@ -2766,7 +2815,7 @@ function renderOverlay() {
   const r = state.panel && state.data ? state.data.requests.find((x) => x.id === state.panel) : null;
   if (r) {
     const pending = isPending(r), ev = pending ? evaluate(r) : null, d = state.ctx.daysOf(r);
-    const anyBusy = Boolean(state.busy), submitted = cleanDate(r.createdAt), name = displayName(r);
+    const anyBusy = Boolean(state.busy), submitted = cleanDate(r.createdAt), name = displayName(r), sid = staffIdOf(r);
     const details = ev ? ev.details : r.cur.details || 'No checks recorded for this request.';
     const actions = pending
       ? `<label class="lbl" for="pnote-${esc(r.id)}"><span class="eyebrow">Note saved with the decision (optional)</span>
@@ -2777,7 +2826,7 @@ function renderOverlay() {
           <button class="btn lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="New request" ${anyBusy ? 'disabled' : ''}>Re-open</button>
         </div>`;
     sheetUI.show(`<header class="dlg-head">
-        <div class="ch-who">${avatar(name, staffIdOf(r))}<div><h2 id="sheet-title">${esc(name)}</h2><p class="subtle">${esc(fmtRange(d.from, d.to))}</p></div></div>
+        <div class="ch-who">${avatar(name, sid)}<div><h2 id="sheet-title">${esc(name)}</h2><p class="subtle">${esc(fmtRange(d.from, d.to))}</p></div></div>
         <button class="close" type="button" data-act="close" aria-label="Close details">${icon('close')}</button>
       </header>
       <div class="dlg-body">
@@ -2787,6 +2836,7 @@ function renderOverlay() {
           <div class="stat"><span>Working days</span><b class="num">${fmtNum(d.total)}</b></div>
           ${ev && ev.leftAfter !== null ? `<div class="stat"><span>Left after this</span><b class="num">${fmtNum(ev.leftAfter)}</b></div>` : ''}
           <div class="stat"><span>Leave group</span><b>${esc((ev && ev.groupNames) || r.cur.leaveGroup || '—')}</b></div>
+          ${sid && !staffView() && String(sid) !== state.person ? `<button class="stat go" type="button" data-act="person" data-id="${esc(sid)}"><span>Leave record</span><b>Days left and all leave${icon('chev-r')}</b></button>` : ''}
           <div class="stat"><span>Submitted</span><b>${submitted ? esc(fmtDate(submitted)) : '—'}</b></div>
           ${r.cur.decidedOn ? `<div class="stat"><span>Decided on</span><b>${esc(fmtDate(r.cur.decidedOn))}</b></div>` : ''}
           ${r.email ? `<div class="stat"><span>Email</span><b class="formlink">${esc(r.email)}</b></div>` : ''}
@@ -2825,11 +2875,106 @@ function requestDecision(id, action) {
   }
   decide(id, action);
 }
+/* ---------- Opening and closing a person's record ---------- */
+// The record shows in place of the tab it was opened from, which stays selected. "‹ Diary" above the name, that tab
+// or the browser's Back goes back to it as it was left (same place, same name selected). The record has its own address,
+// #person-<record id>, so Back and Forward work and a record can be linked to. Only approvers ever see one: the FLR
+// server sends staff nobody's leave but their own, and the page turns the address away from them too.
+const PERSON_HASH = /^#person-(\d+)$/;
+let recordFrom = null;   // the page it was opened from: how far down it was, and which of its names was selected
+let addressRead = false;
+const PAGE_LOAD = Math.random().toString(36).slice(2);   // a step made before a reload belongs to the page that was reloaded
+try { history.scrollRestoration = 'manual'; } catch (e) { /* the page puts the scroll back itself */ }
+function setAddress(id) {   // a record's address as a new step in the history, or no record (this step rewritten)
+  try {
+    if (id) history.pushState({ flrPerson: id, load: PAGE_LOAD }, '', `#person-${id}`);
+    else if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  } catch (e) { /* no history to use (the Claude preview): the record still opens and closes */ }
+}
+const ownStep = () => Boolean(history.state && state.person && history.state.flrPerson === state.person && history.state.load === PAGE_LOAD);
+// The person whose record is open, while it can be: for approvers, and while they're on FLR - Leave Allowances.
+function recordPerson() {
+  if (!state.person || !state.data) return null;
+  const s = staffView() ? null : state.ctx.staffById.get(state.person);
+  if (!s) { state.person = null; recordFrom = null; setAddress(null); }
+  return s || null;
+}
+function setBack(label) {
+  const back = document.getElementById('lt-back');
+  back.hidden = !label;
+  document.getElementById('lt-eyebrow').hidden = Boolean(label);
+  if (label) { document.getElementById('lt-back-label').textContent = label; back.setAttribute('aria-label', `Back to ${label}`); }
+}
+function openPerson(id, { opener = null, step = true } = {}) {
+  id = String(id);
+  if (staffView() || !state.data || !state.ctx.staffById.has(id) || state.person === id) return;
+  if (!state.person) {
+    const names = [...document.querySelectorAll('#view [data-act="person"]')];
+    recordFrom = { scroll: window.scrollY, at: names.indexOf(opener) };
+  }
+  state.person = id;
+  if (step) setAddress(id);
+  renderChrome(); renderView();
+  window.scrollTo(0, 0);
+  focusTitle();
+  FLRUI.slideIn(document.getElementById('view'), 1);   // in from the right, as a page opened from a list
+  if (chrome) chrome.update();
+}
+// Back to the tab underneath. When the record was a step in the history, the history steps back too (so a later Back
+// leaves the page, as it would have), but the page goes back straight away, so a second tap can't go any further.
+function closePerson() {
+  if (!state.person) return;
+  const own = ownStep();
+  showUnderneath();
+  if (own) history.back(); else setAddress(null);
+}
+function dropPerson() {   // the record closes without drawing the tab underneath (another tab is about to show)
+  const own = ownStep();
+  state.person = null; recordFrom = null;
+  if (own) history.back(); else setAddress(null);
+}
+function showUnderneath() {
+  const from = recordFrom, id = state.person;
+  state.person = null; recordFrom = null;
+  renderChrome(); renderView();
+  window.scrollTo(0, from ? from.scroll : 0);
+  const names = from ? [...document.querySelectorAll('#view [data-act="person"]')] : [];
+  const back = (names[from && from.at] && names[from.at].dataset.id === id && names[from.at]) || names.find((n) => n.dataset.id === id);
+  if (back) back.focus({ preventScroll: true }); else focusTitle();
+  FLRUI.slideIn(document.getElementById('view'), -1);
+  if (chrome) chrome.update();
+}
+// A record's address, once the leave has loaded (only then is it known whether this is an approver): from a link or a
+// reload, and from Back and Forward. Staff are shown their own My Leave instead.
+function readAddress() {
+  const m = PERSON_HASH.exec(location.hash);
+  if (!m) { if (state.person) showUnderneath(); return; }
+  if (staffView()) {
+    setAddress(null);
+    const me = state.data.staff[0];
+    if (!me || String(me.id) !== m[1]) showToast('You can only see your own leave.');
+    if (state.tab !== 'mine') goTab('mine');
+    return;
+  }
+  if (m[1] === state.person) return;
+  if (!state.ctx.staffById.has(m[1])) { setAddress(null); showToast('That leave record isn’t on FLR - Leave Allowances.'); return; }
+  const link = !state.person && !addressRead;
+  if (link) state.tab = 'diary';   // opened from a link: its way back is the Diary, from the top
+  openPerson(m[1], { step: false });
+  if (link) recordFrom = null;
+}
+addEventListener('popstate', () => { if (state.data) readAddress(); });
+
 // Tabs keep their own scroll position; tapping the current tab again scrolls it to the top, as on iPhone.
 function goTab(id) {
   if (!TABS.some((t) => t.id === id)) return;
+  if (state.person && id === state.tab) { closePerson(); return; }   // the record's own tab takes it back there
   if (id === state.tab) { window.scrollTo({ top: 0, behavior: FLRUI.reduced() ? 'auto' : 'smooth' }); return; }
-  scrollByTab[state.tab] = window.scrollY;
+  if (state.person) {
+    // Another tab while a record is open: the record goes, and its place in the browser's history with it.
+    scrollByTab[state.tab] = recordFrom ? recordFrom.scroll : 0;
+    dropPerson();
+  } else scrollByTab[state.tab] = window.scrollY;
   state.tab = id;
   try { localStorage.setItem('flr-leave-tab', id); } catch (e) { /* storage unavailable */ }
   renderChrome(); renderView();
@@ -2853,6 +2998,11 @@ document.addEventListener('click', async (ev) => {
       break;
     }
     case 'open': state.panel = id; renderOverlay(); break;
+    case 'person':
+      if (state.panel) { state.panel = null; renderOverlay(); }   // from the request sheet: it goes down as the record opens
+      openPerson(id, { opener: el });
+      break;
+    case 'person-back': closePerson(); break;
     case 'close': state.panel = null; renderOverlay(); break;
     case 'decide': requestDecision(id, el.dataset.action); break;
     case 'confirm-yes': { const run = state.confirm && state.confirm.run; state.confirm = null; renderOverlay(); if (run) run(); break; }
@@ -2865,11 +3015,6 @@ document.addEventListener('click', async (ev) => {
       FLRUI.slideIn(document.getElementById('diary-body'), Math.sign(st.y * 12 + st.m - before));
       break;
     }
-    case 'sort':
-      if (state.bal.sort === id) state.bal.dir = -state.bal.dir; else { state.bal.sort = id; state.bal.dir = 1; }
-      renderBalancesBody();
-      break;
-    case 'sort-dir': state.bal.dir = -state.bal.dir; renderBalancesBody(); break;
     default: break;
   }
 });
@@ -2984,20 +3129,21 @@ document.addEventListener('input', (ev) => {
   const t = ev.target;
   if (t.dataset && t.dataset.note) { state.notes[t.dataset.note] = t.value; return; }
   if (t.id === 'diary-search') { state.diary.search = t.value; renderDiaryBody(); }
-  if (t.id === 'bal-search') { state.bal.search = t.value; renderBalancesBody(); }
   if (t.id === 'all-search') { state.all.search = t.value; renderRequestsBody(); }
 });
 document.addEventListener('change', (ev) => {
   const t = ev.target;
   if (t.name === 'diary-mode') { state.diary.mode = t.value; renderDiaryBody(); FLRUI.fadeIn(document.getElementById('diary-body')); return; }
-  if (t.name === 'mine-year') { mineYear = Number(t.value); renderView(); return; }
+  if (t.name === 'mine-year') {
+    recordYear = Number(t.value); renderView();
+    const on = document.querySelector('#mine-year input:checked');   // keyboard users stay on the switch
+    if (on) on.focus({ preventScroll: true });
+    return;
+  }
   switch (t.id) {
     case 'diary-group': state.diary.group = t.value; renderDiaryBody(); break;
     case 'diary-pending': state.diary.pending = t.checked; renderDiaryBody(); break;
     case 'diary-other': state.diary.other = t.checked; renderDiaryBody(); break;
-    case 'bal-group': state.bal.group = t.value; renderBalancesBody(); break;
-    case 'bal-year': state.bal.year = Number(t.value); renderBalancesBody(); break;
-    case 'bal-sort': state.bal.sort = t.value; state.bal.dir = 1; renderBalancesBody(); break;
     case 'all-decision': state.all.decision = t.value; renderRequestsBody(); break;
     case 'all-year': state.all.year = t.value; renderRequestsBody(); break;
     default: break;

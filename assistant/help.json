@@ -1083,7 +1083,7 @@
         "leave",
         "annual"
       ],
-      "answer": "Annual Leave shows who’s off today, your days left and your leave requests, with the “Request leave” button. Leave approvers also get “Approvals”, “Diary”, “Balances” and “All requests”.",
+      "answer": "Annual Leave shows who’s off today, your days left and your leave requests, with the “Request leave” button. Leave approvers also get “Approvals”, “Diary” and “All requests”, and selecting a name in the Diary opens that person’s leave record.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"
@@ -1330,7 +1330,7 @@
       "id": "leave-balances-all",
       "tool": "annual-leave",
       "who": "approver",
-      "title": "See everyone’s balances",
+      "title": "See everyone’s days left",
       "ask": [
         "everyone's holiday balances",
         "how much leave has the team got left",
@@ -1345,7 +1345,7 @@
         "team",
         "most"
       ],
-      "answer": "Leave approvers can see every member of staff’s allowance and days left under “Balances” in Annual Leave.",
+      "answer": "Leave approvers can see anyone’s allowance and days left in Annual Leave: open the “Diary” and select their name. Their leave record also lists their requests and other leave, such as sick or unpaid leave.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"

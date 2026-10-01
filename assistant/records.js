@@ -129,6 +129,8 @@ async function leaveData() {
   return { h, core, data, ctx, email, approver, me, requestsOf };
 }
 const leaveOpen = hubLink('annual-leave/', 'Open Annual Leave');
+// Someone's leave record on the Annual Leave page (approvers): its own address, as the Diary's names open it.
+const recordLink = s => hubLink(`annual-leave/#person-${encodeURIComponent(s.id)}`, 'Open their leave record');
 const PILL = { accepted: ['Accepted', 'ok'], denied: ['Denied', 'over'], review: ['Review', 'soon'], cancelled: ['Cancelled', 'none'], new: ['New request', 'soon'] };
 const nameOf = (L, r) => { const s = L.ctx.staffOf(r); return s ? s.name : (r.employeeName || r.name || 'Someone'); };
 
@@ -157,7 +159,7 @@ function balanceCard(L, s, own) {
     title, big: f(b.remaining), unit: Math.abs(b.remaining) === 1 ? 'day' : 'days', neg: b.remaining < 0,
     rows: [['Bookable', f(b.entitlement)], ['Accepted', f(b.booked)], ['Waiting for a decision', f(b.pending)], ['Left if accepted', f(b.remainingIfPending)]],
     note: `${sum.join(' ')} = ${f(b.entitlement)} bookable. Bank holidays and the Jeff Day are on top.`,
-    link: own ? hubLink('annual-leave/', 'Open My Leave') : hubLink('annual-leave/', 'Open Balances'),
+    link: own ? hubLink('annual-leave/', 'Open My Leave') : recordLink(s),
   };
 }
 function requestItems(L, rs, withNames) {
@@ -183,8 +185,8 @@ async function leave(kind, q, slots) {
     if (kind === 'balance') return balanceCard(L, s, w.own);
     const rs = L.requestsOf(s).slice().sort((a, z) => (z.from || '').localeCompare(a.from || ''));
     const title = w.own ? 'Your leave requests' : `${s.name}’s leave requests`;
-    if (!rs.length) return { title, text: w.own ? 'You haven’t sent any leave requests yet.' : 'No leave requests.', link: leaveOpen };
-    return { title, list: requestItems(L, rs.slice(0, 8), false), note: rs.length > 8 ? `And ${rs.length - 8} more in Annual Leave.` : '', link: leaveOpen };
+    if (!rs.length) return { title, text: w.own ? 'You haven’t sent any leave requests yet.' : 'No leave requests.', link: w.own ? leaveOpen : recordLink(s) };
+    return { title, list: requestItems(L, rs.slice(0, 8), false), note: rs.length > 8 ? `And ${rs.length - 8} more in Annual Leave.` : '', link: w.own ? leaveOpen : recordLink(s) };
   }
 
   if (kind === 'pending') {
@@ -214,8 +216,8 @@ async function leave(kind, q, slots) {
     return {
       title: `Days left in ${L.ctx.currentYear}` + (groups.length ? `: ${groups.join(', ')}` : ''),
       list: people.slice(0, 15).map(({ s, b }) => ({ title: s.name, meta: `Bookable ${L.core.fmtNum(b.entitlement)} · accepted ${L.core.fmtNum(b.booked)} · waiting ${L.core.fmtNum(b.pending)}`, pill: `${L.core.fmtNum(b.remaining)} left`, tone: b.remaining < 0 ? 'over' : b.remaining <= 3 ? 'soon' : 'ok' })),
-      note: people.length > 15 ? `And ${people.length - 15} more on the Balances tab.` : '',
-      link: hubLink('annual-leave/', 'Open Balances'),
+      note: `${people.length > 15 ? `And ${people.length - 15} more. ` : ''}Select a name in the Diary for that person’s leave record.`,
+      link: leaveOpen,
     };
   }
 
