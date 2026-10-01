@@ -1083,7 +1083,7 @@
         "leave",
         "annual"
       ],
-      "answer": "Annual Leave shows who’s off today, your days left and your leave requests, with the “Request leave” button. Leave approvers also get “Approvals”, “Diary” and “All requests”, and selecting a name in the Diary opens that person’s leave record.",
+      "answer": "Annual Leave shows who’s off today, your days left, your leave requests and any other leave such as sick or unpaid leave, with the “Request leave” button. Leave approvers also get “Approvals”, “Diary” and “All requests”, and selecting a name in the Diary opens that person’s leave record.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"

@@ -6,7 +6,7 @@ The front door to FLR's staff tools. One FLR account (the Cost Estimator's sign-
 - **Fleet Management** (the driver speeding report) opens here too (`speeding/`), but only for the people on its list. Its data and staff photos
   stay in the FLR database and reach the page only after sign-in.
 - **Annual Leave** opens here (`annual-leave/`). Leave approvers (a list in the database) see and decide everyone's leave;
-  everyone else sees only their own requests and days left. monday.com stays the source of truth: the `flr-leave`
+  everyone else sees only their own requests, days left and other leave. monday.com stays the source of truth: the `flr-leave`
   function keeps the database's copy in step with it and writes decisions back. Approvers also see staff photos beside
   names, from `public.leave_faces()` after sign-in; anyone without a photo gets their initials.
 - **Fitter Schedule** opens the fitter schedule site in a new tab: who is free, who is working and which jobs still need a

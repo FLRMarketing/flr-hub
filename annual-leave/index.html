@@ -2735,13 +2735,15 @@ function renderMine() {
       <h2 class="mine-sect" id="mine-list-h">Your requests</h2>
       ${rows ? `<ul class="mine-rows">${rows}</ul>` : emptyHtml('No requests yet', 'Requests you send with the leave form appear here.', 'diary')}
     </section>
+    ${otherLeaveHtml(me, year, true)}
   </div>`;
 }
 
 /* ---------- A person's leave record: leave approvers open it from a name in the Diary ---------- */
 // My Leave's layout for anyone on FLR - Leave Allowances, one leave year at a time: their days left, the days FLR is
 // closed, their annual leave requests (each opens the request) and their other leave. It replaced the Balances table,
-// so its figures are that table's: balanceFor() above, and otherTotalsFor() for other leave.
+// so its figures are that table's: balanceFor() above, and otherTotalsFor() for other leave. My Leave has the same
+// other leave section: staff receive their own other leave from the FLR server, and nobody else's.
 function otherLeaveOf(s, year) {
   const ctx = state.ctx, first = `${year}-01-01`, last = `${year}-12-31`;
   return ctx.otherLeave.filter((e) => {
@@ -2764,6 +2766,18 @@ function otherRowHtml(e, year) {
         <p class="subtle"><span class="ol-type"><i class="sw" style="background:${OTHER_TYPE_COLOURS[e.type] || '#c4c4c4'}" aria-hidden="true"></i>${esc(e.type)}</span> · ${esc(bits.join(' · '))}</p></div>
       <div class="mr-status"><span class="pill ${tone}">${status}</span></div></li>`;
 }
+// The section on a person's record and on My Leave: the year's other leave by type (the Balances table's "Other leave"
+// column, from otherTotalsFor()), then each entry.
+function otherLeaveHtml(s, year, own) {
+  const totals = otherTotalsFor(state.ctx, s, year), other = otherLeaveOf(s, year);
+  const days = Object.values(totals).reduce((a, n) => a + n, 0);
+  const byType = Object.entries(totals).sort((x, z) => z[1] - x[1] || x[0].localeCompare(z[0])).map(([t, n]) => `${t} ${fmtNum(n)}`).join(', ');
+  return `<section aria-labelledby="other-h">
+      <h2 class="mine-sect" id="other-h">Other leave in ${year}</h2>
+      <p class="sect-sum">${days ? `<b>${esc(lvDays(days))}</b>: ${esc(byType)}. ` : ''}Other leave isn’t taken from annual leave, so it doesn’t change ${own ? 'your' : 'the'} days left.</p>
+      ${other.length ? `<ul class="mine-rows">${other.map((e) => otherRowHtml(e, year)).join('')}</ul>` : `<p class="mine-none">No other leave in ${year}.</p>`}
+    </section>`;
+}
 function renderRecord(s) {
   const ctx = state.ctx, years = leaveYears(), year = shownYear(years);
   const groups = ctx.groupsOf(s).filter(Boolean).map((g) => g.name).sort();
@@ -2774,9 +2788,6 @@ function renderRecord(s) {
     const owner = ctx.staffOf(r), d = ctx.daysOf(r);
     return owner && String(owner.id) === String(s.id) && (!d.from || (d.from <= last && d.to >= first));
   }).sort((x, z) => (ctx.daysOf(z).from || '').localeCompare(ctx.daysOf(x).from || ''));
-  const other = otherLeaveOf(s, year), totals = otherTotalsFor(ctx, s, year);
-  const otherDays = Object.values(totals).reduce((a, n) => a + n, 0);
-  const byType = Object.entries(totals).sort((x, z) => z[1] - x[1] || x[0].localeCompare(z[0])).map(([t, n]) => `${t} ${fmtNum(n)}`).join(', ');
   return `<div class="mine record">
     <div class="mine-top">
       ${balanceCardHtml(s, year, years, false)}
@@ -2789,11 +2800,7 @@ function renderRecord(s) {
       <h2 class="mine-sect" id="rec-annual-h">Annual leave in ${year}</h2>
       ${requests.length ? `<ul class="mine-rows">${requests.map((r) => requestRowHtml(r, year)).join('')}</ul>` : `<p class="mine-none">No annual leave requests in ${year}.</p>`}
     </section>
-    <section aria-labelledby="rec-other-h">
-      <h2 class="mine-sect" id="rec-other-h">Other leave in ${year}</h2>
-      <p class="sect-sum">${otherDays ? `<b>${esc(lvDays(otherDays))}</b>: ${esc(byType)}. ` : ''}Other leave isn’t taken from annual leave, so it doesn’t change the days left.</p>
-      ${other.length ? `<ul class="mine-rows">${other.map((e) => otherRowHtml(e, year)).join('')}</ul>` : `<p class="mine-none">No other leave in ${year}.</p>`}
-    </section>
+    ${otherLeaveHtml(s, year, false)}
   </div>`;
 }
 
