@@ -181,6 +181,9 @@ a{color:var(--tint)}
 .lt-title{font:700 clamp(32px,4.2vw,40px)/1.08 var(--font-display);letter-spacing:-.022em;text-wrap:balance}
 .lt-title:focus{outline:none}
 .lt-sub{max-width:70ch;font-size:15px;color:var(--ink-2);text-wrap:pretty}
+.lt-sub.has-who{display:flex;align-items:center;gap:10px}   /* My Leave: the person's photo, then their name in bold */
+.lt-sub .avatar{width:34px;height:34px;font-size:12.5px}
+.lt-sub b{font-weight:650;color:var(--ink)}
 .meta-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 22px;margin-top:6px}
 .meta{display:flex;flex-wrap:wrap;gap:4px 22px;font-size:14px}
 .meta>div{display:flex;gap:6px;align-items:baseline}
@@ -317,6 +320,7 @@ label.lbl{display:grid;gap:6px}
 .ch-who>div{min-width:0}
 .ch-side{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .avatar{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:50%;background:var(--tint-soft);color:var(--tint);font:600 15px/1 var(--font-text);letter-spacing:.02em}
+img.avatar{display:block;object-fit:cover;background:var(--fill);box-shadow:0 0 0 var(--hair) var(--sep)}   /* the person's photo, when there is one */
 .card-head h2{font:600 19px/1.25 var(--font-display);letter-spacing:-.017em;overflow-wrap:anywhere}
 .meta-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:5px;font-size:13px;color:var(--ink-2)}
 .card-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);border-top:var(--hair) solid var(--sep)}
@@ -1952,16 +1956,22 @@ function initials(name) {
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
   return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
 }
-function avatar(name) { return `<span class="avatar" aria-hidden="true">${esc(initials(name))}</span>`; }
+// A person's badge: their photo (by staff record) when the page has it, otherwise their initials in the same circle.
+function avatar(name, id) {
+  const face = faceOf(id);
+  return face ? `<img class="avatar" src="${esc(face)}" alt="" decoding="async">` : `<span class="avatar" aria-hidden="true">${esc(initials(name))}</span>`;
+}
+const staffIdOf = (r) => { const s = state.ctx && r ? state.ctx.staffOf(r) : null; return s ? s.id : null; };
 function emptyHtml(title, text, kind = '') {
   const ico = kind === 'done' ? `<span class="em-ico ok">${icon('check')}</span>` : kind ? `<span class="em-ico">${icon(kind)}</span>` : '';
   return `<div class="empty">${ico}<h3>${esc(title)}</h3><p>${esc(text)}</p></div>`;
 }
-function setHead(title, sub) {
+function setHead(title, sub, subHtml) {   // subHtml: the same line as markup, built with esc()
   document.getElementById('lt-title').textContent = title;
   document.getElementById('nb-title').textContent = title;
   const s = document.getElementById('lt-sub');
-  s.textContent = sub || '';
+  if (subHtml) s.innerHTML = subHtml; else s.textContent = sub || '';
+  s.classList.toggle('has-who', Boolean(subHtml));
   s.hidden = !sub;
 }
 function banner(kind, title, body, extra) {
@@ -2155,7 +2165,7 @@ function renderTodayFull(day) {
       ? `<button class="td-line" type="button" data-act="open" data-id="${esc(l.request.id)}">${sw}<span class="td-txt">${text}</span>${icon('chev-r', 'ico td-go')}</button>`
       : `<div class="td-line">${sw}<span class="td-txt">${text}</span></div>`;
   };
-  const person = (p) => `<li class="td-person">${avatar(p.name)}<div class="td-main"><p class="td-name">${esc(p.name)}</p><div class="td-lines">${p.lines.map(lineHtml).join('')}</div></div></li>`;
+  const person = (p) => `<li class="td-person">${avatar(p.name, p.staff && p.staff.id)}<div class="td-main"><p class="td-name">${esc(p.name)}</p><div class="td-lines">${p.lines.map(lineHtml).join('')}</div></div></li>`;
   // Leave groups in name order, each with how many are on annual leave against its limit; people in two groups show in both.
   const people = [...off.values()].sort((a, z) => a.name.localeCompare(z.name));
   const secs = [];
@@ -2179,7 +2189,7 @@ function renderTodayFull(day) {
   const groups = secs.map((s) => `<section class="lv-sec"><h3 class="lv-head">${esc(s.title)}${s.note ? `<span class="limit${s.over ? ' td-over' : ''}">${esc(s.note)}</span>` : ''}</h3>
       <ul class="lv-card">${s.people.map(person).join('')}</ul></section>`).join('');
   const wait = waiting.length ? `<section class="lv-sec"><h3 class="lv-head">Waiting for a decision<span class="limit">asked for today, not decided yet</span></h3>
-      <ul class="lv-card">${waiting.sort((a, z) => a.name.localeCompare(z.name)).map((w) => `<li class="td-person">${avatar(w.name)}<div class="td-main"><p class="td-name">${esc(w.name)}${pillFor(w.line.request.decision)}</p>
+      <ul class="lv-card">${waiting.sort((a, z) => a.name.localeCompare(z.name)).map((w) => `<li class="td-person">${avatar(w.name, w.staff && w.staff.id)}<div class="td-main"><p class="td-name">${esc(w.name)}${pillFor(w.line.request.decision)}</p>
         <div class="td-lines"><button class="td-line" type="button" data-act="open" data-id="${esc(w.line.request.id)}"><i class="sw ${w.line.request.decision === 'review' ? 'rev' : 'new'}"></i>
         <span class="td-txt"><span class="td-what"><b>Annual leave</b> · ${PART[w.line.part]}</span><span class="td-when"><span class="nw">${esc(lvRange(w.line.from, w.line.to, y))}</span></span></span>${icon('chev-r', 'ico td-go')}</button></div></div></li>`).join('')}</ul></section>` : '';
   return `<div class="td">${summary}${groups}${wait}</div>
@@ -2225,7 +2235,7 @@ function renderCard(r) {
   const past = d.from && d.from < state.ctx.today ? '<p class="subtle">These dates start in the past.</p>' : '';
   return `<article class="card" data-card="${esc(r.id)}" aria-label="${esc(name)}">
     <header class="card-head">
-      <div class="ch-who">${avatar(name)}<div><h2>${esc(name)}</h2><div class="meta-line">${chips}<span>Submitted ${submitted ? esc(fmtDate(submitted)) : '—'}</span></div></div></div>
+      <div class="ch-who">${avatar(name, staffIdOf(r))}<div><h2>${esc(name)}</h2><div class="meta-line">${chips}<span>Submitted ${submitted ? esc(fmtDate(submitted)) : '—'}</span></div></div></div>
       <div class="ch-side">${pillFor(r.decision)}<button class="btn tinted sm" type="button" data-act="open" data-id="${esc(r.id)}">Details</button></div>
     </header>
     <div class="card-body">
@@ -2694,7 +2704,8 @@ function renderMine() {
   for (let y = FIRST_LEAVE_YEAR; y <= ctx.currentYear + 1; y++) years.push(y);
   const year = years.includes(mineYear) ? mineYear : ctx.currentYear;
   const b = balanceFor(ctx, me, year);
-  setHead('My Leave', `${me.name}: your leave requests and the days you have left.`);
+  setHead('My Leave', `${me.name}: your leave requests and the days you have left.`,
+    `${avatar(me.name, me.id)}<span><b>${esc(me.name)}</b>: your leave requests and the days you have left.</span>`);
   const sum = [`${fmtNum(b.allowance)} days’ allowance`];
   if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for the Christmas shutdown`);
   if (b.carried) sum.push(`+ ${fmtNum(b.carried)} carried over`);
@@ -2766,7 +2777,7 @@ function renderOverlay() {
           <button class="btn lg" type="button" data-act="decide" data-id="${esc(r.id)}" data-action="New request" ${anyBusy ? 'disabled' : ''}>Re-open</button>
         </div>`;
     sheetUI.show(`<header class="dlg-head">
-        <div class="ch-who">${avatar(name)}<div><h2 id="sheet-title">${esc(name)}</h2><p class="subtle">${esc(fmtRange(d.from, d.to))}</p></div></div>
+        <div class="ch-who">${avatar(name, staffIdOf(r))}<div><h2 id="sheet-title">${esc(name)}</h2><p class="subtle">${esc(fmtRange(d.from, d.to))}</p></div></div>
         <button class="close" type="button" data-act="close" aria-label="Close details">${icon('close')}</button>
       </header>
       <div class="dlg-body">
