@@ -549,5 +549,21 @@
  {
   "q": "does Jeff day come out of my holiday",
   "expect": "leave-closures"
+ },
+ {
+  "q": "how do I turn off someone's access to the estimator",
+  "expect": "hub-settings"
+ },
+ {
+  "q": "where did the accounts page in the estimator go",
+  "expect": "hub-settings"
+ },
+ {
+  "q": "close registration for new accounts",
+  "expect": "hub-settings"
+ },
+ {
+  "q": "it says I don't have access to the cost estimator",
+  "expect": "tools-missing"
  }
 ]

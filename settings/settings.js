@@ -1,0 +1,439 @@
+/* ============================================================================
+   FLR Hub settings: everyone with an FLR account, the apps each person may use,
+   and registration (the access code, open or closed, what new accounts get,
+   roles decided in advance). For administrators: the database checks every call
+   (users.write), whatever this page shows. The apps check the lists themselves,
+   so taking an app away also closes it to anyone who goes to its address.
+   ========================================================================== */
+(function () {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const cfg = window.FLR_CONFIG || {};
+  const AUTH_KEY = 'flr-estimator-auth';            // the one FLR sign-in for the whole site
+  const HUB = new URL('../', location.href).href;
+  const SIGN_IN = '../?next=settings';
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ROLES = { admin: 'Administrator', estimator: 'Estimator', developer: 'Developer' };
+  const ROLE_NOTE = {
+    admin: 'Looks after accounts and these settings; sees everything in their apps',
+    estimator: 'Prices jobs and builds quotes in the Cost Estimator',
+    developer: 'Reads and exports quotes, for testing',
+  };
+  const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters' };
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  let sb = null;
+  const client = () => {
+    if (sb) return sb;
+    if (!cfg.supabaseUrl || !cfg.supabaseAnonKey || !window.supabase) return null;
+    sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: AUTH_KEY },
+    });
+    return sb;
+  };
+
+  /* ---------------------------------------------------------------- talking to the database */
+  const flrCode = e => { const m = /FLR_[A-Z_]+/.exec(e ? `${e.message || ''} ${e.details || ''}` : ''); return m ? m[0] : ''; };
+  const missingFunction = e => !!e && (e.code === 'PGRST202' || e.code === '42883' || /could not find the function/i.test(e.message || ''));
+  const offline = e => !!e && /Failed to fetch|NetworkError|Load failed|fetch failed/i.test(e.message || '');
+  const expired = e => !!e && (e.code === 'PGRST301' || e.code === 'PGRST303' || /JWT expired|invalid JWT/i.test(e.message || ''));
+  async function call(fn, args) {
+    const { data, error } = await client().rpc(fn, args || {});
+    if (error) throw error;
+    return data;
+  }
+  function said(e) {
+    const code = flrCode(e);
+    if (offline(e)) return 'Can’t reach the FLR database. Check your connection and try again.';
+    if (code === 'FLR_VALIDATION' && e.details) return e.details;
+    if (code === 'FLR_FORBIDDEN') return 'Only FLR administrators can do that.';
+    if (code === 'FLR_NOT_FOUND') return 'That account no longer exists. The list has been refreshed.';
+    if (code === 'FLR_ACCOUNT_DISABLED') return 'Your FLR account is switched off.';
+    if (expired(e) || code === 'FLR_SIGN_IN_REQUIRED') return 'Your sign-in has expired. Sign in again.';
+    return 'That didn’t work. Try again.';
+  }
+
+  /* ---------------------------------------------------------------- state */
+  const S = { you: '', apps: [], accounts: [], settings: null, pre: [], query: '' };
+  const byId = id => S.accounts.find(a => a.id === id);
+  const appTitle = id => (S.apps.find(a => a.id === id) || {}).title || SHORT[id] || id;
+  const nameOf = a => (a && (a.name || '').trim()) || (a && a.email) || 'This account';
+  const firstName = a => nameOf(a).split(/\s+/)[0];
+  function initials(text) {
+    const w = String(text || '').trim().split(/\s+/).filter(Boolean);
+    if (!w.length) return '·';
+    return w.length === 1 ? w[0][0].toUpperCase() : (w[0][0] + w[w.length - 1][0]).toUpperCase();
+  }
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const day = iso => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function seen(iso) {
+    if (!iso) return 'Never signed in';
+    const d = new Date(iso), now = new Date();
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const days = Math.round((new Date(now.toDateString()) - new Date(d.toDateString())) / 864e5);
+    if (days === 0) return `Last seen today, ${time}`;
+    if (days === 1) return `Last seen yesterday, ${time}`;
+    return `Last seen ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', ...(d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}) })}`;
+  }
+
+  /* ---------------------------------------------------------------- views */
+  function view(name) { document.body.dataset.view = name; }
+  function gate(title, text, o = {}) {
+    view('gate');
+    $('#gate').hidden = false; $('#gate-message').hidden = false;
+    $('#gate-title').textContent = title; $('#gate-text').textContent = text;
+    $('#gate-retry').hidden = !o.retry;
+    $('#accounts-section').hidden = true; $('#registration-section').hidden = true;
+  }
+
+  function switchEl(on, label, data) {
+    const b = el('button', 'switch');
+    b.type = 'button'; b.setAttribute('role', 'switch'); b.setAttribute('aria-checked', on ? 'true' : 'false');
+    if (label) b.setAttribute('aria-label', label);
+    for (const [k, v] of Object.entries(data || {})) b.dataset[k] = v;
+    b.append(el('span', 'knob'));
+    return b;
+  }
+
+  function accountRow(a) {
+    const li = el('li', 'acct' + (a.status === 'disabled' ? ' is-off' : ''));
+    li.dataset.id = a.id;
+    const person = el('button', 'acct-person');
+    person.type = 'button'; person.dataset.open = a.id;
+    person.setAttribute('aria-label', `${nameOf(a)}, ${a.email}: role, status and password`);
+    const av = el('span', 'avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
+    const text = el('span', 'acct-text');
+    const nm = el('span', 'acct-name'); nm.append(el('span', null, nameOf(a)));
+    if (a.id === S.you) nm.append(el('span', 'pill pill-you', 'You'));
+    text.append(nm, el('span', 'acct-email', a.email));
+    person.append(av, text);
+    const role = el('span', 'acct-role', ROLES[a.role] || a.role);
+    const status = el('span', 'acct-status');
+    status.append(el('span', a.status === 'disabled' ? 'pill pill-off' : 'pill pill-on', a.status === 'disabled' ? 'Switched off' : 'Active'));
+    const apps = el('span', 'acct-apps');
+    for (const app of S.apps) {
+      const cell = el('span', 'app-cell');
+      cell.append(el('span', 'app-label', SHORT[app.id] || appTitle(app.id)),   // phones: the short name; the switch says it in full
+        switchEl(a.apps.includes(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { app: app.id, user: a.id }));
+      apps.append(cell);
+    }
+    li.append(person, role, status, apps);
+    return li;
+  }
+
+  function renderAccounts() {
+    $('#apps-head').replaceChildren(...S.apps.map(a => el('span', null, SHORT[a.id] || a.title)));
+    $('#accounts').style.setProperty('--apps', String(S.apps.length || 1));
+    $('#acct-list').replaceChildren(...S.accounts.map(accountRow));
+    filter();
+  }
+  function filter() {
+    const q = S.query.trim().toLowerCase();
+    let shown = 0;
+    for (const li of $('#acct-list').children) {
+      const a = byId(li.dataset.id);
+      const hit = !q || `${nameOf(a)} ${a.email}`.toLowerCase().includes(q);
+      li.hidden = !hit; if (hit) shown++;
+    }
+    const n = S.accounts.length;
+    $('#accounts-count').textContent = q ? `${shown} of ${n}` : `${n} ${n === 1 ? 'account' : 'accounts'}`;
+    $('#accounts-empty').hidden = shown > 0;
+  }
+  function replaceAccount(a) {
+    const i = S.accounts.findIndex(x => x.id === a.id);
+    if (i < 0) return;
+    S.accounts[i] = a;
+    const old = $(`#acct-list > li[data-id="${a.id}"]`);
+    if (old) { const row = accountRow(a); row.hidden = old.hidden; old.replaceWith(row); }
+    if (openFor === a.id) fillSheet(a);
+  }
+
+  function renderSettings() {
+    const s = S.settings;
+    $('#reg-open').setAttribute('aria-checked', s.registrationOpen ? 'true' : 'false');
+    $('#reg-open-sub').textContent = s.registrationOpen ? 'Anyone with the access code can register.' : 'Nobody can register until you switch this back on.';
+    $('#code-status').textContent = s.accessCodeSet ? `Set${s.accessCodeSetAt ? ' ' + day(s.accessCodeSetAt) : ''}` : 'Not set: nobody can register';
+    $('#code-status').classList.toggle('is-warn', !s.accessCodeSet);
+    $('#defaults').replaceChildren(...S.apps.map(app => {
+      const row = el('div', 'row row-static');
+      const main = el('span', 'row-main'); main.append(el('span', 'row-title', appTitle(app.id)));
+      row.append(main, switchEl((s.defaultApps || []).includes(app.id), `New accounts get ${appTitle(app.id)}`, { default: app.id }));
+      return row;
+    }));
+  }
+
+  function renderPre() {
+    const list = $('#pre-list');
+    if (!S.pre.length) { list.replaceChildren(el('p', 'empty', 'None. Everyone who registers starts as an estimator.')); return; }
+    list.replaceChildren(...S.pre.map(p => {
+      const row = el('div', 'row row-static pre-row');
+      const main = el('span', 'row-main');
+      main.append(el('span', 'row-title', p.email), el('span', 'row-sub', `${ROLES[p.role] || p.role} · ${p.registered ? 'Registered' : 'Not registered yet'}`));
+      const rm = el('button', 'btn btn-small', 'Remove');
+      rm.type = 'button'; rm.dataset.unassign = p.email; rm.setAttribute('aria-label', `Remove the role assigned to ${p.email}`);
+      row.append(main, rm);
+      return row;
+    }));
+  }
+
+  /* ---------------------------------------------------------------- loading */
+  async function load() {
+    const c = client();
+    if (!c) return gate('Hub settings isn’t set up here', 'This copy of the Hub has no FLR sign-in settings.');
+    let session = null;
+    try { session = (await c.auth.getSession()).data.session; } catch (e) { /* treated as signed out */ }
+    if (!session) { location.replace(SIGN_IN); return; }
+    try {
+      const [acc, set, pre] = await Promise.all([call('admin_accounts'), call('admin_hub_settings'), call('admin_preassigned_roles')]);
+      S.you = acc.you; S.apps = acc.apps || []; S.accounts = acc.accounts || []; S.settings = set; S.pre = pre || [];
+    } catch (e) {
+      const code = flrCode(e);
+      if (code === 'FLR_SIGN_IN_REQUIRED' || expired(e)) { location.replace(SIGN_IN); return; }
+      if (code === 'FLR_FORBIDDEN') return gate('For FLR administrators', 'Only FLR administrators can open Hub settings. If you look after accounts, ask an administrator to make you one.');
+      if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR administrator to switch it back on.');
+      if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR administrator.');
+      if (missingFunction(e)) return gate('Not ready yet', 'Hub settings needs the latest update to the FLR database. Ask whoever looks after it to run the “app access” update, then try again.', { retry: true });
+      return gate('Hub settings didn’t load', offline(e) ? 'Can’t reach the FLR database. Check your connection and try again.' : 'Something went wrong. Try again in a moment.', { retry: true });
+    }
+    $('#gate').hidden = true;
+    $('#accounts-section').hidden = false; $('#registration-section').hidden = false;
+    renderAccounts(); renderSettings(); renderPre();
+    view('ready');
+  }
+  async function reloadAccounts() {
+    const acc = await call('admin_accounts');
+    S.you = acc.you; S.apps = acc.apps || []; S.accounts = acc.accounts || [];
+    renderAccounts();
+    if (openFor) { const a = byId(openFor); if (a) fillSheet(a); else sheets.close($('#sheet-account')); }
+  }
+
+  /* ---------------------------------------------------------------- giving and taking apps (the list and the account sheet) */
+  async function toggleApp(btn) {
+    const a = byId(btn.dataset.user), app = btn.dataset.app;
+    if (!a || btn.getAttribute('aria-busy') === 'true') return;
+    const on = btn.getAttribute('aria-checked') !== 'true';
+    for (const b of document.querySelectorAll(`.switch[data-user="${a.id}"][data-app="${app}"]`)) { b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-busy', 'true'); }
+    try {
+      const row = await call('admin_set_app_access', { p_user: a.id, p_app: app, p_allowed: on });
+      replaceAccount(row);
+      toast(`${appTitle(app)} ${on ? 'on' : 'off'} for ${nameOf(row)}`);
+    } catch (e) {
+      for (const b of document.querySelectorAll(`.switch[data-user="${a.id}"][data-app="${app}"]`)) b.setAttribute('aria-checked', on ? 'false' : 'true');
+      toast(said(e));
+      if (flrCode(e) === 'FLR_NOT_FOUND') reloadAccounts().catch(() => {});
+    } finally {
+      for (const b of document.querySelectorAll(`.switch[data-user="${a.id}"][data-app="${app}"]`)) b.removeAttribute('aria-busy');
+    }
+  }
+  document.addEventListener('click', e => {
+    const sw = e.target.closest('.switch[data-app][data-user]');
+    if (sw) { toggleApp(sw); return; }
+    const open = e.target.closest('[data-open]');
+    if (open) openAccount(open.dataset.open);
+  });
+  $('#search').addEventListener('input', e => { S.query = e.target.value; filter(); });
+
+  /* ---------------------------------------------------------------- one account */
+  let openFor = '';
+  function appNote(a, id) {
+    if (id === 'speeding') return a.role === 'admin' ? 'Sees every driver' : a.driver ? `Sees their own driving (${a.driver})` : 'Not linked to a FleetView driver, so it shows them nothing yet';
+    if (id === 'annual-leave') return a.approver ? 'Leave approver: sees everyone’s leave' : 'Their own leave';
+    if (id === 'fitters') return 'Photos and plates here; the schedule also needs the team passcode';
+    if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
+    return '';
+  }
+  function fillSheet(a) {
+    const self = a.id === S.you;
+    $('#sa-initials').textContent = initials(nameOf(a));
+    $('#sa-name').textContent = nameOf(a);
+    $('#sa-email').textContent = a.email;
+    $('#sa-meta').textContent = `Joined ${day(a.createdAt)} · ${seen(a.lastSeen)}`;
+    const role = $('#sa-role');
+    role.value = a.role; role.disabled = self;
+    $('#sa-role-sub').textContent = self ? 'You can’t change your own role' : ROLE_NOTE[a.role] || '';
+    const active = $('#sa-active');
+    active.setAttribute('aria-checked', a.status === 'disabled' ? 'false' : 'true');
+    active.disabled = self;
+    $('#sa-active-sub').textContent = self ? 'You can’t switch off your own account' : a.status === 'disabled' ? 'Can’t sign in to the Hub or any app' : 'Can sign in';
+    $('#sa-apps').replaceChildren(...S.apps.map(app => {
+      const row = el('div', 'row row-static');
+      const main = el('span', 'row-main');
+      main.append(el('span', 'row-title', appTitle(app.id)), el('span', 'row-sub', appNote(a, app.id)));
+      row.append(main, switchEl(a.apps.includes(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { app: app.id, user: a.id }));
+      return row;
+    }));
+  }
+  function openAccount(id) {
+    const a = byId(id);
+    if (!a) return;
+    openFor = id; fillSheet(a);
+    sheets.open($('#sheet-account'));
+  }
+  $('#sa-role').addEventListener('change', async e => {
+    const a = byId(openFor), role = e.target.value;
+    if (!a || role === a.role) return;
+    const toAdmin = role === 'admin', fromAdmin = a.role === 'admin';
+    if ((toAdmin || fromAdmin) && !(await confirmIt(
+      toAdmin ? `Make ${firstName(a)} an administrator?` : `Take ${firstName(a)}’s administrator rights away?`,
+      toAdmin ? 'Administrators look after every account, these settings and the Cost Estimator’s prices and rules, and see everything in their apps.'
+              : `${firstName(a)} will no longer be able to open Hub settings or change accounts.`,
+      toAdmin ? 'Make administrator' : 'Take away', !toAdmin))) { e.target.value = a.role; return; }
+    e.target.disabled = true;
+    try { await call('admin_set_role', { p_user: a.id, p_role: role }); await reloadAccounts(); toast(`${nameOf(a)} is now ${toAdmin ? 'an administrator' : role === 'developer' ? 'a developer' : 'an estimator'}`); }
+    catch (err) { e.target.value = a.role; toast(said(err)); }
+    finally { e.target.disabled = a.id === S.you; }
+  });
+  $('#sa-active').addEventListener('click', async e => {
+    const btn = e.currentTarget, a = byId(openFor);
+    if (!a || btn.disabled || btn.getAttribute('aria-busy') === 'true') return;
+    const on = a.status === 'disabled';
+    if (!on && !(await confirmIt(`Switch off ${firstName(a)}’s account?`, 'They won’t be able to sign in to the Hub or any app until it’s switched back on. Nothing of theirs is deleted.', 'Switch off', true))) return;
+    btn.setAttribute('aria-busy', 'true'); btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    try { await call('admin_set_status', { p_user: a.id, p_status: on ? 'active' : 'disabled' }); await reloadAccounts(); toast(on ? `${nameOf(a)} switched back on` : `${nameOf(a)} switched off`); }
+    catch (err) { btn.setAttribute('aria-checked', on ? 'false' : 'true'); toast(said(err)); }
+    finally { btn.removeAttribute('aria-busy'); }
+  });
+  $('#sa-reset').addEventListener('click', async e => {
+    const a = byId(openFor), btn = e.currentTarget;
+    if (!a || btn.disabled) return;
+    btn.disabled = true;
+    try {
+      const { error } = await client().auth.resetPasswordForEmail(a.email, { redirectTo: HUB });
+      if (error) throw error;
+      toast(`Reset email sent to ${a.email}`);
+    } catch (err) { toast(offline(err) ? 'Can’t reach the FLR sign-in service. Check your connection.' : 'The reset email couldn’t be sent. Try again in a few minutes.'); }
+    finally { btn.disabled = false; }
+  });
+
+  /* ---------------------------------------------------------------- registration */
+  $('#reg-open').addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    if (btn.getAttribute('aria-busy') === 'true') return;
+    const open = btn.getAttribute('aria-checked') !== 'true';
+    btn.setAttribute('aria-busy', 'true'); btn.setAttribute('aria-checked', open ? 'true' : 'false');
+    try { await call('admin_set_registration', { p_open: open }); S.settings = await call('admin_hub_settings'); renderSettings(); toast(open ? 'Registration is open' : 'Registration is closed'); }
+    catch (err) { btn.setAttribute('aria-checked', open ? 'false' : 'true'); toast(said(err)); }
+    finally { btn.removeAttribute('aria-busy'); }
+  });
+  $('#defaults').addEventListener('click', async e => {
+    const btn = e.target.closest('.switch[data-default]');
+    if (!btn || btn.getAttribute('aria-busy') === 'true') return;
+    const app = btn.dataset.default, on = btn.getAttribute('aria-checked') !== 'true';
+    const next = S.apps.map(a => a.id).filter(id => id === app ? on : (S.settings.defaultApps || []).includes(id));
+    btn.setAttribute('aria-busy', 'true'); btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    try { S.settings = await call('admin_set_default_apps', { p_apps: next }); renderSettings(); toast(`New accounts ${on ? 'get' : 'don’t get'} ${appTitle(app)}`); }
+    catch (err) { btn.setAttribute('aria-checked', on ? 'false' : 'true'); btn.removeAttribute('aria-busy'); toast(said(err)); }
+  });
+  $('#code-change').addEventListener('click', () => { $('#code-form').reset(); formError(''); sheets.open($('#sheet-code')); });
+  $('#sc-show').addEventListener('click', e => {
+    const f = $('#sc-code'), show = f.type === 'password';
+    f.type = show ? 'text' : 'password'; e.currentTarget.textContent = show ? 'Hide' : 'Show';
+  });
+  function formError(text) { const p = $('#sc-error'); p.querySelector('span').textContent = text; p.hidden = !text; }
+  $('#code-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.currentTarget.querySelector('button[type="submit"]'), code = $('#sc-code').value;
+    if (btn.getAttribute('aria-busy') === 'true') return;
+    if (code.trim().length < 12) { formError('Use at least 12 characters.'); $('#sc-code').focus(); return; }
+    formError(''); btn.setAttribute('aria-busy', 'true');
+    try {
+      await call('admin_set_access_code', { p_code: code });
+      S.settings = await call('admin_hub_settings'); renderSettings();
+      sheets.close($('#sheet-code'));
+      toast('New access code set: share it with staff in person');
+    } catch (err) { formError(said(err)); }
+    finally { btn.removeAttribute('aria-busy'); }
+  });
+  $('#pre-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('#pre-email').value.trim().toLowerCase(), role = $('#pre-role').value;
+    if (!EMAIL.test(email)) { toast('Enter a valid email address'); $('#pre-email').focus(); return; }
+    const btn = e.currentTarget.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      S.pre = await call('admin_set_preassigned_role', { p_email: email, p_role: role }) || [];
+      renderPre(); $('#pre-email').value = '';
+      await reloadAccounts();
+      toast(`${email} will be ${role === 'admin' ? 'an administrator' : role === 'developer' ? 'a developer' : 'an estimator'}`);
+    } catch (err) { toast(said(err)); }
+    finally { btn.disabled = false; }
+  });
+  $('#pre-list').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-unassign]');
+    if (!btn) return;
+    btn.disabled = true;
+    try { S.pre = await call('admin_remove_preassigned_role', { p_email: btn.dataset.unassign }) || []; renderPre(); toast('Removed'); }
+    catch (err) { btn.disabled = false; toast(said(err)); }
+  });
+
+  /* ---------------------------------------------------------------- sheets and the confirmation */
+  const sheets = {
+    open(d) {
+      if (d.open) return;
+      d.showModal();
+      document.documentElement.classList.add('sheet-open');
+      requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('open')));
+      // A sheet to type in (the access code) starts in its field; the others leave focus where the dialog puts it, so a
+      // click doesn't ring the role menu, and a confirmation starts on Cancel.
+      const first = d.querySelector('input');
+      if (first && !matchMedia('(pointer: coarse)').matches) setTimeout(() => first.focus({ preventScroll: true }), reduced() ? 0 : 60);
+    },
+    close(d) {
+      if (!d.open) return;
+      d.classList.remove('open');
+      const done = () => { if (!d.classList.contains('open') && d.open) d.close(); };
+      if (reduced()) done(); else setTimeout(done, 420);
+    },
+  };
+  for (const d of document.querySelectorAll('dialog.sheet')) {
+    d.addEventListener('cancel', e => { e.preventDefault(); sheets.close(d); });
+    d.addEventListener('close', () => {
+      if (!document.querySelector('dialog.sheet[open]')) document.documentElement.classList.remove('sheet-open');
+      if (d.id === 'sheet-account') openFor = '';
+      if (d.id === 'sheet-confirm' && confirming) { confirming(false); confirming = null; }
+    });
+    d.addEventListener('click', e => { if (e.target.closest('[data-close]')) sheets.close(d); });
+  }
+  let confirming = null;
+  function confirmIt(title, text, ok, danger) {
+    if (confirming) confirming(false);
+    $('#cf-title').textContent = title; $('#cf-text').textContent = text;
+    const b = $('#cf-ok'); b.textContent = ok; b.className = danger ? 'btn btn-danger' : 'btn btn-primary';
+    return new Promise(res => {
+      confirming = res;
+      sheets.open($('#sheet-confirm'));
+      setTimeout(() => $('#cf-cancel').focus({ preventScroll: true }), 30);   // the safe answer has focus
+    });
+  }
+  $('#cf-ok').addEventListener('click', () => { const r = confirming; confirming = null; sheets.close($('#sheet-confirm')); if (r) r(true); });
+
+  /* ---------------------------------------------------------------- small things */
+  let toastTimer = 0;
+  function toast(text) {
+    const t = $('#toast');
+    t.textContent = text; t.hidden = false;
+    if (!reduced()) t.animate([{ opacity: 0, transform: 'translate(-50%, 12px) scale(.96)' }, { opacity: 1, transform: 'translate(-50%, 0) scale(1)' }], { duration: 380, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      if (reduced()) { t.hidden = true; return; }
+      const a = t.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' });
+      a.onfinish = () => { t.hidden = true; a.cancel(); };
+    }, 2600);
+  }
+  // The bar's material and the small title come in as the page scrolls under it.
+  let raf = 0;
+  addEventListener('scroll', () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; $('#bar').style.setProperty('--bar-mat', Math.min(1, Math.max(0, (scrollY - 20) / 30)).toFixed(3)); });
+  }, { passive: true });
+  $('#gate-retry').addEventListener('click', () => { $('#gate-message').hidden = true; view('loading'); load(); });
+  document.addEventListener('touchstart', () => {}, { passive: true });   // iOS: press feedback starts on touch-down
+  addEventListener('pagereveal', e => { const t = e.viewTransition; if (t) { t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {}); } });
+
+  function start() {
+    const c = client();
+    if (c) c.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') setTimeout(() => location.replace(SIGN_IN), 0); });
+    load();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();

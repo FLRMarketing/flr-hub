@@ -14,6 +14,8 @@
   const AUTH_KEY = 'flr-estimator-auth';   // the Cost Estimator's key: one sign-in for the whole site
   const NAME_KEY = 'flr-hub:name';         // this browser only: greet people by name before the database answers
   const ROLES = { estimator: 'Estimator', admin: 'Administrator', developer: 'Developer' };
+  // Only for a database from before each account was given its apps (hub_home without 'apps'): it showed everyone the
+  // Estimator. Since then the Estimator is a tile like the others, for the accounts that have it.
   const ESTIMATOR = { id: 'estimator', title: 'Cost Estimator', subtitle: 'Price commercial flooring jobs and build quotes.', url: 'estimator/' };
   const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -321,9 +323,14 @@
     $('#acct-email').textContent = (home && home.email) || '';
     const role = home && ROLES[home.role];
     $('#acct-role').textContent = role || ''; $('#acct-role').hidden = !role;
-    const tiles = [tileEl(ESTIMATOR)];
-    if (o.loading) tiles.push(tileEl(null, { loading: true }));
-    else for (const t of (home && home.tiles) || []) if (safeTile(t)) tiles.push(tileEl(t));
+    // Hub settings: for administrators (the settings page asks the database again, which decides).
+    $('#settings-btn').hidden = !(home && home.role === 'admin');
+    const tiles = [];
+    if (o.loading) tiles.push(tileEl(null, { loading: true }), tileEl(null, { loading: true }));
+    else {
+      if (home && home.tiles && !home.apps) tiles.push(tileEl(ESTIMATOR));
+      for (const t of (home && home.tiles) || []) if (safeTile(t)) tiles.push(tileEl(t));
+    }
     $('#tiles').replaceChildren(...tiles);
     const n = $('#home-notice'); n.querySelector('span').textContent = o.notice || ''; n.hidden = !o.notice;
   }
@@ -343,29 +350,30 @@
       let r = await c.rpc('hub_home');
       let home = r.error ? null : r.data;
       if (r.error && missingFunction(r.error)) {
-        // This database doesn't have the hub's tiles yet: greet the person and still offer the Estimator.
+        // This database doesn't have the hub's tiles yet: greet the person and still offer the Estimator (renderHome adds
+        // it for any database without the apps).
         const m = await c.rpc('me');
         if (!m.error && m.data) home = { name: m.data.name, email: m.data.upn, role: (m.data.roles || [])[0], tiles: [] };
         else r = m;
       }
       if (!home) return failed(r.error, o);
       store.set(NAME_KEY, home.name || '');
-      const fresh = current !== 'home';
       renderHome(home);
       await show('home', { animate: o.animate });
-      rise([...$('#tiles').children].slice(fresh ? 0 : 1));
+      rise([...$('#tiles').children]);
       goNext(home);
     })().finally(() => { loading = null; });
     return loading;
   }
   // A tool on this site sent someone here to sign in (…/?next=speeding): once they're in, carry on to it, but only
-  // to a page of this site that is one of their tiles.
+  // to a page of this site that is one of their tiles (or Hub settings, for an administrator).
   function goNext(home) {
     const next = new URLSearchParams(location.search).get('next');
     if (!next) return;
     history.replaceState(null, '', location.pathname + location.hash);   // Back from the tool returns to a plain hub
     const path = next + '/';
-    const theirs = path === ESTIMATOR.url || ((home && home.tiles) || []).some(t => t && t.url === path);
+    const theirs = ((home && home.tiles) || []).some(t => t && t.url === path) || (path === ESTIMATOR.url && !(home && home.apps))
+      || (path === 'settings/' && home && home.role === 'admin');
     if (/^[a-z0-9-]{1,40}$/.test(next) && theirs) location.assign(path);
   }
   async function failed(err, o) {
@@ -378,7 +386,7 @@
       formError('#signin-error', ACCOUNT[code] || ACCOUNT.FLR_SIGN_IN_REQUIRED);
       return show('signin', { animate: o.animate });
     }
-    // The database couldn't be reached: keep the Estimator tile, say what happened, offer a retry.
+    // The database couldn't be reached: say what happened and offer a retry (which tools are theirs is the database's to say).
     renderHome({ name: store.get(NAME_KEY) || '' }, {
       notice: offline(err) ? 'Can’t reach the FLR sign-in service, so some tools may be missing. Check your connection.' : 'Some of your tools didn’t load.',
     });

@@ -25,27 +25,35 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `flr-config.js` | The FLR sign-in's address and public key. Both are safe to publish. |
 | `vendor/supabase-2.116.0.js` | The Supabase client, the same version the Estimator bundles. |
 | `tool-transition.css` | The slide between the hub and a tool, linked from each tool's page. |
+| `settings/` | Hub settings, for FLR administrators (the gear beside their initials): accounts, the apps each person can use, and registration. It calls the database's `admin_*` functions, which check every call. |
 | `estimator/` | The Estimator's production page (no pricing data), copied by `scripts/sync-estimator.sh`. |
 | `speeding/` | The Speeding Report page, built by `scripts/sync-speeding.py` from `../flr-speeding-report` with no photos or names; `bridge.js`, which answers the page's data requests from the FLR database; and `map/`, the OpenStreetMap road and place packs (public map data). |
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
-## Tiles
+## Tiles, and who uses which app
 
-The hub always shows the Cost Estimator. Other tiles come from the database (`public.hub_home()`), from the migration
-`supabase/migrations/20260928000100_flr_hub.sql` in the Estimator's repository. A tile's link is either a page of this
-site such as `speeding/` (same tab) or an `https://` address (new tab). Change tiles in the Supabase SQL editor, or as an
-FLR administrator:
+Every app is a tile in the database (`public.hub_home()`): the Cost Estimator (`estimator`), Fleet Management
+(`speeding`), Annual Leave (`annual-leave`) and the Fitter Schedule (`fitters`). Since
+`supabase/migrations/20261001100000_flr_app_access.sql` (in the Estimator's repository), each tile has its own list of
+the accounts that may use the app, and administrators switch people on and off in **Hub settings**. The Hub shows each
+person only their apps, and the apps check the same list in the database, so going straight to an app's address
+doesn't get round it: the Estimator, Fleet Management and Annual Leave say "You don't have access to …". On the Fitter
+Schedule it covers the photos, plates and arrivals; the schedule itself is behind its team passcode. New accounts get the
+apps chosen under "New accounts get" in Hub settings (all four to begin with).
+
+A tile's link is either a page of this site such as `speeding/` (same tab) or an `https://` address (new tab). The SQL
+editor can do what Hub settings does:
 
 ```sql
-select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'everyone', 20);
-select public.admin_set_hub_tile_person('speeding', 'name@flr.co.uk', true);   -- false takes them off the list
-select public.admin_hub_tiles();                                              -- everything, with the lists
+select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'listed', 20);
+select public.admin_set_hub_tile_person('speeding', 'name@flr.co.uk', true);   -- by email; false takes them off the list
+select public.admin_accounts();                                               -- everyone, with their role, status and apps
 ```
 
-Use `'everyone'` instead of `'listed'` to show a tile to every FLR account. Before the migration is run, the hub still
-works and shows the Estimator only.
+A tile switched off (`active` false) is an app nobody can use. Before the app-access migration is run, the hub works as
+it did: the Estimator for everyone, plus the tiles their audience allows.
 
 ## The Speeding Report's data
 
@@ -159,7 +167,8 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 
 1. **Supabase, SQL editor:** run `20260928000100_flr_hub.sql`, then `20260928000200_flr_speeding.sql`. Then register the
    writer key's SHA-256 with `public.admin_set_speeding_writer(...)`, and add the tiles and people (above). For Annual
-   Leave, `20260928000300_flr_leave.sql` and the `flr-leave` function (the steps in its README).
+   Leave, `20260928000300_flr_leave.sql` and the `flr-leave` function (the steps in its README). For Hub settings and app access,
+   `20261001100000_flr_app_access.sql`, after the others (it adds an app check to their functions).
 2. **Supabase, Authentication, URL Configuration:** add `https://flrmarketing.github.io/flr-hub/`,
    `https://flrmarketing.github.io/flr-hub/estimator/` and `https://flrmarketing.github.io/flr-hub/speeding/` to the
    redirect URLs, so password-reset emails come back here.

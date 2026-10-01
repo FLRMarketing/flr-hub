@@ -1,0 +1,153 @@
+/* ============================================================================
+   FLR Hub settings: accounts, the apps each person can use, and registration.
+   Built on hub.css (its tokens, grouped rows, buttons, sheets and toast): only
+   what this page adds is here.
+   ========================================================================== */
+@property --y{syntax:'<length>';inherits:false;initial-value:0px}
+
+/* ---------------------------------------------------------------- bar: Back to the Hub, the title once the big one scrolls away */
+.bar-inner{display:grid;grid-template-columns:1fr auto 1fr}
+.back{display:inline-flex;align-items:center;gap:2px;justify-self:start;margin-left:-8px;padding:8px 10px 8px 4px;border-radius:10px;color:var(--tint);
+  font:400 17px/1 var(--font-text);letter-spacing:-.012em;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.back svg{width:24px;height:24px}
+.back:active{opacity:.55}
+.bar-title{margin:0;font:600 17px/1 var(--font-text);letter-spacing:-.02em;opacity:var(--bar-mat,0)}
+
+/* ---------------------------------------------------------------- page */
+.settings{padding-block:10px 40px}
+.settings-head{margin-bottom:26px}
+.settings-head .lede{margin:6px 0 0;max-width:52ch;text-wrap:pretty}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.section{margin-bottom:40px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+.section-title{margin:0;font:700 22px/1.2 var(--font-display);letter-spacing:-.018em}
+.section-count{margin:0;color:var(--ink-3);font-size:15px;font-variant-numeric:tabular-nums}
+.section-note{margin:0 0 14px;max-width:70ch;color:var(--ink-2);font-size:15px;line-height:1.4}
+.sub-title{margin:24px 16px 7px;color:var(--ink-2);font:400 13px/1.3 var(--font-text);letter-spacing:.01em;text-transform:uppercase}
+.section > .group + .hint,.section .hint{margin:8px 16px 0;max-width:70ch}
+
+/* ---------------------------------------------------------------- what stands between the person and the page */
+.gate-loading{display:flex;flex-direction:column;gap:10px}
+.skeleton-line,.skeleton-block{display:block;border-radius:8px;background:var(--skeleton)}
+.skeleton-line{width:40%;height:22px}
+.skeleton-line.short{width:24%;height:14px}
+.skeleton-block{height:260px;border-radius:var(--r-group)}
+@media (prefers-reduced-motion:no-preference){
+  .skeleton-line,.skeleton-block{background:linear-gradient(90deg,var(--skeleton) 30%,var(--skeleton-hi) 50%,var(--skeleton) 70%) 0 0/300% 100%;animation:shimmer 1.4s linear infinite}
+}
+.gate-message{padding:28px 24px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);text-align:center}
+.gate-title{margin:0 0 6px;font:650 21px/1.25 var(--font-display);letter-spacing:-.017em}
+.gate-text{margin:0 auto 18px;max-width:46ch;color:var(--ink-2);font-size:16px;line-height:1.45}
+.gate-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0}
+.gate-actions .btn{text-decoration:none}
+body:not([data-view="loading"]) .gate-loading{display:none}
+
+/* ---------------------------------------------------------------- buttons this page adds */
+.btn-plain{background:var(--fill);color:var(--tint)}
+@media (hover:hover){.btn-plain:hover{background:var(--fill-2)}}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{min-height:34px;padding:0 14px;border-radius:999px;background:var(--fill);color:var(--tint);font-size:15px;flex:none}
+.btn-tint{background:var(--tint-fill);color:var(--on-tint)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+
+/* ---------------------------------------------------------------- the switch, as in Settings on iPhone */
+.switch{position:relative;flex:none;width:51px;height:31px;padding:0;border:0;border-radius:999px;background:var(--fill-2);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background-color .25s ease}
+.switch .knob{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16),0 3px 1px rgba(0,0,0,.06);transition:transform .3s cubic-bezier(.3,1.3,.5,1),width .2s ease}
+.switch[aria-checked="true"]{background:#34c759}
+.switch[aria-checked="true"] .knob{transform:translateX(20px)}
+.switch:active:not([disabled]) .knob{width:31px}
+.switch[aria-checked="true"]:active:not([disabled]) .knob{transform:translateX(16px)}
+.switch[disabled]{opacity:.45;cursor:default}
+.switch[aria-busy="true"]{opacity:.7;pointer-events:none}
+@media (prefers-color-scheme:dark){.switch[aria-checked="true"]{background:#30d158}}
+
+/* ---------------------------------------------------------------- search */
+.search{position:relative;display:block;margin-bottom:12px}
+.search svg{position:absolute;left:10px;top:50%;width:19px;height:19px;margin-top:-9.5px;color:var(--ink-3);pointer-events:none}
+.search input{width:100%;height:40px;padding:0 12px 0 36px;border:0;border-radius:11px;background:var(--fill);font-size:17px;letter-spacing:-.01em;outline:none}
+.search input::placeholder{color:var(--ink-3);opacity:1}
+.search input:focus-visible{box-shadow:0 0 0 3px var(--focus)}
+.search input::-webkit-search-cancel-button{cursor:pointer}
+
+/* ---------------------------------------------------------------- accounts: a table on wide screens, cards on phones */
+.accounts{--apps:4;--app-w:72px;border-radius:var(--r-group);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.acct-head,.acct{display:grid;grid-template-columns:minmax(0,1fr) 128px 112px calc(var(--apps) * var(--app-w));align-items:center;column-gap:12px;padding:0 16px}
+.acct-head{min-height:40px;color:var(--ink-3);font:600 12px/1.2 var(--font-text);letter-spacing:.02em;text-transform:uppercase;box-shadow:inset 0 calc(-1 * var(--hair)) 0 var(--sep)}
+.apps-head{display:grid;grid-template-columns:repeat(var(--apps),var(--app-w));text-align:center}
+.acct-list{margin:0;padding:0;list-style:none}
+.acct{position:relative;min-height:66px}
+.acct + .acct::before{content:"";position:absolute;top:0;left:68px;right:0;height:var(--hair);background:var(--sep)}
+.acct[hidden]{display:none}
+.acct-person{display:flex;align-items:center;gap:12px;min-width:0;margin:0 0 0 -8px;padding:10px 8px;border:0;border-radius:12px;background:none;text-align:left;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s}
+@media (hover:hover){.acct-person:hover{background:var(--fill)}}
+.acct-person:active{background:var(--press)}
+.acct-person .avatar{width:40px;height:40px;font-size:15px;cursor:inherit}
+.acct-text{display:flex;flex-direction:column;min-width:0}
+.acct-name{display:flex;align-items:center;gap:6px;min-width:0;font:600 16px/1.25 var(--font-text);letter-spacing:-.012em}
+.acct-name > span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-email{overflow:hidden;color:var(--ink-2);font-size:14px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+.acct-role{color:var(--ink-2);font-size:15px}
+.pill{display:inline-flex;align-items:center;flex:none;padding:3px 9px;border-radius:999px;background:var(--fill);color:var(--ink-2);font:600 12px/1.3 var(--font-text);white-space:nowrap}
+.pill-on{background:var(--green-soft);color:var(--green)}
+.pill-off{background:var(--red-soft);color:var(--red)}
+.pill-you{background:var(--tint-soft);color:var(--tint);padding:1px 7px}
+.acct-apps{display:grid;grid-template-columns:repeat(var(--apps),var(--app-w));justify-items:center}
+.app-cell{display:contents}
+.app-cell .app-label{display:none}
+.acct.is-off .acct-person,.acct.is-off .acct-role{opacity:.55}
+.empty{margin:0;padding:22px 16px;color:var(--ink-3);text-align:center}
+@media (max-width:760px){
+  .acct-head{display:none}
+  .acct{grid-template-columns:minmax(0,1fr) auto;row-gap:2px;padding:6px 16px 14px}
+  .acct + .acct::before{left:16px}
+  .acct-role{display:none}
+  .acct-status{justify-self:end}
+  .acct-apps{grid-column:1 / -1;grid-template-columns:1fr 1fr;justify-items:stretch;gap:8px 14px;padding-top:6px}
+  .app-cell{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:4px 4px 4px 10px;border-radius:10px;background:var(--fill)}
+  .app-cell .app-label{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media (max-width:340px){.acct-apps{grid-template-columns:1fr}}
+
+/* ---------------------------------------------------------------- grouped rows that aren't text fields */
+.row-static{cursor:default;padding-block:8px}
+.row-static:focus-within{background:transparent}
+.row-main{display:flex;flex:1;flex-direction:column;min-width:0}
+.row-title{font-size:17px;line-height:1.3}
+.row-sub{color:var(--ink-3);font-size:13.5px;line-height:1.35}
+.row-sub:empty{display:none}
+label.row{cursor:text}
+.select-wrap{position:relative;flex:none}
+.select-wrap select{appearance:none;-webkit-appearance:none;height:34px;padding:0 30px 0 12px;border:0;border-radius:999px;background:var(--fill);color:var(--tint);
+  font:600 15px/1 var(--font-text);cursor:pointer}
+.select-wrap::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;margin-top:-6px;border:solid var(--tint);border-width:0 2px 2px 0;
+  transform:rotate(45deg);pointer-events:none}
+.select-wrap select:disabled{color:var(--ink-3);cursor:default}
+.select-wrap:has(select:disabled)::after{border-color:var(--ink-3)}
+.pre-form{margin-top:12px}
+.pre-actions{justify-content:flex-end;gap:10px}
+.pre-row .row-main{gap:1px}
+.pre-row .row-title{overflow-wrap:anywhere}
+.group .empty{padding:14px 16px;text-align:left}
+
+/* ---------------------------------------------------------------- sheets: up from the bottom (in the middle on big screens); this page has no drag */
+.sheet .panel{transition:--y .45s cubic-bezier(.2,.9,.25,1)}
+.sheet .scrim{transition:opacity .3s ease}
+.sheet.open .panel{--y:0px}
+.sheet.open .scrim{opacity:1}
+.sheet-head{cursor:default}
+.who-meta{margin:6px 0 0;color:var(--ink-3);font-size:13.5px;line-height:1.4;text-wrap:balance}
+.sa-reset{margin-top:22px}
+#sa-apps .row-sub{max-width:40ch}
+.sheet-confirm .panel{width:min(calc(100% - 32px),380px);bottom:max(16px,env(safe-area-inset-bottom,0px));border-radius:var(--r-sheet);padding-bottom:0}
+.confirm-body{padding:24px 20px 20px;text-align:center}
+.confirm-body .sheet-title{font-size:20px}
+.confirm-body .sheet-lede{margin:8px 0 20px}
+.confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form .hint{margin-top:-4px}
+
+@media (prefers-reduced-motion:reduce){
+  .sheet .panel,.sheet .scrim,.switch,.switch .knob{transition:none}
+}

@@ -81,6 +81,13 @@ a{color:var(--tint)}
 .mark{display:block;flex:none;aspect-ratio:143/164}
 .bar-mark{height:30px;view-transition-name:flr-mark}
 .brand-name{color:var(--ink)}
+/* the bar's trailing controls: Hub settings (administrators only) and the account */
+.bar-trail{display:flex;align-items:center;gap:10px}
+.iconbtn{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:50%;background:var(--fill);color:var(--ink-2);
+  transition:transform .28s var(--ease-out),background-color .15s,color .15s}
+.iconbtn svg{width:21px;height:21px}
+.iconbtn:active{transform:scale(.92);transition-duration:.1s}
+@media (hover:hover){.iconbtn:hover{background:var(--fill-2);color:var(--ink)}}
 .avatar{display:grid;place-items:center;width:36px;height:36px;flex:none;padding:0;border:0;border-radius:50%;background:var(--tint-soft);
   color:var(--tint);font:600 14px/1 var(--font-text);letter-spacing:.01em;cursor:pointer;transition:transform .28s var(--ease-out),background-color .15s}
 .avatar:active{transform:scale(.92);transition-duration:.1s}

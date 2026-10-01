@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Settings · FLR Hub</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="flr-assist-nudge" content="off"><!-- Likkle Jeff: no speech bubble here, it would sit over the switches -->
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<link rel="icon" href="../assets/flr-icon-192.png">
+<!-- the Hub's look, then this page's; the tools' slide, so Settings arrives from the right and Back slides the Hub in again -->
+<link rel="stylesheet" href="../hub.css?v=1.4">
+<link rel="stylesheet" href="settings.css?v=1.0">
+<link rel="stylesheet" href="../tool-transition.css">
+<script src="../flr-config.js"></script>
+<script src="../vendor/supabase-2.116.0.js" defer></script>
+<script src="settings.js?v=1.0" defer></script>
+<script type="module" src="../assistant/assistant.js?v=2.1"></script>
+</head>
+<body data-view="loading">
+<svg class="defs" aria-hidden="true" focusable="false">
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5.5 8.5 12l6.5 6.5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l4.5 4.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01" stroke-width="2.6"/></symbol>
+  <symbol id="i-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></symbol>
+</svg>
+
+<header class="bar" id="bar">
+  <div class="wrap bar-inner">
+    <a class="back" href="../" id="back"><svg aria-hidden="true"><use href="#i-back"/></svg><span>Hub</span></a>
+    <p class="bar-title" id="bar-title" aria-hidden="true">Settings</p>
+    <span class="bar-end" aria-hidden="true"></span>
+  </div>
+</header>
+
+<main class="wrap settings" id="main">
+  <div class="settings-head">
+    <h1 class="display" id="title">Settings</h1>
+    <p class="lede">Who has an FLR account, which apps each person can use, and how new people join.</p>
+  </div>
+
+  <!-- what stands between the person and this page: loading, not an administrator, not set up yet, offline -->
+  <div class="gate" id="gate" role="status" aria-live="polite">
+    <div class="gate-loading" id="gate-loading"><span class="skeleton-line"></span><span class="skeleton-line short"></span><span class="skeleton-block"></span></div>
+    <div class="gate-message" id="gate-message" hidden>
+      <h2 class="gate-title" id="gate-title"></h2>
+      <p class="gate-text" id="gate-text"></p>
+      <p class="gate-actions"><a class="btn btn-primary" id="gate-home" href="../">Back to the Hub</a><button class="btn btn-plain" type="button" id="gate-retry" hidden>Try again</button></p>
+    </div>
+  </div>
+
+  <section class="section" id="accounts-section" aria-labelledby="accounts-title" hidden>
+    <div class="section-head">
+      <h2 class="section-title" id="accounts-title">Accounts</h2>
+      <p class="section-count" id="accounts-count"></p>
+    </div>
+    <p class="section-note">Switch an app on to let someone use it, off to take it away. Changes apply at once, and the apps check them too, so someone can’t get in by going to an app’s address.</p>
+    <label class="search">
+      <svg aria-hidden="true"><use href="#i-search"/></svg>
+      <span class="sr">Find an account</span>
+      <input type="search" id="search" placeholder="Search by name or email" autocomplete="off" spellcheck="false" enterkeyhint="search">
+    </label>
+    <div class="accounts" id="accounts">
+      <div class="acct-head" id="acct-head" aria-hidden="true">
+        <span>Person</span><span>Role</span><span>Status</span><span class="apps-head" id="apps-head"></span>
+      </div>
+      <ul class="acct-list" id="acct-list"></ul>
+      <p class="empty" id="accounts-empty" hidden>No account matches that search.</p>
+    </div>
+  </section>
+
+  <section class="section" id="registration-section" aria-labelledby="registration-title" hidden>
+    <div class="section-head"><h2 class="section-title" id="registration-title">Registration</h2></div>
+    <p class="section-note">People register on the Hub with the FLR access code, which you share with staff in person.</p>
+    <div class="group">
+      <div class="row row-static">
+        <span class="row-main"><span class="row-title" id="reg-open-label">Let new people register</span><span class="row-sub" id="reg-open-sub"></span></span>
+        <button class="switch" type="button" role="switch" id="reg-open" aria-labelledby="reg-open-label" aria-checked="false"><span class="knob"></span></button>
+      </div>
+      <div class="row row-static">
+        <span class="row-main"><span class="row-title">Access code</span><span class="row-sub" id="code-status"></span></span>
+        <button class="btn btn-small" type="button" id="code-change">Change</button>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="defaults-title">New accounts get</h3>
+    <div class="group" id="defaults" role="group" aria-labelledby="defaults-title"></div>
+    <p class="hint">Only for people who register from now on. Everyone already registered keeps their own apps, which you change under Accounts.</p>
+
+    <h3 class="sub-title" id="pre-title">Roles assigned in advance</h3>
+    <div class="group" id="pre-list" aria-labelledby="pre-title"></div>
+    <form class="group pre-form" id="pre-form" novalidate>
+      <label class="row"><span class="sr">Email address</span><input type="email" id="pre-email" placeholder="name@flr.co.uk" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="email" required></label>
+      <div class="row row-static pre-actions">
+        <label class="select-wrap"><span class="sr">Role</span><select id="pre-role"><option value="estimator">Estimator</option><option value="developer">Developer</option><option value="admin">Administrator</option></select></label>
+        <button class="btn btn-small btn-tint" type="submit">Assign</button>
+      </div>
+    </form>
+    <p class="hint">Someone who registers with that email address starts with that role (an account that already exists changes at once). Use it only for addresses you know: whoever registers an address first gets its role.</p>
+  </section>
+</main>
+
+<footer class="foot"><p>FLR Group · Tools for staff</p></footer>
+
+<!-- one account: role, on or off, apps, password reset -->
+<dialog class="sheet" id="sheet-account" aria-labelledby="sa-name">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title">Account</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="sheet-body">
+      <div class="who">
+        <span class="avatar avatar-lg" id="sa-initials" aria-hidden="true"></span>
+        <p class="who-name" id="sa-name"></p>
+        <p class="who-email" id="sa-email"></p>
+        <p class="who-meta" id="sa-meta"></p>
+      </div>
+      <h3 class="sub-title">Role</h3>
+      <div class="group">
+        <div class="row row-static">
+          <label class="row-main" for="sa-role"><span class="row-title">Role</span><span class="row-sub" id="sa-role-sub"></span></label>
+          <label class="select-wrap"><select id="sa-role"><option value="estimator">Estimator</option><option value="developer">Developer</option><option value="admin">Administrator</option></select></label>
+        </div>
+        <div class="row row-static">
+          <span class="row-main"><span class="row-title" id="sa-active-label">Account on</span><span class="row-sub" id="sa-active-sub"></span></span>
+          <button class="switch" type="button" role="switch" id="sa-active" aria-labelledby="sa-active-label" aria-checked="true"><span class="knob"></span></button>
+        </div>
+      </div>
+      <h3 class="sub-title" id="sa-apps-title">Apps</h3>
+      <div class="group" id="sa-apps" role="group" aria-labelledby="sa-apps-title"></div>
+      <div class="group sa-reset">
+        <button class="row row-button" type="button" id="sa-reset">Send a password reset email</button>
+      </div>
+      <p class="hint" id="sa-hint">Passwords are never visible to anyone, administrators included.</p>
+    </div>
+  </div>
+</dialog>
+
+<!-- a new access code -->
+<dialog class="sheet" id="sheet-code" aria-labelledby="sc-title">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title" id="sc-title">New access code</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <form class="sheet-body form" id="code-form" novalidate>
+      <p class="sheet-lede">The code new people type to register. It’s stored so nobody can read it back, so share the new one with staff in person.</p>
+      <div class="group">
+        <label class="row"><span class="row-label">Code</span><input type="password" id="sc-code" autocomplete="new-password" minlength="12" maxlength="120" required aria-describedby="sc-hint"><button class="link" type="button" id="sc-show">Show</button></label>
+      </div>
+      <p class="hint" id="sc-hint">At least 12 characters. The old code stops working at once.</p>
+      <p class="form-error" id="sc-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+      <button class="btn btn-primary btn-block" type="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Set the new code</span></button>
+    </form>
+  </div>
+</dialog>
+
+<!-- are you sure? -->
+<dialog class="sheet sheet-confirm" id="sheet-confirm" aria-labelledby="cf-title" aria-describedby="cf-text">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <div class="sheet-body confirm-body">
+      <h2 class="sheet-title" id="cf-title"></h2>
+      <p class="sheet-lede" id="cf-text"></p>
+      <div class="confirm-actions"><button class="btn btn-plain" type="button" data-close id="cf-cancel">Cancel</button><button class="btn btn-danger" type="button" id="cf-ok"></button></div>
+    </div>
+  </div>
+</dialog>
+
+<p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+<noscript><p class="noscript">Hub settings needs JavaScript.</p></noscript>
+</body>
+</html>

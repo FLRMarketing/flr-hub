@@ -228,14 +228,17 @@
         "where has my app gone",
         "some of my tools didn't load",
         "why is an icon missing",
-        "why can't I see the same tools as my manager"
+        "why can't I see the same tools as my manager",
+        "it says I don't have access to the cost estimator",
+        "annual leave says I don't have access",
+        "why can't I open fleet management"
       ],
       "keys": [
         "missing",
         "access",
         "icon"
       ],
-      "answer": "Your Hub shows the tools your account can use. If one you need isn’t there, ask an FLR administrator for access.\n\nIf the Hub says “Some of your tools didn’t load”, press “Try again”.",
+      "answer": "Your Hub shows the apps your account can use: FLR administrators choose them in Hub settings. If one you need isn’t there, or an app says you don’t have access, ask an FLR administrator.\n\nIf the Hub says “Some of your tools didn’t load”, press “Try again”.",
       "link": {
         "href": "./",
         "label": "Go to the Hub"
@@ -257,7 +260,43 @@
         "switched off",
         "blocked"
       ],
-      "answer": "If a page says your FLR account is switched off, only an FLR administrator can switch it back on. Ask one to check it."
+      "answer": "If a page says your FLR account is switched off, only an FLR administrator can switch it back on, in Hub settings. Ask one to check it."
+    },
+    {
+      "id": "hub-settings",
+      "tool": "hub",
+      "who": "admin",
+      "title": "Manage accounts and app access",
+      "ask": [
+        "how do I give someone access to an app",
+        "turn off someone's access to an app",
+        "switch the cost estimator on for someone",
+        "stop someone using fleet management",
+        "manage staff accounts",
+        "where do I manage accounts now",
+        "switch off a leaver's account",
+        "how do I close registration",
+        "send someone else a password reset",
+        "where are the hub settings",
+        "which apps does a new account get",
+        "change which apps a person can use"
+      ],
+      "keys": [
+        "settings",
+        "accounts",
+        "app access",
+        "registration",
+        "leaver"
+      ],
+      "answer": "FLR administrators look after every account in Hub settings: the gear beside your initials on the Hub. Each person has a switch for each app (Cost Estimator, Fleet Management, Annual Leave, Fitter Schedule); their name opens their role, a switch for the whole account and a password reset. Registration, the access code and what new accounts get are under “Registration”.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "tools-missing",
+        "account-off"
+      ]
     },
     {
       "id": "back-to-hub",
@@ -616,7 +655,7 @@
         "developer",
         "permission"
       ],
-      "answer": "Estimators can create, edit, approve and archive quotations. Administrators can also delete and reassign them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub.",
+      "answer": "Estimators can create, edit, approve and archive quotations. Administrators can also delete and reassign them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub; FLR administrators change it in Hub settings.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"

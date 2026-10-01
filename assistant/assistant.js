@@ -25,7 +25,7 @@ const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
 const LOG_KEY = 'flr-assist:log', GUIDE_KEY = 'flr-assist:guide';
-const NAMES = { hub: 'the Hub', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule' };
+const NAMES = { hub: 'the Hub', settings: 'Hub settings', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule' };
 const PAGE = location.pathname.includes('/fitter-schedule/') ? 'fitters'
   : (location.pathname.startsWith(HUB.pathname) ? location.pathname.slice(HUB.pathname.length).split('/')[0] : '') || 'hub';
 // The Fitter Schedule has its own way in (a team passcode) and lives outside the Hub's folder: people use it without
@@ -74,7 +74,8 @@ function context() {
       if (!r.ok) return unknown;
       const h = await r.json(), titles = {}, urls = { estimator: new URL('estimator/', HUB).href };
       for (const t of h.tiles || []) if (t && t.id) { titles[t.id] = t.title; if (t.url) urls[t.id] = new URL(t.url, HUB).href; }
-      return { signedIn: true, name: h.name || '', role: h.role || '', tools: new Set(['hub', 'estimator', ...Object.keys(titles)]), urls, titles };
+      // 'apps': Hub settings decides who has each app, the Cost Estimator included (a tile like the others); before it, everyone had it
+      return { signedIn: true, name: h.name || '', role: h.role || '', tools: new Set(['hub', ...(h.apps ? [] : ['estimator']), ...Object.keys(titles)]), urls, titles };
     } catch (e) { return unknown; }
   })();
   ctxMemo = { token, p };
@@ -278,7 +279,9 @@ function stir(ev) {
 for (const t of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll']) addEventListener(t, stir, { capture: true, passive: true });
 document.addEventListener('visibilitychange', () => stir());
 const LINE_KEY = 'flr-assist:line', nudgeEl = fab.querySelector('.fab-nudge');
-const quietHere = () => !document.hidden && !panel.open && !host.hasAttribute('data-covered') && !fab.classList.contains('noart');
+// A page of switches (Hub settings) asks him not to: <meta name="flr-assist-nudge" content="off">. His bubble would sit over them and take the tap.
+const NO_NUDGE = !!document.querySelector('meta[name="flr-assist-nudge"][content="off"]');
+const quietHere = () => !NO_NUDGE && !document.hidden && !panel.open && !host.hasAttribute('data-covered') && !fab.classList.contains('noart');
 // What he says comes from lines.js: for this page, signing in or the time of day, with their first name if the Hub
 // tells it quickly enough; never the line he said last, even on the page before.
 async function nudge(first) {
@@ -359,7 +362,7 @@ function chipsFor(ids, H, ctx) {   // with ctx: leave out tools that aren't on t
 }
 function gate(e, ctx) {
   if (!ctx.signedIn && e.link && e.link.tile && !(OWN_ACCESS && e.tool === PAGE)) return 'signin';
-  if (!e.tool || e.tool === 'hub' || !ctx.tools) return 'ok';
+  if (!e.tool || e.tool === 'hub' || !ctx.tools) return e.who === 'admin' && ctx.role && ctx.role !== 'admin' ? 'admin' : 'ok';   // Hub settings is the Hub's own
   if (!ctx.tools.has(e.tool)) return 'missing';
   if (e.who === 'admin' && ctx.role && ctx.role !== 'admin') return 'admin';
   if (e.who === 'estimator' && ctx.role === 'developer') return 'viewonly';
