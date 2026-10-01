@@ -1014,7 +1014,7 @@
         "out of date",
         "live"
       ],
-      "answer": "Fleet Management covers the 30 days up to each morning’s refresh from FleetView. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page; let an FLR administrator know if it stays.",
+      "answer": "Fleet Management covers the 30 days up to each morning’s refresh from FleetView. Vehicle details from the Monday fleet board update every 15 minutes. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page; let an FLR administrator know if it stays.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"

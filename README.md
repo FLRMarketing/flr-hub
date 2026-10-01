@@ -39,7 +39,7 @@ site such as `speeding/` (same tab) or an `https://` address (new tab). Change t
 FLR administrator:
 
 ```sql
-select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'listed', 20);
+select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'everyone', 20);
 select public.admin_set_hub_tile_person('speeding', 'name@flr.co.uk', true);   -- false takes them off the list
 select public.admin_hub_tiles();                                              -- everything, with the lists
 ```
@@ -49,10 +49,18 @@ works and shows the Estimator only.
 
 ## The Speeding Report's data
 
-The report page reads `public.speeding_data()`, from the migration `20260928000200_flr_speeding.sql`. That returns data
-only to active accounts the `speeding` tile is for, and each view is recorded in the audit trail. The data is written
-by the report's refresh jobs with `../flr-speeding-report/push_supabase.py`, which sends the same writes the Claude
-page gets. It uses a writer key kept in `~/.config/flr/speeding-writer.key`, of which the database holds only the SHA-256.
+The report page reads `public.speeding_data()` (migrations `20260928000200_flr_speeding.sql` and
+`20260928001000_flr_speeding_drivers.sql`): administrators get every driver, an account linked to a FleetView driver
+only that driver's own log, anyone else nothing, and each view is recorded in the audit trail.
+- **Vehicle details:** the Monday fleet board is synced every 15 minutes by the Supabase Edge Function `flr-fleet` (in
+  the Estimator's repository, `supabase/functions/flr-fleet/`, with its setup steps in its README), which writes only
+  what changed. `select public.admin_fleet_status();` shows how it's doing.
+- **Speeding data:** since 1 Oct 2026 the function can do this too, but FleetView doesn't yet let FLR's API key read
+  Driver Performance. Until it does, the morning Claude refresh writes it with `../flr-speeding-report/push_supabase.py`.
+  The same script loads the staff photos (`--photos`). It uses a writer key kept in `~/.config/flr/speeding-writer.key`,
+  of which the database holds only the SHA-256.
+- **Fresh data:** the page re-reads it when it comes back to the front after five minutes, and every 15 minutes while it
+  stays open.
 
 ## Updating the copies
 

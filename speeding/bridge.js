@@ -17,10 +17,11 @@
   const AUTH_KEY = 'flr-estimator-auth';        // the FLR sign-in the hub and the Estimator share
   const HUB = '../';
   const SIGN_IN = HUB + '?next=speeding';
-  const FRESH_MS = 10 * 60 * 1000;              // re-read when the page comes back to the front after 10 minutes
+  const FRESH_MS = 5 * 60 * 1000;               // re-read when the page comes back to the front after 5 minutes,
+  const OPEN_MS = 15 * 60 * 1000;               // and every 15 minutes while it stays open (FLR's server updates the data that often)
   const PHOTO = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
   const PREVIEW = (() => { try { return (new URLSearchParams(location.search).get('preview') || '').trim().slice(0, 120); } catch (e) { return ''; } })();
-  let sb = null, data = null, scope = null, loadedAt = 0, loading = null;
+  let sb = null, data = null, scope = null, loadedAt = 0, loading = null, sig = '';
   // The report's pages stay hidden until the database has said which view this person gets.
   document.documentElement.dataset.hub = 'loading';
   const subs = [];                              // the page's subscriptions, so fresh data reaches every one
@@ -74,14 +75,18 @@
     if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
   }
 
-  async function fetchData() {
+  // quiet: a re-read in the background. If it fails, the page keeps what it shows; the next visit says why.
+  async function fetchData(quiet) {
     const c = client();
-    if (!c) { blocked('Fleet Management can’t start', 'This copy of the FLR site has no sign-in settings (flr-config.js).'); return null; }
+    if (!c) { if (!quiet) blocked('Fleet Management can’t start', 'This copy of the FLR site has no sign-in settings (flr-config.js).'); return null; }
     let session = null;
     try { session = (await c.auth.getSession()).data.session; } catch (e) { /* treated as signed out */ }
-    if (!session) { location.replace(SIGN_IN); return new Promise(() => {}); }   // the hub signs people in, then brings them back
-    const r = PREVIEW ? await c.rpc('speeding_preview', { p_driver: PREVIEW }) : await c.rpc('speeding_data');
+    if (!session) { if (quiet) return null; location.replace(SIGN_IN); return new Promise(() => {}); }   // the hub signs people in, then brings them back
+    let r;
+    try { r = PREVIEW ? await c.rpc('speeding_preview', { p_driver: PREVIEW }) : await c.rpc('speeding_data'); }
+    catch (e) { r = { error: e }; }
     if (!r.error) return r.data;
+    if (quiet) return null;
     const code = flrCode(r.error), why = detailOf(r.error);
     if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return new Promise(() => {}); }
     if (code === 'FLR_FORBIDDEN' && why === 'speeding.unlinked') blocked('Nothing to show you yet', 'Fleet Management shows each driver their own speeding, driving score and vehicle details. If you drive an FLR vehicle, ask an FLR administrator to link your FLR account to your name.', { switchAccount: true });
@@ -107,6 +112,7 @@
       withheld: Object.freeze((Array.isArray(s.withheld) ? s.withheld : []).filter(x => typeof x === 'string')) });
     document.documentElement.dataset.hub = scope.kind;
     loadedAt = Date.now();
+    try { sig = JSON.stringify(d); } catch (e) { sig = String(Date.now()); }
   }
   // Administrators link FLR accounts to FleetView drivers from the page. The database checks the caller every time.
   async function call(fn, args) {
@@ -148,17 +154,25 @@
   window.claude = Object.freeze({ use: async name => name === 'db' && (await (loading || (loading = load()))) ? db : null });
   window.FLRHUB = Object.freeze(hub);
 
-  // The refresh jobs update the data every morning and hourly on weekdays: coming back to the page after a while
-  // reads it again and hands every subscription the new version.
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState !== 'visible' || !data || Date.now() - loadedAt < FRESH_MS) return;
-    loadedAt = Date.now();
-    const d = await fetchData();
-    if (!d) return;
-    const was = scope;
-    take(d);
-    // Linked, unlinked or made an administrator since the page opened: start again with the view they have now.
-    if (was && (was.kind !== scope.kind || was.driver !== scope.driver)) { location.reload(); return; }
-    subs.slice().forEach(deliver);
+  // FLR's server updates the data every 15 minutes (FleetView and the Monday fleet board). Coming back to the page after
+  // five minutes, or keeping it open for fifteen, reads it again; every subscription gets the new version, and only
+  // when something changed, so a quiet read never redraws the page under the reader.
+  let rereading = false;
+  async function reread() {
+    if (rereading || !data) return;
+    rereading = true; loadedAt = Date.now();
+    try {
+      const d = await fetchData(true);
+      if (!d) return;
+      const was = scope, before = sig;
+      take(d);
+      // Linked, unlinked or made an administrator since the page opened: start again with the view they have now.
+      if (was && (was.kind !== scope.kind || was.driver !== scope.driver)) { location.reload(); return; }
+      if (sig !== before) subs.slice().forEach(deliver);
+    } finally { rereading = false; }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - loadedAt >= FRESH_MS) reread();
   });
+  setInterval(() => { if (document.visibilityState === 'visible' && Date.now() - loadedAt >= OPEN_MS) reread(); }, 60 * 1000);
 })();
