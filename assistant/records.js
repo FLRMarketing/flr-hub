@@ -153,7 +153,7 @@ function balanceCard(L, s, own) {
   const title = own ? `Days left in ${year}` : `${s.name}: days left in ${year}`;
   if (b.allowanceMissing) return { title, text: `${own ? 'Your' : 'Their'} allowance isn’t on the FLR - Leave Allowances board yet.`, link: leaveOpen };
   const sum = [`${f(b.allowance)} days’ allowance`];
-  if (b.reserved) sum.push(`− ${f(b.reserved)} for the Christmas shutdown`);
+  if (b.reserved) sum.push(`− ${f(b.reserved)} for company close days`);
   if (b.carried) sum.push(`+ ${f(b.carried)} carried over`);
   return {
     title, big: f(b.remaining), unit: Math.abs(b.remaining) === 1 ? 'day' : 'days', neg: b.remaining < 0,
@@ -229,7 +229,7 @@ async function leave(kind, q, slots) {
     if (span.from !== today || span.to !== today) return { title, text: 'Annual Leave shows you who’s off today. Leave approvers can see other days in the Diary.', link: leaveOpen };
     const t = L.h.today;
     if (!t) return { title, text: 'Annual Leave can’t show who’s off today yet: the FLR server hasn’t been updated for it. Try again later.', link: leaveOpen };
-    if (t.closure) return { title, text: `The office is closed today: ${t.closure.name}.`, link: leaveOpen };
+    if (t.closure) return { title, text: `The office is closed today: ${/shutdown|close day/i.test(t.closure.kind || '') ? 'Company close day' : t.closure.name}.`, link: leaveOpen };
     if (t.weekend) return { title, text: 'It’s the weekend: no one is working today.', link: leaveOpen };
     const off = (t.off || []).map(p => ({ title: p.name, meta: PART[p.part] || PART.all })).sort((a, z) => a.title.localeCompare(z.title));
     if (!off.length) return { title, big: '0', unit: 'people off', text: 'Everyone’s in today.', link: leaveOpen };

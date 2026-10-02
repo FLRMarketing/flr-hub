@@ -1429,7 +1429,7 @@
         "key",
         "legend"
       ],
-      "answer": "In the “Diary”, press “Colour key” to see what each colour means, including bank holidays, the Christmas shutdown and the Jeff Day.",
+      "answer": "In the “Diary”, press “Colour key” to see what each colour means, including bank holidays, company close days and the Jeff Day.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"
@@ -1438,7 +1438,7 @@
     {
       "id": "leave-closures",
       "tool": "annual-leave",
-      "title": "Bank holidays and the Christmas shutdown",
+      "title": "Bank holidays and company close days",
       "ask": [
         "do bank holidays come out of my allowance",
         "is the christmas shutdown taken from my holiday",
@@ -1446,7 +1446,8 @@
         "company closure days",
         "does the jeff day count as holiday",
         "when are the bank holidays this year",
-        "what are the christmas shutdown dates"
+        "what are the christmas shutdown dates",
+        "what are the company close days"
       ],
       "keys": [
         "closure",
@@ -1454,7 +1455,7 @@
         "jeff day",
         "shutdown"
       ],
-      "answer": "Bank holidays and the Jeff Day are on top of your allowance. Days for the Christmas shutdown are set aside from it, and My Leave shows how many. My Leave also lists the year’s bank holidays and Christmas shutdown dates under “Request leave”; switch the year to see next year’s.",
+      "answer": "Bank holidays and the Jeff Day are on top of your allowance. Company close days (when FLR closes over Christmas) are set aside from it, and My Leave shows how many. My Leave also lists the year’s bank holidays and company close days under “Request leave”; switch the year to see next year’s.",
       "link": {
         "href": "annual-leave/",
         "label": "Open Annual Leave"

@@ -20,6 +20,10 @@ const ALW = {
 };
 const GRP = { members: 'board_relation_mm7ms65q', maxOff: 'numeric_mm7m80jy', rules: 'long_text_mm7mjg7b' };
 const CLO = { date: 'date_mm7mny6j', type: 'color_mm7m8tgx' };
+// FLR - Leave Closures has bank holidays, the Jeff Day and company close days: the days FLR closes around Christmas,
+// labelled "Christmas shutdown" on the board (either name is understood). The page calls each one a "Company close day".
+const CLOSE_DAY = 'Company close day';
+const isCloseDay = (type) => /shutdown|close day/i.test(type || '');
 // The Notes column on the other-leave board is never loaded: it can hold health information.
 const OTH = { dates: 'timerange_mm7mrm7g', halfDay: 'color_mm7mhgm1', workingDays: 'numeric_mm7mgar6', staff: 'board_relation_mm7mt3h4' };
 const OTHER_GROUP_TYPES = {
@@ -206,8 +210,8 @@ function evaluateRequest(ctx, req) {
     suggested: 'Review', reason: '', leftAfter: null, groupNames: '', details: '',
   };
   const lines = [];
-  lines.push(`Dates: ${fmtRange(days.from, days.to)} = ${plural(days.total, 'working day')} (weekends and bank holidays not counted).`);
-  if (days.excluded.length) lines.push(`Bank holidays not counted: ${days.excluded.map((e) => `${fmtDate(e.date)} (${e.name})`).join(', ')}.`);
+  lines.push(`Dates: ${fmtRange(days.from, days.to)} = ${plural(days.total, 'working day')} (weekends, bank holidays and company close days not counted).`);
+  if (days.excluded.length) lines.push(`Bank holidays and company close days not counted: ${days.excluded.map((e) => `${fmtDate(e.date)} (${e.name})`).join(', ')}.`);
   for (const i of days.info) lines.push(i);
   for (const w of days.warnings) lines.push(`Warning: ${w}`);
   if (days.from && days.from < ctx.today) lines.push('Note: these dates start in the past.');
@@ -231,7 +235,7 @@ function evaluateRequest(ctx, req) {
     res.years.push({ year: y, ...b, thisRequest: thisReq, leftAfter, leftIfPending });
     if (leftAfter < 0) over = true;
     let line = `Allowance ${y}: ${fmtNum(b.allowance)} days`;
-    if (b.reserved) line += ` − ${fmtNum(b.reserved)} held for the Christmas shutdown`;
+    if (b.reserved) line += ` − ${fmtNum(b.reserved)} held for company close days`;
     if (b.carried) line += ` + ${fmtNum(b.carried)} carried over`;
     if (b.reserved || b.carried) line += ` = ${fmtNum(b.entitlement)} bookable`;
     line += `. Used: ${fmtNum(b.booked)} accepted`;
@@ -372,8 +376,9 @@ function mapData(raw) {
     const c = cv(it);
     const d = c[CLO.date] ? cleanDate(c[CLO.date].date || c[CLO.date].text) : null;
     if (!d) continue;
-    bankHolidays.set(d, it.name || 'Bank holiday');
-    closureTypes.set(d, lab(c[CLO.type]) || 'Bank holiday');
+    const type = lab(c[CLO.type]) || 'Bank holiday';
+    bankHolidays.set(d, isCloseDay(type) ? CLOSE_DAY : it.name || 'Bank holiday');   // the name the Diary, Today and checks show
+    closureTypes.set(d, type);
   }
   const other = raw.items.oth.map((it) => {
     const c = cv(it), d = timeline(c[OTH.dates]), staffIds = links(c[OTH.staff]);

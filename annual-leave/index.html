@@ -731,7 +731,7 @@ html.staff #copy-form{display:none}
 .mb-grid dd.neg{color:var(--red-ink)}
 .mine-request p{font-size:14.5px;color:var(--ink-2)}
 .mine-request .btn{justify-self:start}
-/* The days FLR is closed in the chosen year, under the button: bank holidays, then the Christmas shutdown. The dots are
+/* The days FLR is closed in the chosen year, under the button: bank holidays, then the company close days. The dots are
    the Diary's closure colours; the first column is one width in both lists so they line up. */
 .mine-closed{display:grid;gap:14px;margin-top:4px;padding-top:16px;box-shadow:inset 0 var(--hair) 0 var(--sep)}
 .mine-closed h3{font:600 14px/1.3 var(--font-text);letter-spacing:-.006em;color:var(--ink)}
@@ -740,7 +740,7 @@ html.staff #copy-form{display:none}
 .cl-list .sw{width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--cl);box-shadow:none}
 .cl-when{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cl-what{min-width:0;color:var(--ink-2);overflow-wrap:anywhere}
-.cl-list li.wide .cl-when{grid-column:2 / -1}   /* a run of shutdown days needs both columns */
+.cl-list li.wide .cl-when{grid-column:2 / -1}   /* a line with a date only (a company close day) */
 .mine-sect{margin:0 4px 10px;font:600 17px/1.3 var(--font-display);letter-spacing:-.016em}
 .mine-rows{padding:0;list-style:none;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
 .mine-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px}
@@ -1204,6 +1204,10 @@ const ALW = {
 };
 const GRP = { members: 'board_relation_mm7ms65q', maxOff: 'numeric_mm7m80jy', rules: 'long_text_mm7mjg7b' };
 const CLO = { date: 'date_mm7mny6j', type: 'color_mm7m8tgx' };
+// FLR - Leave Closures has bank holidays, the Jeff Day and company close days: the days FLR closes around Christmas,
+// labelled "Christmas shutdown" on the board (either name is understood). The page calls each one a "Company close day".
+const CLOSE_DAY = 'Company close day';
+const isCloseDay = (type) => /shutdown|close day/i.test(type || '');
 // The Notes column on the other-leave board is never loaded: it can hold health information.
 const OTH = { dates: 'timerange_mm7mrm7g', halfDay: 'color_mm7mhgm1', workingDays: 'numeric_mm7mgar6', staff: 'board_relation_mm7mt3h4' };
 const OTHER_GROUP_TYPES = {
@@ -1393,8 +1397,8 @@ function evaluateRequest(ctx, req) {
     suggested: 'Review', reason: '', leftAfter: null, groupNames: '', details: '',
   };
   const lines = [];
-  lines.push(`Dates: ${fmtRange(days.from, days.to)} = ${plural(days.total, 'working day')} (weekends and bank holidays not counted).`);
-  if (days.excluded.length) lines.push(`Bank holidays not counted: ${days.excluded.map((e) => `${fmtDate(e.date)} (${e.name})`).join(', ')}.`);
+  lines.push(`Dates: ${fmtRange(days.from, days.to)} = ${plural(days.total, 'working day')} (weekends, bank holidays and company close days not counted).`);
+  if (days.excluded.length) lines.push(`Bank holidays and company close days not counted: ${days.excluded.map((e) => `${fmtDate(e.date)} (${e.name})`).join(', ')}.`);
   for (const i of days.info) lines.push(i);
   for (const w of days.warnings) lines.push(`Warning: ${w}`);
   if (days.from && days.from < ctx.today) lines.push('Note: these dates start in the past.');
@@ -1418,7 +1422,7 @@ function evaluateRequest(ctx, req) {
     res.years.push({ year: y, ...b, thisRequest: thisReq, leftAfter, leftIfPending });
     if (leftAfter < 0) over = true;
     let line = `Allowance ${y}: ${fmtNum(b.allowance)} days`;
-    if (b.reserved) line += ` − ${fmtNum(b.reserved)} held for the Christmas shutdown`;
+    if (b.reserved) line += ` − ${fmtNum(b.reserved)} held for company close days`;
     if (b.carried) line += ` + ${fmtNum(b.carried)} carried over`;
     if (b.reserved || b.carried) line += ` = ${fmtNum(b.entitlement)} bookable`;
     line += `. Used: ${fmtNum(b.booked)} accepted`;
@@ -1652,8 +1656,9 @@ function mapData(raw) {
     const c = cv(it);
     const d = c[CLO.date] ? cleanDate(c[CLO.date].date || c[CLO.date].text) : null;
     if (!d) continue;
-    bankHolidays.set(d, it.name || 'Bank holiday');
-    closureTypes.set(d, lab(c[CLO.type]) || 'Bank holiday');
+    const type = lab(c[CLO.type]) || 'Bank holiday';
+    bankHolidays.set(d, isCloseDay(type) ? CLOSE_DAY : it.name || 'Bank holiday');   // the name the Diary, Today and checks show
+    closureTypes.set(d, type);
   }
   const other = raw.items.oth.map((it) => {
     const c = cv(it), d = timeline(c[OTH.dates]), staffIds = links(c[OTH.staff]);
@@ -1904,7 +1909,7 @@ function monthDays(y, m) {
 function closureClass(d) {
   const t = state.data.closureTypes.get(d);
   if (!t) return '';
-  if (/shutdown/i.test(t)) return 'closed-shut';
+  if (isCloseDay(t)) return 'closed-shut';
   if (/jeff/i.test(t)) return 'closed-jeff';
   return 'closed-bh';
 }
@@ -2160,7 +2165,8 @@ function backText(line, day) {
   return b === addDays(day, 1) ? 'back tomorrow' : `back ${fmtDate(b, yearOf(b) !== yearOf(day))}`;
 }
 function closedCard(name, kind) {
-  const cl = /shutdown/i.test(kind || '') ? 'shut' : /jeff/i.test(kind || '') ? 'jeff' : 'bh';
+  const cl = isCloseDay(kind) ? 'shut' : /jeff/i.test(kind || '') ? 'jeff' : 'bh';
+  if (cl === 'shut') name = CLOSE_DAY;   // staff get the board's own name from the FLR server
   return `<section class="card td-closed" style="--cl:var(--${cl})"><p class="td-closed-label"><i class="sw closed-${cl}"></i>Closed today</p>
     <h2>${esc(name)}</h2><p class="subtle">No one is working today, so no one is listed as off.</p></section>`;
 }
@@ -2304,7 +2310,7 @@ function renderAllowance(ev, r) {
     ${ev.years.length > 1 ? `<p class="yearlabel">${y.year}</p>` : ''}
     <div class="statlist">
       <div class="stat"><span>Annual allowance</span><b class="num">${fmtNum(y.allowance)}</b></div>
-      ${y.reserved ? `<div class="stat"><span>Christmas shutdown</span><b class="num">−${fmtNum(y.reserved)}</b></div>` : ''}
+      ${y.reserved ? `<div class="stat"><span>Company close days</span><b class="num">−${fmtNum(y.reserved)}</b></div>` : ''}
       ${y.carried ? `<div class="stat"><span>Carried over</span><b class="num">+${fmtNum(y.carried)}</b></div>` : ''}
       ${y.reserved || y.carried ? `<div class="stat"><span>Bookable</span><b class="num">${fmtNum(y.entitlement)}</b></div>` : ''}
       <div class="stat"><span>Accepted so far</span><b class="num">${fmtNum(y.booked)}</b></div>
@@ -2399,7 +2405,7 @@ function renderDiaryShell() {
 function keyGroups() {
   return [
     ['Annual leave', [['<i class="sw acc"></i>', 'Accepted'], ['<i class="sw new"></i>', 'New request'], ['<i class="sw rev"></i>', 'Review']]],
-    ['Closures', [['<i class="sw closed-bh"></i>', 'Bank holiday'], ['<i class="sw closed-shut"></i>', 'Christmas shutdown'], ['<i class="sw closed-jeff"></i>', 'Jeff Day']]],
+    ['Closures', [['<i class="sw closed-bh"></i>', 'Bank holiday'], ['<i class="sw closed-shut"></i>', CLOSE_DAY], ['<i class="sw closed-jeff"></i>', 'Jeff Day']]],
     ['Other leave', Object.entries(OTHER_TYPE_COLOURS).map(([t, c]) => [`<i class="sw" style="background:${c}"></i>`, t])],
   ];
 }
@@ -2633,13 +2639,12 @@ function mineFor() {
   return { me, requests, email };
 }
 // What's closed in a leave year, from the FLR - Leave Closures board: its bank holidays (and a Jeff Day once it has a date),
-// then its Christmas shutdown days. Each year lists only its own dates: the shutdown that starts in December 2027 shows
-// "Fri 24 – Fri 31 Dec" under 2027, and its January days under 2028. Days next to each other, across weekends and bank
-// holidays, are one run.
+// then its company close days, one line each (Fri 24, Wed 29, Thu 30 and Fri 31 Dec 2027), so they're never mistaken for
+// the bank holidays between them. Each year lists only its own dates: the January days after Christmas 2027 are under 2028.
 function closedInHtml(year) {
   const types = state.data.closureTypes, names = state.data.bankHolidays;
   const all = [...types.keys()].sort();
-  const kind = (d) => { const t = types.get(d) || ''; return /shutdown/i.test(t) ? 'shut' : /jeff/i.test(t) ? 'jeff' : 'bh'; };
+  const kind = (d) => { const t = types.get(d) || ''; return isCloseDay(t) ? 'shut' : /jeff/i.test(t) ? 'jeff' : 'bh'; };
   const day = (d) => fmtDate(d, yearOf(d) !== year);
   const bare = (n) => String(n || '').replace(/\s+\d{4}(?:\/\d{2})?(?=\s*(?:\(|$))/, '').trim();   // "Good Friday 2027" → "Good Friday"
   const row = (cl, when, what) => (what === null
@@ -2647,20 +2652,11 @@ function closedInHtml(year) {
     : `<li><i class="sw closed-${cl}" aria-hidden="true"></i><span class="cl-when">${esc(when)}</span><span class="cl-what">${esc(what)}</span></li>`);
   const bank = all.filter((d) => yearOf(d) === year && kind(d) === 'bh').map((d) => row('bh', day(d), bare(names.get(d)) || 'Bank holiday'));
   const jeff = all.filter((d) => yearOf(d) === year && kind(d) === 'jeff').map((d) => row('jeff', day(d), 'Jeff Day'));
-  const runs = [];
-  for (const d of all.filter((x) => kind(x) === 'shut' && yearOf(x) === year)) {
-    const last = runs[runs.length - 1];
-    let next = last ? addDays(last.to, 1) : null;
-    for (let i = 0; last && i < 14 && next < d && (isWeekend(next) || types.has(next)); i++) next = addDays(next, 1);
-    if (last && next === d) last.to = d; else runs.push({ from: d, to: d });
-  }
-  const span = (r) => (r.from === r.to ? day(r.from)
-    : r.from.slice(0, 7) === r.to.slice(0, 7) ? `${DOW[weekday(r.from)]} ${Number(r.from.slice(8))} – ${day(r.to)}`   // "Fri 24 – Fri 31 Dec"
-      : `${day(r.from)} – ${day(r.to)}`);
-  const shut = runs.map((r) => row('shut', span(r), null));
-  if (!runs.some((r) => r.from.slice(5, 7) === '12')) shut.push(row('shut', 'December', 'Dates to follow'));
+  const closeDays = all.filter((d) => yearOf(d) === year && kind(d) === 'shut');
+  const shut = closeDays.map((d) => row('shut', day(d), null));
+  if (!closeDays.some((d) => d.slice(5, 7) === '12')) shut.push(row('shut', 'December', 'Dates to follow'));
   const list = (h, rows) => rows.length ? `<div><h3>${h}</h3><ul class="cl-list">${rows.join('')}</ul></div>` : '';
-  return `<div class="mine-closed">${list(`Bank holidays in ${year}`, bank)}${list('Jeff Day', jeff)}${list(`Christmas shutdown in ${year}`, shut)}</div>`;
+  return `<div class="mine-closed">${list(`Bank holidays in ${year}`, bank)}${list('Jeff Day', jeff)}${list(`Company close days in ${year}`, shut)}</div>`;
 }
 // The leave years there are to look at: from the first on this tracker to next year.
 function leaveYears() {
@@ -2670,12 +2666,12 @@ function leaveYears() {
 }
 const shownYear = (years) => (years.includes(recordYear) ? recordYear : state.ctx.currentYear);
 // Days left in a leave year, with every figure the Balances table had, from the same balanceFor(): the allowance less
-// the days held back for the Christmas shutdown, plus any carried over, is what's bookable; Accepted and Waiting are the
+// the days held back for company close days, plus any carried over, is what's bookable; Accepted and Waiting are the
 // working days requested in that year.
 function balanceCardHtml(s, year, years, own) {
   const b = balanceFor(state.ctx, s, year);
   const sum = [`${fmtNum(b.allowance)} days’ allowance`];
-  if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for the Christmas shutdown`);
+  if (b.reserved) sum.push(`− ${fmtNum(b.reserved)} for company close days`);
   if (b.carried) sum.push(`+ ${fmtNum(b.carried)} carried over`);
   const unset = !b.allowanceMissing ? '' : own ? 'Your record has no allowance set yet. Ask a leave approver.' : 'No allowance is set on their FLR - Leave Allowances record.';
   return `<section class="card mine-balance" aria-labelledby="mine-h">
