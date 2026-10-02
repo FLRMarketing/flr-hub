@@ -110,7 +110,16 @@
     if (a.id === S.you) nm.append(el('span', 'pill pill-you', 'You'));
     text.append(nm, el('span', 'acct-email', a.email));
     person.append(av, text);
-    const role = el('span', 'acct-role', ROLES[a.role] || a.role);
+    // The role, changed right here (as in the person's sheet). Nobody changes their own.
+    const role = el('label', 'acct-role select-wrap');
+    const pick = el('select');
+    pick.dataset.roleFor = a.id;
+    pick.setAttribute('aria-label', `Role for ${nameOf(a)}`);
+    for (const r of ['estimator', 'manager', 'admin', 'developer']) { const o = el('option', null, ROLES[r]); o.value = r; pick.append(o); }
+    if (!ROLES[a.role]) { const o = el('option', null, a.role); o.value = a.role; pick.append(o); }   // a role this page doesn't know yet
+    pick.value = a.role;
+    if (a.id === S.you) { pick.disabled = true; role.title = 'You can’t change your own role'; }
+    role.append(pick);
     const status = el('span', 'acct-status');
     status.append(el('span', a.status === 'disabled' ? 'pill pill-off' : 'pill pill-on', a.status === 'disabled' ? 'Switched off' : 'Active'));
     const apps = el('span', 'acct-apps');
@@ -272,20 +281,22 @@
     openFor = id; fillSheet(a);
     sheets.open($('#sheet-account'));
   }
-  $('#sa-role').addEventListener('change', async e => {
-    const a = byId(openFor), role = e.target.value;
+  // A new role, from the person's sheet or the menu in their row. Both levels see other people's data (everyone's leave,
+  // every driver), so making someone either is confirmed, as is taking one away.
+  async function changeRole(a, role, select) {
     if (!a || role === a.role) return;
-    // Both levels see other people's data (everyone's leave, every driver), so either is confirmed, as is taking one away.
     const ask = role === 'admin' ? [`Make ${firstName(a)} a Super Admin?`, 'Super Admins look after every account, role and app, and every app’s settings, including the Cost Estimator’s prices and rules.', 'Make Super Admin', false]
       : role === 'manager' ? [`Make ${firstName(a)} an Admin?`, 'Admins approve leave and see everyone’s, see every driver’s driving and fitter arrivals, and reassign quotes. They can’t change any settings.', 'Make Admin', false]
       : a.role === 'admin' ? [`Take ${firstName(a)}’s Super Admin rights away?`, `${firstName(a)} will no longer be able to open Hub settings or change accounts and settings.`, 'Take away', true]
       : a.role === 'manager' ? [`Take ${firstName(a)}’s Admin rights away?`, `${firstName(a)} will no longer approve leave or see everyone’s leave, every driver or fitter arrivals.`, 'Take away', true] : null;
-    if (ask && !(await confirmIt(...ask))) { e.target.value = a.role; return; }
-    e.target.disabled = true;
+    if (ask && !(await confirmIt(...ask))) { select.value = a.role; return; }
+    select.disabled = true;
     try { await call('admin_set_role', { p_user: a.id, p_role: role }); await reloadAccounts(); toast(`${nameOf(a)} is now ${AS[role] || role}`); }
-    catch (err) { e.target.value = a.role; toast(said(err)); }
-    finally { e.target.disabled = a.id === S.you; }
-  });
+    catch (err) { select.value = a.role; toast(said(err)); }
+    finally { if (select.isConnected) select.disabled = a.id === S.you; }   // the row's menu is redrawn on reload
+  }
+  $('#sa-role').addEventListener('change', e => changeRole(byId(openFor), e.target.value, e.target));
+  $('#acct-list').addEventListener('change', e => { const s = e.target.closest('select[data-role-for]'); if (s) changeRole(byId(s.dataset.roleFor), s.value, s); });
   $('#sa-active').addEventListener('click', async e => {
     const btn = e.currentTarget, a = byId(openFor);
     if (!a || btn.disabled || btn.getAttribute('aria-busy') === 'true') return;
