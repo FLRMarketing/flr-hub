@@ -94,7 +94,8 @@ scripts/sync-speeding.py
 scripts/sync-leave.py
 ```
 
-Then commit `estimator/`, `speeding/` and `annual-leave/`. When `hub.css` or `hub.js` changes, bump the `?v=` on their links in `index.html`:
+Then commit `estimator/`, `speeding/` and `annual-leave/`. After `sync-speeding.py`, run `node scripts/due-rule-test.mjs`:
+it checks the Vehicles page's MOT, tax and service rule against the cases agreed with FLR on 2 Oct 2026. When `hub.css` or `hub.js` changes, bump the `?v=` on their links in `index.html`:
 GitHub Pages lets browsers cache files for 10 minutes, and the version keeps a page from mixing old and new files. The Estimator script refuses the demonstration build, which has pricing data
 in it. The Speeding script refuses a page that lists staff photos.
 
@@ -189,7 +190,8 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
   the person's own records. The answers aren't kept in the chat's saved history: leaving the page forgets them.
 - The figures use the pages' own rules, cut from the built pages: `annual-leave/leave-core.js` (by
   `scripts/leave_core.py`, which `sync-leave.py` runs after every build) and `speeding/speeding-core.js` (the report's
-  CALC block, by `scripts/speeding_core.py`, which `sync-speeding.py` runs). Commit each with its page.
+  CALC block and its MOT, tax and service rule, the DUE block, by `scripts/speeding_core.py`, which `sync-speeding.py`
+  runs). Commit each with its page.
 - Tests: `node assistant/tests/run.mjs`, `--heldout` and `--records` (questions about records, with names and
   registrations, routed as the chat routes them).
 - A speech bubble from him offers help as soon as a page opens, then again the moment it goes quiet (a second's pause):

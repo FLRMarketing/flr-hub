@@ -280,13 +280,13 @@ async function fleetData() {
 const period = F => F.rep && F.rep.periodEnd ? `The 30 days to ${dayMonth(F.rep.periodEnd)}` : '';
 const slug = s => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');   // as the report's own slug()
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-const daysUntil = iso => Math.round((Date.parse(String(iso).slice(0, 10) + 'T12:00:00') - Date.parse(todayIso() + 'T12:00:00')) / 864e5);
-// As the Vehicles page's due(): overdue, due within the board's warning period (30 days unless it says), or OK.
-function due(x, F) {
-  if (!x || !x.date) return { tone: 'none', label: 'No date on the board', days: null };
-  const n = daysUntil(x.date), soon = (F.meta && F.meta.dueDays) || 30;
-  return { tone: n < 0 ? 'over' : n <= soon ? 'soon' : 'ok', days: n,
-    label: n < 0 ? `Overdue by ${plural(-n, 'day')}` : n === 0 ? 'Due today' : n <= soon ? `Due in ${plural(n, 'day')}` : `OK · ${plural(n, 'day')} to go` };
+// The Vehicles page's own MOT, tax and service rule (dueState in speeding-core.js, cut from the page): a date that has
+// passed while Monday doesn't say Overdue reads "Date overdue by N days — Monday status needs checking", never OK and
+// never the plain "Overdue", which means the board agrees.
+const DUE_TONE = { over: 'over', dated: 'over', check: 'soon', soon: 'soon', exempt: 'none', ok: 'ok' };
+function due(x, F, key) {
+  const u = F.core.dueState(x, key, todayIso(), (F.meta && F.meta.dueDays) || 30);
+  return { tone: DUE_TONE[u.cls] || 'none', label: u.short, days: u.days, kind: u.kind, cls: u.cls };
 }
 const STATUS_TONE = { priority: 'over', above: 'soon', limited: 'none', within: 'ok' };
 const WHAT = { mot: 'MOT', tax: 'Tax', service: 'Service' };
@@ -314,7 +314,7 @@ function rowsNamed(q, slots, F) {
 
 function vehicleCard(v, F) {
   const rows = [];
-  for (const k of ['mot', 'tax', 'service']) { const u = due(v[k], F); rows.push([WHAT[k], v[k] && v[k].date ? `${dayMonth(v[k].date, true)} · ${u.label}` : u.label, u.tone]); }
+  for (const k of ['mot', 'tax', 'service']) { const u = due(v[k], F, k); rows.push([WHAT[k], v[k] && v[k].date ? `${dayMonth(v[k].date, true)} · ${u.label}` : u.label, u.tone]); }
   rows.push(['Make and model', [v.make, v.model].filter(Boolean).join(' ') || 'Not on the board']);
   rows.push(['Assigned to', v.assigned || 'Not assigned']);
   if (v.group) rows.push(['Group', v.group]);
@@ -339,7 +339,7 @@ function dueList(q, F) {
   const out = [];
   for (const v of F.vehicles.filter(x => x.kind === 'current')) for (const k of want) {
     const x = v[k]; if (!x || !x.date) continue;
-    const u = due(x, F); if (overdueOnly ? u.days >= 0 : u.days > horizon) continue;
+    const u = due(x, F, k); if (u.days == null || (overdueOnly ? u.days >= 0 : u.days > horizon)) continue;
     out.push({ v, k, u, x });
   }
   out.sort((a, z) => a.u.days - z.u.days || a.v.plate.localeCompare(z.v.plate));
@@ -348,7 +348,8 @@ function dueList(q, F) {
   if (!out.length) return { title, text: overdueOnly ? 'Nothing is overdue.' : 'Nothing is due in that time, and nothing is overdue.', link: hubLink(F.admin ? 'speeding/#vehicles' : 'speeding/', F.admin ? 'Open Vehicles' : 'Open My vehicle') };
   return {
     title, big: String(out.length), unit: out.length === 1 ? 'date' : 'dates',
-    list: out.slice(0, 12).map(({ v, k, u, x }) => ({ title: `${v.plate} · ${WHAT[k]}`, meta: `${dayMonth(x.date, true)} · ${v.assigned || 'not assigned'}`, pill: u.days < 0 ? `${plural(-u.days, 'day')} over` : u.days === 0 ? 'Today' : `In ${plural(u.days, 'day')}`, tone: u.tone })),
+    list: out.slice(0, 12).map(({ v, k, u, x }) => ({ title: `${v.plate} · ${WHAT[k]}`, meta: `${dayMonth(x.date, true)} · ${u.cls === 'dated' ? `Monday says ${x.status || 'nothing'} · ` : ''}${v.assigned || 'not assigned'}`,
+      pill: u.cls === 'dated' ? 'Check Monday' : u.days < 0 ? `${plural(-u.days, 'day')} over` : u.kind === 'exempt' ? 'Exempt' : u.days === 0 ? 'Today' : `In ${plural(u.days, 'day')}`, tone: u.tone })),
     note: (out.length > 12 ? `And ${out.length - 12} more. ` : '') + 'From the Monday fleet board.',
     link: hubLink(F.admin ? 'speeding/#vehicles' : 'speeding/', F.admin ? 'Open Vehicles' : 'Open My vehicle'),
   };
@@ -388,7 +389,7 @@ async function fleet(kind, q, slots) {
       const vs = vehiclesNamed(q, slots, F);
       if (!vs.length) return notFound('vehicle');
       if (vs.length === 1) return vehicleCard(vs[0], F);
-      return { title: 'Vehicles', list: vs.slice(0, 10).map(v => { const s = ['mot', 'tax', 'service'].map(k => due(v[k], F)).filter(u => u.days != null).sort((a, z) => a.days - z.days)[0]; return { title: v.plate, meta: [[v.make, v.model].filter(Boolean).join(' '), v.assigned].filter(Boolean).join(' · '), pill: s ? s.label : '', tone: s ? s.tone : '' }; }), note: 'Ask about one registration for its details.', link: hubLink(F.admin ? 'speeding/#vehicles' : 'speeding/', F.admin ? 'Open Vehicles' : 'Open My vehicle') };
+      return { title: 'Vehicles', list: vs.slice(0, 10).map(v => { const s = ['mot', 'tax', 'service'].map(k => due(v[k], F, k)).filter(u => u.days != null).sort((a, z) => a.days - z.days)[0]; return { title: v.plate, meta: [[v.make, v.model].filter(Boolean).join(' '), v.assigned].filter(Boolean).join(' · '), pill: s ? s.label : '', tone: s ? s.tone : '' }; }), note: 'Ask about one registration for its details.', link: hubLink(F.admin ? 'speeding/#vehicles' : 'speeding/', F.admin ? 'Open Vehicles' : 'Open My vehicle') };
     }
     if (!F.admin) {   // a driver: their own vehicle, which shows every date and how soon it's due
       const mine = F.vehicles.filter(v => v.kind === 'current');

@@ -1108,7 +1108,8 @@
         "who drives the van with registration",
         "which vans need an mot this month",
         "what's overdue on the vehicles",
-        "service history of a van"
+        "service history of a van",
+        "which vehicles need checking"
       ],
       "keys": [
         "mot",
@@ -1118,7 +1119,7 @@
         "registration",
         "overdue"
       ],
-      "answer": "Admins and Super Admins: the “Vehicles” page lists MOT, tax and service due in the next 60 days, and anything overdue, under “Coming up”; each vehicle opens its details, with “Open in Monday”. Linked drivers: your vehicle’s dates are on “My vehicle”.",
+      "answer": "Admins and Super Admins: the “Vehicles” page starts with “Needs action” (a passed date Monday also calls Overdue) and “Needs checking” (a passed date Monday doesn’t call Overdue, or a missing date), then what’s due in the next 30 days. Search by plate, driver or model; each vehicle has “Open in Monday”. Linked drivers: see “My vehicle”.",
       "link": {
         "href": "speeding/#vehicles",
         "label": "Open Fleet Management"

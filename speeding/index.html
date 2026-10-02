@@ -843,6 +843,7 @@ ul.plain li:first-child{border-top:0}
 .due-top{display:flex;align-items:center;gap:8px}
 .due-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--ink-3)}
 .due-sub .mm{color:var(--gold-ink);font-weight:600}
+.due-sub .mx{color:var(--ink-2);font-weight:600}
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .vcard2{display:flex;flex-direction:column;gap:6px;min-width:0;padding:14px 16px;border:var(--bd-w) solid var(--line);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);color:inherit;text-decoration:none;transition:transform .28s cubic-bezier(.25,1,.5,1),box-shadow .2s}
 .vcard2:hover{box-shadow:var(--sh-float)}
@@ -855,6 +856,64 @@ ul.plain li:first-child{border-top:0}
 .vc-fv{font-size:12.5px;color:var(--ink-3)}
 .vc-fv b{color:var(--red-ink)}
 #fleet-page .sechead .fleettools{margin:0}
+/* ---- Vehicles: needs action, needs checking, coming up (2 Oct 2026). A passed date Monday doesn't call Overdue is
+   outlined in red ("dated"), never green and never the solid red that means the board agrees it's overdue. ---- */
+.pill.dated{background:var(--red-soft);border:1.5px solid var(--red);border-radius:10px;color:var(--red-ink);white-space:normal;line-height:1.35}
+.pill.check{background:var(--surface);border:1.5px dashed var(--gold-ink);color:var(--gold-ink)}
+.pill.exempt{background:var(--fill);border-color:var(--line-2);color:var(--ink-2)}
+.duecard.dated{border-top-color:var(--red);box-shadow:var(--sh-card),inset 0 0 0 1.5px var(--red)}
+.duecard.dated::before{background:transparent;box-shadow:inset 0 0 0 3px var(--red)}
+.duecard.check{border-top-color:var(--gold)}.duecard.check::before{background:transparent;box-shadow:inset 0 0 0 2px var(--gold-ink)}
+.duecard.dated .due-l,.duecard.check .due-l{font-size:17px;line-height:1.3}
+.duecard.dated .due-l{color:var(--red-ink)}.duecard.check .due-l{color:var(--gold-ink)}
+.duecard.exempt,.duecard.old{border-top-color:var(--line-2)}.duecard.exempt::before,.duecard.old::before{background:var(--fill-2)}
+.duecard.old .due-l{color:var(--ink-2)}
+.due-x{margin:8px 0 0;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.duegrid + .note{margin-top:10px}
+.kv > div:last-child:nth-child(odd){grid-column:1/-1}
+.duecard .btn{margin-top:10px}
+.drow.dated{box-shadow:inset 4px 0 0 var(--red);background:var(--red-soft)}.drow.dated .dv b{color:var(--red-ink)}
+.drow.check{box-shadow:inset 4px 0 0 var(--gold)}.drow.check .dv b{color:var(--gold-ink)}
+.drow.exempt{box-shadow:inset 4px 0 0 var(--line-2)}
+.av-check{margin:0;padding:9px 12px;border-top:var(--hair) solid var(--sep);font-size:12.5px;color:var(--ink-2)}
+.av-tags,.vc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.vtag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--tint-soft);color:var(--tint);font:600 12px/1.4 var(--font-text);letter-spacing:0;text-transform:none;white-space:nowrap;vertical-align:middle}
+.vtag.old{background:var(--fill);color:var(--ink-2)}
+.vtag.booked{background:var(--green-soft);color:var(--green-ink)}
+.vh-now{margin:8px 0 0;font-size:14px;font-weight:600}
+.vtools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:18px 0 0}
+.vtools .vsearch{flex:1 1 260px;max-width:420px;min-width:0}
+.vchips{display:flex;flex-wrap:wrap;gap:8px}
+.fchip.c-action::before,.fchip.c-check::before,.fchip.c-soon::before{content:"";width:7px;height:7px;border-radius:50%}
+.fchip.c-action::before{background:var(--red)}
+.fchip.c-check::before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--red)}
+.fchip.c-soon::before{background:var(--gold)}
+.fchip[aria-pressed="true"]::before{box-shadow:inset 0 0 0 1.5px var(--on-tint)}
+.vlist{list-style:none;margin:0;padding:0;border:var(--bd-w) solid var(--line);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.vrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 16px 12px 13px;border-left:4px solid transparent}
+.vrow + .vrow{border-top:var(--hair) solid var(--sep)}
+.vrow.st-over,.vrow.st-dated{border-left-color:var(--red)}
+.vrow.st-check{border-left-color:var(--gold)}
+.vr-main{flex:1 1 340px;display:flex;align-items:flex-start;gap:12px;min-width:0;color:inherit;text-decoration:none}
+.vr-main:hover .vr-text b{text-decoration:underline;text-underline-offset:2px}
+.vr-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.vr-text b{font-size:15px;line-height:1.35;color:var(--ink)}
+.vrow.st-over .vr-text b,.vrow.st-dated .vr-text b{color:var(--red-ink)}
+.vrow.st-check .vr-text b{color:var(--gold-ink)}
+.vr-text > span{font-size:13px;line-height:1.45;color:var(--ink-2)}
+.vrow .btn{white-space:nowrap}
+.vnone{margin:0;padding:14px 16px;border:var(--bd-w) dashed var(--line-2);border-radius:var(--r-card)}
+.vlater{margin-top:12px}
+.vlater .due-list{margin:0 12px 12px}
+#fl-body > .pgrid,.vrecords .pgrid{margin-top:16px}
+.vto-rec{margin-top:18px}
+.due-row.st-exempt .due-date{background:var(--fill)}
+.due-row .pill{white-space:nowrap}
+@media (max-width:620px){
+  .vrow{padding:12px 14px 12px 11px}
+  .vrow .pill{margin-left:calc(var(--plate-w, 0px))}
+  .vtools .vsearch{flex-basis:100%;max-width:none}
+}
 
 /* ---- Speeding map: full screen, floating controls and panel ---- */
 #view-map{padding:0;overflow:hidden}
@@ -3854,20 +3913,95 @@ html.drv .f-driver{display:none}
   // =====================================================================================
   let fleetMeta = null, mondayStatus = null, fleetSeen = false, vehiclesSeen = false;
   const vehicleDocs = new Map();
-  const DUE_DAYS = 30;
-  const dueDays = () => (fleetMeta && fleetMeta.dueDays) || DUE_DAYS;
+  /*DUE-START*/
+  // MOT, tax and service: what each date on the Monday fleet board shows (agreed with FLR, 2 Oct 2026). The date is
+  // looked at first, then Monday's own status, and the first step that applies decides. Nothing on Monday is changed,
+  // and nothing here says a vehicle is safe or unsafe: a date that has passed while Monday says something else stays
+  // prominent, for someone to check on the board.
+  //   1. No date: Exempt if Monday says Exempt; otherwise "No date on the board" (needs checking).
+  //   2. A date that can't be read: needs checking.
+  //   3. The date has passed: Overdue if Monday says Overdue too (needs action); otherwise
+  //      "<MOT | Tax | Service> date overdue by N days — Monday status needs checking" (needs checking).
+  //   4. Monday says Overdue but the date hasn't passed: Overdue on the day itself (Monday's tax automation changes the
+  //      status that morning); before it, needs checking.
+  //   5. Monday says Exempt and the date is still to come: Exempt, also under Coming up within 30 days.
+  //   6. Within 30 days: Due in N days, or Due today (Coming up).
+  //   7. Otherwise: OK.
+  // Green only when the date is more than 30 days away and Monday doesn't say Overdue or Exempt; red only when the date
+  // has passed (or is today) and Monday says Overdue too.
+  const DUE_SOON = 30;
+  const DUE_NAME = {mot:'MOT', tax:'Tax', service:'Service'};
+  // A day as the board's date columns give it ("2026-10-02", or with a time after it), or null if it can't be read.
+  function dueDay(s){
+    const m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/.exec(String(s == null ? '' : s).trim());
+    if (!m || +m[1] < 1900) return null;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3] ? `${m[1]}-${m[2]}-${m[3]}` : null;
+  }
+  const dueDaysBetween = (from, to) => Math.round((Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 864e5);
+  const dueCount = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  // x: {status, date} as on the board; key: 'mot' | 'tax' | 'service'; today: 'YYYY-MM-DD' (UK); soon: days (30).
+  //   kind: 'action' (Needs action) | 'check' (Needs checking) | 'soon' (Coming up) | 'exempt' | 'ok'
+  //   cls:  'over' (red) | 'dated' (outlined in red) | 'check' (dashed) | 'soon' (amber) | 'exempt' (grey) | 'ok' (green)
+  //   label names the item for lists ("Service date overdue by 87 days — …"); short goes beside the item's name.
+  function dueState(x, key, today, soon){
+    soon = soon || DUE_SOON;
+    const what = DUE_NAME[key] || 'Due';
+    const monday = x && x.status != null && String(x.status).trim() ? String(x.status).trim() : null;
+    const st = (monday || '').toLowerCase();
+    const raw = x && x.date != null ? String(x.date).trim() : '';
+    const out = (kind, cls, label, short, extra) => Object.assign({kind, cls, label, short: short || label, days: null, date: null, monday, upcoming: false}, extra || {});
+    if (!raw) return st === 'exempt' ? out('exempt', 'exempt', 'Exempt') : out('check', 'check', 'No date on the board', 'No date');
+    const date = dueDay(raw);
+    if (!date) return out('check', 'check', "Date can't be read — needs checking", "Date can't be read");
+    const n = dueDaysBetween(today, date), at = {days: n, date};
+    if (n < 0) return st === 'overdue'
+      ? out('action', 'over', `Overdue by ${dueCount(-n, 'day', 'days')}`, null, at)
+      : out('check', 'dated', `${what} date overdue by ${dueCount(-n, 'day', 'days')} — Monday status needs checking`, `Date overdue by ${dueCount(-n, 'day', 'days')} — Monday status needs checking`, at);
+    if (st === 'overdue') return n === 0
+      ? out('action', 'over', 'Overdue · due today', null, at)
+      : out('check', 'check', 'Monday says Overdue — date not reached, needs checking', null, at);
+    if (st === 'exempt') return out('exempt', 'exempt', 'Exempt', null, Object.assign({upcoming: n <= soon}, at));
+    if (n <= soon) return out('soon', 'soon', n === 0 ? 'Due today' : `Due in ${dueCount(n, 'day', 'days')}`, null, Object.assign({upcoming: true}, at));
+    return out('ok', 'ok', 'OK', null, at);
+  }
+  /*DUE-END*/
+  const dueDays = () => (fleetMeta && fleetMeta.dueDays) || DUE_SOON;
   const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const daysUntil = iso => Math.round((Date.parse(iso + 'T12:00:00') - Date.parse(todayIso() + 'T12:00:00')) / 864e5);
-  const MONDAY_CLS = {'OK':'ok', 'Due soon':'soon', 'Overdue':'over'};
-  function due(x){
-    if (!x || !x.date) return {cls:'none', label:'No date on the board', short:'No date', days:null, monday:x && x.status, mismatch:false};
-    const n = daysUntil(x.date);
-    const cls = n < 0 ? 'over' : n <= dueDays() ? 'soon' : 'ok';
-    const label = n < 0 ? `Overdue by ${plural(-n, 'day', 'days')}` : n === 0 ? 'Due today' : n <= dueDays() ? `Due in ${plural(n, 'day', 'days')}` : `OK · ${plural(n, 'day', 'days')} to go`;
-    const mc = MONDAY_CLS[x.status] || null;
-    return {cls, label, short: cls === 'ok' ? 'OK' : label, days:n, monday:x.status, mismatch: !!mc && mc !== cls};
+  // What a vehicle's MOT, tax or service shows today (the rule above, with the board's warning period).
+  const due = (x, key) => dueState(x, key, todayIso(), dueDays());
+  const DUE_LOWER = {mot:'MOT', tax:'tax', service:'service'};
+  const DATE_WORD = {mot:'Next MOT date', tax:'Tax date', service:'Next service date'};
+  // Names typed with tabs on the board ("K3\tservice\t…") read " · " everywhere.
+  const nm = s => String(s ?? '').replace(/\s*\t+\s*/g, ' · ').trim();
+  const plateKey = s => String(s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // A Former Reg worth showing: not empty and not the plate again.
+  const formerShown = v => v && v.formerReg && plateKey(v.formerReg) !== plateKey(v.plate) ? v.formerReg : null;
+  // The bracket note in an item's name as a tag: "(To be P3 FLR)" -> Becoming P3 FLR, "(was X40 FLR)" -> Was X40 FLR.
+  function noteTag(v){
+    const n = (/\((.*?)\)/.exec(String((v && v.label) || '')) || [])[1];
+    if (!n) return '';
+    const tobe = /^to be\s+(.+)$/i.exec(n.trim()), was = /^was\s+(.+)$/i.exec(n.trim());
+    return `<span class="vtag">${esc(tobe ? 'Becoming ' + tobe[1] : was ? 'Was ' + was[1] : n.trim())}</span>`;
   }
-  const pill = (x, what) => { const d = due(x); return `<span class="pill ${d.cls}"><span class="sr">${esc(what)}: </span><span aria-hidden="true">${esc(what)}&nbsp;·&nbsp;</span>${esc(d.short)}</span>`; };
+  // The vehicle's own log beside a passed MOT or service date: its newest "Done" entry of that kind (lastDone from the
+  // sync; syncs before 2 Oct 2026 don't carry it, and then nothing is said).
+  function doneInfo(v, key, u){
+    if (key === 'tax' || !v || !v.lastDone || !u.date) return null;
+    const last = v.lastDone[key] || null;
+    return {what: key === 'mot' ? 'MOT' : 'service', last, near: !!last && dueDaysBetween(u.date, last) >= -14};
+  }
+  const doneSentence = i => !i ? '' : !i.last ? `Vehicle log: no ${i.what} logged.` : i.near ? `Vehicle log: ${i.what} done ${longDate(i.last)}. The date may not have been moved on after it.` : `Vehicle log: last ${i.what} ${longDate(i.last)}.`;
+  const doneShort = i => !i ? '' : !i.last ? `vehicle log: no ${i.what} logged` : i.near ? `vehicle log: ${i.what} done ${longDate(i.last)}, so the date may not have been moved on` : `vehicle log: last ${i.what} ${longDate(i.last)}`;
+  // A line under a label in a list: what Monday says when it doesn't match the label.
+  function dueNote(u){
+    if (u.kind === 'exempt') return 'Monday says Exempt';
+    if (u.kind === 'soon' && u.monday && u.monday.toLowerCase() === 'ok') return 'Monday says OK';
+    if (u.kind === 'ok' && u.monday && u.monday.toLowerCase() === 'due soon') return 'Monday says Due soon';
+    return '';
+  }
+  const pill = (x, what, key) => { const d = due(x, key); return `<span class="pill ${d.cls}"><span class="sr">${esc(what)}: </span><span aria-hidden="true">${esc(what)}&nbsp;·&nbsp;</span>${esc(d.short)}</span>`; };
   const personKey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
   function canonName(s){ const k = personKey(s); for (const [a, b] of ((fleetMeta && fleetMeta.aliases) || [])) if (personKey(a) === k) return personKey(b); return k; }
   const isSpareName = s => /^(spare|unassigned|to be removed)?$/i.test(String(s || '').trim());
@@ -3908,6 +4042,15 @@ html.drv .f-driver{display:none}
     return {reg, state:'unchecked', itemId:null, reasons:['This vehicle was added to FleetView after the last Monday sync. It will be matched at the next sync.'], historical:[]};
   }
   const STATE_CHIP = {matched:'<span class="chip inc">Matched to Monday</span>', review:'<span class="chip review">Needs review</span>', unmatched:'<span class="chip review">Needs review</span>', unchecked:'<span class="chip within">Not checked yet</span>'};
+  // Why a FleetView vehicle needs review, then the historical vehicle(s) it points to, each named once. (Syncs before
+  // 2 Oct 2026 also put the name in the reason; it's taken out here so it isn't shown twice.)
+  function reasonsHtml(m, links){
+    const rs = (m.reasons || []).map(r => r.replace(/^(Only a Historical Monday item carries this registration) \(.*\)\.$/, '$1.'));
+    const hs = !m.itemId && !(m.candidates && m.candidates.length) ? (m.historical || []).map(vSummary).filter(Boolean) : [];
+    if (hs.length && rs.length) rs[rs.length - 1] = rs[rs.length - 1].replace(/\.$/, ':');
+    const names = hs.map(v => links ? `<a href="#vehicle/${esc(v.id)}">${esc(nm(v.label))}</a>` : esc(nm(v.label))).join(', ');
+    return rs.map(esc).join(' ') + (names ? ` ${names}.` : '');
+  }
 
   // ---- Driver Details page (one FleetView vehicle row: its FleetView driver, speeding and the Monday vehicle) ----
   let driverRowKey = null;
@@ -4030,21 +4173,27 @@ html.drv .f-driver{display:none}
   // calculation as the Vehicles tab and Vehicle Details, so the views can't disagree. Monday = the CURRENT
   // assignment; FleetView = the driver and vehicle on the incidents below. When they differ, both are named.
   // A missing or ambiguous match shows "Vehicle match needs review" and no other vehicle's details.
-  function dueRow(x, what){
-    const u = due(x);
-    return `<div class="drow ${u.cls}"><span class="dk">${esc(what)}</span>
-      <span class="dv"><b>${esc(u.cls === 'ok' ? 'OK' : u.short)}</b><span class="dd">${x && x.date ? `${what === 'Service' ? 'Next service' : 'Due'} ${esc(longDate(x.date))}` : 'Not recorded on the Monday board'}</span></span>
-      <span class="dm">Monday: ${esc((x && x.status) || 'not set')}${u.mismatch ? '<span class="mmflag">doesn\'t match the date</span>' : ''}</span></div>`;
+  // One row of MOT, tax or service: the label from the rule, the date, and Monday's own status beside it.
+  function dueRow(x, key, v){
+    const u = due(x, key);
+    const when = !x || !x.date ? (u.kind === 'exempt' ? 'No date on the board' : 'Not recorded on the Monday board')
+      : !u.date ? `On the board as “${x.date}”` : u.kind === 'exempt' ? `Date on the board: ${longDate(u.date)}` : `${key === 'service' ? 'Next service' : 'Due'} ${longDate(u.date)}`;
+    const log = u.cls === 'dated' ? doneSentence(doneInfo(v, key, u)) : '';
+    return `<div class="drow ${u.cls}"><span class="dk">${esc(DUE_NAME[key])}</span>
+      <span class="dv"><b>${esc(u.short)}</b><span class="dd">${esc(when)}</span>${log ? `<span class="dd">${esc(log)}</span>` : ''}</span>
+      <span class="dm">Monday: ${esc(u.monday || 'not set')}</span></div>`;
   }
   function avCard(id, relation, note, cls){
     const v = vehicleData(id); if (!v) return '';
+    const fr = formerShown(v), checking = DUE_KEYS.some(k => due(v[k], k).kind === 'check');
     return `<article class="avcard ${cls || ''}">
-      <div class="av-id"><div class="role">${esc(relation)}</div><span class="plate bigplate">${esc(v.plate)}</span>
+      <div class="av-id"><div class="role">${esc(relation)}</div><span class="plate bigplate">${esc(v.plate)}</span>${noteTag(v) ? `<div class="av-tags">${noteTag(v)}</div>` : ''}
         <div class="av-model">${esc([v.make, v.model].filter(Boolean).join(' ') || 'Make and model not on the board')}</div>
-        ${v.formerReg ? `<div class="av-small">Former registration <b>${esc(v.formerReg)}</b></div>` : ''}</div>
+        ${fr ? `<div class="av-small">Former registration <b>${esc(fr)}</b></div>` : ''}</div>
       <div class="av-assign"><div class="role">Current assignment (Monday)</div><div class="av-name">${esc(v.assigned || 'Nobody')}</div>${note || ''}
         ${DRV() ? '' : `<a class="btn" href="#vehicle/${esc(id)}">View full vehicle details</a>`}</div>
-      <div class="av-due" role="group" aria-label="MOT, tax and service for ${esc(v.plate)}">${dueRow(v.mot, 'MOT')}${dueRow(v.tax, 'Tax')}${dueRow(v.service, 'Service')}</div>
+      <div class="av-due" role="group" aria-label="MOT, tax and service for ${esc(v.plate)}">${dueRow(v.mot, 'mot', v)}${dueRow(v.tax, 'tax', v)}${dueRow(v.service, 'service', v)}
+        ${checking ? `<p class="av-check">${DRV() ? 'Something here needs checking on the Monday fleet board. Your fleet manager can correct it there.' : 'The Hub never changes the Monday board. Correct the date or status there and this updates within 15 minutes.'}</p>` : ''}</div>
     </article>`;
   }
   function assignedVehicleHtml(r){
@@ -4063,7 +4212,7 @@ html.drv .f-driver{display:none}
       cards.push(avCard(m.itemId, `Vehicle in these incidents (FleetView ${r.reg})`, note, sameP ? '' : 'diff'));
     } else {
       cards.push(`<article class="avcard review-card"><div class="av-id"><div class="role">Vehicle in these incidents (FleetView)</div><span class="plate bigplate">${esc(r.reg)}</span></div>
-        <div class="av-review"><b>Vehicle match needs review</b><p>${m.reasons.map(esc).join(' ')}</p><p class="note">No Monday vehicle details are shown for ${esc(r.reg)}, so another vehicle's MOT, tax or assignment can't be mistaken for this one. ${DRV() ? 'Your fleet manager can fix this on the Monday board.' : 'Fix the registration on the Monday board and it will match at the next sync. <a href="#vehicles">See the review list</a>.'}</p></div></article>`);
+        <div class="av-review"><b>Vehicle match needs review</b><p>${reasonsHtml(m, !DRV())}</p><p class="note">No Monday vehicle details are shown for ${esc(r.reg)}, so another vehicle's MOT, tax or assignment can't be mistaken for this one. ${DRV() ? 'Your fleet manager can fix this on the Monday board.' : 'Fix the registration on the Monday board and it will match at the next sync. <a href="#vehicles">See the review list</a>.'}</p></div></article>`);
     }
     const person = spare ? null : canonName(r.d);
     const others = person ? ((fleetMeta.byDriver || {})[person] || []).filter(id => id !== m.itemId) : [];
@@ -4254,41 +4403,59 @@ html.drv .f-driver{display:none}
       const pending = fleetMeta && Object.values(fleetMeta.fv).find(x => (x.candidates || []).includes(d.id));
       if (pending) reviewNotes.push(...pending.reasons);
     }
+    const old = d.kind !== 'current';
+    // An old vehicle's dates aren't tracked: they're shown as on the board, in grey.
     const dueCard = (key, title) => {
-      const x = d[key], u = due(x);
+      const x = d[key] || {}, u = due(x, key);
+      if (old) return `<section class="duecard old" aria-label="${esc(title)}"><h3>${esc(title)}</h3><p class="due-l">Not tracked</p>
+        <p class="due-d">${x.date ? `On the board: ${esc(dueDay(x.date) ? longDate(dueDay(x.date)) : x.date)}` : 'No date on the board'}</p>
+        <p class="due-m">Monday status: <b>${esc(x.status || 'not set')}</b></p></section>`;
+      const more = [];
+      if (u.cls === 'dated') {
+        more.push(`The ${DATE_WORD[key].toLowerCase()} (${longDate(u.date)}) passed ${plural(-u.days, 'day', 'days')} ago, but Monday's status ${u.monday ? `says ${u.monday}` : 'is empty'}.`);
+        const log = doneSentence(doneInfo(d, key, u)); if (log) more.push(log);
+      } else if (u.kind === 'check' && u.date) more.push(`Monday says Overdue, but the date is ${plural(u.days, 'day', 'days')} away.`);
+      else if (u.kind === 'check' && x.date) more.push(`The board has “${x.date}”, which isn't a date this page can read.`);
+      else if (u.kind === 'check') more.push(`The board's ${title === 'Service' ? 'Next Service Date' : title === 'MOT' ? 'Next MOT Date' : 'Tax Date'} column is empty for this vehicle.`);
+      const when = u.date ? (u.kind === 'exempt' ? `Date on the board: ${longDate(u.date)}` : `${key === 'service' ? 'Next service' : 'Due'} ${longDate(u.date)}`) : x.date ? '' : 'No date on the Monday board';
       return `<section class="duecard ${u.cls}" aria-label="${esc(title)}"><h3>${esc(title)}</h3>
-        <p class="due-l">${esc(u.label)}</p>
-        <p class="due-d">${x.date ? `Due ${esc(longDate(x.date))}` : 'No date on the Monday board'}</p>
-        <p class="due-m">Monday status: <b>${esc(x.status || 'not set')}</b>${u.mismatch ? `<span class="warnnote">Monday's status doesn't match the date. The label above is worked out from the date.</span>` : ''}</p></section>`;
+        <p class="due-l">${esc(u.short)}</p>${when ? `<p class="due-d">${esc(when)}</p>` : ''}
+        <p class="due-m">Monday status: <b>${esc(u.monday || 'not set')}</b></p>
+        ${more.map(t => `<p class="due-x">${esc(t)}</p>`).join('')}${u.kind === 'check' || u.kind === 'action' ? mondayLink(d.url) : ''}</section>`;
     };
-    const facts = [['Make', d.make], ['Model', d.model], ['Wheelbase', d.wheelbase], ['Registration (Former Reg on the board)', d.formerRegRaw], ['Breakdown cover', d.breakdown],
+    const fr = formerShown({formerReg: d.formerRegRaw, plate: d.plate});
+    const facts = [['Make', d.make], ['Model', d.model], ['Wheelbase', d.wheelbase], ['Registration (Former Reg on the board)', fr], ['Breakdown cover', d.breakdown],
       ['Board group', d.group], ['Latest recorded mileage', d.latestMileage ? `${fmt(d.latestMileage.miles)} miles (${longDate(d.latestMileage.date)})` : null],
       ['Recorded costs', d.totalCost != null ? `£${d.totalCost.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2})} across ${plural(d.log.filter(x => x.cost != null).length, 'entry', 'entries')}` : null]]
+      .filter(([k]) => !(k.startsWith('Registration') && !fr && d.formerRegRaw))   // a Former Reg that only repeats the plate isn't shown
       .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v ? esc(v) : '<span class="role">Not on the board</span>'}</dd></div>`).join('');
     const types = [...new Set(d.log.map(x => x.type).filter(Boolean))].sort();
     const log = d.log.filter(x => logType === 'all' || x.type === logType);
     const rel = d.related || {};
     const workRows = [...(rel.bookings || []).map(x => ({...x, bucket:'Booked in'})), ...(rel.toBook || []).map(x => ({...x, bucket:'To be booked'})), ...(rel.issues || []).map(x => ({...x, bucket:'Under observation'}))];
     const openWork = d.log.filter(x => x.status && x.status !== 'Done');
-    const workTable = rows => `<table class="evt logt"><thead><tr><th scope="col">Date</th><th scope="col">Work</th><th scope="col">Type</th><th scope="col">Where</th><th scope="col">Status</th></tr></thead><tbody>${rows.map(x => `<tr><td class="c-when" data-label="Date">${x.date ? esc(ukDate(x.date)) : '<span class="role">No date</span>'}${x.date && x.status !== 'Done' ? `<span class="x">${esc(due({date:x.date}).cls === 'over' ? 'date passed' : 'in ' + plural(daysUntil(x.date), 'day', 'days'))}</span>` : ''}</td><td class="c-who" data-label="Work">${esc(x.name)}${x.bucket ? `<span class="x">${esc(x.bucket)}</span>` : ''}</td><td data-label="Type">${esc(x.type || '—')}</td><td data-label="Where">${esc(x.where || '—')}</td><td data-label="Status">${esc(x.status || '—')}</td></tr>`).join('')}</tbody></table>`;
+    const workTable = rows => `<table class="evt logt"><thead><tr><th scope="col">Date</th><th scope="col">Work</th><th scope="col">Type</th><th scope="col">Where</th><th scope="col">Status</th></tr></thead><tbody>${rows.map(x => `<tr><td class="c-when" data-label="Date">${x.date ? esc(ukDate(x.date)) : '<span class="role">No date</span>'}${x.date && x.status !== 'Done' ? `<span class="x">${esc(due({date:x.date}).cls === 'over' ? 'date passed' : 'in ' + plural(daysUntil(x.date), 'day', 'days'))}</span>` : ''}</td><td class="c-who" data-label="Work">${esc(nm(x.name))}${x.bucket ? `<span class="x">${esc(x.bucket)}</span>` : ''}</td><td data-label="Type">${esc(x.type || '—')}</td><td data-label="Where">${esc(x.where || '—')}</td><td data-label="Status">${esc(x.status || '—')}</td></tr>`).join('')}</tbody></table>`;
     const plateNote = d.plateHistory.length ? ' Records filed under this plate on the board may include an earlier vehicle that carried it.' : '';
-    const hist = d.plateHistory.map(h => `<li><a href="#vehicle/${esc(h.id)}">${esc(h.label)}</a> <span class="role">${esc(h.relation)}</span></li>`).join('');
+    const hist = d.plateHistory.map(h => `<li><a href="#vehicle/${esc(h.id)}">${esc(nm(h.label))}</a> <span class="role">${esc(h.relation)}</span></li>`).join('');
+    // An old vehicle that carried a plate a current vehicle has now ("Old K4 FLR", "GJ21 PWF (was K6 FLR)"): that vehicle.
+    const now = old ? d.plateHistory.find(h => h.relation === 'vehicle now on this plate') : null, nowV = now ? vehicleData(now.id) : null;
     const speeding = fvr ? (() => { const r = view && view.rows.find(x => x.reg === fvr.reg); return `<section class="card"><h3>Speeding (FleetView)</h3>
         <dl class="kv"><div><dt>Incidents over threshold</dt><dd>${fmt(r ? r.flag : fvr.flag)}<small>${esc(view ? view.label : 'Last 30 days')}</small></dd></div><div><dt>Serious (20+ over)</dt><dd>${fmt(r ? r.o20 : fvr.o20)}</dd></div>
         <div class="wide"><dt>FleetView-assigned driver</dt><dd>${esc(fvr.d)}<small>FleetView's assignment for the incidents; Monday's current assignment is at the top of this page</small></dd></div></dl>
         <div class="actions" style="margin-top:10px"><a class="btn" href="#driver/${esc(slug(fvr.reg))}">Driver details</a>${incidentsLoaded ? `<a class="btn ghost" href="#map/v/${esc(slug(fvr.reg))}">View on speeding map</a>` : ''}</div></section>`; })()
       : `<section class="card"><h3>Speeding (FleetView)</h3><p class="note">${d.kind === 'historical' ? 'This is a historical vehicle, so it has no current FleetView record.' : "This vehicle isn't matched to a FleetView tracker in the current report."}</p></section>`;
     el.innerHTML = `<p class="crumbs"><a href="#vehicles">← Vehicles</a>${fvr ? ` · <a href="#driver/${esc(slug(fvr.reg))}">Driver details</a>` : ''}</p>
-      <header class="phead vhead"><div><div class="role">${d.kind === 'historical' ? 'Historical vehicle' : esc(d.group.replace(/s$/, ''))} · Monday fleet board</div>
-          <h2 id="h-vehicle" tabindex="-1"><span class="plate hugeplate">${esc(d.plate)}</span>${d.note ? ` <span class="role">${esc(d.note)}</span>` : ''}</h2>
-          <p class="vh-model">${esc([d.make, d.model].filter(Boolean).join(' ') || '')}</p></div>
-        <div class="vh-assign"><div class="role">Assigned to (Monday, current)</div><div class="vh-name">${esc(d.assigned || 'Nobody')}</div>
+      <header class="phead vhead"><div><div class="role">${old ? 'Old vehicle' : esc(d.group.replace(/s$/, ''))} · Monday fleet board</div>
+          <h2 id="h-vehicle" tabindex="-1"><span class="plate hugeplate">${esc(d.plate)}</span>${old ? '<span class="vtag old">Old vehicle</span>' : ''}${noteTag(d)}</h2>
+          <p class="vh-model">${esc([d.make, d.model].filter(Boolean).join(' ') || '')}</p>${now ? `<p class="vh-now"><a href="#vehicle/${esc(now.id)}">The current ${esc(nowV ? nowV.plate : nm(now.label))} →</a></p>` : ''}</div>
+        <div class="vh-assign"><div class="role">${old ? 'Last assigned to (Monday)' : 'Assigned to (Monday, current)'}</div><div class="vh-name">${esc(d.assigned || 'Nobody')}</div>
           ${fvr && !isSpareName(fvr.d) && canonName(fvr.d) !== canonName(d.assigned) ? `<div class="role">FleetView-assigned driver: ${esc(fvr.d)}</div>` : ''}</div></header>
       ${reviewNotes.length ? `<div class="review" role="note"><b>Needs review.</b> ${reviewNotes.map(esc).join(' ')}</div>` : ''}
       ${syncHtml()}
       <div class="actions">${mondayLink(d.url)}<span class="note">Opens the item in Monday for staff with access to the fleet board.</span></div>
       <div class="duegrid">${dueCard('mot', 'MOT')}${dueCard('tax', 'Tax')}${dueCard('service', 'Service')}</div>
-      <p class="note">Labels are worked out from each due date: overdue once the date has passed, due soon within ${dueDays()} days.</p>
+      <p class="note">${old ? "This is an old vehicle, so its dates aren't tracked. They're shown as they are on the board."
+        : `Each label comes from the date and Monday's status together. Red: the date has passed and Monday says Overdue too. Outlined in red: the date has passed but Monday doesn't say Overdue, so it needs checking on the board. Amber: due within ${dueDays()} days. Green: more than ${dueDays()} days away. The Hub never changes the Monday board: correct a date or status there and this page updates within 15 minutes.`}</p>
       <div class="pgrid">
         <section class="card"><h3>Vehicle</h3><dl class="kv">${facts}</dl></section>
         ${speeding}
@@ -4296,97 +4463,181 @@ html.drv .f-driver{display:none}
       <section class="card"><h3>Upcoming and outstanding work</h3>${workRows.length || openWork.length ? workTable([...workRows, ...openWork]) : '<p class="note">Nothing booked, waiting to be booked or under observation for this vehicle on the board.</p>'}</section>
       <section class="card"><div class="loghead"><h3>Maintenance log (${fmt(d.log.length)})</h3>
         ${types.length > 1 ? `<div class="field"><label for="log-type">Show</label><select id="log-type"><option value="all">All work</option>${types.map(t => `<option value="${esc(t)}"${t === logType ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></div>` : ''}</div>
-        ${log.length ? `<table class="evt logt"><thead><tr><th scope="col">Date</th><th scope="col">Work</th><th scope="col">Type</th><th scope="col">Garage</th><th scope="col">Status</th><th scope="col" class="r">Mileage</th><th scope="col" class="r">Cost</th></tr></thead><tbody>${log.map(x => `<tr><td class="c-when" data-label="Date">${x.date ? esc(ukDate(x.date)) : '<span class="role">No date</span>'}</td><td class="c-who" data-label="Work"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>${x.owner ? `<span class="x">Monday owner: ${esc(x.owner)}</span>` : ''}</td><td data-label="Type">${esc(x.type || '—')}</td><td data-label="Garage">${esc(x.where || '—')}</td><td data-label="Status">${esc(x.status || '—')}</td><td class="r" data-label="Mileage">${x.mileage != null ? fmt(x.mileage) : '—'}</td><td class="r" data-label="Cost">${x.cost != null ? '£' + x.cost.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="note">No maintenance entries for this vehicle on the board.</p>'}
+        ${log.length ? `<table class="evt logt"><thead><tr><th scope="col">Date</th><th scope="col">Work</th><th scope="col">Type</th><th scope="col">Garage</th><th scope="col">Status</th><th scope="col" class="r">Mileage</th><th scope="col" class="r">Cost</th></tr></thead><tbody>${log.map(x => `<tr><td class="c-when" data-label="Date">${x.date ? esc(ukDate(x.date)) : '<span class="role">No date</span>'}</td><td class="c-who" data-label="Work"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(nm(x.name))}</a>${x.owner ? `<span class="x">Monday owner: ${esc(x.owner)}</span>` : ''}</td><td data-label="Type">${esc(x.type || '—')}</td><td data-label="Garage">${esc(x.where || '—')}</td><td data-label="Status">${esc(x.status || '—')}</td><td class="r" data-label="Mileage">${x.mileage != null ? fmt(x.mileage) : '—'}</td><td class="r" data-label="Cost">${x.cost != null ? '£' + x.cost.toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="note">No maintenance entries for this vehicle on the board.</p>'}
         <p class="note">From the vehicle's subitems on the Monday board, newest first. Work names link to the entry in Monday.</p></section>
       <div class="pgrid">
         <section class="card"><h3>Vehicle history</h3>
-          <dl class="kv"><div class="wide"><dt>Registration</dt><dd>${esc(d.formerRegRaw || 'Not on the board')}<small>The board's "Former Reg" column</small></dd></div>
+          <dl class="kv"><div class="wide"><dt>Registration</dt><dd>${esc(fr || (d.formerRegRaw ? 'Same as the plate' : 'Not on the board'))}<small>The board's "Former Reg" column</small></dd></div>
             <div><dt>Added to the board</dt><dd>${esc(longDate(d.created.slice(0, 10)))}</dd></div><div><dt>Last changed in Monday</dt><dd>${esc(longDate(d.updated.slice(0, 10)))}</dd></div></dl>
           ${hist ? `<h4 class="sub4">Plate history</h4><ul class="plain">${hist}</ul>` : '<p class="note" style="margin-top:8px">No other vehicle on the board has carried this plate.</p>'}</section>
         <section class="card"><h3>Number plates${(rel.completed || []).length ? ' and completed bookings' : ''}</h3>
-          ${(rel.plates || []).length ? `<h4 class="sub4">Plates ordered</h4><ul class="plain">${rel.plates.map(x => `<li>${esc(x.name)} <span class="role">${x.date ? esc(ukDate(x.date)) : ''} · ${esc(x.status || '')}</span></li>`).join('')}</ul>` : '<p class="note">No number plate records for this vehicle.</p>'}
-          ${(rel.completed || []).length ? `<h4 class="sub4">Completed bookings notes</h4><ul class="plain">${rel.completed.map(x => `<li>${esc(x.name.replace(/\t+/g, ' · '))}</li>`).join('')}</ul><p class="note">As typed on the board's "Complete Bookings" list.${esc(plateNote)}</p>` : ''}
-          ${(rel.fuel || []).length ? `<h4 class="sub4">Fuel cards</h4><ul class="plain">${rel.fuel.map(x => `<li>${esc(x.name)}</li>`).join('')}</ul>` : ''}</section>
+          ${(rel.plates || []).length ? `<h4 class="sub4">Plates ordered</h4><ul class="plain">${rel.plates.map(x => `<li>${esc(nm(x.name))} <span class="role">${x.date ? esc(ukDate(x.date)) : ''} · ${esc(x.status || '')}</span></li>`).join('')}</ul>` : '<p class="note">No number plate records for this vehicle.</p>'}
+          ${(rel.completed || []).length ? `<h4 class="sub4">Completed bookings notes</h4><ul class="plain">${rel.completed.map(x => `<li>${esc(nm(x.name))}</li>`).join('')}</ul><p class="note">As typed on the board's "Complete Bookings" list.${esc(plateNote)}</p>` : ''}
+          ${(rel.fuel || []).length ? `<h4 class="sub4">Fuel cards</h4><ul class="plain">${rel.fuel.map(x => `<li>${esc(nm(x.name))}</li>`).join('')}</ul>` : ''}</section>
       </div>`;
   }
   $('#vehicle-page').addEventListener('change', e => { if (e.target.id === 'log-type') { logType = e.target.value; renderVehiclePage(vehicleId); $('#log-type').focus(); } });
 
-  // ---- Vehicles page: what's coming up first, then every vehicle as a card ----
-  let fleetFilter = {group:'all', due:false};
+  // ---- Vehicles page: what needs doing first, then every current vehicle as a card ----
+  // Four lists from the one rule (dueState): Needs action (a passed date that Monday also calls Overdue), Needs checking
+  // (a passed date Monday doesn't call Overdue, a missing or unreadable date, or Overdue before the date), Coming up (the
+  // next 30 days, exemptions included) and All current vehicles. Old vehicles and fleet stock are under Records.
+  // Nothing here writes to Monday or says a vehicle is safe or unsafe.
+  let fleetFilter = {view:'all', group:'all', q:''};
   const DUE_WHAT = {mot:'MOT', tax:'Tax', service:'Service'};
-  function comingUp(cur){
-    const out = [];
-    for (const v of cur) for (const k of ['mot', 'tax', 'service']) {
-      const x = v[k]; if (!x || !x.date) continue;
-      const n = daysUntil(x.date); if (n > 60) continue;
-      out.push({v, k, x, n, u:due(x)});
-    }
-    return out.sort((a, b) => a.n - b.n || a.v.plate.localeCompare(b.v.plate));
+  const DUE_KEYS = ['mot', 'tax', 'service'];
+  const FLEET_VIEWS = [['all', 'All'], ['action', 'Needs action'], ['check', 'Needs checking'], ['soon', 'Coming up'], ['records', 'Records']];
+  // Search: plate, former reg and FleetView reg ignoring spaces and case; driver, make and model as typed.
+  function vehicleMatches(v, q){
+    const t = String(q || '').trim().toLowerCase(); if (!t) return true;
+    const k = plateKey(t), fr = v.fvReg ? fleetRowFor(v.fvReg) : null;
+    return (!!k && [v.plate, v.formerReg, v.fvReg, v.label].some(s => plateKey(s).includes(k)))
+      || [v.assigned, fr && fr.d, [v.make, v.model].filter(Boolean).join(' ')].some(s => s && String(s).toLowerCase().includes(t));
   }
-  function dueRowHtml(d){
-    const dt = new Date(d.x.date + 'T12:00:00');
-    return `<li><a class="due-row st-${d.u.cls}" href="#vehicle/${esc(d.v.id)}">
+  // A booking on the board for this MOT or service: the vehicle's Upcoming Bookings, or work "Booked In" in its log.
+  function isBooked(v, k){
+    if (k === 'tax') return false;
+    const d = vehicleDocs.get(v.id); if (!d) return false;
+    const want = k === 'mot' ? /\bmot\b/i : /\bservic/i;
+    const open = [...((d.related && d.related.bookings) || []), ...(d.log || []).filter(x => String(x.status || '').toLowerCase() === 'booked in')];
+    return open.some(x => want.test(x.type || '') || want.test(x.name || ''));
+  }
+  // Everything the page counts and lists, worked out once per drawing.
+  function fleetState(){
+    const all = fleetMeta.vehicles.map(v => vehicleData(v.id) || v);
+    const cur = all.filter(v => v.kind === 'current'), olds = all.filter(v => v.kind !== 'current');
+    const items = [];
+    for (const v of cur) for (const k of DUE_KEYS) items.push({v, k, x: v[k] || {}, u: due(v[k], k)});
+    const action = items.filter(i => i.u.kind === 'action').sort((a, b) => a.u.days - b.u.days || a.v.plate.localeCompare(b.v.plate));
+    // Needs checking, one row per vehicle, worst first: a passed date (longest ago first), Overdue before its date,
+    // a date that can't be read, then a missing date.
+    const rank = i => i.u.cls === 'dated' ? 0 : i.u.date ? 1 : i.x.date ? 2 : 3;
+    const byV = new Map();
+    for (const i of items) if (i.u.kind === 'check') { if (!byV.has(i.v.id)) byV.set(i.v.id, []); byV.get(i.v.id).push(i); }
+    const check = [...byV.values()].map(l => l.sort((a, b) => rank(a) - rank(b) || (a.u.days || 0) - (b.u.days || 0)))
+      .sort((a, b) => rank(a[0]) - rank(b[0]) || (a[0].u.days || 0) - (b[0].u.days || 0) || a[0].v.plate.localeCompare(b[0].v.plate));
+    const soon = items.filter(i => i.u.upcoming).sort((a, b) => a.u.days - b.u.days || a.v.plate.localeCompare(b.v.plate));
+    const later = items.filter(i => !i.u.upcoming && (i.u.kind === 'ok' || i.u.kind === 'exempt') && i.u.days != null && i.u.days <= 60).sort((a, b) => a.u.days - b.u.days || a.v.plate.localeCompare(b.v.plate));
+    const actionV = new Set(action.map(i => i.v.id));
+    return {cur, olds, action, check, soon, later, counts: {all: cur.length, action: actionV.size, check: check.length, soon: soon.length, records: olds.length}};
+  }
+  const vrowPlate = v => `<span class="plate">${esc(v.plate)}</span>`;
+  function actionRow(i){
+    return `<li class="vrow st-over"><a class="vr-main" href="#vehicle/${esc(i.v.id)}">${vrowPlate(i.v)}
+        <span class="vr-text"><b>${esc(DUE_NAME[i.k])} overdue</b><span>${esc(`${DATE_WORD[i.k]} ${longDate(i.u.date)} · Monday also says Overdue`)}</span></span></a>
+      <span class="pill over"><span class="sr">${esc(DUE_NAME[i.k])}: </span><span aria-hidden="true">${esc(DUE_NAME[i.k])}&nbsp;·&nbsp;</span>${esc(i.u.short)}</span>${mondayLink(i.v.url)}</li>`;
+  }
+  function checkRow(list){
+    const i = list[0], v = i.v;
+    const head = i.u.label === 'No date on the board' ? `No ${DUE_LOWER[i.k]} date on the board` : i.u.label === "Date can't be read — needs checking" ? `${DUE_NAME[i.k]} date can't be read — needs checking` : i.u.label;
+    const detail = [];
+    if (i.u.date) detail.push(`${DATE_WORD[i.k]} ${longDate(i.u.date)}`); else if (i.x.date) detail.push(`On the board as “${i.x.date}”`);
+    detail.push(i.u.monday ? `Monday says ${i.u.monday}` : 'no status on Monday');
+    if (i.u.cls === 'dated') { const d = doneShort(doneInfo(v, i.k, i.u)); if (d) detail.push(d); }
+    const also = list.slice(1).map(o => o.u.label === 'No date on the board' ? `no ${DUE_LOWER[o.k]} date on the board` : o.u.cls === 'dated' ? `${DUE_LOWER[o.k]} date overdue by ${plural(-o.u.days, 'day', 'days')}` : `${DUE_LOWER[o.k]}: ${o.u.short.charAt(0).toLowerCase() + o.u.short.slice(1)}`);
+    if (also.length) detail.push('also ' + also.join(', '));
+    return `<li class="vrow st-${i.u.cls}"><a class="vr-main" href="#vehicle/${esc(v.id)}">${vrowPlate(v)}
+        <span class="vr-text"><b>${esc(head)}</b><span>${esc(detail.join(' · '))}</span></span></a>${mondayLink(v.url)}</li>`;
+  }
+  function upRow(i){
+    const dt = new Date(i.u.date + 'T12:00:00'), note = dueNote(i.u), booked = isBooked(i.v, i.k);
+    return `<li><a class="due-row st-${i.u.cls}" href="#vehicle/${esc(i.v.id)}">
       <span class="due-date" aria-hidden="true"><b>${dt.getDate()}</b><small>${dt.toLocaleDateString('en-GB', {month:'short'})}</small></span>
-      <span class="due-main"><span class="due-top"><span class="plate">${esc(d.v.plate)}</span><b>${DUE_WHAT[d.k]}</b></span>
-        <span class="due-sub">${esc([d.v.make, d.v.model].filter(Boolean).join(' ') || 'Vehicle')}${d.v.assigned ? ` · ${esc(d.v.assigned)}` : ''}${d.u.mismatch ? ` · <span class="mm">Monday says ${esc(d.u.monday)}</span>` : ''}</span></span>
-      <span class="pill ${d.u.cls}">${esc(d.u.label.replace(/^OK · /, ''))}</span><span class="go" aria-hidden="true"></span></a></li>`;
+      <span class="due-main"><span class="due-top"><span class="plate">${esc(i.v.plate)}</span><b>${DUE_WHAT[i.k]}</b>${booked ? '<span class="vtag booked">Booked</span>' : ''}</span>
+        <span class="due-sub">${esc([i.v.make, i.v.model].filter(Boolean).join(' ') || 'Vehicle')}${i.v.assigned ? ` · ${esc(i.v.assigned)}` : ''}${note ? ` · <span class="${i.u.kind === 'exempt' ? 'mx' : 'mm'}">${esc(note)}</span>` : ''}</span></span>
+      <span class="pill ${i.u.cls}"><span class="sr">${esc(longDate(i.u.date))}: </span>${esc(i.u.short)}</span><span class="go" aria-hidden="true"></span></a></li>`;
   }
+  function vehicleCard(v){
+    const fr = v.fvReg ? fleetRowFor(v.fvReg) : null, mm = v.fvReg ? fvMatch(v.fvReg) : null;
+    return `<a class="vcard2" href="#vehicle/${esc(v.id)}" aria-label="${esc(v.plate)}, ${esc([v.make, v.model].filter(Boolean).join(' '))}, assigned to ${esc(v.assigned || 'nobody')}. Open vehicle details">
+      <span class="vc-top"><span class="plate bigplate">${esc(v.plate)}</span><span class="vc-grp">${esc(String(v.group || '').replace(/s$/, ''))}</span></span>${noteTag(v) ? `<span class="vc-tags">${noteTag(v)}</span>` : ''}
+      <span class="vc-model">${esc([v.make, v.model].filter(Boolean).join(' ') || 'Make and model not on the board')}</span>
+      <span class="vc-who">${v.assigned ? esc(v.assigned) : '<i>Not assigned</i>'}</span>
+      <span class="vc-due">${pill(v.mot, 'MOT', 'mot')}${pill(v.tax, 'Tax', 'tax')}${pill(v.service, 'Service', 'service')}</span>
+      <span class="vc-fv">${fr ? `${fmt(fr.flag)} speeding incidents${fr.o20 ? ` · <b>${fr.o20} serious</b>` : ''}${mm && mm.state === 'review' ? ' · <span class="chip review">Needs review</span>' : ''}` : '<span class="role">Not in FleetView</span>'}</span></a>`;
+  }
+  function oldRow(v, cur){
+    // The current vehicle on the plate it carried: from the sync's plate history, else the same plate.
+    const h = ((vehicleData(v.id) || {}).plateHistory || []).find(x => x.relation === 'vehicle now on this plate');
+    const now = (h && cur.find(c => c.id === h.id)) || cur.find(c => plateKey(c.plate) === plateKey(v.plate));
+    return `<li><a href="#vehicle/${esc(v.id)}">${esc(v.plate)} (old vehicle)</a> ${noteTag(v)}${now ? ` <span class="role">· <a href="#vehicle/${esc(now.id)}">the current ${esc(now.plate)}</a></span>` : ''}${v.assigned ? ` <span class="role">· last assigned to ${esc(v.assigned)}</span>` : ''}</li>`;
+  }
+  const secHead = (id, title, n, sub) => `<div class="sechead"><div><h2 id="${id}">${esc(title)}${n != null ? `<span class="dg-n">${fmt(n)}</span>` : ''}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}</div></div>`;
   function renderFleetPage(){
     if (DRV()) { renderMyVehicles(); return; }
     const el = $('#fleet-page');
     const head = sub => `<header class="lt"><p class="lt-eyebrow">Monday fleet board · MOT, tax and service</p><h1 class="lt-title" id="h-fleet" tabindex="-1">Vehicles</h1>${sub ? `<p class="lt-sub">${sub}</p>` : ''}</header>`;
     if (!fleetMeta) { el.innerHTML = head('') + syncHtml(); return; }
-    const cur = fleetMeta.vehicles.filter(v => v.kind === 'current').map(v => vehicleData(v.id));
-    const soonest = v => Math.min(...['mot', 'tax', 'service'].map(k => v[k] && v[k].date ? daysUntil(v[k].date) : Infinity));
-    const groups = [...new Set(cur.map(v => v.group))];
-    if (fleetFilter.group !== 'all' && !groups.includes(fleetFilter.group)) fleetFilter.group = 'all';
-    const shownV = cur.filter(v => (fleetFilter.group === 'all' || v.group === fleetFilter.group) && (!fleetFilter.due || soonest(v) <= dueDays())).sort((a, b) => soonest(a) - soonest(b) || a.plate.localeCompare(b.plate));
+    const S = fleetState(), c = S.counts;
     const review = Object.values(fleetMeta.fv).filter(m => m.state !== 'matched');
-    const notFv = cur.filter(v => !v.fvReg);
-    const lists = fleetMeta.lists || {}, c = fleetMeta.counts || {};
-    const up = comingUp(cur);
-    const bands = [['over', 'Overdue', d => d.n < 0], ['week', 'Next 7 days', d => d.n >= 0 && d.n <= 7], ['month', 'Next 30 days', d => d.n > 7 && d.n <= 30], ['later', 'In 31 to 60 days', d => d.n > 30]];
-    const upHtml = up.length ? bands.map(([k, t, f]) => { const items = up.filter(f); return items.length ? `<section class="due-band b-${k}"><h3>${t}<span class="dg-n">${items.length}</span></h3><ol class="due-list">${items.map(dueRowHtml).join('')}</ol></section>` : ''; }).join('')
-      : '<p class="note">Nothing due in the next 60 days, and nothing overdue.</p>';
-    const bookingRow = x => `<li><b>${x.vehicle ? `<a href="#vehicle/${esc(x.vehicle)}">${esc(x.name)}</a>` : esc(x.name)}</b> <span class="role">${[x.type, x.where, x.date ? ukDate(x.date) : 'no date', x.status].filter(Boolean).map(esc).join(' · ')}</span></li>`;
-    const card = v => {
-      const fr = v.fvReg ? fleetRowFor(v.fvReg) : null, mm = v.fvReg ? fvMatch(v.fvReg) : null;
-      return `<a class="vcard2" href="#vehicle/${esc(v.id)}" aria-label="${esc(v.plate)}, ${esc([v.make, v.model].filter(Boolean).join(' '))}, assigned to ${esc(v.assigned || 'nobody')}. Open vehicle details">
-        <span class="vc-top"><span class="plate bigplate">${esc(v.plate)}</span><span class="vc-grp">${esc(String(v.group || '').replace(/s$/, ''))}</span></span>
-        <span class="vc-model">${esc([v.make, v.model].filter(Boolean).join(' ') || 'Make and model not on the board')}</span>
-        <span class="vc-who">${v.assigned ? esc(v.assigned) : '<i>Not assigned</i>'}</span>
-        <span class="vc-due">${pill(v.mot, 'MOT')}${pill(v.tax, 'Tax')}${pill(v.service, 'Service')}</span>
-        <span class="vc-fv">${fr ? `${fmt(fr.flag)} speeding incidents${fr.o20 ? ` · <b>${fr.o20} serious</b>` : ''}${mm && mm.state === 'review' ? ' · <span class="chip review">Needs review</span>' : ''}` : '<span class="role">Not in FleetView</span>'}</span></a>`;
-    };
-    el.innerHTML = head(`${fmt(cur.length)} current vehicles · ${fmt(c.matched || 0)} of ${fmt(c.fvVehicles || 0)} FleetView vehicles matched${c.review ? ` · ${fmt(c.review + (c.unmatched || 0))} need review` : ''}`) + `
+    el.innerHTML = head(`${plural(c.all, 'current vehicle', 'current vehicles')} · ${fmt(c.action)} need${c.action === 1 ? 's' : ''} action · ${fmt(c.check)} need${c.check === 1 ? 's' : ''} checking · ${plural(c.soon, 'date', 'dates')} in the next ${dueDays()} days`) + `
       ${syncHtml()}
-      ${review.length ? `<section class="card reviewcard"><h3>Needs review (${review.length})</h3><ul class="plain">${review.map(m => `<li><span class="plate">${esc(m.reg)}</span> ${m.reasons.map(esc).join(' ')} ${m.itemId ? `<a href="#vehicle/${esc(m.itemId)}">View vehicle</a> · ` : ''}${(m.historical || []).map(id => { const v = vSummary(id); return v ? `<a href="#vehicle/${esc(id)}">${esc(v.label)}</a>` : ''; }).join(', ')}${fleetRowFor(m.reg) ? ` · <a href="#driver/${esc(slug(m.reg))}">Driver details</a>` : ''}</li>`).join('')}</ul><p class="note">Nothing on this list is matched automatically. Fix the registration or assignment on the Monday board, or confirm a name alias, and it clears at the next sync.</p></section>` : ''}
-      <section class="section" aria-labelledby="h-due"><div class="sechead"><div><h2 id="h-due">Coming up</h2><p class="sub">MOT, tax and service due in the next 60 days, and anything overdue. Worked out from each due date.</p></div></div>
-        <div class="dues">${upHtml}</div></section>
-      <section class="section" aria-labelledby="h-allv"><div class="sechead"><div><h2 id="h-allv">All vehicles</h2><p class="sub">Soonest due date first.</p></div>
-        <div class="fleettools" role="group" aria-label="Filter vehicles">
-          <fieldset class="seg" id="fl-group"><legend>Vehicle group</legend><label><input type="radio" name="fl-group" value="all"${fleetFilter.group === 'all' ? ' checked' : ''}>All</label>${groups.map(g => `<label><input type="radio" name="fl-group" value="${esc(g)}"${g === fleetFilter.group ? ' checked' : ''}>${esc(g)}</label>`).join('')}</fieldset>
-          <label class="chk"><input type="checkbox" id="fl-due"${fleetFilter.due ? ' checked' : ''}> Due within ${dueDays()} days</label></div></div>
-        <div class="vgrid">${shownV.map(card).join('') || '<p class="note">No vehicles match.</p>'}</div>
-        ${notFv.length ? `<p class="note" style="margin-top:12px">${plural(notFv.length, 'current vehicle is', 'current vehicles are')} on the Monday board but not in FleetView's speeding data: ${notFv.map(v => `<a href="#vehicle/${esc(v.id)}">${esc(v.plate)}</a>`).join(', ')}.</p>` : ''}</section>
-      <div class="pgrid">
-        <section class="card"><h3>Fleet bookings</h3>
+      ${review.length ? `<section class="card reviewcard"><h3>FleetView match needs review (${review.length})</h3><ul class="plain">${review.map(m => `<li><span class="plate">${esc(m.reg)}</span> ${reasonsHtml(m, true)} ${m.itemId ? `<a href="#vehicle/${esc(m.itemId)}">View vehicle</a>` : ''}${fleetRowFor(m.reg) ? `${m.itemId ? ' · ' : ''}<a href="#driver/${esc(slug(m.reg))}">Driver details</a>` : ''}</li>`).join('')}</ul><p class="note">Nothing on this list is matched automatically. Fix the registration or assignment on the Monday board, or confirm a name alias, and it clears at the next sync.</p></section>` : ''}
+      <div class="vtools"><div class="field vsearch"><label for="fl-q" class="sr">Search vehicles</label><input id="fl-q" type="search" placeholder="Search plate, former reg, driver or model" autocomplete="off" value="${esc(fleetFilter.q)}"></div>
+        <div class="vchips" id="fl-view" role="group" aria-label="Show"></div></div>
+      <div id="fl-body"></div>`;
+    renderFleetBody(S);
+  }
+  // Everything under the search box: drawn again as the search or the chosen list changes, so typing keeps its place.
+  function renderFleetBody(S){
+    S = S || fleetState();
+    const c = S.counts, q = fleetFilter.q, view = fleetFilter.view;
+    const chips = $('#fl-view'), body = $('#fl-body');
+    if (!chips || !body) return;
+    const had = document.activeElement && document.activeElement.closest && document.activeElement.closest('#fl-view') ? document.activeElement.dataset.fv : null;
+    chips.innerHTML = FLEET_VIEWS.map(([k, l]) => `<button type="button" class="fchip ${k === 'all' || k === 'records' ? '' : 'c-' + k}" data-fv="${k}" aria-pressed="${view === k}">${l}<span>${fmt(c[k])}</span></button>`).join('');
+    if (had) { const b = $(`#fl-view [data-fv="${had}"]`); if (b) b.focus({preventScroll:true}); }
+    const m = v => vehicleMatches(v, q);
+    const action = S.action.filter(i => m(i.v)), check = S.check.filter(l => m(l[0].v)), soon = S.soon.filter(i => m(i.v)), later = S.later.filter(i => m(i.v));
+    const lists = fleetMeta.lists || {};
+    const bookingRow = x => `<li><b>${x.vehicle ? `<a href="#vehicle/${esc(x.vehicle)}">${esc(nm(x.name))}</a>` : esc(nm(x.name))}</b> <span class="role">${[x.type, x.where, x.date ? ukDate(x.date) : 'no date', x.status].filter(Boolean).map(esc).join(' · ')}</span></li>`;
+    const none = t => `<p class="note vnone">${t}</p>`;
+    const qNote = q.trim() ? ` matching “${esc(q.trim())}”` : '';
+    const sAction = `<section class="section vsec-action" aria-labelledby="h-act">${secHead('h-act', 'Needs action', action.length, "The date has passed and Monday says Overdue too.")}
+        ${action.length ? `<ul class="vlist">${action.map(actionRow).join('')}</ul>` : none(`Nothing needs action${qNote}.`)}</section>`;
+    const sCheck = `<section class="section vsec-check" aria-labelledby="h-chk">${secHead('h-chk', 'Needs checking', check.length, "A date on the board has passed but Monday's status doesn't say Overdue, or a date is missing or can't be read. Open each one in Monday and correct the date or the status; this list updates within 15 minutes. Nothing here changes Monday, and no vehicle is marked safe or unsafe.")}
+        ${check.length ? `<ul class="vlist">${check.map(checkRow).join('')}</ul>` : none(`Nothing needs checking${qNote}.`)}</section>`;
+    const sSoon = `<section class="section" aria-labelledby="h-due">${secHead('h-due', `Coming up · next ${dueDays()} days`, soon.length, `MOT, tax and service due in the next ${dueDays()} days, soonest first. Exempt dates in that time are listed too, so they aren't missed.`)}
+        ${soon.length ? `<ol class="due-list">${soon.map(upRow).join('')}</ol>` : none(`Nothing due in the next ${dueDays()} days${qNote}.`)}
+        ${later.length ? `<details class="how vlater"><summary><span class="howh">Later: ${dueDays() + 1} to 60 days (${later.length})</span></summary><ol class="due-list">${later.map(upRow).join('')}</ol></details>` : ''}</section>`;
+    const groups = [...new Set(S.cur.map(v => v.group))];
+    if (fleetFilter.group !== 'all' && !groups.includes(fleetFilter.group)) fleetFilter.group = 'all';
+    const soonest = v => Math.min(...DUE_KEYS.map(k => { const u = due(v[k], k); return u.days == null ? Infinity : u.days; }));
+    const shownV = S.cur.filter(v => m(v) && (fleetFilter.group === 'all' || v.group === fleetFilter.group)).sort((a, b) => soonest(a) - soonest(b) || a.plate.localeCompare(b.plate));
+    const notFv = S.cur.filter(v => !v.fvReg);
+    const sAll = `<section class="section" aria-labelledby="h-allv"><div class="sechead"><div><h2 id="h-allv">All current vehicles<span class="dg-n">${fmt(shownV.length)}</span></h2><p class="sub">Soonest date first.</p></div>
+        ${groups.length > 1 ? `<div class="fleettools" role="group" aria-label="Filter vehicles"><fieldset class="seg" id="fl-group"><legend>Vehicle group</legend><label><input type="radio" name="fl-group" value="all"${fleetFilter.group === 'all' ? ' checked' : ''}>All</label>${groups.map(g => `<label><input type="radio" name="fl-group" value="${esc(g)}"${g === fleetFilter.group ? ' checked' : ''}>${esc(g)}</label>`).join('')}</fieldset></div>` : ''}</div>
+        <div class="vgrid">${shownV.map(vehicleCard).join('') || '<p class="note">No vehicles match.</p>'}</div>
+        ${notFv.length && !q.trim() ? `<p class="note" style="margin-top:12px">${plural(notFv.length, 'current vehicle is', 'current vehicles are')} on the Monday board but not in FleetView's speeding data: ${notFv.map(v => `<a href="#vehicle/${esc(v.id)}">${esc(v.plate)}</a>`).join(', ')}.</p>` : ''}</section>`;
+    const sBookings = `<section class="card vbook"><h3>Fleet bookings</h3>
           <h4 class="sub4">Upcoming bookings (${(lists.bookings || []).length})</h4><ul class="plain">${(lists.bookings || []).map(bookingRow).join('') || '<li class="role">None</li>'}</ul>
           <h4 class="sub4">To be booked (${(lists.toBook || []).length})</h4><ul class="plain">${(lists.toBook || []).map(bookingRow).join('') || '<li class="role">None</li>'}</ul>
-          <h4 class="sub4">Issues under observation (${(lists.issues || []).length})</h4><ul class="plain">${(lists.issues || []).map(bookingRow).join('') || '<li class="role">None</li>'}</ul></section>
-        <section class="card"><h3>Vehicle stock</h3><ul class="plain">${(lists.stock || []).map(x => `<li>${esc(x.name)} <span class="role">${[x.date ? ukDate(x.date) : '', x.where, x.cost != null ? '£' + x.cost.toFixed(2) : ''].filter(Boolean).map(esc).join(' · ')}</span></li>`).join('') || '<li class="role">None</li>'}</ul>
-          <h4 class="sub4">Historical vehicles</h4><ul class="plain">${fleetMeta.vehicles.filter(v => v.kind !== 'current').map(v => `<li><a href="#vehicle/${esc(v.id)}">${esc(v.label)}</a>${v.assigned ? ` <span class="role">last assigned to ${esc(v.assigned)}</span>` : ''}</li>`).join('')}</ul></section>
-      </div>
-      ${(lists.unmatched || []).length ? `<details class="how" style="margin-top:16px"><summary><span class="howh">Board records not linked to one vehicle (${lists.unmatched.length})</span></summary><div style="padding:0 16px 14px"><p class="note">These bookings, plate orders and notes name a plate that isn't on a current vehicle, or that more than one vehicle could claim, so they aren't shown on any vehicle page.</p><ul class="plain">${lists.unmatched.map(x => `<li>${esc(x.name.replace(/\t+/g, ' · '))} <span class="role">${esc(x.list)}</span></li>`).join('')}</ul></div></details>` : ''}`;
-    UI.initSeg($('#fl-group'));
+          <h4 class="sub4">Issues under observation (${(lists.issues || []).length})</h4><ul class="plain">${(lists.issues || []).map(bookingRow).join('') || '<li class="role">None</li>'}</ul></section>`;
+    const olds = S.olds.filter(m);
+    const sRecords = `<section class="section vrecords" aria-labelledby="h-rec">${secHead('h-rec', 'Records', null, "Old vehicles, fleet stock and board records that aren't linked to one vehicle. Old vehicles' dates aren't tracked.")}
+        <div class="pgrid"><section class="card"><h3>Old vehicles (${olds.length})</h3><ul class="plain">${olds.map(v => oldRow(v, S.cur)).join('') || `<li class="role">None${qNote}</li>`}</ul></section>
+        <section class="card"><h3>Vehicle stock</h3><ul class="plain">${(lists.stock || []).map(x => `<li>${esc(nm(x.name))} <span class="role">${[x.date ? ukDate(x.date) : '', x.where, x.cost != null ? '£' + x.cost.toFixed(2) : ''].filter(Boolean).map(esc).join(' · ')}</span></li>`).join('') || '<li class="role">None</li>'}</ul></section></div>
+        ${(lists.unmatched || []).length ? `<details class="how" style="margin-top:16px"><summary><span class="howh">Board records not linked to one vehicle (${lists.unmatched.length})</span></summary><div style="padding:0 16px 14px"><p class="note">These bookings, plate orders and notes name a plate that isn't on a current vehicle, or that more than one vehicle could claim, so they aren't shown on any vehicle page.</p><ul class="plain">${lists.unmatched.map(x => `<li>${esc(nm(x.name))} <span class="role">${esc(x.list)}</span></li>`).join('')}</ul></div></details>` : ''}</section>`;
+    const toRecords = `<p class="note vto-rec">Old vehicles, fleet stock and board records not linked to one vehicle are under <button type="button" class="linkbtn" data-fv="records">Records</button>.</p>`;
+    body.innerHTML = view === 'action' ? sAction : view === 'check' ? sCheck : view === 'soon' ? sSoon : view === 'records' ? sRecords
+      : q.trim() ? sAll + (olds.length ? sRecords : '')
+      : (S.action.length ? sAction : '') + (S.check.length ? sCheck : '') + sSoon + sAll + `<div class="pgrid">${sBookings}</div>` + toRecords;
+    if ($('#fl-group')) UI.initSeg($('#fl-group'));
   }
   $('#fleet-page').addEventListener('change', e => {
-    let focus;
-    if (e.target.name === 'fl-group') { fleetFilter.group = e.target.value; focus = () => { const i = $('#fl-group input:checked'); if (i) i.focus({preventScroll:true}); }; }
-    else if (e.target.id === 'fl-due') { fleetFilter.due = e.target.checked; focus = () => $('#fl-due').focus({preventScroll:true}); }
-    else return;
+    if (e.target.name !== 'fl-group') return;
+    fleetFilter.group = e.target.value;
     const sc = $('#view-fleet'), y = sc.scrollTop;
-    renderFleetPage(); sc.scrollTop = y; focus();
+    renderFleetBody(); sc.scrollTop = y;
+    const i = $('#fl-group input:checked'); if (i) i.focus({preventScroll:true});
+  });
+  $('#fleet-page').addEventListener('input', e => { if (e.target.id === 'fl-q') { fleetFilter.q = e.target.value; renderFleetBody(); } });
+  $('#fleet-page').addEventListener('click', e => {
+    const b = e.target.closest('[data-fv]'); if (!b) return;
+    fleetFilter.view = b.dataset.fv;
+    renderFleetBody();
+    const chip = $(`#fl-view [data-fv="${fleetFilter.view}"]`); if (chip) chip.focus({preventScroll:true});
+    if (!b.closest('#fl-view')) { const t = $('#fl-view'); if (t) t.scrollIntoView({block:'nearest'}); }
   });
   // Re-draw whichever Monday-backed page is showing when data arrives (keeping the reader's place).
   function refreshFleetViews(){
