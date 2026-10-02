@@ -200,7 +200,7 @@
   const offline = e => !!e && /Failed to fetch|NetworkError|Load failed|fetch failed/i.test(e.message || '');
   const expired = e => !!e && (e.code === 'PGRST301' || e.code === 'PGRST303' || /JWT expired|invalid JWT/i.test(e.message || ''));
   const ACCOUNT = {
-    FLR_ACCOUNT_DISABLED: 'Your FLR account is switched off. Ask an FLR administrator to switch it back on.',
+    FLR_ACCOUNT_DISABLED: 'Your FLR account is switched off. Ask an FLR Super Admin to switch it back on.',
     FLR_NO_PROFILE: 'You signed in, but this account has no FLR profile yet. Ask an FLR administrator.',
     FLR_SIGN_IN_REQUIRED: 'Your sign-in has expired. Sign in again.',
   };
@@ -325,6 +325,13 @@
     $('#acct-role').textContent = role || ''; $('#acct-role').hidden = !role;
     // Hub settings: for administrators (the settings page asks the database again, which decides).
     $('#settings-btn').hidden = !(home && home.role === 'admin');
+    // A new account waits, switched off, until a Super Admin has checked who it is (Hub migration 2.2).
+    const waiting = !!(home && home.waiting);
+    $('#home-waiting').hidden = !waiting; $('#tools-label').hidden = waiting;
+    if (waiting) {
+      const t = home.registeredAt ? new Date(home.registeredAt) : null;
+      $('#home-waiting-meta').textContent = `Registered with ${home.email || 'your work email'}${t ? ` on ${t.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} at ${t.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : ''}`;
+    }
     const tiles = [];
     if (o.loading) tiles.push(tileEl(null, { loading: true }), tileEl(null, { loading: true }));
     else {

@@ -1,9 +1,11 @@
 /* ============================================================================
    FLR Hub settings: everyone with an FLR account, the apps each person may use,
-   and registration (the access code, open or closed, what new accounts get,
-   roles decided in advance). For Super Admins: the database checks every call
-   (users.write), whatever this page shows. The apps check the lists themselves,
-   so taking an app away also closes it to anyone who goes to its address.
+   new accounts waiting for approval, and registration (the access code, open or
+   closed, what new accounts get, roles decided in advance). For Super Admins:
+   the database checks every call (users.write), whatever this page shows. The
+   apps check the lists themselves, so taking an app away also closes it to
+   anyone who goes to its address. A new account is switched off until a Super
+   Admin checks who it is and approves it (Hub migration 2.2).
    ========================================================================== */
 (function () {
   'use strict';
@@ -23,6 +25,7 @@
     developer: 'Reads and exports quotes, for testing',
   };
   const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters' };
+  const CHECKED = { phone: 'checked by phone', teams: 'checked on Teams', it: 'checked by IT' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   let sb = null;
@@ -59,6 +62,10 @@
   /* ---------------------------------------------------------------- state */
   const S = { you: '', apps: [], accounts: [], settings: null, pre: [], query: '' };
   const byId = id => S.accounts.find(a => a.id === id);
+  // Waiting: registered, switched off, nobody has decided yet. Not approved: waiting, or a Super Admin said no.
+  const notApproved = a => !!(a && a.request && a.request.decision !== 'approved');
+  const waitingOf = () => S.accounts.filter(a => a.waiting);
+  const listed = () => S.accounts.filter(a => !a.waiting);
   const appTitle = id => (S.apps.find(a => a.id === id) || {}).title || SHORT[id] || id;
   const nameOf = a => (a && (a.name || '').trim()) || (a && a.email) || 'This account';
   const firstName = a => nameOf(a).split(/\s+/)[0];
@@ -69,6 +76,12 @@
   }
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const day = iso => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function when(iso) {
+    if (!iso) return '';
+    const d = new Date(iso), today = new Date().toDateString() === d.toDateString();
+    const t = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return today ? `today at ${t}` : `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} at ${t}`;
+  }
   function seen(iso) {
     if (!iso) return 'Never signed in';
     const d = new Date(iso), now = new Date();
@@ -86,7 +99,7 @@
     $('#gate').hidden = false; $('#gate-message').hidden = false;
     $('#gate-title').textContent = title; $('#gate-text').textContent = text;
     $('#gate-retry').hidden = !o.retry;
-    $('#accounts-section').hidden = true; $('#registration-section').hidden = true;
+    $('#accounts-section').hidden = true; $('#registration-section').hidden = true; $('#waiting-section').hidden = true;
   }
 
   function switchEl(on, label, data) {
@@ -99,11 +112,13 @@
   }
 
   function accountRow(a) {
+    const off = notApproved(a);
     const li = el('li', 'acct' + (a.status === 'disabled' ? ' is-off' : ''));
     li.dataset.id = a.id;
     const person = el('button', 'acct-person');
-    person.type = 'button'; person.dataset.open = a.id;
-    person.setAttribute('aria-label', `${nameOf(a)}, ${a.email}: role, status and password`);
+    person.type = 'button';
+    if (off) { person.dataset.approve = a.id; person.setAttribute('aria-label', `${nameOf(a)}, ${a.email}: not approved. Check and approve`); }
+    else { person.dataset.open = a.id; person.setAttribute('aria-label', `${nameOf(a)}, ${a.email}: role, status and password`); }
     const av = el('span', 'avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
     const text = el('span', 'acct-text');
     const nm = el('span', 'acct-name'); nm.append(el('span', null, nameOf(a)));
@@ -119,14 +134,16 @@
     if (!ROLES[a.role]) { const o = el('option', null, a.role); o.value = a.role; pick.append(o); }   // a role this page doesn't know yet
     pick.value = a.role;
     if (a.id === S.you) { pick.disabled = true; role.title = 'You can’t change your own role'; }
+    else if (off) { pick.disabled = true; role.title = 'Approve this account first'; }
     role.append(pick);
     const status = el('span', 'acct-status');
-    status.append(el('span', a.status === 'disabled' ? 'pill pill-off' : 'pill pill-on', a.status === 'disabled' ? 'Switched off' : 'Active'));
+    status.append(el('span', a.status === 'disabled' ? 'pill pill-off' : 'pill pill-on', off ? 'Not approved' : a.status === 'disabled' ? 'Switched off' : 'Active'));
     const apps = el('span', 'acct-apps');
     for (const app of S.apps) {
       const cell = el('span', 'app-cell');
-      cell.append(el('span', 'app-label', SHORT[app.id] || appTitle(app.id)),   // phones: the short name; the switch says it in full
-        switchEl(a.apps.includes(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { app: app.id, user: a.id }));
+      const sw = switchEl(a.apps.includes(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { app: app.id, user: a.id });
+      if (off) sw.disabled = true;   // tools come with approval
+      cell.append(el('span', 'app-label', SHORT[app.id] || appTitle(app.id)), sw);   // phones: the short name; the switch says it in full
       apps.append(cell);
     }
     li.append(person, role, status, apps);
@@ -136,8 +153,36 @@
   function renderAccounts() {
     $('#apps-head').replaceChildren(...S.apps.map(a => el('span', null, SHORT[a.id] || a.title)));
     $('#accounts').style.setProperty('--apps', String(S.apps.length || 1));
-    $('#acct-list').replaceChildren(...S.accounts.map(accountRow));
+    $('#acct-list').replaceChildren(...listed().map(accountRow));
     filter();
+    renderWaiting();
+  }
+  // New accounts waiting: who registered, when, and any role set up in advance for the address.
+  function noted(a) {
+    const r = a.request || {};
+    if (!r.notedRole) return 'Nothing set up in advance';
+    return `Set up in advance as ${ROLES[r.notedRole] || r.notedRole}${r.notedBy && r.notedBy.name ? ` by ${r.notedBy.name}` : ''}${r.notedAt ? ` on ${day(r.notedAt)}` : ''}`;
+  }
+  function waitRow(a) {
+    const li = el('li', 'row row-static wait-row');
+    li.dataset.id = a.id;
+    const av = el('span', 'avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
+    const main = el('span', 'row-main');
+    main.append(el('span', 'row-title', nameOf(a)), el('span', 'row-sub', a.email), el('span', 'row-sub', `Registered ${when((a.request || {}).registeredAt)} · ${noted(a)}`));
+    const actions = el('span', 'wait-actions');
+    const ok = el('button', 'btn btn-small btn-tint', 'Check and approve'); ok.type = 'button'; ok.dataset.approve = a.id;
+    ok.setAttribute('aria-label', `Check and approve ${nameOf(a)}`);
+    const no = el('button', 'btn btn-small', 'Don’t approve'); no.type = 'button'; no.dataset.refuse = a.id;
+    no.setAttribute('aria-label', `Don’t approve ${nameOf(a)}`);
+    actions.append(ok, no);
+    li.append(av, main, actions);
+    return li;
+  }
+  function renderWaiting() {
+    const w = waitingOf();
+    $('#waiting-section').hidden = !w.length;
+    $('#waiting-count').textContent = w.length ? `${w.length} waiting` : '';
+    $('#wait-list').replaceChildren(...w.map(waitRow));
   }
   function filter() {
     const q = S.query.trim().toLowerCase();
@@ -147,7 +192,7 @@
       const hit = !q || `${nameOf(a)} ${a.email}`.toLowerCase().includes(q);
       li.hidden = !hit; if (hit) shown++;
     }
-    const n = S.accounts.length;
+    const n = listed().length;
     $('#accounts-count').textContent = q ? `${shown} of ${n}` : `${n} ${n === 1 ? 'account' : 'accounts'}`;
     $('#accounts-empty').hidden = shown > 0;
   }
@@ -156,7 +201,7 @@
     if (i < 0) return;
     S.accounts[i] = a;
     const old = $(`#acct-list > li[data-id="${a.id}"]`);
-    if (old) { const row = accountRow(a); row.hidden = old.hidden; old.replaceWith(row); }
+    if (old && !a.waiting) { const row = accountRow(a); row.hidden = old.hidden; old.replaceWith(row); }
     if (openFor === a.id) fillSheet(a);
   }
 
@@ -180,7 +225,8 @@
     list.replaceChildren(...S.pre.map(p => {
       const row = el('div', 'row row-static pre-row');
       const main = el('span', 'row-main');
-      main.append(el('span', 'row-title', p.email), el('span', 'row-sub', `${ROLES[p.role] || p.role} · ${p.registered ? 'Registered' : 'Not registered yet'}`));
+      const state = p.waiting ? `Registered ${when(p.claimedAt)}: waiting for you to approve` : p.registered ? 'Registered' : 'Not registered yet';
+      main.append(el('span', 'row-title', p.email), el('span', 'row-sub', `${ROLES[p.role] || p.role} · ${state}`));
       const rm = el('button', 'btn btn-small', 'Remove');
       rm.type = 'button'; rm.dataset.unassign = p.email; rm.setAttribute('aria-label', `Remove the role assigned to ${p.email}`);
       row.append(main, rm);
@@ -209,7 +255,7 @@
     }
     $('#gate').hidden = true;
     $('#accounts-section').hidden = false; $('#registration-section').hidden = false;
-    renderAccounts(); renderSettings(); renderPre();
+    renderSettings(); renderAccounts(); renderPre();
     view('ready');
   }
   async function reloadAccounts() {
@@ -217,6 +263,7 @@
     S.you = acc.you; S.apps = acc.apps || []; S.accounts = acc.accounts || [];
     renderAccounts();
     if (openFor) { const a = byId(openFor); if (a) fillSheet(a); else sheets.close($('#sheet-account')); }
+    if (approveFor) { const a = byId(approveFor); if (!a || !notApproved(a)) sheets.close($('#sheet-approve')); }
   }
 
   /* ---------------------------------------------------------------- giving and taking apps (the list and the account sheet) */
@@ -239,7 +286,11 @@
   }
   document.addEventListener('click', e => {
     const sw = e.target.closest('.switch[data-app][data-user]');
-    if (sw) { toggleApp(sw); return; }
+    if (sw) { if (!sw.disabled) toggleApp(sw); return; }
+    const ap = e.target.closest('[data-approve]');
+    if (ap) { openApprove(ap.dataset.approve); return; }
+    const no = e.target.closest('[data-refuse]');
+    if (no) { refuse(no.dataset.refuse); return; }
     const open = e.target.closest('[data-open]');
     if (open) openAccount(open.dataset.open);
   });
@@ -319,6 +370,78 @@
     finally { btn.disabled = false; }
   });
 
+  /* ---------------------------------------------------------------- a new account: check who it is, then approve */
+  let approveFor = '';
+  function apError(text) { const p = $('#ap-error'); p.querySelector('span').textContent = text; p.hidden = !text; }
+  function apReady() {
+    const how = document.querySelector('input[name="ap-how"]:checked');
+    $('#ap-submit').disabled = !(how && $('#ap-note').value.trim().length >= 5 && $('#ap-tick').checked);
+  }
+  function apRole() {
+    const a = byId(approveFor), v = $('#ap-role').value, r = (a && a.request) || {};
+    $('#ap-role-sub').textContent = `${r.notedRole === v ? 'Set up in advance. ' : ''}${ROLE_NOTE[v] || ''}`;
+    $('#ap-role-warn').hidden = v !== 'admin';
+  }
+  function fillApprove(a) {
+    const r = a.request || {};
+    $('#ap-title').textContent = `Approve ${firstName(a)}`;
+    $('#ap-initials').textContent = initials(nameOf(a));
+    $('#ap-name').textContent = nameOf(a);
+    $('#ap-email').textContent = a.email;
+    $('#ap-meta').textContent = `Registered ${when(r.registeredAt)} · name typed: ${(a.name || '').trim() || 'none'}`;
+    $('#ap-refused').hidden = r.decision !== 'refused';
+    for (const i of document.querySelectorAll('input[name="ap-how"]')) i.checked = false;
+    $('#ap-note').value = ''; $('#ap-tick').checked = false;
+    $('#ap-tick-label').textContent = `I’ve checked this is ${nameOf(a)}, using contact details FLR already holds.`;
+    $('#ap-role').value = ROLES[r.notedRole] ? r.notedRole : 'estimator';
+    apRole();
+    // The tools: New accounts get, plus any already switched on for the address. Change them here if needed.
+    const on = new Set([...((S.settings && S.settings.defaultApps) || []), ...(a.apps || [])]);
+    $('#ap-apps').replaceChildren(...S.apps.map(app => {
+      const row = el('div', 'row row-static');
+      const main = el('span', 'row-main'); main.append(el('span', 'row-title', appTitle(app.id)));
+      row.append(main, switchEl(on.has(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { apApp: app.id }));
+      return row;
+    }));
+    apError(''); apReady();
+  }
+  function openApprove(id) {
+    const a = byId(id);
+    if (!a || !notApproved(a)) return;
+    approveFor = id; fillApprove(a);
+    sheets.open($('#sheet-approve'));
+  }
+  $('#approve-form').addEventListener('input', apReady);
+  $('#approve-form').addEventListener('change', e => { if (e.target.id === 'ap-role') apRole(); apReady(); });
+  $('#ap-apps').addEventListener('click', e => {
+    const b = e.target.closest('.switch[data-ap-app]');
+    if (b) b.setAttribute('aria-checked', b.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+  });
+  $('#approve-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const a = byId(approveFor), btn = $('#ap-submit');
+    if (!a || btn.disabled || btn.getAttribute('aria-busy') === 'true') return;
+    const how = document.querySelector('input[name="ap-how"]:checked').value, role = $('#ap-role').value;
+    const apps = [...document.querySelectorAll('#ap-apps .switch[data-ap-app]')].filter(b => b.getAttribute('aria-checked') === 'true').map(b => b.dataset.apApp);
+    btn.setAttribute('aria-busy', 'true'); apError('');
+    try {
+      await call('admin_approve_account', { p_user: a.id, p_checked_how: how, p_check_note: $('#ap-note').value.trim(), p_role: role, p_apps: apps });
+      sheets.close($('#sheet-approve'));
+      await reloadAccounts();
+      S.pre = await call('admin_preassigned_roles') || []; renderPre();
+      toast(`${nameOf(a)} approved as ${AS[role] || role}, ${CHECKED[how]}`);
+    } catch (err) { apError(said(err)); }
+    finally { btn.removeAttribute('aria-busy'); }
+  });
+  async function refuse(id) {
+    const a = byId(id);
+    if (!a) return;
+    if (!(await confirmIt(`Don’t approve ${firstName(a)}?`, 'Their account stays switched off and can’t use any tools. You can still approve it later from Accounts.', 'Don’t approve', true))) return;
+    try { await call('admin_refuse_account', { p_user: a.id }); await reloadAccounts(); toast(`${nameOf(a)} not approved`); }
+    catch (err) { toast(said(err)); }
+  }
+  $('#ap-refuse').addEventListener('click', () => { const id = approveFor; sheets.close($('#sheet-approve')); setTimeout(() => refuse(id), reduced() ? 0 : 300); });
+
   /* ---------------------------------------------------------------- registration */
   $('#reg-open').addEventListener('click', async e => {
     const btn = e.currentTarget;
@@ -368,7 +491,8 @@
       S.pre = await call('admin_set_preassigned_role', { p_email: email, p_role: role }) || [];
       renderPre(); $('#pre-email').value = '';
       await reloadAccounts();
-      toast(`${email} will be ${AS[role] || role}`);
+      const p = S.pre.find(x => x.email === email) || {};
+      toast(p.waiting ? `${email} will be ${AS[role] || role} once you approve them` : p.registered ? `${email} is now ${AS[role] || role}` : `${email} will be ${AS[role] || role} once they register and you approve them`);
     } catch (err) { toast(said(err)); }
     finally { btn.disabled = false; }
   });
@@ -404,6 +528,7 @@
     d.addEventListener('close', () => {
       if (!document.querySelector('dialog.sheet[open]')) document.documentElement.classList.remove('sheet-open');
       if (d.id === 'sheet-account') openFor = '';
+      if (d.id === 'sheet-approve') approveFor = '';
       if (d.id === 'sheet-confirm' && confirming) { confirming(false); confirming = null; }
     });
     d.addEventListener('click', e => { if (e.target.closest('[data-close]')) sheets.close(d); });

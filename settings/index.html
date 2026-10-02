@@ -11,12 +11,12 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
 <!-- the Hub's look, then this page's; the tools' slide, so Settings arrives from the right and Back slides the Hub in again -->
-<link rel="stylesheet" href="../hub.css?v=1.4">
-<link rel="stylesheet" href="settings.css?v=1.1">
+<link rel="stylesheet" href="../hub.css?v=1.5">
+<link rel="stylesheet" href="settings.css?v=1.2">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="settings.js?v=1.3" defer></script>
+<script src="settings.js?v=1.4" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.1"></script>
 </head>
 <body data-view="loading">
@@ -53,12 +53,32 @@
     </div>
   </div>
 
+  <!-- new accounts: switched off until a Super Admin checks who each person is (Hub migration 2.2) -->
+  <section class="section" id="waiting-section" aria-labelledby="waiting-title" hidden>
+    <div class="section-head">
+      <h2 class="section-title" id="waiting-title">New accounts waiting</h2>
+      <p class="section-count" id="waiting-count"></p>
+    </div>
+    <p class="section-note">Nothing is switched on until you’ve checked who each person is, with contact details FLR already holds (their work number from the staff list, or Teams on their existing work account) or through IT. Never use a number, address or message that came with the sign-up.</p>
+    <ul class="group wait-list" id="wait-list"></ul>
+  </section>
+
   <section class="section" id="accounts-section" aria-labelledby="accounts-title" hidden>
     <div class="section-head">
       <h2 class="section-title" id="accounts-title">Accounts</h2>
       <p class="section-count" id="accounts-count"></p>
     </div>
     <p class="section-note">Switch an app on to let someone use it, off to take it away, and change a role from its menu. Changes apply at once, and the apps check them too, so someone can’t get in by going to an app’s address.</p>
+    <details class="roles-guide" id="roles-guide">
+      <summary>What each role can do</summary>
+      <div class="roles-grid">
+        <div><p class="rg-name">User</p><p>Uses the tools switched on for them. Cost Estimator: reads every quote; creates, edits, approves, archives and exports them. Fleet Management: their own driving, once linked to their name. Annual Leave: their own leave and who’s off today. Fitter Schedule: photos and plates; the schedule itself needs the team passcode.</p></div>
+        <div><p class="rg-name">Admin</p><p>Everything a User can do, plus: approves leave and sees everyone’s, sees every driver and vehicle, sees van arrivals, and reassigns quotes. No settings.</p></div>
+        <div><p class="rg-name">Super Admin</p><p>Everything, including Hub settings (accounts, roles, apps and registration), the Cost Estimator’s prices, rules and wording, deleting quotes, and linking drivers to accounts. There’s always at least one.</p></div>
+        <div><p class="rg-name">Developer</p><p>Reads and exports quotes, with diagnostics and test data in the Cost Estimator; otherwise as a User.</p></div>
+      </div>
+      <p class="hint">Each tool also has to be switched on for the person.</p>
+    </details>
     <label class="search">
       <svg aria-hidden="true"><use href="#i-search"/></svg>
       <span class="sr">Find an account</span>
@@ -89,7 +109,7 @@
 
     <h3 class="sub-title" id="defaults-title">New accounts get</h3>
     <div class="group" id="defaults" role="group" aria-labelledby="defaults-title"></div>
-    <p class="hint">Only for people who register from now on. Everyone already registered keeps their own apps, which you change under Accounts.</p>
+    <p class="hint">Given when you approve a new account, unless you choose others then. Everyone already approved keeps their own apps, which you change under Accounts.</p>
 
     <h3 class="sub-title" id="pre-title">Roles assigned in advance</h3>
     <div class="group" id="pre-list" aria-labelledby="pre-title"></div>
@@ -100,7 +120,7 @@
         <button class="btn btn-small btn-tint" type="submit">Assign</button>
       </div>
     </form>
-    <p class="hint">Someone who registers with that email address starts with that role (an account that already exists changes at once). Use it only for addresses you know: whoever registers an address first gets its role.</p>
+    <p class="hint">The role is given when you approve their new account, after you’ve checked who they are; registering with the address doesn’t give it. An account that’s already approved changes at once.</p>
   </section>
 </main>
 
@@ -152,6 +172,48 @@
       <p class="hint" id="sc-hint">At least 12 characters. The old code stops working at once.</p>
       <p class="form-error" id="sc-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
       <button class="btn btn-primary btn-block" type="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Set the new code</span></button>
+    </form>
+  </div>
+</dialog>
+
+<!-- a new account: check who it is, then what they get -->
+<dialog class="sheet" id="sheet-approve" aria-labelledby="ap-title">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title" id="ap-title">Approve</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <form class="sheet-body form" id="approve-form" novalidate>
+      <div class="who">
+        <span class="avatar avatar-lg" id="ap-initials" aria-hidden="true"></span>
+        <p class="who-name" id="ap-name"></p>
+        <p class="who-email" id="ap-email"></p>
+        <p class="who-meta" id="ap-meta"></p>
+      </div>
+      <p class="ap-refused" id="ap-refused" hidden>This account wasn’t approved before. Approving it now switches it on.</p>
+      <h3 class="sub-title" id="ap-check-title">1. Check it’s really them</h3>
+      <p class="ap-lede">Use contact details FLR already holds. Never use a number, address or message that came with this sign-up.</p>
+      <div class="group ap-how" role="radiogroup" aria-labelledby="ap-check-title">
+        <label class="row ap-choice"><input type="radio" name="ap-how" value="phone"><span>I called them on their work number from the staff list</span></label>
+        <label class="row ap-choice"><input type="radio" name="ap-how" value="teams"><span>I messaged them on Teams, on their existing work account</span></label>
+        <label class="row ap-choice"><input type="radio" name="ap-how" value="it"><span>IT confirmed the person and the address</span></label>
+      </div>
+      <div class="group ap-note-group">
+        <label class="row" for="ap-note"><span class="row-label">Note</span><input id="ap-note" type="text" maxlength="500" autocomplete="off" placeholder="When and how; the IT ticket number if IT checked" aria-describedby="ap-note-hint"></label>
+      </div>
+      <p class="hint" id="ap-note-hint">Kept in the change log with your name and the time.</p>
+      <h3 class="sub-title">2. What they get</h3>
+      <div class="group">
+        <div class="row row-static">
+          <label class="row-main" for="ap-role"><span class="row-title">Role</span><span class="row-sub" id="ap-role-sub"></span></label>
+          <label class="select-wrap"><select id="ap-role"><option value="estimator">User</option><option value="manager">Admin</option><option value="admin">Super Admin</option><option value="developer">Developer</option></select></label>
+        </div>
+      </div>
+      <p class="ap-warn" id="ap-role-warn" hidden>A Super Admin can change every account, role and app setting, including yours.</p>
+      <div class="group" id="ap-apps" role="group" aria-label="Tools"></div>
+      <label class="ap-tick"><input type="checkbox" id="ap-tick"><span id="ap-tick-label">I’ve checked who this is, using contact details FLR already holds.</span></label>
+      <p class="form-error" id="ap-error" role="alert" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+      <button class="btn btn-primary btn-block" type="submit" id="ap-submit" disabled><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Approve</span></button>
+      <button class="btn btn-plain btn-block ap-refuse" type="button" id="ap-refuse">Don’t approve</button>
+      <p class="hint ap-foot">Approve stays greyed out until you’ve chosen how you checked, written a note and ticked the box.</p>
     </form>
   </div>
 </dialog>

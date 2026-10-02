@@ -14,10 +14,10 @@
 <link rel="icon" href="assets/flr-icon-192.png">
 <link rel="apple-touch-icon" href="assets/flr-icon-192.png">
 <!-- ?v= changes with every release, so a page never runs with an older cached hub.css or hub.js (GitHub Pages caches for 10 minutes) -->
-<link rel="stylesheet" href="hub.css?v=1.4">
+<link rel="stylesheet" href="hub.css?v=1.5">
 <script src="flr-config.js"></script>
 <script src="vendor/supabase-2.116.0.js" defer></script>
-<script src="hub.js?v=1.7" defer></script>
+<script src="hub.js?v=1.8" defer></script>
 <script type="module" src="assistant/assistant.js?v=2.1"></script>
 </head>
 <body data-view="boot">
@@ -96,6 +96,11 @@
       <p class="eyebrow" id="today"></p>
       <h1 class="display" id="greeting">Welcome back</h1>
     </div>
+    <div class="waiting-card" id="home-waiting" role="status" hidden>
+      <h2 class="waiting-title">Your account is waiting for a Super Admin</h2>
+      <p class="waiting-text">They’ll check it’s really you, using your usual work phone number or Teams, or through IT, then switch on your tools. You don’t need to do anything. Your tools appear here once they’re on.</p>
+      <p class="waiting-meta" id="home-waiting-meta"></p>
+    </div>
     <h2 class="section-label" id="tools-label">Your tools</h2>
     <ul class="tiles" id="tiles" aria-labelledby="tools-label"></ul>
     <p class="notice" id="home-notice" role="status" hidden><span></span> <button class="link" type="button" id="home-retry">Try again</button></p>
@@ -133,7 +138,7 @@
   <div class="panel">
     <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title" id="register-title">Create your FLR account</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
     <form class="form sheet-body" id="register-form" novalidate>
-      <p class="sheet-lede">One account opens every FLR tool, including the Cost Estimator.</p>
+      <p class="sheet-lede">One account opens your FLR tools. A Super Admin checks who you are before switching them on.</p>
       <div class="group">
         <label class="row" for="rg-name"><span class="row-label">Full name</span><input id="rg-name" name="name" type="text" autocomplete="name" placeholder="First and last name" required aria-describedby="rg-name-err"></label>
         <label class="row" for="rg-email"><span class="row-label">Work email</span><input id="rg-email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="name@flr.co.uk" required aria-describedby="rg-email-err"></label>

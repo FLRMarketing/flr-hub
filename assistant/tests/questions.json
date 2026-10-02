@@ -422,6 +422,18 @@
   "expect": "estimate-print"
  },
  {
+  "q": "I've registered but my Hub is empty",
+  "expect": "account-waiting"
+ },
+ {
+  "q": "how do I approve a new account?",
+  "expect": "approve-account"
+ },
+ {
+  "q": "someone new has registered, what do I need to do",
+  "expect": "approve-account"
+ },
+ {
   "q": "what's the weather like",
   "expect": null
  },

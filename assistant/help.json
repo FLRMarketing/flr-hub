@@ -107,20 +107,49 @@
         "account",
         "new starter"
       ],
-      "answer": "On the Hub’s sign-in screen, choose “Create an account”. You’ll need your full name, your work email, a password of at least 10 characters with letters and numbers, and the access code from an FLR Super Admin.",
+      "answer": "On the Hub’s sign-in screen, choose “Create an account”. You’ll need your full name, your work email, a password of at least 10 characters with letters and numbers, and the access code from an FLR Super Admin. A Super Admin then checks who you are and switches on your tools.",
       "steps": [
         "Open the Hub and choose “Create an account”, below “Sign in”.",
         "Enter your full name and work email, then a password and the same password again under “Confirm”.",
         "Enter the access code from an FLR Super Admin.",
-        "Press “Create account”."
+        "Press “Create account”.",
+        "Wait for a Super Admin to check who you are. Your tools appear on the Hub once they’re on."
       ],
       "link": {
         "href": "./",
         "label": "Go to the Hub"
       },
       "related": [
+        "account-waiting",
         "access-code",
         "signin"
+      ]
+    },
+    {
+      "id": "account-waiting",
+      "tool": "hub",
+      "title": "Waiting for your tools",
+      "ask": [
+        "I've registered but I can't see any tools",
+        "why is my account waiting",
+        "my hub says waiting for a super admin",
+        "when will my tools appear",
+        "I made an account and nothing is there",
+        "how long until my tools are switched on"
+      ],
+      "keys": [
+        "waiting",
+        "empty hub",
+        "new account"
+      ],
+      "answer": "New accounts wait until a Super Admin checks it’s really you, using your usual work number or Teams, or through IT. They then switch on your tools, which appear on the Hub. You don’t need to do anything. If it’s been more than a working day, ask a Super Admin.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "account-new",
+        "tools-missing"
       ]
     },
     {
@@ -288,14 +317,49 @@
         "registration",
         "leaver"
       ],
-      "answer": "FLR Super Admins look after every account in Hub settings: the gear beside your initials on the Hub. Each person has a switch for each app (Cost Estimator, Fleet Management, Annual Leave, Fitter Schedule); their name opens their role, a switch for the whole account and a password reset. Registration, the access code and what new accounts get are under “Registration”.",
+      "answer": "FLR Super Admins look after every account in Hub settings: the gear beside your initials on the Hub. New accounts wait under “New accounts waiting” until you’ve checked who they are. Each person has a switch for each app; their name opens their role, a switch for the whole account and a password reset. Registration, the access code and what new accounts get are under “Registration”.",
       "link": {
         "href": "settings/",
         "label": "Open Hub settings"
       },
       "related": [
+        "approve-account",
         "tools-missing",
         "account-off"
+      ]
+    },
+    {
+      "id": "approve-account",
+      "tool": "hub",
+      "who": "superadmin",
+      "title": "Check and switch on a new account",
+      "ask": [
+        "how do I approve a new account",
+        "someone has registered, what do I do",
+        "new accounts waiting",
+        "check who someone is before switching them on",
+        "switch on someone who has just registered",
+        "how do I check a new account is genuine"
+      ],
+      "keys": [
+        "waiting",
+        "identity",
+        "registered"
+      ],
+      "answer": "In Hub settings, new accounts are listed under “New accounts waiting”. Open the person, check it’s really them with contact details FLR already holds (their work number from the staff list, Teams on their existing work account, or IT) and write a short note. Then choose their role and tools, tick the box and confirm. If you can’t confirm who it is, turn the account down: it stays switched off.",
+      "steps": [
+        "Open Hub settings and find the person under “New accounts waiting”.",
+        "Contact them using details FLR already holds, never ones that came with the sign-up.",
+        "Say how you checked, add a note (when, and the IT ticket number if IT checked), choose the role and tools, and tick the box.",
+        "Confirm. Their tools appear on their Hub straight away."
+      ],
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "hub-settings",
+        "admin-roles"
       ]
     },
     {
@@ -518,7 +582,8 @@
         "approve an estimate",
         "sign off a quotation",
         "finish a quote",
-        "the quotation is ready, what next"
+        "the quotation is ready, what next",
+        "approve"
       ],
       "keys": [
         "approve",
@@ -1333,7 +1398,8 @@
         "decline a leave request",
         "deny a holiday",
         "where are the leave approvals",
-        "approve time off for my team"
+        "approve time off for my team",
+        "approve"
       ],
       "keys": [
         "approve",

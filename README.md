@@ -40,8 +40,15 @@ Every app is a tile in the database (`public.hub_home()`): the Cost Estimator (`
 the accounts that may use the app, and administrators switch people on and off in **Hub settings**. The Hub shows each
 person only their apps, and the apps check the same list in the database, so going straight to an app's address
 doesn't get round it: the Estimator, Fleet Management and Annual Leave say "You don't have access to …". On the Fitter
-Schedule it covers the photos, plates and arrivals; the schedule itself is behind its team passcode. New accounts get the
-apps chosen under "New accounts get" in Hub settings (all four to begin with).
+Schedule it covers the photos, plates and arrivals; the schedule itself is behind its team passcode.
+
+**New accounts wait for a Super Admin** (`20261002200000_flr_account_approval.sql`, Hub migration 2.2). A new account
+starts switched off, as a User, whatever was set up for its address: a role assigned in advance is only noted, and apps
+switched on in advance and the leave approver list do nothing yet. The Hub shows the person "Your account is waiting for
+a Super Admin". In Hub settings, **New accounts waiting** lists them; "Check and approve" opens a sheet that needs the
+identity check (their work number from the staff list, Teams on their existing work account, or IT), a note and a tick
+before it approves. Approval switches the account on with the role and the apps in "New accounts get" (or others chosen
+there), and the change log keeps who approved, how they checked and when. "Don't approve" keeps it switched off.
 
 **Super Admins and Admins** (`20261002100000_flr_admin_roles.sql`, 2 Oct 2026). A Super Admin (database role `admin`, what
 every administrator was before) looks after accounts, roles, app access, registration and every app's settings. An Admin
