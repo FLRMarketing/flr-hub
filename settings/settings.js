@@ -248,7 +248,12 @@
       const code = flrCode(e);
       if (code === 'FLR_SIGN_IN_REQUIRED' || expired(e)) { location.replace(SIGN_IN); return; }
       if (code === 'FLR_FORBIDDEN') return gate('For FLR Super Admins', 'Only Super Admins can open Hub settings. If you look after accounts, ask a Super Admin to make you one.');
-      if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR Super Admin to switch it back on.');
+      if (code === 'FLR_ACCOUNT_DISABLED') {
+        let waiting = false;   // new and not approved yet (Hub migration 2.2), or switched off
+        try { const h = await c.rpc('hub_home'); waiting = !!(h && h.data && h.data.waiting); } catch (err) { /* treated as switched off */ }
+        return waiting ? gate('Your account is waiting for a Super Admin', 'They’ll check it’s really you, then switch on your tools. You don’t need to do anything.')
+          : gate('Your account is switched off', 'Ask an FLR Super Admin to switch it back on.');
+      }
       if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR Super Admin.');
       if (missingFunction(e)) return gate('Not ready yet', 'Hub settings needs the latest update to the FLR database. Ask whoever looks after it to run the “app access” update, then try again.', { retry: true });
       return gate('Hub settings didn’t load', offline(e) ? 'Can’t reach the FLR database. Check your connection and try again.' : 'Something went wrong. Try again in a moment.', { retry: true });
