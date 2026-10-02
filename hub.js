@@ -17,7 +17,7 @@
   // Only for a database from before each account was given its apps (hub_home without 'apps'): it showed everyone the
   // Estimator. Since then the Estimator is a tile like the others, for the accounts that have it.
   const ESTIMATOR = { id: 'estimator', title: 'Cost Estimator', subtitle: 'Price commercial flooring jobs and build quotes.', url: 'estimator/' };
-  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters' };
+  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters', onboarding: 'i-onboarding' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const strongEnough = p => p.length >= 10 && /[A-Za-z]/.test(p) && /\d/.test(p);
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

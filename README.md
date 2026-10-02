@@ -29,6 +29,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `estimator/` | The Estimator's production page (no pricing data), copied by `scripts/sync-estimator.sh`. |
 | `speeding/` | The Speeding Report page, built by `scripts/sync-speeding.py` from `../flr-speeding-report` with no photos or names; `bridge.js`, which answers the page's data requests from the FLR database; and `map/`, the OpenStreetMap road and place packs (public map data). |
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
+| `onboarding/` | Onboarding: each new starter's checklist (forms, FLR documents, uploads, acknowledgements), and the reviews, checks and internal setup behind it. `content.js` holds the wording taken from FLR's source forms. Draft on branch `feature/onboarding`; see "Onboarding" below. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
@@ -129,6 +130,29 @@ Everyone else is matched to their staff record by the Email column on FLR - Leav
 To try it all locally, add `LEAVE=1 LEAVE_APPROVERS=you@example.com` to the preview command below: a stand-in
 monday.com with made-up staff, the real function, and webhooks between them. `/__mock/monday/edit?item=402&col=color_mm7m6q47&value=Denied`
 changes something "in monday.com".
+
+## Onboarding (draft, not live)
+
+New starters and the people who look after them. HR adds a starter (name, email, route: Operative, or Office employee with
+"visits sites" yes/no, and what applies: driving, PPE, qualifications, PAT-tested tools, phone, email, DBS) and the
+Onboarding tile appears for that email address; they register on the Hub as usual. Their tasks follow the route and
+those requirements (`private.onb_rules`, which Super Admins can change in Setup). The database is
+`supabase/migrations/20261003000100_flr_onboarding.sql` in the Estimator's repository, with `tests/db/onboarding.test.ts`.
+
+- Who sees what is decided in the database, never by this page: the starter sees their own tasks; **overview** (managers)
+  sees progress and statuses only; **HR** adds starters, reviews, records document and right-to-work checks, the
+  internal checklist and pay; **payroll** sees personal details, bank details (opened on request, and each opening is
+  recorded), pay, the P45 and HMRC checklist; **medical** (named people only, not every Super Admin) reads medical
+  answers, opened on request and recorded; trainers and DSE assessors see the tasks they're assigned. Super Admins manage
+  the team, FLR document templates and task rules.
+- An upload never completes a check: HR records how and when each document was checked, and the right-to-work check
+  is kept apart from the upload. The H&S induction is led and completed by the trainer; the starter then signs it.
+- FLR documents (contract, handbook, H&S policy, emergency contacts notice) show as "Awaiting FLR document" until a
+  Super Admin uploads one and confirms it as FLR's approved version. The working time form is held back until HR
+  approves its wording (Setup, Launch checks). HMRC's starter checklist is linked from GOV.UK, never reproduced.
+- Uploads are kept in the database (private schema, up to 10 MB each), not in this repository; nothing private is
+  written to the audit trail, notifications or the console.
+- Preview: `build/onboarding-demo.ts` (Estimator repository) fills the mock Supabase with made-up people.
 
 ## Likkle Jeff (the help button, first called Ask the Hub)
 
