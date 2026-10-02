@@ -565,5 +565,16 @@
  {
   "q": "it says I don't have access to the cost estimator",
   "expect": "tools-missing"
+ },
+ {
+  "q": "what can an admin do that a super admin can't",
+  "expect": "admin-roles"
+ },
+ {
+  "q": "who is allowed to change settings",
+  "expect": "admin-roles",
+  "alt": [
+   "hub-settings"
+  ]
  }
 ]

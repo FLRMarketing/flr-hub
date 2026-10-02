@@ -344,7 +344,7 @@ function starters(ctx) {
   if (!ctx.signedIn && !OWN_ACCESS) return ['signin', 'account-new', 'password-forgot'];
   switch (PAGE) {
     case 'estimator': return ['estimate-new', 'estimate-find', 'estimate-approve', 'estimate-print'];
-    case 'speeding': return ctx.role === 'admin' ? ['fleet-review', 'fleet-link', 'fleet-map', 'fleet-vehicles'] : ['fleet-my-driving', 'fleet-incident', 'fleet-nothing', 'fleet-privacy'];
+    case 'speeding': return ctx.role === 'admin' ? ['fleet-review', 'fleet-link', 'fleet-map', 'fleet-vehicles'] : ctx.role === 'manager' ? ['fleet-review', 'fleet-map', 'fleet-vehicles', 'fleet-rules'] : ['fleet-my-driving', 'fleet-incident', 'fleet-nothing', 'fleet-privacy'];
     case 'annual-leave': return ['leave-request', 'leave-balance', 'leave-diary', 'leave-approve'];
     case 'fitters': return ['fitters-free', 'fitters-jobs', 'fitters-views', 'fitters-passcode'];
     default: return ['leave-request', 'estimate-new', 'fleet-find', 'fitters-free'];
@@ -360,11 +360,19 @@ function chipsFor(ids, H, ctx) {   // with ctx: leave out tools that aren't on t
   }
   return box;
 }
+// Two levels of administrator (2 Oct 2026): help marked 'superadmin' is for Super Admins (role 'admin'); help marked
+// 'admin' is for Admins (role 'manager') and Super Admins.
+function whoGate(e, ctx) {
+  if (!ctx.role) return null;
+  if (e.who === 'superadmin' && ctx.role !== 'admin') return 'superadmin';
+  if (e.who === 'admin' && ctx.role !== 'admin' && ctx.role !== 'manager') return 'admin';
+  return null;
+}
 function gate(e, ctx) {
   if (!ctx.signedIn && e.link && e.link.tile && !(OWN_ACCESS && e.tool === PAGE)) return 'signin';
-  if (!e.tool || e.tool === 'hub' || !ctx.tools) return e.who === 'admin' && ctx.role && ctx.role !== 'admin' ? 'admin' : 'ok';   // Hub settings is the Hub's own
+  if (!e.tool || e.tool === 'hub' || !ctx.tools) return whoGate(e, ctx) || 'ok';   // Hub settings is the Hub's own
   if (!ctx.tools.has(e.tool)) return 'missing';
-  if (e.who === 'admin' && ctx.role && ctx.role !== 'admin') return 'admin';
+  const w = whoGate(e, ctx); if (w) return w;
   if (e.who === 'estimator' && ctx.role === 'developer') return 'viewonly';
   return 'ok';
 }
@@ -392,8 +400,9 @@ function answerEl(m, H, ctx) {
   b.append(el('h3', null, e.title));
   for (const para of String(e.answer).split('\n\n')) b.append(el('p', null, para));
   if (e.steps && e.steps.length && g === 'ok') { const ol = el('ol'); for (const s of e.steps) ol.append(el('li', null, s)); b.append(ol); }
-  if (g === 'missing') b.append(el('p', 'note', `${toolName(e.tool, ctx)} isn’t on your Hub. Ask an FLR administrator if you need it.`));
-  if (g === 'admin') b.append(el('p', 'note', 'This is for FLR administrators.'));
+  if (g === 'missing') b.append(el('p', 'note', `${toolName(e.tool, ctx)} isn’t on your Hub. Ask an FLR Super Admin if you need it.`));
+  if (g === 'admin') b.append(el('p', 'note', 'This is for FLR Admins and Super Admins.'));
+  if (g === 'superadmin') b.append(el('p', 'note', 'This is for FLR Super Admins.'));
   if (g === 'viewonly') b.append(el('p', 'note', 'Your role can view quotations but not create or change them.'));
   if (g === 'signin') {
     b.append(el('p', 'note', `Sign in to the Hub first, then open ${toolName(e.tool, ctx)} from there.`));

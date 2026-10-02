@@ -107,11 +107,11 @@
         "account",
         "new starter"
       ],
-      "answer": "On the Hub’s sign-in screen, choose “Create an account”. You’ll need your full name, your work email, a password of at least 10 characters with letters and numbers, and the access code from your FLR administrator.",
+      "answer": "On the Hub’s sign-in screen, choose “Create an account”. You’ll need your full name, your work email, a password of at least 10 characters with letters and numbers, and the access code from an FLR Super Admin.",
       "steps": [
         "Open the Hub and choose “Create an account”, below “Sign in”.",
         "Enter your full name and work email, then a password and the same password again under “Confirm”.",
-        "Enter the access code from your FLR administrator.",
+        "Enter the access code from an FLR Super Admin.",
         "Press “Create account”."
       ],
       "link": {
@@ -138,7 +138,7 @@
         "access code",
         "code"
       ],
-      "answer": "You only need the access code to create an account. Ask your FLR administrator for it: it isn’t written anywhere on the Hub, and I don’t know it.\n\nIf it isn’t accepted, check it with your administrator, as it may have changed.",
+      "answer": "You only need the access code to create an account. Ask an FLR Super Admin for it: it isn’t written anywhere on the Hub, and I don’t know it.\n\nIf it isn’t accepted, check it with a Super Admin, as it may have changed.",
       "related": [
         "account-new"
       ]
@@ -238,7 +238,7 @@
         "access",
         "icon"
       ],
-      "answer": "Your Hub shows the apps your account can use: FLR administrators choose them in Hub settings. If one you need isn’t there, or an app says you don’t have access, ask an FLR administrator.\n\nIf the Hub says “Some of your tools didn’t load”, press “Try again”.",
+      "answer": "Your Hub shows the apps your account can use: FLR Super Admins choose them in Hub settings. If one you need isn’t there, or an app says you don’t have access, ask an FLR Super Admin.\n\nIf the Hub says “Some of your tools didn’t load”, press “Try again”.",
       "link": {
         "href": "./",
         "label": "Go to the Hub"
@@ -260,12 +260,12 @@
         "switched off",
         "blocked"
       ],
-      "answer": "If a page says your FLR account is switched off, only an FLR administrator can switch it back on, in Hub settings. Ask one to check it."
+      "answer": "If a page says your FLR account is switched off, only an FLR Super Admin can switch it back on, in Hub settings. Ask one to check it."
     },
     {
       "id": "hub-settings",
       "tool": "hub",
-      "who": "admin",
+      "who": "superadmin",
       "title": "Manage accounts and app access",
       "ask": [
         "how do I give someone access to an app",
@@ -288,7 +288,7 @@
         "registration",
         "leaver"
       ],
-      "answer": "FLR administrators look after every account in Hub settings: the gear beside your initials on the Hub. Each person has a switch for each app (Cost Estimator, Fleet Management, Annual Leave, Fitter Schedule); their name opens their role, a switch for the whole account and a password reset. Registration, the access code and what new accounts get are under “Registration”.",
+      "answer": "FLR Super Admins look after every account in Hub settings: the gear beside your initials on the Hub. Each person has a switch for each app (Cost Estimator, Fleet Management, Annual Leave, Fitter Schedule); their name opens their role, a switch for the whole account and a password reset. Registration, the access code and what new accounts get are under “Registration”.",
       "link": {
         "href": "settings/",
         "label": "Open Hub settings"
@@ -296,6 +296,28 @@
       "related": [
         "tools-missing",
         "account-off"
+      ]
+    },
+    {
+      "id": "admin-roles",
+      "tool": "hub",
+      "title": "Admins and Super Admins",
+      "ask": [
+        "what's the difference between an admin and a super admin",
+        "what can an admin do",
+        "what can a super admin do",
+        "who can change the settings",
+        "why can't an admin open hub settings",
+        "what does super admin mean"
+      ],
+      "keys": [
+        "super admin",
+        "roles"
+      ],
+      "answer": "Super Admins look after accounts, roles, app access, registration and every app’s settings. Admins do the day-to-day work: they approve leave and see everyone’s, see every driver and fitter arrivals, and reassign quotations, but can’t see or change any settings. Your role is shown in your account on the Hub.",
+      "related": [
+        "hub-settings",
+        "estimate-roles"
       ]
     },
     {
@@ -611,7 +633,7 @@
         "delete",
         "restore"
       ],
-      "answer": "On the Projects page, open the quotation’s “More” menu and choose “Archive”. Archived quotations are under “Archived”, where “Restore” brings them back. Only FLR administrators can delete a quotation.",
+      "answer": "On the Projects page, open the quotation’s “More” menu and choose “Archive”. Archived quotations are under “Archived”, where “Restore” brings them back. Only FLR Super Admins can delete a quotation.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"
@@ -655,7 +677,7 @@
         "developer",
         "permission"
       ],
-      "answer": "Estimators can create, edit, approve and archive quotations. Administrators can also delete and reassign them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub; FLR administrators change it in Hub settings.",
+      "answer": "Estimators can create, edit, approve and archive quotations. Admins can also reassign them; Super Admins can also delete them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub; Super Admins change it in Hub settings.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"
@@ -664,7 +686,7 @@
     {
       "id": "estimate-admin",
       "tool": "estimator",
-      "who": "admin",
+      "who": "superadmin",
       "title": "Change prices, rules or quotation wording",
       "ask": [
         "how do I change the prices",
@@ -681,9 +703,9 @@
         "settings",
         "wording"
       ],
-      "answer": "FLR administrators set prices, rules and wording on the Cost Estimator’s Admin page: “Catalogue”, “Commercial rules”, “Price overrides” and “Quotation settings”.",
+      "answer": "FLR Super Admins set prices, rules and wording in the Cost Estimator’s Settings: “Catalogue”, “Commercial rules”, “Price overrides” and “Quotation settings”.",
       "steps": [
-        "Open the Cost Estimator and choose “Admin” in the bar at the top (at the bottom on a phone).",
+        "Open the Cost Estimator and choose “Settings” in the bar at the top (at the bottom on a phone).",
         "Pick “Catalogue”, “Commercial rules”, “Price overrides” or “Quotation settings”."
       ],
       "link": {
@@ -707,7 +729,7 @@
         "transfer",
         "hand over"
       ],
-      "answer": "FLR administrators can move a quotation to another estimator with “Reassign…” on the quotation.",
+      "answer": "FLR Admins and Super Admins can move a quotation to another estimator with “Reassign…” on the quotation.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"
@@ -749,7 +771,7 @@
         "speed",
         "report"
       ],
-      "answer": "Fleet Management shows speeding by driver and vehicle from FleetView, covering the last 30 days and updated every morning. FLR administrators see every driver and vehicle. A driver whose FLR account is linked to their FleetView name sees only their own driving; anyone else sees nothing until an administrator links them.",
+      "answer": "Fleet Management shows speeding by driver and vehicle from FleetView, covering the last 30 days and updated every morning. FLR Admins and Super Admins see every driver and vehicle. A driver whose FLR account is linked to their FleetView name sees only their own driving; anyone else sees nothing until a Super Admin links them.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -775,7 +797,7 @@
         "report",
         "fleet"
       ],
-      "answer": "The driver speeding report is Fleet Management on the Hub. Administrators see every driver; a driver linked to their FLR account sees their own driving.",
+      "answer": "The driver speeding report is Fleet Management on the Hub. Admins and Super Admins see every driver; a driver linked to their FLR account sees their own driving.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -808,7 +830,7 @@
         "own",
         "incidents"
       ],
-      "answer": "Open Fleet Management. If your FLR account is linked to your FleetView name, it opens on “My driving”, with your incidents and FleetView performance, then “Map” for where they happened and “My vehicle” for your vehicle’s dates. Only you and FLR administrators can see your page.",
+      "answer": "Open Fleet Management. If your FLR account is linked to your FleetView name, it opens on “My driving”, with your incidents and FleetView performance, then “Map” for where they happened and “My vehicle” for your vehicle’s dates. Only you and FLR Admins and Super Admins can see your page.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -836,7 +858,7 @@
         "empty",
         "linked"
       ],
-      "answer": "“Nothing to show you yet” means your FLR account isn’t linked to your FleetView driver name. Ask an FLR administrator to link it; then you’ll see your own driving.",
+      "answer": "“Nothing to show you yet” means your FLR account isn’t linked to your FleetView driver name. Ask an FLR Super Admin to link it; then you’ll see your own driving.",
       "related": [
         "fleet-privacy"
       ]
@@ -844,7 +866,7 @@
     {
       "id": "fleet-link",
       "tool": "speeding",
-      "who": "admin",
+      "who": "superadmin",
       "title": "Link a driver to an FLR account",
       "ask": [
         "how do I link a driver to an account",
@@ -858,7 +880,7 @@
         "sign-ins",
         "driver"
       ],
-      "answer": "FLR administrators link each FleetView driver to their FLR account in Fleet Management. A linked driver sees only their own page.",
+      "answer": "FLR Super Admins link each FleetView driver to their FLR account in Fleet Management. A linked driver sees only their own page.",
       "steps": [
         "Open Fleet Management on the “Drivers” page.",
         "Under “Driver sign-ins”, press “Manage sign-ins”.",
@@ -942,7 +964,7 @@
         "serious",
         "top"
       ],
-      "answer": "Fleet Management lists each serious incident: 20 mph or more over the limit. Administrators see the whole fleet’s on the map and each driver’s page; a linked driver sees their own. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
+      "answer": "Fleet Management lists each serious incident: 20 mph or more over the limit. Admins and Super Admins see the whole fleet’s on the map and each driver’s page; a linked driver sees their own. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
       "data": "fleet.serious",
       "link": {
         "href": "speeding/#map",
@@ -970,7 +992,7 @@
         "google maps",
         "where"
       ],
-      "answer": "Open an incident to see when and where it happened, with “Open in Google Maps”. Administrators also get “Open in FleetView” and the driver and vehicle details. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
+      "answer": "Open an incident to see when and where it happened, with “Open in Google Maps”. Admins and Super Admins also get “Open in FleetView” and the driver and vehicle details. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -1029,7 +1051,7 @@
         "registration",
         "overdue"
       ],
-      "answer": "Administrators: the “Vehicles” page lists MOT, tax and service due in the next 60 days, and anything overdue, under “Coming up”; each vehicle opens its details, with “Open in Monday”. Linked drivers: your vehicle’s dates are on “My vehicle”.",
+      "answer": "Admins and Super Admins: the “Vehicles” page lists MOT, tax and service due in the next 60 days, and anything overdue, under “Coming up”; each vehicle opens its details, with “Open in Monday”. Linked drivers: your vehicle’s dates are on “My vehicle”.",
       "link": {
         "href": "speeding/#vehicles",
         "label": "Open Fleet Management"
@@ -1053,7 +1075,7 @@
         "out of date",
         "live"
       ],
-      "answer": "Fleet Management covers the 30 days up to each morning’s refresh from FleetView. Vehicle details from the Monday fleet board update every 15 minutes. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page; let an FLR administrator know if it stays.",
+      "answer": "Fleet Management covers the 30 days up to each morning’s refresh from FleetView. Vehicle details from the Monday fleet board update every 15 minutes. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page; let an FLR Super Admin know if it stays.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -1075,7 +1097,7 @@
         "privacy",
         "private"
       ],
-      "answer": "Only you and FLR administrators can see your page. Drivers never see other drivers or the review order.",
+      "answer": "Only you and FLR Admins and Super Admins can see your page. Drivers never see other drivers or the review order.",
       "related": [
         "fleet-my-driving",
         "fleet-wrong-driver"
@@ -1098,7 +1120,7 @@
         "wrong driver",
         "not me"
       ],
-      "answer": "FleetView records events against a vehicle, so the name shown is the vehicle’s assigned driver, who may not have been driving at the time. If an incident wasn’t you, tell an FLR administrator which one.",
+      "answer": "FleetView records events against a vehicle, so the name shown is the vehicle’s assigned driver, who may not have been driving at the time. If an incident wasn’t you, tell an FLR Admin or Super Admin which one.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -1604,7 +1626,7 @@
         "postcode",
         "unassigned"
       ],
-      "answer": "In the Fitter Schedule’s “Jobs” tab each job shows once with all its fitters. Choose “Needs fitter” for jobs still missing one, or search by job, postcode or fitter. Tap a job to see each person’s dates, whether they’re Scheduled or TBC and, for administrators, today’s arrival, with “Open in monday.com”.",
+      "answer": "In the Fitter Schedule’s “Jobs” tab each job shows once with all its fitters. Choose “Needs fitter” for jobs still missing one, or search by job, postcode or fitter. Tap a job to see each person’s dates, whether they’re Scheduled or TBC and, for Admins and Super Admins, today’s arrival, with “Open in monday.com”.",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"

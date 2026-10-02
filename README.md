@@ -43,6 +43,14 @@ doesn't get round it: the Estimator, Fleet Management and Annual Leave say "You 
 Schedule it covers the photos, plates and arrivals; the schedule itself is behind its team passcode. New accounts get the
 apps chosen under "New accounts get" in Hub settings (all four to begin with).
 
+**Super Admins and Admins** (`20261002100000_flr_admin_roles.sql`, 2 Oct 2026). A Super Admin (database role `admin`, what
+every administrator was before) looks after accounts, roles, app access, registration and every app's settings. An Admin
+(`manager`) does the day-to-day work and no settings: approves leave and sees everyone's, sees every driver in Fleet
+Management (without the driver sign-ins) and the fitters' arrivals, and in the Cost Estimator builds, approves and
+reassigns quotations (no Settings, no deleting). The database decides; the pages hide what an Admin can't use, and Hub
+settings or the Estimator's Settings opened by their address say they're for Super Admins. There is always an active
+Super Admin: the database refuses any change that would leave none.
+
 A tile's link is either a page of this site such as `speeding/` (same tab) or an `https://` address (new tab). The SQL
 editor can do what Hub settings does:
 

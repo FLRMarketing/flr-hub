@@ -1,7 +1,7 @@
 /* ============================================================================
    FLR Hub settings: everyone with an FLR account, the apps each person may use,
    and registration (the access code, open or closed, what new accounts get,
-   roles decided in advance). For administrators: the database checks every call
+   roles decided in advance). For Super Admins: the database checks every call
    (users.write), whatever this page shows. The apps check the lists themselves,
    so taking an app away also closes it to anyone who goes to its address.
    ========================================================================== */
@@ -13,9 +13,12 @@
   const HUB = new URL('../', location.href).href;
   const SIGN_IN = '../?next=settings';
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const ROLES = { admin: 'Administrator', estimator: 'Estimator', developer: 'Developer' };
+  // 'admin' is the Super Admin (what every administrator was before 2 Oct 2026); 'manager' is the Admin.
+  const ROLES = { admin: 'Super Admin', manager: 'Admin', estimator: 'Estimator', developer: 'Developer' };
+  const AS = { admin: 'a Super Admin', manager: 'an Admin', estimator: 'an estimator', developer: 'a developer' };
   const ROLE_NOTE = {
-    admin: 'Looks after accounts and these settings; sees everything in their apps',
+    admin: 'Looks after accounts, roles and every app’s settings; sees everything in their apps',
+    manager: 'Day-to-day: approves leave, sees every driver and fitter arrivals, reassigns quotes; no settings',
     estimator: 'Prices jobs and builds quotes in the Cost Estimator',
     developer: 'Reads and exports quotes, for testing',
   };
@@ -46,7 +49,7 @@
     const code = flrCode(e);
     if (offline(e)) return 'Can’t reach the FLR database. Check your connection and try again.';
     if (code === 'FLR_VALIDATION' && e.details) return e.details;
-    if (code === 'FLR_FORBIDDEN') return 'Only FLR administrators can do that.';
+    if (code === 'FLR_FORBIDDEN') return 'Only FLR Super Admins can do that.';
     if (code === 'FLR_NOT_FOUND') return 'That account no longer exists. The list has been refreshed.';
     if (code === 'FLR_ACCOUNT_DISABLED') return 'Your FLR account is switched off.';
     if (expired(e) || code === 'FLR_SIGN_IN_REQUIRED') return 'Your sign-in has expired. Sign in again.';
@@ -189,9 +192,9 @@
     } catch (e) {
       const code = flrCode(e);
       if (code === 'FLR_SIGN_IN_REQUIRED' || expired(e)) { location.replace(SIGN_IN); return; }
-      if (code === 'FLR_FORBIDDEN') return gate('For FLR administrators', 'Only FLR administrators can open Hub settings. If you look after accounts, ask an administrator to make you one.');
-      if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR administrator to switch it back on.');
-      if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR administrator.');
+      if (code === 'FLR_FORBIDDEN') return gate('For FLR Super Admins', 'Only Super Admins can open Hub settings. If you look after accounts, ask a Super Admin to make you one.');
+      if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR Super Admin to switch it back on.');
+      if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR Super Admin.');
       if (missingFunction(e)) return gate('Not ready yet', 'Hub settings needs the latest update to the FLR database. Ask whoever looks after it to run the “app access” update, then try again.', { retry: true });
       return gate('Hub settings didn’t load', offline(e) ? 'Can’t reach the FLR database. Check your connection and try again.' : 'Something went wrong. Try again in a moment.', { retry: true });
     }
@@ -236,10 +239,10 @@
   /* ---------------------------------------------------------------- one account */
   let openFor = '';
   function appNote(a, id) {
-    if (id === 'speeding') return a.role === 'admin' ? 'Sees every driver' : a.driver ? `Sees their own driving (${a.driver})` : 'Not linked to a FleetView driver, so it shows them nothing yet';
+    if (id === 'speeding') return a.role === 'admin' ? 'Sees every driver, and links drivers to accounts' : a.role === 'manager' ? 'Sees every driver' : a.driver ? `Sees their own driving (${a.driver})` : 'Not linked to a FleetView driver, so it shows them nothing yet';
     if (id === 'annual-leave') return a.approver ? 'Leave approver: sees everyone’s leave' : 'Their own leave';
-    if (id === 'fitters') return 'Photos and plates here; the schedule also needs the team passcode';
-    if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
+    if (id === 'fitters') return a.role === 'admin' || a.role === 'manager' ? 'Photos, plates and arrivals here; the schedule also needs the team passcode' : 'Photos and plates here; the schedule also needs the team passcode';
+    if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'manager' ? 'Builds, approves and reassigns quotes' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
     return '';
   }
   function fillSheet(a) {
@@ -272,14 +275,14 @@
   $('#sa-role').addEventListener('change', async e => {
     const a = byId(openFor), role = e.target.value;
     if (!a || role === a.role) return;
-    const toAdmin = role === 'admin', fromAdmin = a.role === 'admin';
-    if ((toAdmin || fromAdmin) && !(await confirmIt(
-      toAdmin ? `Make ${firstName(a)} an administrator?` : `Take ${firstName(a)}’s administrator rights away?`,
-      toAdmin ? 'Administrators look after every account, these settings and the Cost Estimator’s prices and rules, and see everything in their apps.'
-              : `${firstName(a)} will no longer be able to open Hub settings or change accounts.`,
-      toAdmin ? 'Make administrator' : 'Take away', !toAdmin))) { e.target.value = a.role; return; }
+    // Both levels see other people's data (everyone's leave, every driver), so either is confirmed, as is taking one away.
+    const ask = role === 'admin' ? [`Make ${firstName(a)} a Super Admin?`, 'Super Admins look after every account, role and app, and every app’s settings, including the Cost Estimator’s prices and rules.', 'Make Super Admin', false]
+      : role === 'manager' ? [`Make ${firstName(a)} an Admin?`, 'Admins approve leave and see everyone’s, see every driver’s driving and fitter arrivals, and reassign quotes. They can’t change any settings.', 'Make Admin', false]
+      : a.role === 'admin' ? [`Take ${firstName(a)}’s Super Admin rights away?`, `${firstName(a)} will no longer be able to open Hub settings or change accounts and settings.`, 'Take away', true]
+      : a.role === 'manager' ? [`Take ${firstName(a)}’s Admin rights away?`, `${firstName(a)} will no longer approve leave or see everyone’s leave, every driver or fitter arrivals.`, 'Take away', true] : null;
+    if (ask && !(await confirmIt(...ask))) { e.target.value = a.role; return; }
     e.target.disabled = true;
-    try { await call('admin_set_role', { p_user: a.id, p_role: role }); await reloadAccounts(); toast(`${nameOf(a)} is now ${toAdmin ? 'an administrator' : role === 'developer' ? 'a developer' : 'an estimator'}`); }
+    try { await call('admin_set_role', { p_user: a.id, p_role: role }); await reloadAccounts(); toast(`${nameOf(a)} is now ${AS[role] || role}`); }
     catch (err) { e.target.value = a.role; toast(said(err)); }
     finally { e.target.disabled = a.id === S.you; }
   });
@@ -354,7 +357,7 @@
       S.pre = await call('admin_set_preassigned_role', { p_email: email, p_role: role }) || [];
       renderPre(); $('#pre-email').value = '';
       await reloadAccounts();
-      toast(`${email} will be ${role === 'admin' ? 'an administrator' : role === 'developer' ? 'a developer' : 'an estimator'}`);
+      toast(`${email} will be ${AS[role] || role}`);
     } catch (err) { toast(said(err)); }
     finally { btn.disabled = false; }
   });

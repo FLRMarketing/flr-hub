@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="settings.js?v=1.0" defer></script>
+<script src="settings.js?v=1.1" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.1"></script>
 </head>
 <body data-view="loading">
@@ -43,7 +43,7 @@
     <p class="lede">Who has an FLR account, which apps each person can use, and how new people join.</p>
   </div>
 
-  <!-- what stands between the person and this page: loading, not an administrator, not set up yet, offline -->
+  <!-- what stands between the person and this page: loading, not a Super Admin, not set up yet, offline -->
   <div class="gate" id="gate" role="status" aria-live="polite">
     <div class="gate-loading" id="gate-loading"><span class="skeleton-line"></span><span class="skeleton-line short"></span><span class="skeleton-block"></span></div>
     <div class="gate-message" id="gate-message" hidden>
@@ -96,7 +96,7 @@
     <form class="group pre-form" id="pre-form" novalidate>
       <label class="row"><span class="sr">Email address</span><input type="email" id="pre-email" placeholder="name@flr.co.uk" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="email" required></label>
       <div class="row row-static pre-actions">
-        <label class="select-wrap"><span class="sr">Role</span><select id="pre-role"><option value="estimator">Estimator</option><option value="developer">Developer</option><option value="admin">Administrator</option></select></label>
+        <label class="select-wrap"><span class="sr">Role</span><select id="pre-role"><option value="estimator">Estimator</option><option value="manager">Admin</option><option value="admin">Super Admin</option><option value="developer">Developer</option></select></label>
         <button class="btn btn-small btn-tint" type="submit">Assign</button>
       </div>
     </form>
@@ -122,7 +122,7 @@
       <div class="group">
         <div class="row row-static">
           <label class="row-main" for="sa-role"><span class="row-title">Role</span><span class="row-sub" id="sa-role-sub"></span></label>
-          <label class="select-wrap"><select id="sa-role"><option value="estimator">Estimator</option><option value="developer">Developer</option><option value="admin">Administrator</option></select></label>
+          <label class="select-wrap"><select id="sa-role"><option value="estimator">Estimator</option><option value="manager">Admin</option><option value="admin">Super Admin</option><option value="developer">Developer</option></select></label>
         </div>
         <div class="row row-static">
           <span class="row-main"><span class="row-title" id="sa-active-label">Account on</span><span class="row-sub" id="sa-active-sub"></span></span>
@@ -134,7 +134,7 @@
       <div class="group sa-reset">
         <button class="row row-button" type="button" id="sa-reset">Send a password reset email</button>
       </div>
-      <p class="hint" id="sa-hint">Passwords are never visible to anyone, administrators included.</p>
+      <p class="hint" id="sa-hint">Passwords are never visible to anyone, Super Admins included.</p>
     </div>
   </div>
 </dialog>

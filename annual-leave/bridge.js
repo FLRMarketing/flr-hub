@@ -88,7 +88,7 @@
     if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return never(); }
     if (code === 'FLR_ACCOUNT_DISABLED') { blocked('Your FLR account is switched off', 'Ask an FLR administrator to switch it back on.'); return never(); }
     // Hub settings decides who uses Annual Leave; the database refuses everyone else (detail 'app.annual-leave').
-    if (code === 'FLR_FORBIDDEN') { blocked('You don’t have access to Annual Leave', 'Ask an FLR administrator if you need it.'); return never(); }
+    if (code === 'FLR_FORBIDDEN') { blocked('You don’t have access to Annual Leave', 'Ask an FLR Super Admin if you need it.'); return never(); }
     if (code === 'FLR_NO_PROFILE') { blocked('Your account isn’t set up for FLR tools', 'Ask an FLR administrator to finish setting it up.'); return never(); }
     if (missing(r.error)) { blocked('Annual Leave isn’t set up yet', 'Its data hasn’t been added to the FLR database.'); return never(); }
     if (offline(r.error)) throw { code: 'offline', message: 'Check your connection, then press Refresh.' };
