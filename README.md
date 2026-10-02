@@ -125,6 +125,11 @@ changes something "in monday.com".
 
 ## Likkle Jeff (the help button, first called Ask the Hub)
 
+**Paused since 2 Oct 2026** (the user's request: off for now, not deleted). `assistant/assistant.js`, the file every page
+loads, now only loads `logo.js` (the FLR logo on each tool goes back to the Hub) and, when `JEFF` is `true`, `jeff.js`
+(Likkle Jeff himself, unchanged). To bring him back: set `const JEFF = true;` in `assistant/assistant.js` and publish.
+
+
 A round button, bottom right on the Hub, the Estimator, Fleet Management and Annual Leave. People ask where to find
 something or how to do it, and get a short answer and a link. It is search, not AI: `assistant/engine.js` matches
 the question against the approved answers in `assistant/help.json`, in the browser, and says so when nothing fits
