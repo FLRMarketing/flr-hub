@@ -13,7 +13,7 @@
   const cfg = window.FLR_CONFIG || {};
   const AUTH_KEY = 'flr-estimator-auth';   // the Cost Estimator's key: one sign-in for the whole site
   const NAME_KEY = 'flr-hub:name';         // this browser only: greet people by name before the database answers
-  const ROLES = { estimator: 'Estimator', manager: 'Admin', admin: 'Super Admin', developer: 'Developer' };   // 'admin' is the Super Admin, 'manager' the Admin
+  const ROLES = { estimator: 'User', manager: 'Admin', admin: 'Super Admin', developer: 'Developer' };   // stored as estimator, manager (Admin), admin (Super Admin)
   // Only for a database from before each account was given its apps (hub_home without 'apps'): it showed everyone the
   // Estimator. Since then the Estimator is a tile like the others, for the accounts that have it.
   const ESTIMATOR = { id: 'estimator', title: 'Cost Estimator', subtitle: 'Price commercial flooring jobs and build quotes.', url: 'estimator/' };

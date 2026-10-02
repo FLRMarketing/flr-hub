@@ -664,20 +664,22 @@
     {
       "id": "estimate-roles",
       "tool": "estimator",
-      "title": "What your Estimator role allows",
+      "title": "What your role allows in the Cost Estimator",
       "ask": [
         "why can't I create a quote",
         "what can an estimator do",
         "what does the developer role do",
         "it says my role can view quotations but not create them",
-        "what's the difference between admin and estimator"
+        "what's the difference between admin and estimator",
+        "what can a user do",
+        "what does the user role mean"
       ],
       "keys": [
         "role",
         "developer",
         "permission"
       ],
-      "answer": "Estimators can create, edit, approve and archive quotations. Admins can also reassign them; Super Admins can also delete them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub; Super Admins change it in Hub settings.",
+      "answer": "Users can create, edit, approve and archive quotations. Admins can also reassign them; Super Admins can also delete them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub; Super Admins change it in Hub settings.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"

@@ -14,12 +14,12 @@
   const SIGN_IN = '../?next=settings';
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   // 'admin' is the Super Admin (what every administrator was before 2 Oct 2026); 'manager' is the Admin.
-  const ROLES = { admin: 'Super Admin', manager: 'Admin', estimator: 'Estimator', developer: 'Developer' };
-  const AS = { admin: 'a Super Admin', manager: 'an Admin', estimator: 'an estimator', developer: 'a developer' };
+  const ROLES = { admin: 'Super Admin', manager: 'Admin', estimator: 'User', developer: 'Developer' };   // 'estimator' is shown as User
+  const AS = { admin: 'a Super Admin', manager: 'an Admin', estimator: 'a User', developer: 'a developer' };
   const ROLE_NOTE = {
     admin: 'Looks after accounts, roles and every app’s settings; sees everything in their apps',
     manager: 'Day-to-day: approves leave, sees every driver and fitter arrivals, reassigns quotes; no settings',
-    estimator: 'Prices jobs and builds quotes in the Cost Estimator',
+    estimator: 'Uses the apps switched on for them: builds and approves quotes, sees their own leave and driving',
     developer: 'Reads and exports quotes, for testing',
   };
   const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters' };
@@ -176,7 +176,7 @@
 
   function renderPre() {
     const list = $('#pre-list');
-    if (!S.pre.length) { list.replaceChildren(el('p', 'empty', 'None. Everyone who registers starts as an estimator.')); return; }
+    if (!S.pre.length) { list.replaceChildren(el('p', 'empty', 'None. Everyone who registers starts as a User.')); return; }
     list.replaceChildren(...S.pre.map(p => {
       const row = el('div', 'row row-static pre-row');
       const main = el('span', 'row-main');
