@@ -1055,13 +1055,15 @@
     return h('li', null, h('a', { class: 'starter', href: '#/team/' + s.id },
       h('div', { class: 'starter-top' }, h('span', { class: 'avatar', 'aria-hidden': 'true' }, initials(s.name)),
         h('div', null, h('p', { class: 'starter-name' }, s.name), h('p', { class: 'starter-sub' }, [s.jobTitle, s.startDate ? `starts ${day(s.startDate)}` : null].filter(Boolean).join(' · ') || s.email))),
-      h('p', { class: 'meta', style: { margin: '0' } }, h('span', { class: 'pill pill-tint' }, routeLabel(s)), s.registered ? null : h('span', { class: 'pill' }, 'Not registered yet'), (s.review || []).length ? h('span', { class: 'pill' }, `${s.review.length} waiting`) : null),
+      h('p', { class: 'meta', style: { margin: '0' } }, h('span', { class: 'pill pill-tint' }, routeLabel(s)), accountPill(s), (s.review || []).length ? h('span', { class: 'pill' }, `${s.review.length} waiting`) : null),
       h('div', { class: 'starter-bars' },
         h('div', null, h('p', { class: 'bar-label' }, h('span', null, 'Employee tasks'), h('span', null, `${s.done} of ${s.total}`)), h('div', { class: 'track small' + (pct === 100 ? ' done' : '') }, fill)),
         s.internal && s.internal.total ? h('div', null, h('p', { class: 'bar-label' }, h('span', null, 'Internal setup'), h('span', null, `${s.internal.done} of ${s.internal.total}`)), h('div', { class: 'track small' }, ifill)) : null,
         h('div', { class: 'dots', 'aria-label': 'Task statuses' }, s.tasks.map(x => h('span', { dataset: { s: x.status }, title: `${title(x.key)}: ${C.STATUS[x.status]}` }))))));
   }
   const routeLabel = s => (s.route === 'office' ? (s.visitsSites ? 'Office · visits sites' : 'Office employee') : 'Operative');
+  // New accounts wait for a Super Admin to approve them (Hub migration 2.2) before the starter can open Onboarding.
+  const accountPill = s => (!s.registered ? h('span', { class: 'pill' }, 'Not registered yet') : s.account === 'disabled' ? h('span', { class: 'pill' }, 'Account waiting for approval') : null);
 
   async function starterView(id, tab) {
     stop();
@@ -1082,7 +1084,7 @@
       h('header', { class: 'page-head' }, h('p', { class: 'eyebrow' }, 'New starter'), h('h1', { class: 'display' }, s.name),
         h('div', { class: 'meta' }, h('span', null, s.email), s.jobTitle ? h('span', null, s.jobTitle) : null, s.startDate ? h('span', null, `Starts ${dayLong(s.startDate)}`) : null,
           s.hours ? h('span', null, `${s.hours} hours a week`) : null),
-        h('div', { class: 'meta' }, h('span', { class: 'pill pill-route' }, routeLabel(s)), needs, s.registered ? null : h('span', { class: 'pill' }, 'Not registered yet'),
+        h('div', { class: 'meta' }, h('span', { class: 'pill pill-route' }, routeLabel(s)), needs, accountPill(s),
           s.young ? h('span', { class: 'pill' }, 'Young person (16–18)') : null),
         can.hr ? h('div', { class: 'btn-row' },
           h('button', { class: 'btn btn-plain btn-small', type: 'button', onclick: () => inviteSheet(s) }, 'Edit details or route'),
@@ -1213,7 +1215,7 @@
     openSheet(s ? `Edit ${first(s.name)}’s onboarding` : 'Add a new starter', body);
   }
   function inviteMessage(s) {
-    const text = `Hello ${first(s.name)},\n\nWelcome to FLR. Your new starter onboarding is ready on the FLR Hub:\n${HUB_URL}\n\nRegister with this email address (${s.email}) and the access code FLR gives you, then open Onboarding. Your answers save as you go, so you can come back to it at any time.\n\nFLR HR`;
+    const text = `Hello ${first(s.name)},\n\nWelcome to FLR. Your new starter onboarding is ready on the FLR Hub:\n${HUB_URL}\n\nRegister with this email address (${s.email}) and the access code FLR gives you. Once an FLR Super Admin has approved your new account, open Onboarding. Your answers save as you go, so you can come back to it at any time.\n\nFLR HR`;
     openSheet('Invitation message', [h('p', { class: 'sheet-lede' }, 'The Hub doesn’t send emails. Copy this into an email or message to them. It holds no personal details beyond their name and email.'),
       h('div', { class: 'card' }, h('p', { class: 'invite-text' }, text)),
       h('div', { class: 'btn-row' }, h('button', { class: 'btn btn-primary', type: 'button', onclick: async e => {
