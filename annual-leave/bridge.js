@@ -81,12 +81,20 @@
     return s;
   }
 
+  // Switched off, or new and still waiting for a Super Admin to check who it is (Hub migration 2.2): the Hub knows which.
+  async function offOrWaiting() {
+    let waiting = false;
+    try { const h = await client().rpc('hub_home'); waiting = !!(h && h.data && h.data.waiting); } catch (e) { /* treated as switched off */ }
+    if (waiting) blocked('Your account is waiting for a Super Admin', 'They’ll check it’s really you, then switch on your tools. You don’t need to do anything.');
+    else blocked('Your FLR account is switched off', 'Ask an FLR Super Admin to switch it back on.');
+  }
+
   async function readHome() {
     const r = await client().rpc('leave_home');
     if (!r.error) return r.data;
     const code = flrCode(r.error);
     if (code === 'FLR_SIGN_IN_REQUIRED' || expired(r.error)) { location.replace(SIGN_IN); return never(); }
-    if (code === 'FLR_ACCOUNT_DISABLED') { blocked('Your FLR account is switched off', 'Ask an FLR administrator to switch it back on.'); return never(); }
+    if (code === 'FLR_ACCOUNT_DISABLED') { await offOrWaiting(); return never(); }
     // Hub settings decides who uses Annual Leave; the database refuses everyone else (detail 'app.annual-leave').
     if (code === 'FLR_FORBIDDEN') { blocked('You don’t have access to Annual Leave', 'Ask an FLR Super Admin if you need it.'); return never(); }
     if (code === 'FLR_NO_PROFILE') { blocked('Your account isn’t set up for FLR tools', 'Ask an FLR administrator to finish setting it up.'); return never(); }

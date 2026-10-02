@@ -75,6 +75,14 @@
     if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
   }
 
+  // Switched off, or new and still waiting for a Super Admin to check who it is (Hub migration 2.2): the Hub knows which.
+  async function offOrWaiting() {
+    let waiting = false;
+    try { const h = await client().rpc('hub_home'); waiting = !!(h && h.data && h.data.waiting); } catch (e) { /* treated as switched off */ }
+    if (waiting) blocked('Your account is waiting for a Super Admin', 'They’ll check it’s really you, then switch on your tools. You don’t need to do anything.');
+    else blocked('Your FLR account is switched off', 'Ask an FLR Super Admin to switch it back on.');
+  }
+
   // quiet: a re-read in the background. If it fails, the page keeps what it shows; the next visit says why.
   async function fetchData(quiet) {
     const c = client();
@@ -94,7 +102,7 @@
     else if (code === 'FLR_FORBIDDEN' && why === 'speeding.preview') blocked('Only administrators can preview', 'Previewing another driver’s page is for FLR administrators.', { own: true });
     else if (code === 'FLR_VALIDATION' && PREVIEW) blocked('That driver isn’t in the current report', 'Go back to Fleet Management and choose a driver from the list.', { own: true });
     else if (code === 'FLR_FORBIDDEN') blocked('You don’t have access to Fleet Management', 'Ask an FLR administrator if you need it.', { switchAccount: true });
-    else if (code === 'FLR_ACCOUNT_DISABLED') blocked('Your FLR account is switched off', 'Ask an FLR administrator to switch it back on.');
+    else if (code === 'FLR_ACCOUNT_DISABLED') await offOrWaiting();
     else if (code === 'FLR_NO_PROFILE') blocked('Your account isn’t set up for FLR tools', 'Ask an FLR administrator to finish setting it up.');
     else if (missing(r.error)) blocked('Fleet Management isn’t set up yet', 'Its data hasn’t been added to the FLR database.');
     else if (offline(r.error)) blocked('Can’t reach the FLR database', 'Check your connection, then try again.', { retry: true });
