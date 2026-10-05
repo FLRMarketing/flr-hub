@@ -790,6 +790,55 @@ button.mine-row:focus-visible{outline:2px solid var(--focus);outline-offset:-2px
 .sect-sum b{font-weight:600;color:var(--ink)}
 .mine-none{padding:14px 18px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);font-size:14px;color:var(--ink-2)}
 
+/* ---------------------------------------------------------------- before leave tracking starts: notes, the Diary's first month, Today's start card */
+.lt-note{padding:10px 14px;border-radius:12px;background:var(--tint-soft);color:var(--ink);font-size:14px;line-height:1.45}
+.lt-note b{font-weight:600}
+#diary-body>.lt-note{margin-bottom:12px}
+.iconbtn:disabled{opacity:.35;cursor:default}
+.iconbtn:disabled:active{transform:none}
+@media (hover:hover){.iconbtn:disabled:hover{background:var(--fill)}}
+.td-start{display:grid;gap:6px;padding:20px 22px}
+.td-start h2{font:700 20px/1.25 var(--font-display);letter-spacing:-.016em;text-wrap:balance}
+.td-start p{max-width:60ch;font-size:14.5px;line-height:1.5;color:var(--ink-2)}
+.td-start .btn{justify-self:start;margin-top:8px}
+/* My Leave: one leave year's requests, grouped (going ahead, waiting, not going ahead), then any sent before tracking started.
+   The date is the row's title, so these rows have no date badge; when it was requested and decided goes across the row. */
+.mine-acts{display:flex;flex-wrap:wrap;gap:8px}
+.mine-reqs .mine-sect{margin-bottom:6px}
+.mine-grp-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 4px 8px;font:600 13.5px/1.3 var(--font-text);letter-spacing:-.003em;color:var(--ink-2)}
+.mine-nothing{margin:4px 4px 0;font-size:14px;color:var(--ink-3)}
+details.mine-grp>summary{list-style:none;cursor:pointer;border-radius:8px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+details.mine-grp>summary::-webkit-details-marker{display:none}
+details.mine-grp>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mine-grp-h h3{font:inherit;color:inherit}
+.mine-grp-h .ico{width:15px;height:15px;color:var(--ink-3);transition:transform .25s var(--ease)}
+details.mine-grp[open]>summary .ico{transform:rotate(90deg)}
+/* At every width, so the phone layout for rows with a date badge (times across the row) never applies to these */
+.mine-row.nb,.mine-row.nb:has(.rq-times){grid-template-columns:minmax(0,1fr) auto;grid-template-areas:none;align-items:center;gap:0 12px}
+.mine-row.nb:has(.rq-times) .mr-main{display:block}
+.mine-row.nb .mr-status,.mine-row.nb:has(.rq-times) .mr-status{grid-area:auto;grid-column:2;margin-top:0}
+.mine-row.nb .mr-times{grid-column:1 / -1;display:grid;gap:4px}
+.mine-row.nb .mr-times .rq-times,.mine-row.nb:has(.rq-times) .rq-times{grid-area:auto;margin-top:8px}
+/* Check dates: a sheet with the first and last day, and the working days the existing count gives them */
+.cd-head{position:relative;justify-content:center;padding-inline:52px;text-align:center}
+.cd-head .close{position:absolute;top:16px;right:16px}
+.cd-title{display:grid;gap:4px}
+.cd-title .subtle{font-size:14px}
+.cd-rows{border-radius:12px;background:var(--surface);box-shadow:0 0 0 var(--hair) var(--sep);overflow:hidden}
+.cd-row{position:relative;display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 16px;font-size:15px;cursor:pointer;transition:background-color .15s}
+.cd-row+.cd-row{box-shadow:inset 0 var(--hair) 0 var(--sep)}
+@media (hover:hover){.cd-row:hover{background:var(--row-hover)}}
+.cd-k{flex:none;width:52px;color:var(--ink-3)}
+.cd-v{font-weight:600;font-variant-numeric:tabular-nums}
+.cd-in{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer;font-size:16px}
+.cd-row:has(.cd-in:focus-visible){outline:2px solid var(--focus);outline-offset:-2px;border-radius:12px}
+.cd-res{display:grid;gap:6px;padding:14px 16px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 var(--hair) var(--sep)}
+.cd-res.zero{background:var(--gold-soft);box-shadow:none}
+.cd-n{font:700 17px/1.3 var(--font-display);letter-spacing:-.012em}
+.cd-res p{font-size:14.5px;line-height:1.5}
+.cd-res b{font-weight:600}
+.cd-form{width:100%}
+
 /* ---------------------------------------------------------------- motion preferences: springs jump, slides become fades (see FLRUI) */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
@@ -1551,11 +1600,125 @@ const state = {
   confirm: null,
   diary: { y: startMonth.y, m: startMonth.m, group: 'all', search: '', pending: true, other: true, mode: 'planner' },
   all: { search: '', decision: 'any', year: 'any' },
+  check: { from: null, to: null },   // the Check dates sheet's first and last day
 };
 try {
   const t = localStorage.getItem('flr-leave-tab');
   if (['today', 'approvals', 'diary', 'requests', 'mine'].includes(t)) state.tab = t;   // renderChrome() moves it on if this viewer doesn't have that tab
 } catch (e) { /* storage unavailable */ }
+
+/* ---------------------------------------------------------------------
+   Before tracking starts, a request's leave year, and plain reasons
+   Pure functions: dev/plan-rules.test.mjs runs them straight from this page. Nothing here changes the leave rules above,
+   the leave year used for carry-over and the allowances board, or the check details the page writes to monday.com.
+   --------------------------------------------------------------------- */
+// Leave tracking starts on 1 January of the first leave year. Until then the page opens where tracked leave is: staff on
+// My Leave, and the Diary on its first month, which says so; Today says when its list starts. From that day it opens on
+// the current day and month, as it always has. It goes by the date, so nothing needs changing on 1 January.
+const TRACKING_START = `${FIRST_LEAVE_YEAR}-01-01`;
+const TRACKING_START_TEXT = `1 January ${FIRST_LEAVE_YEAR}`;
+const beforeTracking = (day = today) => day < TRACKING_START;
+const yearText = (y, day = today) => `${y} · ${y === FIRST_LEAVE_YEAR && beforeTracking(day) ? 'starts 1 Jan' : 'Jan–Dec'}`;
+// A request is in a leave year when any of its days are (leave over New Year is in both), or when it has no dates at all:
+// the rule a person's leave record has always used, and My Leave's too.
+function inLeaveYear(d, year) { return !d.from || (d.from <= `${year}-12-31` && d.to >= `${year}-01-01`); }
+// Leave that ends before tracking starts is in no leave year: My Leave lists it on its own, under "Before 1 Jan 2027".
+const beforeTrackingLeave = (d) => Boolean(d.from && d.to < TRACKING_START);
+// A closure's name without its year, as the closures list shows it: "Good Friday 2027" → "Good Friday".
+const bareName = (n) => String(n || '').replace(/\s+\d{4}(?:\/\d{2})?(?=\s*(?:\(|$))/, '').trim();
+const closureKind = (name) => (name === CLOSE_DAY ? 'shut' : /jeff/i.test(name || '') ? 'jeff' : 'bh');
+function andList(items, serial = false) {
+  return items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')}${serial ? ',' : ''} and ${items[items.length - 1]}`;
+}
+// Why a request uses none of the allowance, in a few words for its row ("New Year's Day, FLR is closed"), or null when it
+// uses some, or has no dates. Once a day FLR is closed is named, the weekends either side go without saying.
+function zeroDayReason(d) {
+  if (!d.from || d.total !== 0) return null;
+  if (d.days.length) return 'set to 0 days on the request';   // working days, but the request's Days override is 0
+  const shut = d.excluded.filter((e) => closureKind(e.name) === 'shut').length, names = [];
+  for (const e of d.excluded) {
+    const n = closureKind(e.name) === 'shut' ? `company close day${shut > 1 ? 's' : ''}` : bareName(e.name) || 'bank holiday';
+    if (!names.includes(n)) names.push(n);
+  }
+  return names.length ? `${andList(names)}, FLR is closed` : 'weekends aren’t working days';
+}
+// The line under a request's dates on My Leave: why it's there, or why it uses no allowance, or its working days.
+function mineReason(r, d, { own = true, before = false, year = null } = {}) {
+  if (before) return 'Before leave tracking starts';
+  if (!own && r.email) return 'Sent with your email for a colleague';   // matched to you by its email only: it isn't counted
+  if (!d.from) return 'No dates on the request';
+  const zero = zeroDayReason(d);
+  if (zero) return `No allowance used: ${zero}`;
+  const bits = [plural(d.total, 'working day')];
+  if (year && (d.byYear[year] || 0) !== d.total) bits.push(`${fmtNum(d.byYear[year] || 0)} in ${year}`);   // runs over New Year
+  if (r.halfDay && r.halfDay !== 'none') bits.push(r.halfDay === 'am' ? 'morning off' : 'afternoon off');
+  return bits.join(' · ');
+}
+// My Leave's requests for one leave year, by the record's rule (inLeaveYear), in groups: going ahead (accepted), waiting for
+// a decision, and not going ahead (denied or cancelled), newest leave first; then, in the first leave year, any for dates
+// before tracking started. Requests that aren't going ahead and say the same (dates, decision and reason) share a row.
+function mineGroups(ctx, me, requests, year) {
+  const own = (r) => { const o = ctx.staffOf(r); return Boolean(o) && String(o.id) === String(me.id); };
+  const newest = (x, z) => (ctx.daysOf(z).from || '').localeCompare(ctx.daysOf(x).from || '');
+  const rows = (list, merge, before = false) => {
+    const out = [], byKey = new Map();
+    for (const r of list) {
+      const d = ctx.daysOf(r), text = mineReason(r, d, { own: own(r), before, year });
+      const key = `${d.from}|${d.to}|${r.halfDay}|${r.decision}|${text}`;
+      if (merge && byKey.has(key)) { byKey.get(key).list.push(r); continue; }
+      const row = { decision: r.decision, from: d.from, to: d.to, text, list: [r] };
+      out.push(row);
+      if (merge) byKey.set(key, row);
+    }
+    return out;
+  };
+  const inYear = requests.filter((r) => inLeaveYear(ctx.daysOf(r), year)).sort(newest);
+  return {
+    going: rows(inYear.filter((r) => r.decision === 'accepted'), false),
+    waiting: rows(inYear.filter(isPending), false),
+    notGoing: rows(inYear.filter((r) => !isActive(r)), true),
+    before: year === FIRST_LEAVE_YEAR ? rows(requests.filter((r) => beforeTrackingLeave(ctx.daysOf(r))).sort(newest), true, true) : [],
+  };
+}
+// The checks' reason as the page shows it. What the page writes to monday.com's Details column keeps its words (D8); on
+// screen the no-working-days warning names every kind of day FLR is closed, and a reason reads on from what's before it.
+const NO_WORKING_DAYS = /^The dates contain no working days\b/;
+function screenReason(text) {
+  const t = String(text || '');
+  if (NO_WORKING_DAYS.test(t)) return 'the dates have no working days (only weekends, bank holidays, the Jeff Day or company close days)';
+  return /^[A-Z][a-z]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;
+}
+// Check dates: what a request from `from` to `to` would use, by the page's own working-day count, and the days between
+// that it wouldn't count, with each closure's name.
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function checkDates(from, to, bankHolidays) {
+  if (to < from) [from, to] = [to, from];
+  const d = leaveDays({ from, to, halfDay: 'none', daysOverride: null }, bankHolidays), skipped = [];
+  for (let x = from; x <= to; x = addDays(x, 1)) {
+    if (bankHolidays.has(x)) skipped.push({ date: x, name: bareName(bankHolidays.get(x)) || 'Bank holiday' });
+    else if (isWeekend(x)) skipped.push({ date: x, name: null });
+  }
+  return { from, to, total: d.total, skipped, before: from < TRACKING_START };
+}
+// "Fri 1 Jan (New Year's Day), Sat 2, Sun 3, and Mon 4 Jan (Company close day)"; more than four weekend days are summed up.
+function skippedText(skipped) {
+  const weekend = skipped.filter((s) => !s.name), list = weekend.length > 4 ? skipped.filter((s) => s.name) : skipped;
+  const items = list.map((s, i) => {
+    if (s.name) return `${fmtDate(s.date, false)} (${s.name})`;
+    const next = list[i + 1];
+    return !next || next.date.slice(0, 7) !== s.date.slice(0, 7) ? fmtDate(s.date, false) : `${DOW[weekday(s.date)]} ${Number(s.date.slice(8))}`;
+  });
+  if (weekend.length > 4) items.push(`${weekend.length} weekend days`);
+  return andList(items, true);
+}
+// Why there's nothing to book, when the dates use no working days.
+function checkZeroText(c) {
+  if (c.from !== c.to) return `${fmtRange(c.from, c.to)} has no working days, so there’s nothing to book. Not counted: ${skippedText(c.skipped)}. No allowance would be used.`;
+  const s = c.skipped[0], day = `${Number(c.from.slice(8))} ${MONTHS[Number(c.from.slice(5, 7)) - 1]}`;
+  const what = !s || !s.name ? `a ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][weekday(c.from)]}`
+    : closureKind(s.name) === 'shut' ? 'a company close day and FLR is closed' : closureKind(s.name) === 'jeff' ? 'the Jeff Day and FLR is closed' : `${s.name} and FLR is closed`;
+  return `${day} is ${what}, so there’s nothing to book. No allowance would be used.`;
+}
 
 /* ---------------------------------------------------------------------
    monday.com access
@@ -1787,6 +1950,13 @@ async function saveChecks() {
 /* ---------------------------------------------------------------------
    Loading
    --------------------------------------------------------------------- */
+// Where the page opens, once it knows who is looking. Until leave tracking starts, staff open on My Leave: their days and
+// requests for the first leave year (Today has nothing to list yet). Otherwise everyone opens as before: on the tab they
+// last used, or on Today (staff) and Approvals (approvers).
+let opened = false;
+function openingView() {
+  if (staffView() && beforeTracking()) state.tab = 'mine';
+}
 async function load() {
   if (!state.mcp) return;
   state.loading = true;
@@ -1803,6 +1973,7 @@ async function load() {
     state.error = err || { code: 'upstream_error', message: 'Unknown error' };
   } finally {
     state.loading = false;
+    if (state.data && !opened) { opened = true; openingView(); }
     renderAll();
     if (state.data && !addressRead) { readAddress(); addressRead = true; }
   }
@@ -2120,7 +2291,7 @@ function renderChrome() {
   document.getElementById('view').setAttribute('aria-labelledby', `tab-${state.tab}`);
   if (tabsCtl) tabsCtl.sync(false);
   const year = state.ctx ? state.ctx.currentYear : Math.max(yearOf(today), FIRST_LEAVE_YEAR);
-  document.getElementById('year-chip').textContent = `${year} · Jan–Dec`;
+  document.getElementById('year-chip').textContent = yearText(year);   // "2027 · starts 1 Jan" until it has
   const up = document.getElementById('updated');
   up.textContent = state.loading ? 'Loading…' : state.lastLoaded ? state.lastLoaded.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—';
   const refresh = document.getElementById('refresh');
@@ -2229,7 +2400,15 @@ function renderToday() {
   const day = todayInLondon();
   const dt = new Date(toUTC(day)), part = (o) => dt.toLocaleDateString('en-GB', { ...o, timeZone: 'UTC' });
   setHead('Today', `${part({ weekday: 'long' })} ${dt.getUTCDate()} ${part({ month: 'long' })} ${dt.getUTCFullYear()}`);
-  return staffView() ? renderTodayStaff() : renderTodayFull(day);
+  return staffView() ? renderTodayStaff(day) : renderTodayFull(day);
+}
+// Until leave tracking starts, nothing is listed, so Today says when its list starts instead of "Everyone's in today",
+// and points to where the tracked leave is: My Leave for staff, the Diary for approvers.
+function trackingStartCard(to) {
+  const [id, label] = to === 'mine' ? ['mine', 'Go to My Leave'] : ['diary', 'Go to the Diary'];
+  return `<section class="card td-start" aria-labelledby="td-start-h"><h2 id="td-start-h">Today’s list starts on ${esc(TRACKING_START_TEXT)}</h2>
+    <p>That’s when leave tracking begins. Until then it can’t show who is off, because leave before January was booked the old way.</p>
+    <button class="btn primary" type="button" data-act="tab" data-id="${id}">${label}</button></section>`;
 }
 function renderTodayFull(day) {
   const ctx = state.ctx, closure = state.data.bankHolidays.get(day);
@@ -2269,8 +2448,10 @@ function renderTodayFull(day) {
     const ids = ctx.membersByGroup.get(String(g.id)) || new Set();
     const inGroup = people.filter((p) => p.staff && ids.has(String(p.staff.id)));
     if (!inGroup.length) continue;
+    // The group's limit counts annual leave only; other leave is shown beside it, so the day's whole picture is there.
     const annual = inGroup.filter((p) => p.lines.some((l) => l.kind === 'annual')).length, limit = maxOffOf(g);
-    secs.push({ title: g.name, note: `${annual} on annual leave · max ${limit}`, over: annual > limit, people: inGroup });
+    const other = inGroup.filter((p) => p.lines.some((l) => l.kind === 'other')).length;
+    secs.push({ title: g.name, note: `${annual} annual + ${other} other off · max ${limit}`, over: annual > limit, people: inGroup });
   }
   const loose = people.filter((p) => p.staff && !(ctx.groupsByStaff.get(String(p.staff.id)) || new Set()).size);
   if (loose.length) secs.push({ title: 'No group', note: '', people: loose });
@@ -2281,6 +2462,7 @@ function renderTodayFull(day) {
   const summary = people.length
     ? `<section class="card td-sum"><p class="td-big"><span class="big num">${people.length}</span><span class="mb-unit">${people.length === 1 ? 'person' : 'people'} off today</span></p>
         <p class="subtle">${esc(bits.join(' · '))}</p></section>`
+    : beforeTracking(day) ? trackingStartCard('diary')
     : emptyHtml('Everyone’s in today', waiting.length ? 'No one has leave booked for today.' : 'No one has leave booked for today, and nothing for today is waiting for a decision.', 'done');
   const groups = secs.map((s) => `<section class="lv-sec"><h3 class="lv-head">${esc(s.title)}${s.note ? `<span class="limit${s.over ? ' td-over' : ''}">${esc(s.note)}</span>` : ''}</h3>
       <ul class="lv-card">${s.people.map(person).join('')}</ul></section>`).join('');
@@ -2291,12 +2473,12 @@ function renderTodayFull(day) {
   return `<div class="td">${summary}${groups}${wait}</div>
     <p class="foot">Accepted annual leave and other leave on the leave boards. Everyone signed in to the FLR Hub sees who is off today, with names only: not the kind of leave, its dates or notes.</p>`;
 }
-function renderTodayStaff() {
+function renderTodayStaff(day) {
   const t = window.__FLR_LEAVE && window.__FLR_LEAVE.today;
   if (!t) return emptyHtml('Today isn’t available yet', 'The FLR server hasn’t been updated for this yet. Try again later.', 'diary');
   if (t.closure) return closedCard(t.closure.name, t.closure.kind);
   if (t.weekend) return emptyHtml('It’s the weekend', 'No one is working today.', 'diary');
-  if (!t.off.length) return emptyHtml('Everyone’s in today', 'No one has leave booked for today.', 'done');
+  if (!t.off.length) return beforeTracking(day) ? trackingStartCard('mine') : emptyHtml('Everyone’s in today', 'No one has leave booked for today.', 'done');
   const byGroup = new Map();
   for (const p of t.off) for (const g of (p.groups && p.groups.length ? p.groups : ['No group'])) { if (!byGroup.has(g)) byGroup.set(g, []); byGroup.get(g).push(p); }
   const names = [...byGroup.keys()].sort((a, z) => (a === 'No group') - (z === 'No group') || a.localeCompare(z));
@@ -2327,7 +2509,7 @@ function renderCard(r) {
   const submitted = cleanDate(r.createdAt), name = displayName(r);
   const chips = ev.groupNames ? ev.groupNames.split(', ').map((g) => `<span class="chip">${esc(g)}</span>`).join('') : '<span class="chip">No leave group</span>';
   const excluded = d.excluded.length ? `<p class="subtle">Not counted: ${d.excluded.map((e) => `${esc(fmtDate(e.date, false))} (${esc(e.name)})`).join(', ')}</p>` : '';
-  const info = [...d.info, ...d.warnings.map((w) => `Warning: ${w}`)].map((t) => `<p class="subtle">${esc(t)}</p>`).join('');
+  const info = [...d.info, ...d.warnings.map((w) => `Warning: ${NO_WORKING_DAYS.test(w) ? `${screenReason(w)}.` : w}`)].map((t) => `<p class="subtle">${esc(t)}</p>`).join('');
   const past = d.from && d.from < state.ctx.today ? '<p class="subtle">These dates start in the past.</p>' : '';
   return `<article class="card" data-card="${esc(r.id)}" aria-label="${esc(name)}">
     <header class="card-head">
@@ -2348,7 +2530,7 @@ function renderCard(r) {
       <div class="card-col side">${renderAllowance(ev, r)}${renderGroup(ev)}</div>
     </div>
     <footer class="card-foot">
-      <div class="suggest">${suggestPill(ev.suggested)}<span class="subtle">${esc(ev.reason)}</span></div>
+      <div class="suggest">${suggestPill(ev.suggested)}<span class="subtle">${esc(screenReason(ev.reason))}</span></div>
       <label class="lbl" for="note-${esc(r.id)}"><span class="eyebrow">Note saved with the decision (optional)</span>
         <textarea class="note" id="note-${esc(r.id)}" data-note="${esc(r.id)}" placeholder="e.g. Cover arranged with Dave" ${anyBusy ? 'disabled' : ''}>${esc(state.notes[r.id] || '')}</textarea></label>
       ${decideButtons(r, anyBusy, busy)}
@@ -2430,7 +2612,7 @@ function renderDiaryShell() {
   const nav = diaryNavText(st);
   return `<div class="toolbar diary-nav">
       <div class="monthnav">
-        <button class="iconbtn" type="button" data-act="month" data-id="-1" aria-label="${nav.prev}">${icon('chev-l')}</button>
+        <button class="iconbtn" type="button" data-act="month" data-id="-1" aria-label="${nav.prev}"${nav.atFirst ? ' disabled' : ''}>${icon('chev-l')}</button>
         <h2 class="month" id="month-label" aria-live="polite">${esc(nav.label)}</h2>
         <button class="iconbtn" type="button" data-act="month" data-id="1" aria-label="${nav.next}">${icon('chev-r')}</button>
         <button class="btn sm" type="button" data-act="month" data-id="0">${nav.now}</button>
@@ -2471,10 +2653,18 @@ function colourKeyHtml(tag) {
 function colourKeyStripHtml() {
   return keyGroups().map(([title, items]) => `<span class="ks-group" role="group" aria-label="${title}"><span class="kh" aria-hidden="true">${title}</span>${items.map(([sw, label]) => `<span class="ks-item">${sw}${esc(label)}</span>`).join('')}</span>`).join('');
 }
-// The month arrows step a month in the Planner and Calendar, and a year in the Leave List, which shows a whole year.
+// The month arrows step a month in the Planner and Calendar, and a year in the Leave List, which shows a whole year. Nothing
+// before tracking starts is tracked, so the back arrow stops at January of the first leave year. Until that day the button
+// goes back to that first month (or year), and says so; from then on it's "This month" again.
 function diaryNavText(st) {
   const list = st.mode === 'list', unit = list ? 'year' : 'month';
-  return { label: list ? String(st.y) : monthName(st.y, st.m), prev: `Previous ${unit}`, next: `Next ${unit}`, now: `This ${unit}` };
+  const atFirst = list ? st.y <= FIRST_LEAVE_YEAR : st.y * 12 + st.m <= FIRST_LEAVE_YEAR * 12;
+  return { label: list ? String(st.y) : monthName(st.y, st.m), prev: `Previous ${unit}`, next: `Next ${unit}`, now: `${beforeTracking() ? 'First' : 'This'} ${unit}`, atFirst };
+}
+// Above the first month (or year) until tracking starts: why the Diary opens there, and why it goes no further back.
+function diaryStartNote(st) {
+  if (!beforeTracking() || st.y !== FIRST_LEAVE_YEAR || (st.mode !== 'list' && st.m !== 0)) return '';
+  return `<p class="lt-note" role="note"><b>Leave tracking starts on ${esc(TRACKING_START_TEXT)}.</b> This is the first ${st.mode === 'list' ? 'year' : 'month'}, so the diary opens here until then. Days before January aren’t tracked here.</p>`;
 }
 function diarySections() {
   const ctx = state.ctx, st = state.diary, q = normaliseName(st.search);
@@ -2499,16 +2689,22 @@ function renderDiaryBody() {
   const label = document.getElementById('month-label');
   if (label.textContent !== nav.label) label.textContent = nav.label;
   const bar = label.parentElement;
-  bar.querySelector('[data-id="-1"]').setAttribute('aria-label', nav.prev);
+  const prev = bar.querySelector('[data-id="-1"]');
+  prev.setAttribute('aria-label', nav.prev);
+  if (prev.disabled !== nav.atFirst) {
+    if (nav.atFirst && document.activeElement === prev) bar.querySelector('[data-id="1"]').focus({ preventScroll: true });   // keyboard users keep a place in the bar
+    prev.disabled = nav.atFirst;
+  }
   bar.querySelector('[data-id="1"]').setAttribute('aria-label', nav.next);
   const now = bar.querySelector('[data-id="0"]');
   if (now.textContent !== nav.now) now.textContent = nav.now;
+  const note = diaryStartNote(st);
   const sections = diarySections();
-  if (!sections.length) { host.innerHTML = emptyHtml('No one matches', 'Try another name or leave group.', 'search'); return; }
-  if (st.mode === 'list') { host.innerHTML = renderLeaveList(st.y, sections); return; }
+  if (!sections.length) { host.innerHTML = note + emptyHtml('No one matches', 'Try another name or leave group.', 'search'); return; }
+  if (st.mode === 'list') { host.innerHTML = note + renderLeaveList(st.y, sections); return; }
   const dates = monthDays(st.y, st.m);
   const map = offMap(dates, { pending: st.pending, other: st.other });
-  host.innerHTML = st.mode === 'calendar' ? renderCalendar(dates, map, sections) : renderPlanner(dates, map, sections);
+  host.innerHTML = note + (st.mode === 'calendar' ? renderCalendar(dates, map, sections) : renderPlanner(dates, map, sections));
 }
 function renderPlanner(dates, map, sections) {
   const ctx = state.ctx;
@@ -2702,7 +2898,7 @@ function closedInHtml(year) {
   const all = [...types.keys()].sort();
   const kind = (d) => { const t = types.get(d) || ''; return isCloseDay(t) ? 'shut' : /jeff/i.test(t) ? 'jeff' : 'bh'; };
   const day = (d) => fmtDate(d, yearOf(d) !== year);
-  const bare = (n) => String(n || '').replace(/\s+\d{4}(?:\/\d{2})?(?=\s*(?:\(|$))/, '').trim();   // "Good Friday 2027" → "Good Friday"
+  const bare = bareName;   // "Good Friday 2027" → "Good Friday"
   const row = (cl, when, what) => (what === null
     ? `<li class="wide"><i class="sw closed-${cl}" aria-hidden="true"></i><span class="cl-when">${esc(when)}</span></li>`
     : `<li><i class="sw closed-${cl}" aria-hidden="true"></i><span class="cl-when">${esc(when)}</span><span class="cl-what">${esc(what)}</span></li>`);
@@ -2732,7 +2928,7 @@ function balanceCardHtml(s, year, years, own) {
   const unset = !b.allowanceMissing ? '' : own ? 'Your record has no allowance set yet. Ask a leave approver.' : 'No allowance is set on their FLR - Leave Allowances record.';
   return `<section class="card mine-balance" aria-labelledby="mine-h">
       <div class="mb-head"><h2 id="mine-h">Days left in ${year}</h2>
-        ${years.length > 1 ? `<fieldset class="seg" id="mine-year"><legend>Leave year</legend>${years.map((y) => `<label><input type="radio" name="mine-year" value="${y}" ${y === year ? 'checked' : ''}>${y}</label>`).join('')}</fieldset>` : ''}</div>
+        ${years.length > 1 ? `<fieldset class="seg" id="mine-year"><legend>Leave year</legend>${years.map((y) => `<label><input type="radio" name="mine-year" value="${y}" ${y === year ? 'checked' : ''}>${y === FIRST_LEAVE_YEAR && beforeTracking() ? esc(yearText(y)) : y}</label>`).join('')}</fieldset>` : ''}</div>
       <p class="mb-big"><span class="big num${b.remaining < 0 ? ' neg' : ''}">${fmtNum(b.remaining)}</span><span class="mb-unit">days</span></p>
       <dl class="mb-grid">
         <div><dt>Bookable</dt><dd class="num">${fmtNum(b.entitlement)}</dd></div>
@@ -2744,20 +2940,14 @@ function balanceCardHtml(s, year, years, own) {
       <p class="subtle neg">${esc(unset)}</p>` : ''}
     </section>`;
 }
-// A request as a row: its first day, its dates, its working days and the decision. On a person's record (given the
-// year) the row is a button that opens the request, and leave running over New Year says how much falls in that year.
-function requestRowHtml(r, year = null) {
+// A request on a person's record: its first day, its dates, its working days and the decision, as a button that opens the
+// request; leave running over New Year says how much falls in the year shown.
+function requestRowHtml(r, year) {
   const d = state.ctx.daysOf(r), start = d.from || r.from;
   const bits = [plural(d.total, 'working day')];
   if (year && d.from && (d.byYear[year] || 0) !== d.total) bits.push(`${fmtNum(d.byYear[year] || 0)} in ${year}`);
   if (r.halfDay !== 'none') bits.push(r.halfDay === 'am' ? 'morning off' : 'afternoon off');
   const badge = start ? `<b>${Number(start.slice(8))}</b><small>${MON[Number(start.slice(5, 7)) - 1]}</small>` : '<b>?</b>';
-  if (!year) {
-    return `<li class="mine-row">
-      <div class="ag-date">${badge}</div>
-      <div class="mr-main"><p class="mr-dates">${esc(fmtRange(d.from, d.to))}</p><p class="subtle">${esc(bits.join(' · '))}</p>${timesHtml(r)}</div>
-      <div class="mr-status">${pillFor(r.decision)}</div></li>`;
-  }
   return `<li><button class="mine-row" type="button" data-act="open" data-id="${esc(r.id)}">
       <span class="ag-date">${badge}</span>
       <span class="mr-main"><span class="mr-dates">${esc(fmtRange(d.from, d.to))}</span><span class="subtle">${esc(bits.join(' · '))}</span>${timesHtml(r)}</span>
@@ -2776,23 +2966,42 @@ function renderMine() {
   const years = leaveYears(), year = shownYear(years);
   setHead('My Leave', `${me.name}: your leave requests and the days you have left.`,
     `${avatar(me.name, me.id)}<span><b>${esc(me.name)}</b>: your leave requests and the days you have left.</span>`);
-  const rows = requests.slice().sort((x, z) => (z.from || '').localeCompare(x.from || '')).map((r) => requestRowHtml(r)).join('');
+  const note = beforeTracking()
+    ? `<p class="lt-note" role="note">Leave tracking starts on <b>${esc(TRACKING_START_TEXT)}</b>. Book ${FIRST_LEAVE_YEAR} leave here. Leave before then is handled the old way.</p>` : '';
   return `<div class="mine">
+    ${note}
     <div class="mine-top">
       ${balanceCardHtml(me, year, years, true)}
       <section class="card mine-request" aria-labelledby="mine-req-h">
         <h2 id="mine-req-h">Need time off?</h2>
         <p>Send a request with the leave form. It shows here as soon as it reaches monday.com, and a leave approver decides.</p>
-        ${form}
+        <div class="mine-acts">${form}<button class="btn lg" type="button" data-act="check-dates">Check dates</button></div>
         ${closedInHtml(year)}
       </section>
     </div>
-    <section aria-labelledby="mine-list-h">
-      <h2 class="mine-sect" id="mine-list-h">Your requests</h2>
-      ${rows ? `<ul class="mine-rows">${rows}</ul>` : emptyHtml('No requests yet', 'Requests you send with the leave form appear here.', 'diary')}
-    </section>
+    ${mineRequestsHtml(mineGroups(state.ctx, me, requests, year), year)}
     ${otherLeaveHtml(me, year, true)}
   </div>`;
+}
+// "Your requests in 2027": going ahead, waiting and not going ahead (which folds away), then any from before tracking
+// started. The rows aren't buttons: staff don't open the approvers' request sheet.
+function mineRequestsHtml(g, year) {
+  const n = (rows) => rows.reduce((a, row) => a + row.list.length, 0);
+  const rowHtml = (row) => `<li class="mine-row nb">
+      <div class="mr-main"><p class="mr-dates">${esc(fmtRange(row.from, row.to))}${row.list.length > 1 ? ` · ${row.list.length} requests` : ''}</p><p class="subtle">${esc(row.text)}</p></div>
+      <div class="mr-status">${pillFor(row.decision)}</div>
+      <div class="mr-times">${row.list.map(timesHtml).join('')}</div></li>`;
+  const list = (rows) => `<ul class="mine-rows">${rows.map(rowHtml).join('')}</ul>`;
+  const group = (title, rows) => (rows.length ? `<h3 class="mine-grp-h">${esc(title)} · ${n(rows)}</h3>${list(rows)}` : '');
+  const any = g.going.length || g.waiting.length || g.notGoing.length || g.before.length;
+  return `<section class="mine-reqs" aria-labelledby="mine-list-h">
+      <h2 class="mine-sect" id="mine-list-h">Your requests in ${year}</h2>
+      ${!any ? `<p class="mine-none">No requests in ${year}. Requests you send with the leave form appear here.</p>`
+        : g.going.length || g.waiting.length ? '' : '<p class="mine-nothing">Nothing going ahead or waiting.</p>'}
+      ${group('Going ahead', g.going)}${group('Waiting for a decision', g.waiting)}
+      ${g.notGoing.length ? `<details class="mine-grp" open><summary class="mine-grp-h"><h3>Not going ahead · ${n(g.notGoing)}</h3>${icon('chev-r')}</summary>${list(g.notGoing)}</details>` : ''}
+      ${group(`Before 1 Jan ${FIRST_LEAVE_YEAR}`, g.before)}
+    </section>`;
 }
 
 /* ---------- A person's leave record: leave approvers open it from a name in the Diary ---------- */
@@ -2839,10 +3048,9 @@ function renderRecord(s) {
   const groups = ctx.groupsOf(s).filter(Boolean).map((g) => g.name).sort();
   const where = groups.length ? groups.join(', ') : 'No leave group';
   setHead(s.name, `Leave record · ${where}`, `${avatar(s.name, s.id)}<span>Leave record · ${esc(where)}</span>`);
-  const first = `${year}-01-01`, last = `${year}-12-31`;
   const requests = ctx.requests.filter((r) => {
-    const owner = ctx.staffOf(r), d = ctx.daysOf(r);
-    return owner && String(owner.id) === String(s.id) && (!d.from || (d.from <= last && d.to >= first));
+    const owner = ctx.staffOf(r);
+    return owner && String(owner.id) === String(s.id) && inLeaveYear(ctx.daysOf(r), year);   // the year rule My Leave uses too
   }).sort((x, z) => (ctx.daysOf(z).from || '').localeCompare(ctx.daysOf(x).from || ''));
   return `<div class="mine record">
     <div class="mine-top">
@@ -2874,9 +3082,44 @@ const sheetUI = FLRUI.makeSheet(document.getElementById('sheet'), {
 });
 const alertUI = FLRUI.makeAlert(document.getElementById('confirm'), { onChange: () => syncInert(), fallbackFocus: focusTitle });
 
+/* ---------- Check dates: how many working days a request would use, before it's sent ---------- */
+const CHECK = 'check-dates';   // state.panel while the sheet is open
+function checkResultHtml() {
+  const { from, to } = state.check;
+  if (!from || !to) return '<p class="subtle">Choose the first and last day of the leave.</p>';
+  const c = checkDates(from, to, state.ctx.bankHolidays);
+  if (c.before) return `<div class="cd-res"><p>Leave before ${esc(TRACKING_START_TEXT)} is handled the old way, so it isn’t counted here. Choose dates from ${esc(TRACKING_START_TEXT)}.</p></div>`;
+  if (!c.total) return `<div class="cd-res zero"><p class="cd-n">0 working days</p><p>${esc(checkZeroText(c))}</p></div>`;
+  return `<div class="cd-res"><p><b>${esc(fmtRange(c.from, c.to))}</b> would use <b>${esc(plural(c.total, 'working day'))}</b>.${c.skipped.length ? ` Not counted: ${esc(skippedText(c.skipped))}.` : ''}</p></div>`;
+}
+function checkDatesHtml() {
+  if (!state.check.from) state.check.from = state.check.to = [TRACKING_START, addDays(todayInLondon(), 1)].sort()[1];   // the first day that can be booked
+  const row = (id, k, v, label) => `<label class="cd-row" for="${id}"><span class="cd-k">${k}</span><span class="cd-v" id="${id}-v">${esc(v ? fmtDate(v) : 'Choose a day')}</span>
+        <input class="cd-in" type="date" id="${id}" value="${esc(v || '')}" min="${TRACKING_START}" aria-label="${label}"></label>`;
+  return `<header class="dlg-head cd-head">
+      <div class="cd-title"><h2 id="sheet-title">Check dates</h2><p class="subtle">See how many working days a request would use before you send it.</p></div>
+      <button class="close" type="button" data-act="close" aria-label="Close Check dates">${icon('close')}</button>
+    </header>
+    <div class="dlg-body">
+      <div class="cd-rows">${row('cd-from', 'From', state.check.from, 'First day of leave')}${row('cd-to', 'To', state.check.to, 'Last day of leave')}</div>
+      <div id="cd-result" aria-live="polite">${checkResultHtml()}</div>
+    </div>
+    ${FORM_URL ? `<footer class="dlg-foot"><a class="btn primary lg cd-form" href="${esc(FORM_URL)}" target="_blank" rel="noopener">Open the leave form</a></footer>` : ''}`;
+}
+function checkDatesInput(t) {   // a day changed: the rows and the result follow, and the fields keep their focus
+  const v = cleanDate(t.value);
+  if (t.id === 'cd-from') {
+    state.check.from = v;
+    if (v && (!state.check.to || state.check.to < v)) { state.check.to = v; document.getElementById('cd-to').value = v; }
+  } else state.check.to = v;
+  for (const k of ['from', 'to']) document.getElementById(`cd-${k}-v`).textContent = state.check[k] ? fmtDate(state.check[k]) : 'Choose a day';
+  document.getElementById('cd-result').innerHTML = checkResultHtml();
+}
+
 function renderOverlay() {
   const r = state.panel && state.data ? state.data.requests.find((x) => x.id === state.panel) : null;
-  if (r) {
+  if (state.panel === CHECK && state.data) sheetUI.show(checkDatesHtml(), CHECK);
+  else if (r) {
     const pending = isPending(r), ev = pending ? evaluate(r) : null, d = state.ctx.daysOf(r);
     const anyBusy = Boolean(state.busy), name = displayName(r), sid = staffIdOf(r);
     const details = ev ? ev.details : r.cur.details || 'No checks recorded for this request.';
@@ -2894,7 +3137,7 @@ function renderOverlay() {
       </header>
       <div class="dlg-body">
         <div class="decide-row">${pillFor(r.decision)}${ev ? suggestPill(ev.suggested) : ''}</div>
-        ${ev ? `<p class="subtle">${esc(ev.reason)}</p>` : ''}
+        ${ev ? `<p class="subtle">${esc(screenReason(ev.reason))}</p>` : ''}
         <div class="statlist">
           <div class="stat"><span>Working days</span><b class="num">${fmtNum(d.total)}</b></div>
           ${ev && ev.leftAfter !== null ? `<div class="stat"><span>Left after this</span><b class="num">${fmtNum(ev.leftAfter)}</b></div>` : ''}
@@ -2925,7 +3168,7 @@ function requestDecision(id, action) {
   if (action === 'Accepted' && isPending(r)) {
     const ev = evaluate(r);
     if (ev.suggested !== 'Accept') {
-      state.confirm = { title: 'Accept anyway?', body: `The checks suggest ${ev.suggested}: ${ev.reason}.`, yes: 'Accept anyway', no: 'Go back', tone: 'accept', run: () => decide(id, 'Accepted') };
+      state.confirm = { title: 'Accept anyway?', body: `The checks suggest ${ev.suggested}: ${screenReason(ev.reason)}.`, yes: 'Accept anyway', no: 'Go back', tone: 'accept', run: () => decide(id, 'Accepted') };
       renderOverlay();
       return;
     }
@@ -3060,6 +3303,7 @@ document.addEventListener('click', async (ev) => {
       break;
     }
     case 'open': state.panel = id; renderOverlay(); break;
+    case 'check-dates': state.panel = CHECK; renderOverlay(); break;
     case 'person':
       if (state.panel) { state.panel = null; renderOverlay(); }   // from the request sheet: it goes down as the record opens
       openPerson(id, { opener: el });
@@ -3072,7 +3316,11 @@ document.addEventListener('click', async (ev) => {
     case 'month': {
       const st = state.diary, before = st.y * 12 + st.m, step = st.mode === 'list' ? 12 : 1;   // the Leave List shows a year
       if (id === '0') { st.y = startMonth.y; st.m = startMonth.m; }
-      else { const t = st.y * 12 + st.m + Number(id) * step; st.y = Math.floor(t / 12); st.m = t % 12; }
+      else {
+        const t = st.y * 12 + st.m + Number(id) * step;
+        if (Math.floor(t / 12) < FIRST_LEAVE_YEAR) break;   // nothing before tracking starts is tracked
+        st.y = Math.floor(t / 12); st.m = t % 12;
+      }
       renderDiaryBody();
       FLRUI.slideIn(document.getElementById('diary-body'), Math.sign(st.y * 12 + st.m - before));
       break;
@@ -3187,9 +3435,15 @@ document.addEventListener('keydown', (ev) => {
     renderOverlay();
   }
 });
+// Check dates: the whole row opens the date picker, where the browser can be asked to.
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+  if (t && t.matches && t.matches('input.cd-in') && typeof t.showPicker === 'function') { try { t.showPicker(); } catch (e) { /* the browser opens its own */ } }
+});
 document.addEventListener('input', (ev) => {
   const t = ev.target;
   if (t.dataset && t.dataset.note) { state.notes[t.dataset.note] = t.value; return; }
+  if (t.id === 'cd-from' || t.id === 'cd-to') { checkDatesInput(t); return; }
   if (t.id === 'diary-search') { state.diary.search = t.value; renderDiaryBody(); }
   if (t.id === 'all-search') { state.all.search = t.value; renderRequestsBody(); }
 });
