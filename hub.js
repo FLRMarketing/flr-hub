@@ -356,6 +356,7 @@
      waiting (Super Admins). They're asked for once the tiles are on screen and kept in this tab for five minutes; the
      panel says when they were read. Without the function, or after any error, the panel and badges stay hidden. */
   const ATTN_KEY = 'flr-hub:attention', ATTN_MS = 5 * 60 * 1000;
+  const ATTN_SEEN = 'flr-hub:attention-seen';   // this browser has had counts before (so the database has hub_attention)
   const tabStore = {
     get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* private window: asked again next time */ } },
@@ -466,8 +467,10 @@
     if (appearing && !reduced()) list.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease' });
   }
   // While the first counts load, a placeholder holds the panel's place for those likely to have one, so the tools
-  // don't jump across when it arrives.
+  // don't jump across when it arrives. Only in a browser that has had counts before: until Hub migration 2.3 is run
+  // (or if it's undone) there's no panel to come, and the tools mustn't jump back when the placeholder goes.
   function attentionLoading(home) {
+    if (!store.get(ATTN_SEEN)) return;
     const ids = (home.tiles || []).map(t => t && t.id);
     const likely = home.role === 'admin' || ids.includes('estimator') || (home.role === 'manager' && (ids.includes('speeding') || ids.includes('annual-leave')));
     if (!likely) return;
@@ -487,7 +490,11 @@
     let r;
     try { r = await client().rpc('hub_attention'); } catch (e) { r = { error: e }; }
     if (attnHome !== home) return;   // signed out or reloaded meanwhile
-    if (r.error || !r.data || typeof r.data !== 'object' || Array.isArray(r.data)) { tabStore.del(ATTN_KEY); attnAt = 0; renderAttention(null); return; }
+    if (r.error || !r.data || typeof r.data !== 'object' || Array.isArray(r.data)) {
+      if (r.error && missingFunction(r.error)) store.del(ATTN_SEEN);
+      tabStore.del(ATTN_KEY); attnAt = 0; renderAttention(null); return;
+    }
+    store.set(ATTN_SEEN, '1');
     attnAt = Date.now();
     tabStore.set(ATTN_KEY, JSON.stringify({ who, at: attnAt, a: r.data }));
     renderAttention(r.data, attnAt, home.tiles);
