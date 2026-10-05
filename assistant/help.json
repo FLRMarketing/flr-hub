@@ -1731,7 +1731,7 @@
         "postcode",
         "unassigned"
       ],
-      "answer": "In the Fitter Schedule’s “Jobs” tab each job shows once with all its fitters. Choose “Needs fitter” for jobs still missing one, or search by job, postcode or fitter. Tap a job to see each person’s dates, whether they’re Scheduled or TBC and, for Admins and Super Admins, today’s arrival, with “Open in monday.com”.",
+      "answer": "In the Fitter Schedule’s “Jobs” tab each job shows once with all its fitters. “Today” lists today’s jobs with today’s crew; “Needs fitter” shows jobs still missing one, with the day. Search by job, address, postcode, fitter or number plate. Tap a job for its people, later and earlier bookings and “Open in monday.com”; Admins and Super Admins also see what each van did today (“Van arrived 07:42”).",
       "link": {
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
