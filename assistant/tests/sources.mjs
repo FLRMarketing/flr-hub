@@ -157,6 +157,20 @@ for (const [setup, kind, q, names, want, line] of cases) {
   same(`${at} (card "${card.title}") source`, card.source, want);
   if (line) same(`${at} line`, sourceLine(card.source, NOW), line);
 }
+// Before leave tracking starts (1 January 2027), "who's off" says when the list starts, as Annual Leave's Today does,
+// rather than that everyone's in; from that day, as before. The look-up goes by today's date.
+{
+  const before = new Date().toISOString().slice(0, 10) < '2027-01-01';
+  db = { leave_home: { ...leaveHome('staff'), today: { off: [], weekend: false, closure: null } } };
+  const c1 = await lookUp('leave.off', 'who is off today', { uid: 'u-faye', name: 'Faye Turner' }, []);
+  const t1 = (c1 && c1.text) || '';
+  if (before ? !/list starts on 1 January 2027/.test(t1) : !/Everyone’s in today/.test(t1)) problems.push(`who's off today with nobody listed: "${t1}"`);
+  if (!c1 || !c1.source) problems.push(`who's off today with nobody listed: no source`);
+  db = SETUP.approver();
+  const c2 = await lookUp('leave.off', 'who is off on 20 Oct 2026', { uid: 'u-faye', name: 'Faye Turner' }, []);
+  if (!/list starts on 1 January 2027/.test((c2 && c2.text) || '')) problems.push(`an approver asking about a day in 2026: "${c2 && c2.text}"`);
+  looked += 2;
+}
 const kinds = new Set(cases.map(c => c[1])), dataKinds = new Set(help.entries.filter(e => e.data).map(e => e.data.replace(/^leave\.today$/, 'leave.off')));
 for (const k of dataKinds) if (!kinds.has(k)) problems.push(`help.json's look-up "${k}" isn’t checked here`);
 

@@ -237,6 +237,10 @@ function leaveCard(kind, q, slots, L) {
   // names only, as their Today tab shows it.
   const today = L.core.todayInLondon(), span = when(q, today), PART = { all: 'All day', am: 'Morning', pm: 'Afternoon' };
   const title = span.label === 'today' ? 'Who’s off today' : `Who’s off ${span.label}`;
+  // Before leave tracking starts nothing is listed, so say when the list starts rather than that everyone's in, as
+  // Annual Leave's Today does.
+  const START = `${L.core.FIRST_LEAVE_YEAR}-01-01`;
+  const notYet = { title, text: `Annual Leave’s list starts on 1 January ${L.core.FIRST_LEAVE_YEAR}, when leave tracking begins. Until then it can’t show who is off, because leave before January was booked the old way.`, link: leaveOpen };
   if (!L.approver) {
     if (span.from !== today || span.to !== today) return { title, text: 'Annual Leave shows you who’s off today. Leave approvers can see other days in the Diary.', link: leaveOpen };
     const t = L.h.today;
@@ -244,7 +248,7 @@ function leaveCard(kind, q, slots, L) {
     if (t.closure) return { title, text: `The office is closed today: ${/shutdown|close day/i.test(t.closure.kind || '') ? 'Company close day' : t.closure.name}.`, link: leaveOpen };
     if (t.weekend) return { title, text: 'It’s the weekend: no one is working today.', link: leaveOpen };
     const off = (t.off || []).map(p => ({ title: p.name, meta: PART[p.part] || PART.all })).sort((a, z) => a.title.localeCompare(z.title));
-    if (!off.length) return { title, big: '0', unit: 'people off', text: 'Everyone’s in today.', link: leaveOpen };
+    if (!off.length) return today < START ? notYet : { title, big: '0', unit: 'people off', text: 'Everyone’s in today.', link: leaveOpen };
     return { title, big: String(off.length), unit: off.length === 1 ? 'person off' : 'people off', list: off.slice(0, 15), note: 'Names only, not the kind of leave.', link: leaveOpen };
   }
   const people = new Map();
@@ -263,7 +267,7 @@ function leaveCard(kind, q, slots, L) {
     title: p.name,
     meta: [[...p.kinds].join(', '), span.from === span.to ? PART[p.days[0].part] : p.days.length === 1 ? `${dayMonth(p.days[0].d)}, ${PART[p.days[0].part].toLowerCase()}` : `${dayMonth(p.days[0].d)} – ${dayMonth(p.days[p.days.length - 1].d)}`].join(' · '),
   }));
-  if (!list.length) return { title, big: '0', unit: 'people off', text: 'No one has leave booked.', link: leaveOpen };
+  if (!list.length) return span.to < START ? notYet : { title, big: '0', unit: 'people off', text: 'No one has leave booked.', link: leaveOpen };
   return { title, big: String(list.length), unit: list.length === 1 ? 'person off' : 'people off', list: list.slice(0, 15), note: (list.length > 15 ? `And ${list.length - 15} more. ` : '') + 'Accepted annual leave and other leave, as the Diary shows it.', link: leaveOpen };
 }
 
