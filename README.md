@@ -63,7 +63,7 @@ A tile's link is either a page of this site such as `speeding/` (same tab) or an
 editor can do what Hub settings does:
 
 ```sql
-select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated every morning', 'speeding/', 'listed', 20);
+select public.admin_set_hub_tile('speeding', 'Fleet Management', 'Speeding by driver and vehicle, updated through the working day', 'speeding/', 'listed', 20);
 select public.admin_set_hub_tile_person('speeding', 'name@flr.co.uk', true);   -- by email; false takes them off the list
 select public.admin_accounts();                                               -- everyone, with their role, status and apps
 ```
@@ -79,10 +79,16 @@ only that driver's own log, anyone else nothing, and each view is recorded in th
 - **Vehicle details:** the Monday fleet board is synced every 15 minutes by the Supabase Edge Function `flr-fleet` (in
   the Estimator's repository, `supabase/functions/flr-fleet/`, with its setup steps in its README), which writes only
   what changed. `select public.admin_fleet_status();` shows how it's doing.
-- **Speeding data:** since 1 Oct 2026 the function can do this too, but FleetView doesn't yet let FLR's API key read
-  Driver Performance. Until it does, the morning Claude refresh writes it with `../flr-speeding-report/push_supabase.py`.
-  The same script loads the staff photos (`--photos`). It uses a writer key kept in `~/.config/flr/speeding-writer.key`,
-  of which the database holds only the SHA-256.
+- **Speeding data:** FleetView doesn't let FLR's API key read Driver Performance, so the FLR Fleet Management updater
+  reads it: a Chrome add-on (the Estimator's repository, `extension/fleet-updater/`) that every 15 minutes reads it in a
+  signed-in FleetView tab and sends it to `flr-fleet` (`?op=peek`, then `?op=upload`) with an FLR Super Admin's
+  sign-in. It runs only while that computer is on with Chrome open, so the page counts only the working day (Monday to
+  Friday, 9am to 5pm UK time) before it says the figures haven't updated. Bank holidays are worked out in the page, and
+  FLR's close days come from the Monday board "FLR - Bank Holidays & Closures" (the Annual Leave calendar, from
+  flr-leave's copy) as the `closures` collection of `speeding_data()` (Fleet migration 2.3,
+  `20261005000100_flr_fleet_close_days.sql`). Add next year's close days to that board and Fleet Management follows.
+- **Staff photos:** `../flr-speeding-report/push_supabase.py --photos` loads them, with a writer key kept in
+  `~/.config/flr/speeding-writer.key`, of which the database holds only the SHA-256.
 - **Fresh data:** the page re-reads it when it comes back to the front after five minutes, and every 15 minutes while it
   stays open.
 

@@ -376,7 +376,7 @@ const onlyYourDriving = { care: true, title: 'Only your own driving', text: 'Fle
 async function fleet(kind, q, slots) {
   const F = await fleetData();
   if (F.card) return F.card;
-  if (!F.rep || !F.rep.fleet) return { care: true, title: 'No driving data yet', text: 'The speeding report hasn’t been loaded yet. It updates every morning.', link: hubLink('speeding/', 'Open Fleet Management') };
+  if (!F.rep || !F.rep.fleet) return { care: true, title: 'No driving data yet', text: 'The speeding report hasn’t been loaded yet. It updates every 15 minutes through the working day.', link: hubLink('speeding/', 'Open Fleet Management') };
   const plate = PLATE.test(q), named = slots.length || plate;
   // Nothing by that name or registration: say so when the question clearly named something, else no answer at all.
   const notFound = what => plate || nameLike(q, slots)

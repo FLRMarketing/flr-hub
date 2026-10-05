@@ -1184,7 +1184,7 @@ html.drv .f-driver{display:none}
         <h1 class="lt-title" id="h-report" tabindex="-1">Drivers</h1>
         <dl class="meta" aria-live="polite">
           <div><dt>Period</dt><dd id="m-period">Loading…</dd></div>
-          <div><dt>Refreshed</dt><dd id="m-refreshed">Loading…</dd></div>
+          <div><dt>Updated</dt><dd id="m-refreshed">Loading…</dd></div>
         </dl>
       </header>
       <div class="alerts" id="alerts" role="status"></div>
@@ -1215,12 +1215,12 @@ html.drv .f-driver{display:none}
           <div class="mv-head">
             <div class="mv-text"><h3 id="mv-title">Movement in the review order</h3><p class="mv-sum" id="mv-sum" aria-live="polite"></p></div>
             <div class="mv-ctl">
-              <fieldset class="seg mv-seg" id="f-since"><legend>Compare with</legend><label><input type="radio" name="f-since" value="refresh" checked>Last refresh</label><label><input type="radio" name="f-since" value="week">A week ago</label></fieldset>
+              <fieldset class="seg mv-seg" id="f-since"><legend>Compare with</legend><label><input type="radio" name="f-since" value="refresh" checked>Yesterday</label><label><input type="radio" name="f-since" value="week">A week ago</label></fieldset>
               <button type="button" class="linkbtn mv-replay" id="mv-replay" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.2 8a4.8 4.8 0 1 0 1.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.4 1.9v2.9h2.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Replay</button>
             </div>
           </div>
           <ul class="mv-groups" id="mv-groups"></ul>
-          <p class="mv-note" id="mv-note" hidden>Earlier places here are rebuilt from event data, not a saved refresh.</p>
+          <p class="mv-note" id="mv-note" hidden>Earlier places here are rebuilt from event data, not figures saved at the time.</p>
         </div>
         <div class="listwrap" id="list"></div>
       </section>
@@ -1248,7 +1248,7 @@ html.drv .f-driver{display:none}
           <div class="body" id="how-body"></div>
         </details>
       </section>
-      <footer class="foot"><span>© FLR Group · Internal: contains driver data. For fleet managers only.</span><span>Source: FleetView (FVS Telematics), refreshed automatically each morning, and the Monday fleet board, synced every 15 minutes. Map data © OpenStreetMap contributors.</span></footer>
+      <footer class="foot"><span>© FLR Group · Internal: contains driver data. For fleet managers only.</span><span>Source: FleetView (FVS Telematics), updated every 15 minutes while FLR's updater is running, and the Monday fleet board, synced every 15 minutes. Map data © OpenStreetMap contributors.</span></footer>
     </div>
   </section>
 
@@ -1318,7 +1318,7 @@ html.drv .f-driver{display:none}
   </section>
 
   <section class="view off" id="view-fleet" data-title="Vehicles" inert>
-    <div class="vin"><div id="fleet-page"></div><footer class="foot"><span>© FLR Group · Internal: contains driver data. For fleet managers only.</span><span>Source: FleetView (FVS Telematics), refreshed automatically each morning, and the Monday fleet board, synced every 15 minutes. Map data © OpenStreetMap contributors.</span></footer></div>
+    <div class="vin"><div id="fleet-page"></div><footer class="foot"><span>© FLR Group · Internal: contains driver data. For fleet managers only.</span><span>Source: FleetView (FVS Telematics), updated every 15 minutes while FLR's updater is running, and the Monday fleet board, synced every 15 minutes. Map data © OpenStreetMap contributors.</span></footer></div>
   </section>
 
   <section class="view off" id="view-driver" data-title="Driver" inert>
@@ -2489,18 +2489,67 @@ html.drv .f-driver{display:none}
     armReplay();
   }
 
+  // The speeding figures come from the FLR Fleet Management updater, a Chrome add-on on an FLR Super Admin's computer. It
+  // sends them every 15 minutes, but only while that computer is on with Chrome open, so no updates overnight, at weekends
+  // or on holiday is normal. Only the working day counts towards "out of date": Monday to Friday, 9am to 5pm UK time, not
+  // bank holidays (England and Wales, worked out here) and not FLR's close days. Those come from the Monday board
+  // "FLR - Bank Holidays & Closures" (bank holidays, the Jeff Day and company close days such as the Christmas shutdown):
+  // the calendar the Annual Leave app uses, which FLR updates on Monday each year. The database sends its dated days as
+  // the `closures` collection.
+  const WORK = { from: 9, to: 17, staleHours: 2 };
+  let closeDays = new Set();
+  const utcDay = (y, m, d) => new Date(Date.UTC(y, m - 1, d));
+  const dayIso = d => d.toISOString().slice(0, 10);
+  function bankHolidays(y){
+    // Easter Sunday by the Gregorian computus, for Good Friday and Easter Monday.
+    const a = y % 19, b = Math.floor(y / 100), c = y % 100;
+    const h = (19 * a + b - Math.floor(b / 4) - Math.floor((b - Math.floor((b + 8) / 25) + 1) / 3) + 15) % 30;
+    const l = (32 + 2 * (b % 4) + 2 * Math.floor(c / 4) - h - c % 4) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const easter = utcDay(y, Math.floor((h + l - 7 * m + 114) / 31), (h + l - 7 * m + 114) % 31 + 1).getTime();
+    const firstMonday = mo => utcDay(y, mo, 1 + (8 - utcDay(y, mo, 1).getUTCDay()) % 7);
+    const lastMonday = mo => { const end = utcDay(y, mo + 1, 0); return utcDay(y, mo, end.getUTCDate() - (end.getUTCDay() + 6) % 7); };
+    const out = new Set([new Date(easter - 2 * 864e5), new Date(easter + 864e5), firstMonday(5), lastMonday(5), lastMonday(8)].map(dayIso));
+    // New Year's Day, Christmas Day and Boxing Day move to the next free weekday when they fall at a weekend.
+    for (const [mo, d] of [[1, 1], [12, 25], [12, 26]]) {
+      let t = utcDay(y, mo, d);
+      while (t.getUTCDay() === 0 || t.getUTCDay() === 6 || out.has(dayIso(t))) t = new Date(t.getTime() + 864e5);
+      out.add(dayIso(t));
+    }
+    return out;
+  }
+  const holidaysByYear = {}, ukHour = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: 'numeric', hourCycle: 'h23' });
+  // Hours of the working day between two times (ms), looking back three weeks at most.
+  function workingHoursBetween(t0, t1, closed = closeDays){
+    const first = new Date(Math.max(t0, t1 - 21 * 864e5));
+    let ms = 0;
+    for (let d = utcDay(first.getUTCFullYear(), first.getUTCMonth() + 1, first.getUTCDate() - 1); d.getTime() <= t1; d = new Date(d.getTime() + 864e5)) {
+      const y = d.getUTCFullYear(), wd = d.getUTCDay();
+      if (wd === 0 || wd === 6 || closed.has(dayIso(d)) || (holidaysByYear[y] = holidaysByYear[y] || bankHolidays(y)).has(dayIso(d))) continue;
+      // UK clocks change at 1am on a Sunday, so midday gives the day's offset from UTC.
+      const off = (+ukHour.format(new Date(d.getTime() + 12 * 36e5)) - 12) * 36e5;
+      ms += Math.max(0, Math.min(d.getTime() + WORK.to * 36e5 - off, t1) - Math.max(d.getTime() + WORK.from * 36e5 - off, t0));
+    }
+    return ms / 36e5;
+  }
+
   function renderMeta(){
     const alerts = [];
     if (report) {
       $('#m-period').textContent = `${longDate(report.periodStart)} – ${longDate(report.periodEnd)} (rolling 30 days)`;
       const gen = new Date(report.generatedAt);
-      $('#m-refreshed').textContent = gen.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      const ageH = (Date.now() - gen.getTime()) / 36e5;
+      // When FleetView was last read: the report's own time, or later when a check since then found nothing new.
+      const checked = runStatus && runStatus.ok && runStatus.at && new Date(runStatus.at) > gen ? new Date(runStatus.at) : gen;
+      $('#m-refreshed').textContent = checked.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      const when = d => d.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      // A Super Admin can put it right on the updater's computer; anyone else needs to tell one.
+      const fix = hubAdmin() ? 'Check the computer the FLR Fleet Management updater runs on: switched on, Chrome open, and FleetView and the updater both signed in.' : "Tell an FLR Super Admin if this doesn't clear.";
       if (runStatus && runStatus.ok === false && new Date(runStatus.at) > gen) {
-        alerts.push(`<div class="alert bad"><b>Refresh failed.</b><span>The refresh on ${esc(new Date(runStatus.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))} didn't complete: ${esc(runStatus.message || 'no reason given')}. The figures below are from the last successful refresh.</span></div>`);
+        alerts.push(`<div class="alert bad"><b>Update failed.</b><span>The update at ${esc(when(new Date(runStatus.at)))} didn't complete: ${esc(String(runStatus.message || 'no reason given').replace(/\.$/, ''))}. The figures below are from the last successful update. ${fix}</span></div>`);
       }
-      if (ageH > 26) alerts.push(`<div class="alert warn"><b>Data is out of date.</b><span>These figures were last refreshed ${ageH < 48 ? 'more than a day' : Math.floor(ageH/24) + ' days'} ago. The morning refresh needs the Claude app and Chrome open, and FleetView signed in.</span></div>`);
-      if (eventsSeen && !incidentsLoaded) alerts.push(`<div class="alert warn"><b>Incident detail is missing.</b><span>The latest refresh didn't include each vehicle's event list, so driver histories and the speeding map aren't available and the serious-incident list shows only the 10 largest. Check individual incidents in FleetView.</span></div>`);
+      // The updater only runs while its computer is on, so a quiet evening or weekend is normal: only the working day counts
+      // (see WORK), and two hours of it without an update means the updates have stopped.
+      else if (workingHoursBetween(checked.getTime(), Date.now()) >= WORK.staleHours) alerts.push(`<div class="alert warn"><b>Not updating.</b><span>The speeding figures were last updated ${esc(when(checked))}, and normally update every 15 minutes through the working day. ${fix}</span></div>`);
+      if (eventsSeen && !incidentsLoaded) alerts.push(`<div class="alert warn"><b>Incident detail is missing.</b><span>The latest update didn't include each vehicle's event list, so driver histories and the speeding map aren't available and the serious-incident list shows only the 10 largest. Check individual incidents in FleetView.</span></div>`);
       // FleetView's own count is read first; events that arrive while the refresh runs can make the read count higher, which is fine.
       if (report.fleet.fvReported != null && report.fleet.fvEvents < report.fleet.fvReported) alerts.push(`<div class="alert warn"><b>Check the import.</b><span>FleetView reported ${fmt(report.fleet.fvReported)} speeding events but only ${fmt(report.fleet.fvEvents)} were read, so some incidents may be missing.</span></div>`);
     } else {
@@ -2516,7 +2565,7 @@ html.drv .f-driver{display:none}
     $('#countline').textContent = '';
     $('#moves').hidden = true;
     const msg = dbState === 'loading' ? '<b>Loading the latest report…</b>' :
-      '<b>No report data yet.</b>The first figures appear after the morning refresh has run successfully.';
+      '<b>No report data yet.</b>The first figures appear after the first update from FleetView.';
     $('#list').innerHTML = `<div class="empty">${msg}</div>`;
     $('#serious').innerHTML = '';
     renderHow();
@@ -2666,8 +2715,12 @@ html.drv .f-driver{display:none}
   const TRI = '<svg viewBox="0 0 10 8" aria-hidden="true" focusable="false"><path d="M5 .6 9.6 7.4H.4z"/></svg>';
   const ordinal = n => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
   const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-  const baseDay = b => (b.generatedAt ? new Date(b.generatedAt) : new Date(b.periodEnd + 'T12:00:00')).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+  const baseDay = b => (b.generatedAt ? new Date(b.generatedAt) : new Date(b.periodEnd + 'T12:00:00Z')).toLocaleDateString('en-GB', {timeZone: 'Europe/London', weekday:'short', day:'numeric', month:'short'});   // the UK day, wherever it's read
   const whoOf = r => isSpare(r) ? `Spare (${r.reg})` : r.d;
+  // "Yesterday" and "a week ago" only when the saved day is exactly that by today's UK date. Otherwise the day itself: on
+  // a Monday the last saved day is usually Friday, as the updater's computer is off at the weekend.
+  const ukToday = () => new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/London'}).format(new Date());
+  const relDay = (base, kind) => base.periodEnd === addDays(ukToday(), kind === 'week' ? -7 : -1) ? (kind === 'week' ? 'a week ago' : 'yesterday') : '';
   function reviewPlaces(drivers, fleet){
     const avg = fleet && fleet.miles ? fleet.flagged / fleet.miles * 100 : 0;
     const fs = fleet && fleet.fleetScore != null ? fleet.fleetScore : null;
@@ -2675,7 +2728,7 @@ html.drv .f-driver{display:none}
     rows.sort((a, b) => SORTS.review(a, b) || a.d.localeCompare(b.d) || a.reg.localeCompare(b.reg));
     return {at: new Map(rows.map((r, i) => [r.reg, {...r, pos: i + 1}])), avg, n: rows.length, fleetScore: fs};
   }
-  // The refresh to compare with: the one before this, or the latest from at least a week earlier.
+  // The day to compare with: the latest one saved before this report (yesterday), or the latest from at least a week earlier.
   function baseline(kind){
     if (!report) return null;
     const earlier = h => h && h.periodEnd && h.fleet && Array.isArray(h.drivers) &&
@@ -2685,6 +2738,10 @@ html.drv .f-driver{display:none}
     docs.sort((a, b) => b.periodEnd.localeCompare(a.periodEnd) || String(b.generatedAt || '').localeCompare(String(a.generatedAt || '')));
     return docs[0] || null;
   }
+  // Both comparisons. "A week ago" adds nothing while it's the same saved day as the other one, and when it has nothing
+  // of its own the list shows the other comparison rather than none.
+  function bases(){ const refresh = baseline('refresh'), week = baseline('week'); return {refresh, week: week && week !== refresh ? week : null}; }
+  const sinceKind = b => prefs.since === 'week' && !b.week && b.refresh ? 'refresh' : prefs.since;
   function moveBetween(then, now, reg){
     const b = now.at.get(reg), a = then.at.get(reg);
     if (!b) return null;
@@ -2693,7 +2750,7 @@ html.drv .f-driver{display:none}
   function computeMoves(){
     moves = null;
     if (!report || !view || view.week != null) return;
-    const base = baseline(prefs.since);
+    const b = bases(), base = b[sinceKind(b)];
     if (!base) return;
     const now = reviewPlaces(nowDrivers(), nowFleet()), then = reviewPlaces(base.drivers, base.fleet);
     moves = {base, now, then, by: new Map([...now.at.keys()].map(reg => [reg, moveBetween(then, now, reg)])),
@@ -2737,15 +2794,17 @@ html.drv .f-driver{display:none}
     const el = $('#moves');
     if (!report || !view || view.week != null) { el.hidden = true; return; }
     el.hidden = false;
-    const has = {refresh: !!baseline('refresh'), week: !!baseline('week')};
+    const b = bases(), kind = sinceKind(b);
     for (const inp of el.querySelectorAll('input[name="f-since"]')) {
-      inp.checked = inp.value === prefs.since; inp.disabled = !has[inp.value];
-      inp.closest('label').title = has[inp.value] ? '' : 'No saved refresh to compare with yet';
+      const base = b[inp.value], rel = base ? relDay(base, inp.value) : '', label = inp.closest('label');
+      inp.checked = inp.value === kind; inp.disabled = !base;
+      label.lastChild.textContent = !base ? (inp.value === 'week' ? 'A week ago' : 'Yesterday') : rel ? rel[0].toUpperCase() + rel.slice(1) : baseDay(base);
+      label.title = base ? '' : inp.value === 'week' && b.refresh ? 'No other day saved from a week or more ago yet' : 'Nothing saved to compare with yet';
     }
     if ($('#f-since')._seg) $('#f-since')._seg.sync(true);
     if (!moves) {
       $('#mv-title').textContent = 'Movement in the review order';
-      $('#mv-sum').textContent = 'Arrows appear once there is an earlier refresh to compare with.';
+      $('#mv-sum').textContent = 'Arrows appear once there is an earlier day to compare with.';
       $('#mv-groups').innerHTML = ''; $('#mv-note').hidden = true;
       return;
     }
@@ -2796,17 +2855,19 @@ html.drv .f-driver{display:none}
     const land = () => list.classList.remove('replay');
     if (prefersReduced() || !replaying.length) requestAnimationFrame(() => requestAnimationFrame(land)); else setTimeout(land, 420);
   }
-  // The first time a viewer sees a refresh, it plays once as the list comes into view.
+  // The first time a viewer sees the day's changes, they play once as the list comes into view (once a day, though the
+  // figures update every 15 minutes).
   const SEEN_KEY = 'flr-report-moves-seen';
+  const replayId = () => report.periodEnd + '|' + (moves.base.periodEnd || '') + '|' + prefs.since;
   function armReplay(){
     if (!moves || seenIO || !('IntersectionObserver' in window)) return;
-    const id = report.generatedAt + '|' + prefs.since;
+    const id = replayId();
     let seen = null; try { seen = localStorage.getItem(SEEN_KEY); } catch(e) {}
     if (seen === id) return;
     seenIO = new IntersectionObserver(es => {
       if (!es.some(e => e.isIntersecting) || !moves || $('#view-report').classList.contains('off')) return;
       seenIO.disconnect(); seenIO = null;
-      try { localStorage.setItem(SEEN_KEY, report.generatedAt + '|' + prefs.since); } catch(e) {}
+      try { localStorage.setItem(SEEN_KEY, replayId()); } catch(e) {}
       setTimeout(replayMoves, 300);
     }, {threshold: .9});
     seenIO.observe($('#moves'));
@@ -2815,16 +2876,18 @@ html.drv .f-driver{display:none}
     if (!report || !view || view.week != null) return '';
     const now = reviewPlaces(nowDrivers(), nowFleet()), me = now.at.get(r.reg);
     if (!me) return '';
-    const items = [['refresh', 'the last refresh'], ['week', 'a week ago']].map(([k, label]) => {
-      const base = baseline(k); if (!base) return '';
-      const then = reviewPlaces(base.drivers, base.fleet), m = moveBetween(then, now, r.reg);
+    const b = bases();
+    const items = ['refresh', 'week'].map(k => {
+      const base = b[k]; if (!base) return '';
+      const rel = relDay(base, k), then = reviewPlaces(base.drivers, base.fleet), m = moveBetween(then, now, r.reg);
       const head = m.isNew ? 'New' : !m.d ? 'No change' : `${m.d > 0 ? 'Up' : 'Down'} ${plural(Math.abs(m.d), 'place', 'places')}`;
-      return `<li><span class="dmv-b">${moveBadge(m)}</span><div><p class="dmv-h"><b>${head}</b> since ${label} <span class="role">${esc(baseDay(base))}${m.isNew ? '' : ` · was ${ordinal(m.from)}`}</span></p><p class="dmv-why">${esc(moveWhy(m, then, now))}</p></div></li>`;
+      const role = [rel ? baseDay(base) : '', m.isNew ? '' : `was ${ordinal(m.from)}`].filter(Boolean).join(' · ');
+      return `<li><span class="dmv-b">${moveBadge(m)}</span><div><p class="dmv-h"><b>${head}</b> since ${esc(rel || baseDay(base))} <span class="role">${esc(role)}</span></p><p class="dmv-why">${esc(moveWhy(m, then, now))}</p></div></li>`;
     }).filter(Boolean);
-    const rebuilt = (baseline('refresh') || baseline('week') || {}).rebuilt;
+    const rebuilt = (b.refresh || b.week || {}).rebuilt;
     return `<section class="card dmove" aria-labelledby="h-dmove"><div class="card-h"><h3 id="h-dmove">Review order</h3><span class="dmv-pos"><b>${ordinal(me.pos)}</b> of ${now.n}</span></div>
-      ${items.length ? `<ul class="dmv-list">${items.join('')}</ul>` : '<p class="note">Movement shows once there is an earlier refresh to compare with.</p>'}
-      ${items.length && rebuilt ? `<p class="note">Earlier places here are rebuilt from event data, not a saved refresh.</p>` : ''}</section>`;
+      ${items.length ? `<ul class="dmv-list">${items.join('')}</ul>` : '<p class="note">Movement shows once there is an earlier day to compare with.</p>'}
+      ${items.length && rebuilt ? `<p class="note">Earlier places here are rebuilt from event data, not figures saved at the time.</p>` : ''}</section>`;
   }
 
   // ---- Incidents ----
@@ -2948,15 +3011,15 @@ html.drv .f-driver{display:none}
         <p><strong>Serious incidents</strong> are those recorded 20 mph or more over the speed limit. The driver details also show incidents 15 mph or more over.</p>
         <p><strong>Review order</strong> puts priority review first, then above fleet average, then limited evidence, then at or below average. Within each group, drivers with more serious incidents come first, then higher rates.</p></div>
       <div><h3>Movement arrows</h3>
-        <p>The arrows show how each vehicle's place in the review order has changed since the last refresh, or since a week ago (use the switch above the list). A red ▲ means it moved up the list, towards review. A green ▼ means it moved down. A line means it's in the same place, and a filled arrow means it changed group.</p>
+        <p>The arrows show how each vehicle's place in the review order has changed since the last day saved before today's figures, or since a week ago (use the switch above the list). The switch says "Yesterday" or "A week ago" when it's exactly that, and otherwise names the day: on a Monday it's usually Friday, as the updater's computer is off at the weekend. A red ▲ means it moved up the list, towards review. A green ▼ means it moved down. A line means it's in the same place, and a filled arrow means it changed group.</p>
         <p>Places are worked out with the same rules as the list, then and now. A vehicle can move without new incidents when other drivers' figures change, or when older incidents leave the 30 days, so open the driver's page to see why before reading much into a small move.</p></div>
       <div><h3>Periods and data</h3>
-        <p>The report covers the 30 days up to each morning's refresh. Weekly views use FleetView's own weekly mileage (Monday to Sunday), so the first and last weeks can be part weeks.</p>
-        <p>Data comes from FleetView's Driver Performance speeding events and mileage, read with a signed-in FleetView session. Nothing in FleetView is changed. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page.</p></div>
+        <p>The report covers the last 30 days. It's updated every 15 minutes by the FLR Fleet Management updater, a Chrome add-on on an FLR Super Admin's computer, while that computer is on with Chrome open and FleetView signed in, so it doesn't change overnight or at weekends when the computer is off. Weekly views use FleetView's own weekly mileage (Monday to Sunday), so the first and last weeks can be part weeks.</p>
+        <p>Data comes from FleetView's Driver Performance speeding events and mileage, read through that signed-in FleetView session and worked out by FLR's server with the same rules as before. Nothing in FleetView is changed. If the updates fail for 45 minutes, or the figures haven't updated for two hours of the working day (Monday to Friday, 9am to 5pm, not bank holidays or FLR's close days), a notice appears at the top of this page. FLR's close days come from the Monday board "FLR - Bank Holidays & Closures", the calendar the Annual Leave app uses, so changes made there each year apply here too.</p></div>
       <div><h3>Filters</h3>
         <p>The driver list opens showing every vehicle, all statuses, cars and vans, for the last 30 days, in review order. <strong>Reset filters</strong> clears the search and puts status, vehicle type, period and sort back to these defaults. It only changes what the list shows: the imported data and the calculations stay the same. Filters aren't kept in the page address; the sort order is remembered in your browser, and Reset filters puts that back to review order too.</p></div>
       <div><h3>Driver performance</h3>
-        <p>Each driver's page also shows FleetView's own Driver Performance figures for the vehicle: its overall driver score and its counts of harsh braking, harsh acceleration and harsh cornering events. They're copied from FleetView at each refresh, for the period FleetView reports, and they aren't calculated by this report. The harsh event counts are for information only. The overall score also counts in the statuses (see "FleetView score" above), and it depends on FleetView's rating settings, so a change to those settings can move drivers in the review order. "Data unavailable" means FleetView didn't provide that figure; 0 is shown only when FleetView reports 0.</p></div>
+        <p>Each driver's page also shows FleetView's own Driver Performance figures for the vehicle: its overall driver score and its counts of harsh braking, harsh acceleration and harsh cornering events. They're copied from FleetView at each update, for the period FleetView reports, and they aren't calculated by this report. The harsh event counts are for information only. The overall score also counts in the statuses (see "FleetView score" above), and it depends on FleetView's rating settings, so a change to those settings can move drivers in the review order. "Data unavailable" means FleetView didn't provide that figure; 0 is shown only when FleetView reports 0.</p></div>
       <div><h3>Who was driving</h3>
         <p>FleetView records events against a vehicle. The name shown is the FleetView-assigned driver for that vehicle, which may not be the person driving at the time. "Spare" vehicles have no assigned driver.</p></div>
       <div><h3>Speed limits</h3>
@@ -3277,7 +3340,7 @@ html.drv .f-driver{display:none}
   function renderMapUnavailable(){
     const why = dbState === 'loading' || (report && !eventsSeen) ? 'Loading the map data…' :
       dbState === 'unavailable' ? "Report data can't be loaded here. Open this page from its claude.ai link while signed in." :
-      !report ? 'No report data yet. The map appears after the morning refresh has run.' :
+      !report ? 'No report data yet. The map appears after the first update from FleetView.' :
       "The latest refresh didn't include each vehicle's event list, so the map can't be drawn. Check incidents in FleetView.";
     $('#map-count').textContent = why; $('#map-recon').innerHTML = ''; $('#mf-fline').innerHTML = '';
     $('#ml-table').innerHTML = `<div class="empty">${esc(why)}</div>`; $('#nl-table').innerHTML = '';
@@ -3298,7 +3361,7 @@ html.drv .f-driver{display:none}
       $('#map-recon').innerHTML = `<span class="mk" aria-hidden="true">✓</span><span>Matches the driver report: ${fmt(exp)} ${noun(exp)} for this period${on.length || !incView ? ' and these filters' : ''} = ${tail}.</span>`;
     } else {
       $('#map-recon').className = 'recon bad';
-      $('#map-recon').innerHTML = `<span class="mk" aria-hidden="true">!</span><span>Doesn't match the driver report: the report has ${fmt(exp)} but ${tail}. Don't rely on the map until the next refresh.</span>`;
+      $('#map-recon').innerHTML = `<span class="mk" aria-hidden="true">!</span><span>Doesn't match the driver report: the report has ${fmt(exp)} but ${tail}. Don't rely on the map until the next update.</span>`;
     }
     const inc = MAP.base.filter(e => e.inc).length;
     $('#mf-dsnote').textContent = incView
@@ -3780,7 +3843,7 @@ html.drv .f-driver{display:none}
     const e = d.id ? eventById.get(d.id) : null;
     if (!e) {
       const msg = d.missing === 'vehicle' ? "That vehicle isn't in the current report. It may have left the fleet, or the link is from an older version of the report."
-        : "This incident isn't in the current report. It may have left the 30-day window at the last refresh.";
+        : "This incident isn't in the current report. It may have left the 30-day window at the last update.";
       return `<div class="mp-head"><div><div class="kick">Speeding map</div><h3 id="mp-title" tabindex="-1">${d.missing === 'vehicle' ? 'Vehicle not found' : 'Incident not found'}</h3></div><button type="button" class="close" data-pact="close" aria-label="Close">×</button></div><div class="mp-body"><p>${msg}</p></div>`;
     }
     const back = MAP.stack.length > 1 ? MAP.stack[MAP.stack.length - 2] : null;
@@ -4847,6 +4910,7 @@ html.drv .f-driver{display:none}
     }, () => { dbState = 'unavailable'; renderAll(); });
     db.doc('status/lastRun').onSnapshot(snap => { runStatus = snap.exists ? snap.data() : null; renderMeta(); }, () => {});
     db.collection('history').onSnapshot(snap => { history = snap.docs.map(d => d.data()).filter(Boolean); if (report) renderAll(); }, () => {});
+    db.collection('closures').onSnapshot(snap => { closeDays = new Set(snap.docs.map(d => String((d.data() || {}).date || '')).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x))); renderMeta(); }, () => {});
     db.collection('events').onSnapshot(snap => {
       eventDocs = snap.docs.map(d => d.data()).filter(Boolean);
       window.__NEAR = nearIndex(eventDocs);

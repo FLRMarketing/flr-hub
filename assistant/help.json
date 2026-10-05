@@ -838,7 +838,7 @@
         "speed",
         "report"
       ],
-      "answer": "Fleet Management shows speeding by driver and vehicle from FleetView, covering the last 30 days and updated every morning. FLR Admins and Super Admins see every driver and vehicle. A driver whose FLR account is linked to their FleetView name sees only their own driving; anyone else sees nothing until a Super Admin links them.",
+      "answer": "Fleet Management shows speeding by driver and vehicle from FleetView, covering the last 30 days and updated every 15 minutes through the working day. FLR Admins and Super Admins see every driver and vehicle. A driver whose FLR account is linked to their FleetView name sees only their own driving; anyone else sees nothing until a Super Admin links them.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
@@ -1143,7 +1143,7 @@
         "out of date",
         "live"
       ],
-      "answer": "Fleet Management covers the 30 days up to each morning’s refresh from FleetView. Vehicle details from the Monday fleet board update every 15 minutes. If a refresh fails, or the figures are more than a day old, a notice appears at the top of the page; let an FLR Super Admin know if it stays.",
+      "answer": "Speeding figures come from FleetView via the FLR Fleet Management updater, a Chrome add-on on an FLR Super Admin’s computer. It sends them every 15 minutes while that computer is on, so not overnight, at weekends or on FLR close days. Monday board vehicle details update every 15 minutes. If the figures stop updating in the working day, Admins and Super Admins see a notice; tell an FLR Super Admin if it stays.",
       "link": {
         "href": "speeding/",
         "label": "Open Fleet Management"
