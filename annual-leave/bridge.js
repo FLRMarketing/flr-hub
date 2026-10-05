@@ -111,7 +111,9 @@
   }
   function take(h) {
     window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null, today: h.today || null,
-      wpIssues: Array.isArray(h.wpIssues) ? h.wpIssues : [], faces };
+      wpIssues: Array.isArray(h.wpIssues) ? h.wpIssues : [], faces,
+      // who made each request's latest decision on the Hub (the audit trail), for "Accepted … by David Viner"
+      decisions: h.decisions && typeof h.decisions === 'object' && !Array.isArray(h.decisions) ? h.decisions : {} };
     try { FORM_URL = h.formUrl || ''; } catch (e) { /* the page keeps its own */ }   // eslint-disable-line no-undef
     version = h.version;
   }
