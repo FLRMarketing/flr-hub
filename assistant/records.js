@@ -13,6 +13,8 @@
    with the person's own sign-in, so the FLR database decides what they get,
    exactly as on the page. The figures use the pages' own rules, cut from the
    pages themselves: annual-leave/leave-core.js and speeding/speeding-core.js.
+   Every card says where it came from (its source: the tool, and when that data
+   was last synced, as the data itself says), which the chat shows under it.
    Nothing is changed, and answers aren't kept in the chat's saved history.
    Loaded only when someone asks.
    ========================================================================== */
@@ -46,6 +48,11 @@ async function rpc(name) {
 }
 const once = new Map();   // each tool's data is read once per question, however many look-ups use it
 const read = name => { if (!once.has(name)) once.set(name, rpc(name)); return once.get(name); };
+
+// Where a card came from, for the line the chat shows under it (sourceLine in lines.js): the tool, when its data was last
+// synced (at: only ever a time the data itself gives; none when it gives none) and whether the data says its latest sync
+// failed (stale). A card that couldn't be looked up gets none: nothing was read.
+const sourced = (card, source) => card && { ...card, source };
 
 /* ---------------------------------------------------------------- wording */
 const hubLink = (href, label) => ({ href: new URL(href, HUB).href, label });
@@ -171,8 +178,13 @@ function requestItems(L, rs, withNames) {
   });
 }
 
+// Annual Leave reads the FLR server's copy of monday.com: lastFullSync is when it last read every board, and syncError
+// says a read has failed since (the page then shows "This may be out of date").
 async function leave(kind, q, slots) {
   const L = await leaveData();
+  return sourced(leaveCard(kind, q, slots, L), { tool: 'Annual Leave', at: L.h.lastFullSync || null, stale: !!L.h.syncError });
+}
+function leaveCard(kind, q, slots, L) {
   if (kind === 'balance' || kind === 'requests') {
     const w = leaveWho(L, slots, q);
     if (w.refused) return onlyYours;
@@ -275,7 +287,15 @@ async function fleetData() {
   });
   const docs = new Map(((d.collections && d.collections.vehicles) || []).map(v => [v.id, v]));
   const vehicles = ((meta && meta.vehicles) || []).map(v => ({ ...v, ...(docs.get(v.id) || {}) }));
-  return { core, rep, meta, scope, avg, fleetScore, rows, vehicles, admin: scope.kind === 'all', driver: scope.kind === 'driver' ? scope.driver : null };
+  // When each half was last synced, as the page tells it. The Monday fleet board (syncState): the last good sync, else
+  // fleet/meta's own time; a failed sync since then is stale. FleetView's figures (renderMeta): when FleetView was last
+  // checked, which is the report's own time unless a good check since found nothing new; a failed one since is stale.
+  const st = (d.docs && d.docs['status/mondaySync']) || null, run = (d.docs && d.docs['status/lastRun']) || null;
+  const mondayAt = (st && st.ok && st.lastSuccessAt) || (meta && meta.fetchedAt) || null, gen = (rep && rep.generatedAt) || null;
+  const later = (a, b) => !!(a && b && new Date(a) > new Date(b));
+  const monday = { at: mondayAt, stale: !!(st && st.ok === false && later(st.at, mondayAt)) };
+  const fleetView = { at: run && run.ok && later(run.at, gen) ? run.at : gen, stale: !!(run && run.ok === false && later(run.at, gen)) };
+  return { core, rep, meta, scope, avg, fleetScore, rows, vehicles, admin: scope.kind === 'all', driver: scope.kind === 'driver' ? scope.driver : null, monday, fleetView };
 }
 const period = F => F.rep && F.rep.periodEnd ? `The 30 days to ${dayMonth(F.rep.periodEnd)}` : '';
 const slug = s => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');   // as the report's own slug()
@@ -373,9 +393,16 @@ function driverCard(rs, F, own) {
 }
 const onlyYourDriving = { care: true, title: 'Only your own driving', text: 'Fleet Management shows you your own driving and vehicle. FLR administrators see every driver.' };
 
+// Vehicle details come from the Monday fleet board and driving from FleetView's figures: each card says when its own half
+// was last synced. A refusal (not linked, switched off) read no data, so it gives no time.
 async function fleet(kind, q, slots) {
   const F = await fleetData();
-  if (F.card) return F.card;
+  if (F.card) return sourced(F.card, { tool: 'Fleet Management', at: null, stale: false });
+  if (kind === 'me' && /\bwhat\b[^?]*\bdrives?\b|\bwhich (van|vehicle|car)\b/i.test(q) && !/\bdriving\b|\bspeed/i.test(q)) kind = 'vehicles';   // "what does Dan drive?"
+  const half = kind === 'vehicles' && F.rep && F.rep.fleet ? F.monday : F.fleetView;   // no report at all: "No driving data yet"
+  return sourced(fleetCard(kind, q, slots, F), { tool: 'Fleet Management', ...half });
+}
+function fleetCard(kind, q, slots, F) {
   if (!F.rep || !F.rep.fleet) return { care: true, title: 'No driving data yet', text: 'The speeding report hasn’t been loaded yet. It updates every 15 minutes through the working day.', link: hubLink('speeding/', 'Open Fleet Management') };
   const plate = PLATE.test(q), named = slots.length || plate;
   // Nothing by that name or registration: say so when the question clearly named something, else no answer at all.
@@ -383,7 +410,6 @@ async function fleet(kind, q, slots) {
     ? (F.admin ? { unsure: true, title: `No ${what} found`, text: `I couldn’t find “${(q.match(PLATE) || [asWritten(q, slots)])[0]}” in Fleet Management.` } : onlyYourDriving)
     : { empty: true };
 
-  if (kind === 'me' && /\bwhat\b[^?]*\bdrives?\b|\bwhich (van|vehicle|car)\b/i.test(q) && !/\bdriving\b|\bspeed/i.test(q)) kind = 'vehicles';   // "what does Dan drive?"
   if (kind === 'vehicles') {
     if (named) {
       const vs = vehiclesNamed(q, slots, F);
@@ -518,7 +544,8 @@ export async function lookUp(kind, q, who, slots = []) {
     const [tool, what] = kind.split('.');
     if (tool === 'leave') return await leave({ today: 'off', off: 'off' }[what] || what, q, slots);
     if (tool === 'fleet') return await fleet(what, q, slots);
-    if (tool === 'quotes') return await quotations(q, who);
+    // The Estimator's quotations are the FLR database itself, not a synced copy: there's no sync time to give.
+    if (tool === 'quotes') return sourced(await quotations(q, who), { tool: 'Cost Estimator', at: null, stale: false });
   } catch (e) {
     return { title: 'I couldn’t look that up', text: WHY[e.code] || 'The FLR database didn’t answer as expected. Try again in a moment.', error: true, fault: !(e instanceof Refusal && ACCESS.has(e.code)) };
   }

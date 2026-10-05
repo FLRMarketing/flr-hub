@@ -1,5 +1,5 @@
 {
-  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'care' marks a topic that's a worry or about privacy, which the assistant answers with a reassuring face rather than a celebration. 'alsoPeople' lists words the help uses in its own names that are also people's first names (\"the Jeff Day\", \"Likkle Jeff\"): in a question they're taken for a person unless they're part of one of those names. 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Check changes with: node assistant/tests/run.mjs",
+  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'care' marks a topic that's a worry or about privacy, which the assistant answers with a reassuring face rather than a celebration. 'alsoPeople' lists words the help uses in its own names that are also people's first names (\"the Jeff Day\", \"Likkle Jeff\"): in a question they're taken for a person unless they're part of one of those names. 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Every answer shows where it comes from: help answers say \"Hub help\", and an entry may add 'updated' (the day its answer was last checked against its tool, as YYYY-MM-DD) to show \"Hub help · updated 1 Oct\"; look-ups say \"Live\" with the tool and when its data was last synced. Check changes with: node assistant/tests/run.mjs",
   "version": 1,
   "alsoPeople": [
     "Jeff"
@@ -20,7 +20,10 @@
         "is this a chatbot",
         "what can this chat do",
         "how does this assistant work",
-        "can the assistant do things for me"
+        "can the assistant do things for me",
+        "what can you not do",
+        "where do your answers come from",
+        "what does hub help mean"
       ],
       "keys": [
         "likkle jeff",
@@ -31,7 +34,7 @@
         "bot",
         "chat"
       ],
-      "answer": "I’m Likkle Jeff, the Hub’s assistant. I find answers in its help and link you to the right page. I can also look up your own records, read-only: your leave, who’s off, your driving and the Estimator’s quotations. I show only what your tools would show you, and I can’t change anything: booking, approving and editing happen in the tools.\n\nIf the help doesn’t cover something, I’ll say so rather than guess.",
+      "answer": "I’m Likkle Jeff, the Hub’s assistant. I can explain the Hub and look up your own figures. I can’t book, approve or change anything: that happens in the tools.\n\nEach answer says where it’s from: “Hub help”, or “Live” for your leave, driving or quotations, with how fresh they are. I show only what your tools would show you, and if the help doesn’t cover something, I’ll say so rather than guess.",
       "related": [
         "about-hub"
       ]
