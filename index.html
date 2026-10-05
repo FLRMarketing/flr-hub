@@ -14,10 +14,10 @@
 <link rel="icon" href="assets/flr-icon-192.png">
 <link rel="apple-touch-icon" href="assets/flr-icon-192.png">
 <!-- ?v= changes with every release, so a page never runs with an older cached hub.css or hub.js (GitHub Pages caches for 10 minutes) -->
-<link rel="stylesheet" href="hub.css?v=1.6">
+<link rel="stylesheet" href="hub.css?v=1.7">
 <script src="flr-config.js"></script>
 <script src="vendor/supabase-2.116.0.js" defer></script>
-<script src="hub.js?v=1.9" defer></script>
+<script src="hub.js?v=2.0" defer></script>
 <script type="module" src="assistant/assistant.js?v=2.1"></script>
 </head>
 <body data-view="boot">
@@ -56,6 +56,7 @@
     <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
   </symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.6v5.2"/><path stroke-width="2.6" d="M12 16.4h.01"/></symbol>
   <symbol id="i-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
     <path d="M12 3.5v3.2"/><path opacity=".18" d="M18 6l-2.25 2.25"/><path opacity=".26" d="M20.5 12h-3.2"/><path opacity=".36" d="M18 18l-2.25-2.25"/>
@@ -102,8 +103,18 @@
       <p class="waiting-text">They’ll check it’s really you, using your usual work phone number or Teams, or through IT, then switch on your tools. You don’t need to do anything. Your tools appear here once they’re on.</p>
       <p class="waiting-meta" id="home-waiting-meta"></p>
     </div>
-    <h2 class="section-label" id="tools-label">Your tools</h2>
-    <ul class="tiles" id="tiles" aria-labelledby="tools-label"></ul>
+    <div class="home-grid" id="home-grid">
+      <div class="home-tools">
+        <h2 class="section-label" id="tools-label">Your tools</h2>
+        <ul class="tiles" id="tiles" aria-labelledby="tools-label"></ul>
+      </div>
+      <!-- Counts only, from public.hub_attention(): each line only for someone who can open that tool. -->
+      <section class="attn" id="attn" aria-labelledby="attn-label" hidden>
+        <h2 class="section-label" id="attn-label">Needs your attention</h2>
+        <ul class="attn-list" id="attn-list"></ul>
+        <p class="attn-foot" id="attn-foot"></p>
+      </section>
+    </div>
     <p class="notice" id="home-notice" role="status" hidden><span></span> <button class="link" type="button" id="home-retry">Try again</button></p>
   </section>
 

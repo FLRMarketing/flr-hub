@@ -588,5 +588,17 @@
   "alt": [
    "hub-settings"
   ]
+ },
+ {
+  "q": "What does the red number on the Fleet Management icon mean?",
+  "expect": "hub-attention"
+ },
+ {
+  "q": "Why does the Hub say needs your attention?",
+  "expect": "hub-attention"
+ },
+ {
+  "q": "How often do the counts on the Hub home update?",
+  "expect": "hub-attention"
  }
 ]

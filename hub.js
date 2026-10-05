@@ -247,6 +247,7 @@
     const a = li.querySelector('.tile-link'), tip = li.querySelector('.tile-tip');
     if (o.loading) { li.classList.add('tile--loading'); li.setAttribute('aria-hidden', 'true'); a.tabIndex = -1; tip.remove(); return li; }
     const external = /^https:/i.test(t.url) && !sameOrigin(t.url);
+    li.dataset.id = t.id;
     a.href = t.url;
     if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
     const icon = li.querySelector('.app-icon');
@@ -340,6 +341,7 @@
     }
     $('#tiles').replaceChildren(...tiles);
     const n = $('#home-notice'); n.querySelector('span').textContent = o.notice || ''; n.hidden = !o.notice;
+    if (o.loading || o.notice || waiting || !home || !home.tiles) renderAttention(null);
   }
   function rise(els) {
     if (reduced()) return;
@@ -347,6 +349,154 @@
       [{ opacity: 0, transform: 'translateY(16px) scale(.98)' }, { opacity: 1, transform: 'none' }],
       { duration: 560, delay: 90 + i * 60, easing: 'cubic-bezier(.2,.9,.25,1)', fill: 'backwards' }));
   }
+
+  /* ---------------------------------------------------------------- what needs you: counts only (Hub migration 2.3)
+     public.hub_attention() sends counts for the tools this account can open, and nothing else: leave requests waiting
+     (approvers), the Vehicles page's counts (Admins and Super Admins), the person's own empty quotes and new accounts
+     waiting (Super Admins). They're asked for once the tiles are on screen and kept in this tab for five minutes; the
+     panel says when they were read. Without the function, or after any error, the panel and badges stay hidden. */
+  const ATTN_KEY = 'flr-hub:attention', ATTN_MS = 5 * 60 * 1000;
+  const tabStore = {
+    get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* private window: asked again next time */ } },
+    del(k) { try { sessionStorage.removeItem(k); } catch (e) { /* ignore */ } },
+  };
+  const count = v => Math.max(0, Math.floor(Number(v) || 0));
+  const plural = (k, one, many) => `${k} ${k === 1 ? one : many}`;
+  const ukDay = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(d);   // 2026-10-05
+  function sentAgo(iso) {
+    const t = iso ? new Date(iso) : null;
+    if (!t || isNaN(t)) return '';
+    const days = Math.round((Date.parse(ukDay(new Date())) - Date.parse(ukDay(t))) / 864e5);
+    return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+  }
+  // Each line: what it is, said in full for wide screens and shorter for phones, and the page that deals with it.
+  function attentionLines(a, tiles) {
+    const url = id => { const t = tiles.find(x => x && x.id === id); return t && safeTile(t) ? t.url : null; };
+    const lines = [];
+    const leave = a.leave, leaveUrl = url('annual-leave');
+    if (leave && leaveUrl) {
+      const w = count(leave.waiting), wp = count(leave.notOnWorkProgramme), ago = sentAgo(leave.oldestSent);
+      if (w) lines.push({ app: 'annual-leave', href: leaveUrl, title: `${plural(w, 'leave request', 'leave requests')} waiting for a decision`,
+        short: `${plural(w, 'leave request', 'leave requests')} waiting`, sub: `Annual Leave${ago ? ` · oldest sent ${ago}` : ''}`, subShort: 'Annual Leave' });
+      if (wp) lines.push({ app: 'annual-leave', href: leaveUrl, title: `${plural(wp, 'accepted request', 'accepted requests')} not on the Work Programme`,
+        short: `${wp} not on the Work Programme`, sub: 'Annual Leave · it tries again by itself every 10 minutes', subShort: 'Annual Leave' });
+    }
+    const fleet = a.fleet, fleetUrl = url('speeding');
+    if (fleet && fleetUrl) {
+      const act = count(fleet.action), chk = count(fleet.check), soon = count(fleet.soon), days = count(fleet.days) || 30;
+      const href = fleetUrl + (SAME_SITE.test(fleetUrl) ? '#vehicles' : '');
+      const parts = [], short = [];
+      if (act) { parts.push(`${plural(act, 'vehicle', 'vehicles')} overdue`); short.push(`${act} overdue`); }
+      if (chk) { parts.push(act ? `${chk} need${chk === 1 ? 's' : ''} checking` : `${plural(chk, 'vehicle needs', 'vehicles need')} checking`); short.push(`${chk} need${chk === 1 ? 's' : ''} checking`); }
+      if (parts.length) lines.push({ app: 'speeding', href, title: parts.join(' · '), short: short.join(' · '),
+        sub: `Fleet Management${soon ? ` · ${soon} more coming up in the next ${days} days` : ''}`, subShort: 'Fleet Management' });
+      else if (soon) lines.push({ app: 'speeding', href, title: `${plural(soon, 'date', 'dates')} coming up in the next ${days} days`,
+        short: `${plural(soon, 'date', 'dates')} coming up`, sub: 'Fleet Management · MOT, tax and service', subShort: 'Fleet Management' });
+    }
+    const drafts = a.drafts, estUrl = url('estimator');
+    if (drafts && estUrl && count(drafts.empty)) {
+      const d = `${plural(count(drafts.empty), 'empty draft', 'empty drafts')} of yours`;
+      lines.push({ app: 'estimator', href: estUrl, title: d, short: d, sub: 'Cost Estimator · no client, site or rooms yet', subShort: 'Cost Estimator' });
+    }
+    if (a.accounts && count(a.accounts.waiting)) {
+      const w = `${plural(count(a.accounts.waiting), 'new account', 'new accounts')} waiting`;
+      lines.push({ app: 'settings', href: 'settings/', title: w, short: w, sub: 'Hub settings · Super Admins only', subShort: 'Hub settings' });
+    }
+    // Whether anything could ever be listed for this person: if not, there's no panel at all.
+    const possible = !!((leave && leaveUrl) || (fleet && fleetUrl) || (drafts && estUrl) || a.accounts);
+    return { lines, possible };
+  }
+  const svgUse = (cls, id) => {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'), u = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    s.setAttribute('class', cls); s.setAttribute('aria-hidden', 'true'); u.setAttribute('href', '#' + id); s.append(u);
+    return s;
+  };
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  function attentionRow(l) {
+    const li = el('li'), a = el('a', 'attn-row');
+    a.href = l.href;
+    const icon = el('span', 'attn-icon attn-icon--' + l.app);
+    icon.setAttribute('aria-hidden', 'true');
+    icon.append(svgUse('', l.app === 'settings' ? 'i-gear' : ICONS[l.app] || 'i-tile'));
+    const text = el('span', 'attn-text');
+    const title = el('span', 'attn-title');
+    title.append(el('span', 'long', l.title), el('span', 'short', l.short));
+    const sub = el('span', 'attn-sub');
+    sub.append(el('span', 'long', l.sub), el('span', 'short', l.subShort));
+    text.append(title, sub);
+    a.append(icon, text, svgUse('attn-chev', 'i-chevron'));
+    li.append(a);
+    return li;
+  }
+  // The red count on a tool's icon, and the same words for screen readers (the icon itself is hidden from them).
+  function tileBadges(a) {
+    for (const old of tilesEl.querySelectorAll('.badge, .tile-count')) old.remove();
+    if (!a) return;
+    const fleetN = a.fleet ? count(a.fleet.action) + count(a.fleet.check) : 0;
+    const marks = [
+      ['estimator', a.drafts ? count(a.drafts.empty) : 0, k => plural(k, 'empty draft', 'empty drafts')],
+      ['speeding', fleetN, () => [count(a.fleet.action) ? `${count(a.fleet.action)} overdue` : '', count(a.fleet.check) ? `${count(a.fleet.check)} need${count(a.fleet.check) === 1 ? 's' : ''} checking` : ''].filter(Boolean).join(', ')],
+      ['annual-leave', a.leave ? count(a.leave.waiting) : 0, k => `${k} waiting for a decision`],
+    ];
+    for (const [id, k, say] of marks) {
+      const li = k ? tilesEl.querySelector(`.tile[data-id="${id}"]`) : null;
+      if (!li) continue;
+      li.querySelector('.app-icon').append(el('span', 'badge', k > 99 ? '99+' : String(k)));
+      li.querySelector('.tile-name').after(el('span', 'tile-count sr', `, ${say(k)}`));
+    }
+  }
+  let attnHome = null, attnAt = 0;
+  function renderAttention(a, at, tiles) {
+    const sec = $('#attn'), grid = $('#home-grid');
+    const view = a && typeof a === 'object' ? attentionLines(a, tiles || []) : null;
+    if (!view || !view.possible) { sec.hidden = true; sec.classList.remove('is-loading'); grid.classList.remove('with-attn'); tileBadges(null); return; }
+    const list = $('#attn-list');
+    if (view.lines.length) list.replaceChildren(...view.lines.map(attentionRow));
+    else {
+      const li = el('li', 'attn-none');
+      li.append(svgUse('attn-ok', 'i-check'), el('span', 'attn-title', 'Nothing needs you right now'));
+      list.replaceChildren(li);
+    }
+    const t = new Date(at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    $('#attn-foot').textContent = `Counts only. Each line appears only if you can open that tool. Updated ${t}.`;
+    const appearing = sec.hidden || sec.classList.contains('is-loading');
+    sec.classList.remove('is-loading'); sec.hidden = false; grid.classList.add('with-attn');
+    tileBadges(a);
+    if (appearing && !reduced()) list.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease' });
+  }
+  // While the first counts load, a placeholder holds the panel's place for those likely to have one, so the tools
+  // don't jump across when it arrives.
+  function attentionLoading(home) {
+    const ids = (home.tiles || []).map(t => t && t.id);
+    const likely = home.role === 'admin' || ids.includes('estimator') || (home.role === 'manager' && (ids.includes('speeding') || ids.includes('annual-leave')));
+    if (!likely) return;
+    const row = () => { const li = el('li', 'attn-sk'); li.setAttribute('aria-hidden', 'true'); li.append(el('span', 'sk-icon'), el('span', 'sk-lines')); return li; };
+    $('#attn-list').replaceChildren(row(), row());
+    $('#attn-foot').textContent = '';
+    $('#attn').classList.add('is-loading'); $('#attn').hidden = false; $('#home-grid').classList.add('with-attn');
+  }
+  async function loadAttention(home, o = {}) {
+    if (!home || home.waiting || !home.email || !home.tiles) { renderAttention(null); return; }
+    attnHome = home;
+    const who = String(home.email).toLowerCase();
+    let cached = null;
+    try { const c = JSON.parse(tabStore.get(ATTN_KEY) || 'null'); if (c && c.who === who && c.a && typeof c.at === 'number') cached = c; } catch (e) { /* asked again */ }
+    if (cached) { attnAt = cached.at; renderAttention(cached.a, cached.at, home.tiles); if (!o.force && Date.now() - cached.at < ATTN_MS) return; }
+    else attentionLoading(home);
+    let r;
+    try { r = await client().rpc('hub_attention'); } catch (e) { r = { error: e }; }
+    if (attnHome !== home) return;   // signed out or reloaded meanwhile
+    if (r.error || !r.data || typeof r.data !== 'object' || Array.isArray(r.data)) { tabStore.del(ATTN_KEY); attnAt = 0; renderAttention(null); return; }
+    attnAt = Date.now();
+    tabStore.set(ATTN_KEY, JSON.stringify({ who, at: attnAt, a: r.data }));
+    renderAttention(r.data, attnAt, home.tiles);
+  }
+  const forgetAttention = () => { tabStore.del(ATTN_KEY); attnHome = null; attnAt = 0; renderAttention(null); };
+  // Back on the Hub after a while (another tab, or Back from a tool): read the counts again once they're five minutes old.
+  const refreshAttention = () => { if (current === 'home' && attnHome && document.visibilityState === 'visible' && Date.now() - attnAt >= ATTN_MS) loadAttention(attnHome); };
+  document.addEventListener('visibilitychange', refreshAttention);
+  addEventListener('pageshow', e => { if (e.persisted) refreshAttention(); });
 
   /* ---------------------------------------------------------------- loading the signed-in person's hub */
   let loading = null, signingOut = false;
@@ -369,6 +519,7 @@
       await show('home', { animate: o.animate });
       rise([...$('#tiles').children]);
       goNext(home);
+      loadAttention(home);   // after the tiles: they never wait for the counts
     })().finally(() => { loading = null; });
     return loading;
   }
@@ -389,7 +540,7 @@
       signingOut = true;
       const { error } = await client().auth.signOut({ scope: 'local' });
       if (error) store.del(AUTH_KEY);
-      store.del(NAME_KEY); signingOut = false;
+      store.del(NAME_KEY); forgetAttention(); signingOut = false;
       formError('#signin-error', ACCOUNT[code] || ACCOUNT.FLR_SIGN_IN_REQUIRED);
       return show('signin', { animate: o.animate });
     }
@@ -519,7 +670,7 @@
     signingOut = true;
     const { error } = await client().auth.signOut({ scope: 'local' });
     if (error) store.del(AUTH_KEY);   // offline: forget the session on this device anyway
-    store.del(NAME_KEY);
+    store.del(NAME_KEY); forgetAttention();
     sheets.close($('#sheet-account'));
     await show('signin', { animate: true });
     signingOut = false;
@@ -562,7 +713,7 @@
     c.auth.onAuthStateChange(event => {
       // Never call Supabase from inside this callback (it can deadlock); hand off to the next task.
       if (event === 'PASSWORD_RECOVERY') setTimeout(() => sheets.open('sheet-recover'), 0);
-      else if (event === 'SIGNED_OUT') setTimeout(() => { if (signingOut) return; store.del(NAME_KEY); if (current === 'home') show('signin', { animate: true }); }, 0);
+      else if (event === 'SIGNED_OUT') setTimeout(() => { if (signingOut) return; store.del(NAME_KEY); forgetAttention(); if (current === 'home') show('signin', { animate: true }); }, 0);
     });
     let session = null;
     try { session = (await c.auth.getSession()).data.session; } catch (e) { /* treated as signed out */ }

@@ -9,7 +9,7 @@
   --ink:#101116; --ink-2:#55575f; --ink-3:#6b6d75;
   --sep:rgba(60,60,67,.2);
   --tint:#00098b; --tint-fill:#00098b; --tint-press:#1a24a8; --on-tint:#ffffff; --tint-soft:rgba(0,9,139,.08);
-  --red:#d70015; --red-soft:rgba(215,0,21,.07);
+  --red:#d70015; --red-soft:rgba(215,0,21,.07); --badge:#d70015;
   --green:#1d6b33; --green-soft:rgba(52,199,89,.14);
   --mat:rgba(242,242,247,.72); --mat-edge:rgba(0,0,0,.09); --blur:saturate(180%) blur(22px);
   --scrim:rgba(8,10,24,.32);
@@ -36,7 +36,7 @@
     --ink:#f5f5f7; --ink-2:#aeaeb2; --ink-3:#98989f;
     --sep:rgba(84,84,88,.6);
     --tint:#9aa2ff; --tint-fill:#4550f0; --tint-press:#5b65ff; --on-tint:#ffffff; --tint-soft:rgba(154,162,255,.16);
-    --red:#ff453a; --red-soft:rgba(255,69,58,.14);
+    --red:#ff453a; --red-soft:rgba(255,69,58,.14); --badge:#e3122e;
     --green:#5bd87a; --green-soft:rgba(48,209,88,.16);
     --mat:rgba(18,18,20,.72); --mat-edge:rgba(255,255,255,.1);
     --scrim:rgba(0,0,0,.5);
@@ -188,10 +188,11 @@ a{color:var(--tint)}
   font:600 13px/1.2 var(--font-text);letter-spacing:-.004em}
 .tip-go svg{width:14px;height:14px}
 @media (max-width:480px){
-  .tiles{gap:20px 4px}
-  .tile{width:104px}
-  .app-icon{width:72px;height:72px}
-  .app-icon svg{width:38px;height:38px}
+  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 6px}
+  .tile{width:auto}
+  .app-icon{width:62px;height:62px}
+  .app-icon svg{width:33px;height:33px}
+  .tile-name{font-size:12px}
 }
 
 .tile--loading .tile-link{pointer-events:none}
@@ -203,6 +204,59 @@ a{color:var(--tint)}
 }
 @keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
 .notice{margin:18px 2px 0;color:var(--ink-2);font-size:15px}
+
+/* ---------------------------------------------------------------- what needs you (Hub migration 2.3): badges and the panel
+   Counts only. On a wide screen the tools sit on the left and the panel fills the rest of the row; narrower, the panel
+   goes under the tools; on a phone its lines are shorter and the small icons go. */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.home-grid{display:flex;flex-direction:column;gap:36px}
+@media (min-width:900px){
+  .home-grid.with-attn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:56px;align-items:start}
+  .home-grid.with-attn .tiles{display:grid;grid-template-columns:repeat(3,112px);gap:24px 16px}
+}
+.app-icon{position:relative}
+.badge{position:absolute;top:-7px;right:-8px;min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--badge);color:#fff;
+  font:700 13px/24px var(--font-text);letter-spacing:0;text-align:center;font-variant-numeric:tabular-nums;box-shadow:0 0 0 2.5px var(--bg)}
+.attn{min-width:0;max-width:640px}
+.attn-list{margin:0;padding:0;list-style:none;background:var(--surface);border-radius:var(--r-group);box-shadow:var(--sh-card);overflow:hidden}
+.attn-list > li{position:relative}
+.attn-list > li + li::before{content:"";position:absolute;z-index:1;top:0;left:62px;right:0;height:var(--hair);background:var(--sep)}
+.attn-row{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px 10px 16px;color:inherit;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;transition:background-color .15s}
+.attn-row:active{background:var(--press);transition-duration:0s}
+@media (hover:hover){.attn-row:hover{background:var(--fill)}}
+.attn-row:focus-visible{outline-offset:-3px;border-radius:var(--r-group)}
+.attn-icon{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:9px;color:#fff;box-shadow:var(--sh-icon);
+  background:linear-gradient(160deg,#8e8e93 0%,#48484a 100%)}
+.attn-icon svg{width:20px;height:20px}
+.attn-icon--estimator{background:linear-gradient(160deg,#3a47e0 0%,#00098b 78%)}
+.attn-icon--speeding{background:linear-gradient(160deg,#ff8a3d 0%,#e3122e 78%)}
+.attn-icon--annual-leave{background:linear-gradient(160deg,#4fd46a 0%,#17853a 78%)}
+.attn-icon--settings{background:var(--fill);color:var(--ink-2);box-shadow:none}
+.attn-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.attn-title{font:600 16px/1.3 var(--font-text);letter-spacing:-.012em;color:var(--ink);text-wrap:pretty}
+.attn-sub{color:var(--ink-2);font-size:13.5px;line-height:1.35}
+.attn-chev{width:14px;height:14px;flex:none;color:var(--ink-3)}
+.attn .short{display:none}
+.attn-none{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 16px}
+.attn-ok{width:26px;height:26px;flex:none;color:var(--green)}
+.attn-foot{margin:10px 2px 0;color:var(--ink-3);font-size:13px;line-height:1.4;font-variant-numeric:tabular-nums}
+.attn-foot:empty{display:none}
+.attn-sk{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 16px}
+.attn-sk .sk-icon{width:34px;height:34px;flex:none;border-radius:9px;background:var(--skeleton)}
+.attn-sk .sk-lines{flex:1;height:30px;border-radius:6px;background:var(--skeleton);max-width:70%}
+@media (prefers-reduced-motion:no-preference){
+  .attn-sk .sk-icon,.attn-sk .sk-lines{background:linear-gradient(90deg,var(--skeleton) 30%,var(--skeleton-hi) 50%,var(--skeleton) 70%) 0 0/300% 100%;animation:shimmer 1.4s linear infinite}
+}
+@media (max-width:480px){
+  .attn{max-width:none}
+  .attn-icon,.attn-sk .sk-icon{display:none}
+  .attn .long{display:none}
+  .attn .short{display:inline}
+  .attn-list > li + li::before{left:16px}
+  .attn-row,.attn-none,.attn-sk{min-height:58px}
+  .badge{top:-6px;right:-7px;min-width:22px;height:22px;border-radius:11px;font-size:12.5px;line-height:22px;padding:0 6px}
+}
 
 .foot{padding-block:8px max(20px,env(safe-area-inset-bottom,0px))}
 .foot p{margin:0;color:var(--ink-3);font-size:13px;text-align:center}

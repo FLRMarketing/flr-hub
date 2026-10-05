@@ -65,6 +65,38 @@
       ]
     },
     {
+      "id": "hub-attention",
+      "tool": "hub",
+      "title": "“Needs your attention” and the red numbers",
+      "ask": [
+        "what is needs your attention",
+        "what do the red numbers on the icons mean",
+        "why is there a number on the cost estimator icon",
+        "what does the number on fleet management mean",
+        "what needs my attention",
+        "why can't I see needs your attention",
+        "how up to date are the counts on the hub",
+        "what are the badges on the hub icons"
+      ],
+      "keys": [
+        "attention",
+        "badge",
+        "badges",
+        "red number",
+        "counts",
+        "panel"
+      ],
+      "answer": "The Hub home lists what needs you, as counts only: leave requests waiting for a decision (for approvers), vehicles overdue or needing checking (Admins and Super Admins), your own empty drafts in the Estimator, and new accounts waiting (Super Admins). Each line appears only if you can open that tool, and the red number on its icon matches. Counts are read again after five minutes.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "about-hub",
+        "tools-missing"
+      ]
+    },
+    {
       "id": "signin",
       "tool": "hub",
       "title": "Sign in",
