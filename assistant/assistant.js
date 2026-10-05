@@ -7,11 +7,11 @@
        nothing of his has gone (jeff.js, lines.js, engine.js, records.js,
        help.json, face/).
    Pages load it with:
-     <script type="module" src="<hub>/assistant/assistant.js?v=2.1"></script>
+     <script type="module" src="<hub>/assistant/assistant.js?v=2.2"></script>
    On a release, bump ?v= in the pages and in the imports here and in jeff.js
    (GitHub Pages caches files for 10 minutes).
    ========================================================================== */
-import './logo.js?v=2.1';
+import './logo.js?v=2.2';
 
 const JEFF = false;   // Likkle Jeff: true shows him on every page again
-if (JEFF) import('./jeff.js?v=2.1');
+if (JEFF) import('./jeff.js?v=2.2');

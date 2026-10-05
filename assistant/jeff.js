@@ -21,10 +21,10 @@
    assistant.js's imports, AND in V and the engine import below (GitHub Pages
    caches files for 10 minutes).
    ========================================================================== */
-import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=2.1';
-import { pickLine, moodFor, sourceLine, CAN_DO } from './lines.js?v=2.1';
+import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=2.2';
+import { pickLine, moodFor, sourceLine, CAN_DO } from './lines.js?v=2.2';
 
-const V = '2.1';
+const V = '2.2';
 const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
