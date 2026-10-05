@@ -704,6 +704,7 @@ ul.plain li:first-child{border-top:0}
 .fchip[aria-pressed="true"]{background:var(--tint-fill);color:var(--on-tint);border-color:var(--tint-fill)}
 .fchip[aria-pressed="true"] span{color:inherit;opacity:.8}
 .fchip.c-priority::before,.fchip.c-above::before,.fchip.c-within::before,.fchip.c-limited::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+.fchip.c-serious::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--red-soft)}
 .fchip.c-priority::before{background:var(--red)}.fchip.c-above::before{background:var(--gold)}.fchip.c-limited::before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
 .tb-foot{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 18px;margin-top:10px}
 .tb-foot .bench{margin-top:0}
@@ -718,6 +719,7 @@ ul.plain li:first-child{border-top:0}
 .g-priority .dot{background:var(--red)}.g-above .dot{background:var(--gold)}.g-within .dot{background:var(--tint-fill);opacity:.55}.g-limited .dot{background:transparent;box-shadow:inset 0 0 0 1.8px var(--ink-3)}
 .dg-n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;margin-left:2px;padding:0 6px;border-radius:999px;background:var(--fill);font:600 12px/1 var(--font-text);letter-spacing:0;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .dg-head p{margin:0;font-size:13px;color:var(--ink-3)}
+.dg-sev{font:600 13px/1.3 var(--font-text);letter-spacing:0;color:var(--red-ink)}
 .dg-list{border:var(--bd-w) solid var(--line);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
 .g-priority .dg-list{box-shadow:var(--sh-card),inset 3px 0 0 var(--red)}
 .dr{display:grid;grid-template-columns:minmax(210px,1.9fr) 88px repeat(2,minmax(62px,.55fr)) minmax(96px,.8fr) minmax(56px,.45fr) auto 18px;align-items:center;gap:10px 14px;padding:11px 16px;color:inherit;text-decoration:none;transition:background-color .15s}
@@ -960,7 +962,7 @@ ul.plain li:first-child{border-top:0}
   .mpwrap .evt td[data-label]::before{content:attr(data-label);display:block;margin-bottom:1px;font:500 10.5px/1.3 var(--font-text);letter-spacing:var(--label-track);text-transform:var(--label-case);color:var(--ink-3)}
 }
 .mapstage .leaflet-bottom.leaflet-right{margin-bottom:4px}
-.mapstage .mlegend{margin-bottom:6px!important}
+.mapstage .mlegend{margin-bottom:6px!important;max-height:min(42vh,320px);overflow-y:auto}
 /* Place names, road-number signs and street names on the map */
 .mpl,.msh,.mst{pointer-events:none}
 .mpl span,.mst span{position:absolute;white-space:nowrap;color:var(--m-label);text-shadow:0 0 2px var(--m-halo),0 0 3px var(--m-halo),0 0 5px var(--m-halo),0 0 1px var(--m-halo)}
@@ -988,6 +990,9 @@ ul.plain li:first-child{border-top:0}
   .mp-grab{display:block;position:sticky;top:0;z-index:3;flex:none;height:20px;margin-bottom:-20px;cursor:grab;touch-action:none}
   .mp-grab::before{content:"";display:block;width:38px;height:5px;margin:8px auto 0;border-radius:3px;background:var(--ink-3);opacity:.45}
   .mp-sum{padding-top:22px;touch-action:none}
+  .mapstage .leaflet-bottom.leaflet-right{top:calc(env(safe-area-inset-top,0px) + var(--nav-h) + 56px);bottom:auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin:0}
+  .mapstage .leaflet-bottom.leaflet-right .leaflet-control{margin:0 12px 0 0!important;float:none}
+  .mapstage .mlegend{max-height:34vh}
 }
 
 /* ============================================================================
@@ -2603,17 +2608,22 @@ html.drv .f-driver{display:none}
     const pr = rows.filter(r => r.st === 'priority').length, ab = rows.filter(r => r.st === 'above').length;
     const lim = rows.filter(r => r.st === 'limited').length, su = rows.filter(r => r.scoreUp).length;
     const per = v.week == null ? 'in the last 30 days' : `in the week ${v.label}`;
+    // People, not vehicles: a driver with two vans counts once, and spare vans (no driver) are counted on their own.
+    const review = r => r.st === 'priority' || r.st === 'above';
+    const named = rows.filter(r => !isSpare(r)), people = new Set(named.map(r => r.d));
+    const needPeople = new Set(named.filter(review).map(r => r.d)).size, needSpare = rows.filter(r => isSpare(r) && review(r)).length;
+    const sevLow = rows.filter(r => r.st === 'within').reduce((a, r) => a + r.o20, 0);
     const fw = fleetWeeks(), fa = fleetAvg30();
     $('#kpis').innerHTML = `
       <div class="kpi"><span class="l">Incidents over the threshold</span>
         <span class="v">${fmt(v.flagged)} <small>incidents</small></span>
         <p>At or above the limit + 10% + 2 mph ${per}.${v.fvEvents != null ? `<span class="kmore"> FleetView logged ${fmt(v.fvEvents)} speeding events in total.</span>` : ''}</p></div>
       <div class="kpi ${pr ? 'alertish' : ''}"><span class="l">Drivers needing review</span>
-        <span class="v">${pr + ab} <small>of ${rows.length} vehicles</small></span>
-        <p>${pr} priority review and ${ab} above the fleet average${su ? `, including ${su} moved up a group for a low FleetView score` : ''}.${lim ? `<span class="kmore"> ${lim} more ${lim === 1 ? 'has' : 'have'} too little mileage to rate.</span>` : ''}</p></div>
+        <span class="v">${needPeople} <small>of ${people.size} ${people.size === 1 ? 'driver' : 'drivers'}</small></span>
+        <p>${needSpare ? `Plus ${needSpare} spare ${needSpare === 1 ? 'van' : 'vans'} with incidents and no driver. ` : ''}<span class="kmore">By vehicle, ${pr} priority review and ${ab} above the fleet average${su ? `, including ${su} moved up a group for a low FleetView score` : ''}.${lim ? ` ${lim} more ${lim === 1 ? 'has' : 'have'} too little mileage to rate.` : ''}</span></p></div>
       <div class="kpi ${v.o20 ? 'alertish' : ''}"><span class="l">Serious incidents</span>
         <span class="v">${fmt(v.o20)} <small>incidents</small></span>
-        <p>Recorded 20 mph or more over the speed limit ${per}.</p></div>
+        <p>Recorded 20 mph or more over the speed limit ${per}.${sevLow ? ` ${fmt(sevLow)} of them by drivers currently "at or below the fleet average".` : ''}</p></div>
       <div class="kpi kpi-trend"><span class="l">Fleet rate</span>
         <span class="v">${f1(v.avg)} <small>per 100 miles</small></span>
         <div class="kt">${spark(fw, fa, {w:120, h:32, sel:v.week, cap:Math.max(fa * 1.6, ...fw.map(k => k.rate)) * 1.1})}<span>Week by week, across ${fmt(v.miles)} miles</span></div></div>`;
@@ -2630,7 +2640,7 @@ html.drv .f-driver{display:none}
     const q = prefs.q.trim().toLowerCase();
     let rows = view.rows.filter(r =>
       (!q || r.d.toLowerCase().includes(q) || r.reg.toLowerCase().replace(/\s+/g,'').includes(q.replace(/\s+/g,''))) &&
-      (prefs.status === 'all' || (prefs.status === 'review' ? (r.st === 'priority' || r.st === 'above') : r.st === prefs.status)) &&
+      (prefs.status === 'all' || (prefs.status === 'review' ? (r.st === 'priority' || r.st === 'above') : prefs.status === 'serious' ? r.o20 > 0 : r.st === prefs.status)) &&
       (prefs.type === 'all' || String(r.grp).toLowerCase() === prefs.type));
     const cmp = SORTS[prefs.sort];
     rows.sort((a,b) => cmp(a,b) * prefs.dir || a.d.localeCompare(b.d) || a.reg.localeCompare(b.reg));
@@ -2658,9 +2668,9 @@ html.drv .f-driver{display:none}
       ${moves ? `<span class="dr-mv" aria-hidden="true"${mv ? ` title="${esc(moveWords(mv))}"` : ''}>${moveBadge(mv)}</span>` : ''}
       <span class="go" aria-hidden="true"></span></a>`;
   }
-  const CHIPS = [['all', 'All'], ['review', 'Needs review'], ['priority', 'Priority'], ['above', 'Above average'], ['within', 'At or below'], ['limited', 'Limited evidence']];
+  const CHIPS = [['all', 'All'], ['review', 'Needs review'], ['serious', 'Serious'], ['priority', 'Priority'], ['above', 'Above average'], ['within', 'At or below'], ['limited', 'Limited evidence']];
   function renderChips(){
-    const n = s => s === 'all' ? view.rows.length : s === 'review' ? view.rows.filter(r => r.st === 'priority' || r.st === 'above').length : view.rows.filter(r => r.st === s).length;
+    const n = s => s === 'all' ? view.rows.length : s === 'review' ? view.rows.filter(r => r.st === 'priority' || r.st === 'above').length : s === 'serious' ? view.rows.filter(r => r.o20 > 0).length : view.rows.filter(r => r.st === s).length;
     const had = document.activeElement && document.activeElement.closest && document.activeElement.closest('#f-status') ? document.activeElement.dataset.st : null;
     $('#f-status').innerHTML = CHIPS.map(([k, l]) => `<button type="button" class="fchip ${k === 'all' || k === 'review' ? '' : 'c-' + k}" data-st="${k}" aria-pressed="${prefs.status === k}">${l}<span>${n(k)}</span></button>`).join('');
     if (had) { const b = $(`#f-status [data-st="${had}"]`); if (b) b.focus({preventScroll:true}); }
@@ -2668,7 +2678,8 @@ html.drv .f-driver{display:none}
   function groupedHtml(rows, stOf){
     return GROUPS.map(([st, title, why]) => {
       const rs = rows.filter(r => stOf(r) === st); if (!rs.length) return '';
-      return `<section class="dgroup g-${st}" aria-labelledby="dg-${st}"><header class="dg-head"><h3 id="dg-${st}"><span class="dot" aria-hidden="true"></span>${title}<span class="dg-n">${rs.length}</span></h3><p>${esc(why(view.avg, scoreCut()))}</p></header>
+      const sev = rs.reduce((a, r) => a + (r.o20 || 0), 0);
+      return `<section class="dgroup g-${st}" aria-labelledby="dg-${st}"><header class="dg-head"><h3 id="dg-${st}"><span class="dot" aria-hidden="true"></span>${title}<span class="dg-n">${rs.length}</span>${sev ? `<span class="dg-sev">· ${fmt(sev)} serious ${sev === 1 ? 'incident' : 'incidents'}</span>` : ''}</h3><p>${esc(why(view.avg, scoreCut()))}</p></header>
           <div class="dg-list">${rs.map(r => driverRow(r, false)).join('')}</div></section>`;
     }).join('');
   }
@@ -4335,7 +4346,7 @@ html.drv .f-driver{display:none}
     const cards = ids.map(id => avCard(id, matched.has(id) ? 'Your vehicle in FleetView' : 'Assigned to you on the Monday board', ''));
     el.innerHTML = head + `<section class="avsec" aria-labelledby="h-fleet">${syncHtml()}${cards.length ? `<div class="avcards">${cards.join('')}</div>`
       : `<div class="empty"><b>No vehicle details for you yet.</b>The Monday fleet board doesn't match a vehicle to you at the moment. Ask your fleet manager.</div>`}
-      <p class="note">From the Monday fleet board, synced every hour on weekdays. Tell your fleet manager if anything here is wrong.</p></section>`;
+      <p class="note">From the Monday fleet board, synced every 15 minutes. Tell your fleet manager if anything here is wrong.</p></section>`;
   }
   function renderMineEmpty(el){
     const name = SCOPE.driver;
