@@ -9,6 +9,10 @@
    shows exactly what their page would. It also asks the FLR database which tools
    the person has (hub_home), so it can say "that isn't on your Hub" instead of
    linking somewhere they can't open.
+   Every answer says where it comes from, under it: "Hub help", or "Live", the
+   tool and when its data was last synced (lines.js words it; records.js gives
+   each look-up its source). Each conversation starts with what he can and
+   can't do (CAN_DO in lines.js).
    Its face is the FLR character (face.css): six drawings of him, one per mood.
    He floats and tilts his head now and then, lifts when you reach for him,
    thinks while a look-up takes a moment and reacts to what it finds.
@@ -18,7 +22,7 @@
    caches files for 10 minutes).
    ========================================================================== */
 import { buildIndex, search, searchSlots, maybes, hubWords, properNames, unaddressed } from './engine.js?v=2.1';
-import { pickLine, moodFor } from './lines.js?v=2.1';
+import { pickLine, moodFor, sourceLine, CAN_DO } from './lines.js?v=2.1';
 
 const V = '2.1';
 const HERE = new URL('.', import.meta.url);
@@ -358,6 +362,7 @@ function linkFor(e, ctx) {
   });
   return a;
 }
+const ABOUT_ME = 'assistant-about';   // help.json's "What Likkle Jeff can do"
 function answerEl(m, H, ctx) {
   const e = H.byId.get(m.id);
   if (!e) return null;
@@ -373,7 +378,9 @@ function answerEl(m, H, ctx) {
     b.append(el('p', 'note', `Sign in to the Hub first, then open ${toolName(e.tool, ctx)} from there.`));
     const a = el('a', 'go', 'Go to the Hub'); a.href = HUB.href; a.insertAdjacentHTML('beforeend', ICON.chev); b.append(a);
   }
+  if (e.id === ABOUT_ME) b.append(canDoEl(false));   // "What Likkle Jeff can do": the answer starts with the card's sentence
   if (e.link && (g === 'ok' || g === 'viewonly') && !(OWN_ACCESS && e.tool === PAGE)) { const a = linkFor(e, ctx); if (a) b.append(a); }
+  b.append(sourceEl({ help: true, updated: e.updated }));
   const rel = chipsFor([...new Set([...(e.related || []), ...(m.rel || [])])].filter(id => id !== e.id).slice(0, 3), H, ctx);
   if (rel.childElementCount) b.append(el('p', 'label', 'Related'), rel);
   return b;
@@ -413,7 +420,28 @@ function recordsEl(m, H, ctx) {
   if (card.text) b.append(el('p', null, card.text));
   if (card.note) b.append(el('p', 'rec-note', card.note));
   if (card.link) { const a = el('a', 'go', card.link.label); a.href = card.link.href; a.insertAdjacentHTML('beforeend', ICON.chev); b.append(a); }
+  if (card.source && !card.error) b.append(sourceEl(card.source));
   return b;
+}
+// Under every answer, where it comes from: "Hub help", or "Live · Annual Leave · synced 10:42 · read-only" (sourceLine).
+function sourceEl(src) {
+  const p = el('p', 'src' + (src.help ? '' : ' live') + (src.stale ? ' stale' : '')), dot = el('span', 'src-dot');
+  dot.setAttribute('aria-hidden', 'true');
+  p.append(dot, el('span', 'sr', 'Source: '), el('span', null, sourceLine(src)));
+  return p;
+}
+// What he can and can't do (CAN_DO in lines.js): in full at the start of every conversation; just the two lists under
+// "What Likkle Jeff can do" (ABOUT_ME), whose answer already says the rest.
+function canDoEl(full) {
+  const box = el('div', 'can');
+  if (full) box.append(el('p', 'can-title', CAN_DO.title), el('p', 'can-lead', CAN_DO.lead));
+  for (const [cls, label, items] of [['yes', 'I can', CAN_DO.can], ['no', 'I can’t', CAN_DO.cant]]) {
+    const ul = el('ul', 'can-list ' + cls);
+    ul.setAttribute('aria-label', label);
+    for (const t of items) ul.append(el('li', null, t));
+    box.append(ul);
+  }
+  return box;
 }
 function render(m, H, ctx) {
   if (m.k === 'me') return el('div', 'msg me', m.t);
@@ -424,10 +452,10 @@ function render(m, H, ctx) {
     const first = (ctx.name || '').trim().split(/\s+/)[0];
     b.append(el('p', null, `Hi${first ? ' ' + first : ''}. Ask me where to find something on the Hub, or how to do it.`));
     if (!ctx.signedIn && !OWN_ACCESS) b.append(el('p', 'note', 'You’re signed out. Sign in to use the Hub’s tools; I can help with that too.'));
-    b.append(chipsFor(starters(ctx), H, ctx));
-  } else if (m.k === 'hello') {
-    b.append(el('p', null, m.thanks ? 'You’re welcome.' : 'Ask me about a tool or a task, for example:'));
-    if (!m.thanks) b.append(chipsFor(starters(ctx), H, ctx));
+    b.append(canDoEl(true), chipsFor(starters(ctx), H, ctx));
+  } else if (m.k === 'hello') {   // nothing to search for: "hi", "help?", "what can you do?"
+    if (m.thanks) b.append(el('p', null, 'You’re welcome.'));
+    else b.append(canDoEl(true), el('p', null, 'Ask me about a tool or a task, for example:'), chipsFor(starters(ctx), H, ctx));
   } else if (m.k === 'unsure') {
     b.append(el('p', null, 'I’m not sure which of these you mean:'));
     b.append(chipsFor(m.ids, H));
@@ -440,6 +468,7 @@ function render(m, H, ctx) {
     if (!e || gate(e, ctx) !== 'ok') return null;
     b.append(el('p', null, `Next, in ${toolName(e.tool, ctx)}:`));
     const ol = el('ol'); for (const s of (e.steps || []).filter((x, i) => !(i === 0 && /^Open /.test(x)))) ol.append(el('li', null, s)); b.append(ol);
+    b.append(sourceEl({ help: true, updated: e.updated }));
   } else if (m.k === 'error') {
     b.append(el('p', null, m.help === false
       ? 'Something went wrong on the Hub’s side while I was looking, not with what you asked. Try again in a moment; if it keeps happening, tell an FLR administrator.'
