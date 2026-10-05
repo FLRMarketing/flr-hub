@@ -751,9 +751,11 @@ html.staff #copy-form{display:none}
 .rq-times{display:flex;flex-wrap:wrap;gap:4px 22px;margin-top:6px}
 .rq-t{display:flex;flex-direction:column;gap:1px;min-width:0}
 .rq-k{font:600 10.5px/1.25 var(--font-text);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
-.rq-v{font-size:12.5px;line-height:1.35;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rq-v{font-size:12.5px;line-height:1.35;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.rq-when,.rq-by{white-space:nowrap}
+.rq-by{color:var(--ink)}   /* who decided, after the time (under it when there isn't room) */
 button.mine-row .mr-main>.rq-times{display:flex}   /* not the block the row's other lines are */
-@media (max-width:420px){   /* phones: the two times across the whole row, so they stay side by side */
+@media (max-width:600px){   /* phones: the two times across the whole row, so they stay side by side */
   .mine-row:has(.rq-times){grid-template-columns:46px minmax(0,1fr);grid-template-areas:"badge dates" "badge bits" "badge status" "times times";align-items:start;gap:2px 12px}
   button.mine-row:has(.rq-times){grid-template-columns:46px minmax(0,1fr) 14px;grid-template-areas:"badge dates go" "badge bits go" "badge status go" "times times times"}
   .mine-row:has(.rq-times) .mr-main{display:contents}
@@ -762,7 +764,7 @@ button.mine-row .mr-main>.rq-times{display:flex}   /* not the block the row's ot
   .mine-row:has(.rq-times) .mr-main>.subtle{grid-area:bits}
   .mine-row:has(.rq-times) .mr-status{grid-area:status;grid-column:auto;margin-top:6px}
   .mine-row:has(.rq-times) .mr-go{grid-area:go;grid-row:auto;align-self:center}
-  .mine-row:has(.rq-times) .rq-times{grid-area:times;margin-top:10px}
+  .mine-row:has(.rq-times) .rq-times{grid-area:times;margin-top:10px;flex-wrap:nowrap}   /* "by …" goes under its time instead */
 }
 .mr-main{min-width:0}
 .empty-act{margin-top:12px}
@@ -2063,12 +2065,22 @@ function fmtStamp(iso) {
 // When a request was sent and, once it's decided, when it was accepted, denied or cancelled: shown side by side under it.
 // The decision's time is monday.com's own record of the Decision column changing; without one, the "Decided on" date.
 const DECIDED_WORD = { accepted: 'Accepted', denied: 'Denied', cancelled: 'Cancelled' };
+// Who made the current decision, when it was made on the FLR Hub: the FLR server's audit trail has each decision there
+// with the person signed in. One changed since in monday.com (another decision, or the time no longer matching) has no name.
+function decidedBy(r) {
+  const d = window.__FLR_LEAVE && window.__FLR_LEAVE.decisions ? window.__FLR_LEAVE.decisions[r.id] : null;
+  if (!d || typeof d.by !== 'string' || !d.by || decisionFromLabel(d.decision) !== r.decision) return '';
+  const hub = Date.parse(d.at), board = Date.parse(r.cur.decidedAt || '');
+  return Number.isFinite(hub) && Number.isFinite(board) && Math.abs(hub - board) > 60000 ? '' : d.by;
+}
+// [label, when, who]: who only for a decision made on the Hub
 function requestTimes(r) {
-  const out = [[r.imported ? 'Imported' : 'Requested', fmtStamp(r.createdAt) || '—']];
-  if (DECIDED_WORD[r.decision]) out.push([DECIDED_WORD[r.decision], fmtStamp(r.cur.decidedAt) || (r.cur.decidedOn ? fmtDate(r.cur.decidedOn) : '—')]);
+  const out = [[r.imported ? 'Imported' : 'Requested', fmtStamp(r.createdAt) || '—', '']];
+  if (DECIDED_WORD[r.decision]) out.push([DECIDED_WORD[r.decision], fmtStamp(r.cur.decidedAt) || (r.cur.decidedOn ? fmtDate(r.cur.decidedOn) : '—'), decidedBy(r)]);
   return out;
 }
-const timesHtml = (r) => `<span class="rq-times">${requestTimes(r).map(([k, v]) => `<span class="rq-t"><span class="rq-k">${esc(k)}</span><span class="rq-v">${esc(v)}</span></span>`).join('')}</span>`;
+const whenHtml = (when, by) => `<span class="rq-when">${esc(when)}</span>${by ? ` <span class="rq-by">by ${esc(by)}</span>` : ''}`;
+const timesHtml = (r) => `<span class="rq-times">${requestTimes(r).map(([k, v, by]) => `<span class="rq-t"><span class="rq-k">${esc(k)}</span><span class="rq-v">${whenHtml(v, by)}</span></span>`).join('')}</span>`;
 function displayName(r) {
   if (r.employeeName) return r.employeeName;
   return isPlaceholder(r.name) ? 'Unnamed request' : r.name;
@@ -2863,7 +2875,7 @@ function renderRequestsBody() {
     return `<tr class="click" data-act="open" data-id="${esc(r.id)}" tabindex="0"><td class="c-name"><b>${esc(displayName(r))}</b></td><td class="c-dates">${esc(fmtRange(d.from, d.to))}</td><td class="r num c-days" data-label="Days">${fmtNum(d.total)}</td>
       <td class="c-dec">${pillFor(r.decision)}</td><td class="c-sug" data-label="Suggested">${ev ? suggestPill(ev.suggested) : r.cur.suggested ? `<span class="subtle">${esc(r.cur.suggested)}</span>` : '—'}</td><td class="c-chk" data-label="Checks">${checks}</td>
       <td class="c-req" data-label="${esc(times[0][0])}">${esc(times[0][1])}</td>
-      <td class="c-when" data-label="${times[1] ? esc(times[1][0]) : 'Decided'}">${times[1] ? esc(times[1][1]) : '—'}</td><td class="go" aria-hidden="true"><i class="chev"></i></td></tr>`;
+      <td class="c-when" data-label="${times[1] ? esc(times[1][0]) : 'Decided'}">${times[1] ? whenHtml(times[1][1], times[1][2]) : '—'}</td><td class="go" aria-hidden="true"><i class="chev"></i></td></tr>`;
   }).join('');
   host.innerHTML = `<div class="table-wrap"><table class="data reqs"><thead><tr><th>Employee</th><th>Dates</th><th class="r">Days</th><th>Decision</th><th>Suggested</th><th>Checks</th><th>Requested</th><th>Decided</th><th class="go"><span class="sr">Open</span></th></tr></thead><tbody>${tr}</tbody></table></div>`;
 }
@@ -3131,7 +3143,7 @@ function renderOverlay() {
           ${ev && ev.leftAfter !== null ? `<div class="stat"><span>Left after this</span><b class="num">${fmtNum(ev.leftAfter)}</b></div>` : ''}
           <div class="stat"><span>Leave group</span><b>${esc((ev && ev.groupNames) || r.cur.leaveGroup || '—')}</b></div>
           ${sid && !staffView() && String(sid) !== state.person ? `<button class="stat go" type="button" data-act="person" data-id="${esc(sid)}"><span>Leave record</span><b>Days left and all leave${icon('chev-r')}</b></button>` : ''}
-          ${requestTimes(r).map(([k, v]) => `<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}
+          ${requestTimes(r).map(([k, v, by]) => `<div class="stat"><span>${esc(k)}</span><b>${whenHtml(v, by)}</b></div>`).join('')}
           ${r.email ? `<div class="stat"><span>Email</span><b class="formlink">${esc(r.email)}</b></div>` : ''}
         </div>
         ${r.notes ? `<section class="panel-block"><h3 class="eyebrow">Employee notes</h3><p class="note-text">${esc(r.notes)}</p></section>` : ''}
