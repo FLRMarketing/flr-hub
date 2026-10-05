@@ -319,6 +319,12 @@ function whoIsOff(ctx, date, { includePending = true } = {}) {
 const today = todayInLondon();   // as the page's own "State" section sets it; mapData reads it
 
 function cv(it) { const m = {}; for (const c of it.column_values || []) m[c.id] = c; return m; }
+// When monday.com last changed a column: it keeps the moment in the column's value ("changed_at", in UTC).
+function changedAt(c) {
+  if (!c) return null;
+  if (typeof c.updated_at === 'string' && c.updated_at) return c.updated_at;
+  try { const v = JSON.parse(c.value || 'null'); return v && typeof v.changed_at === 'string' ? v.changed_at : null; } catch (e) { return null; }
+}
 function num(c) {
   if (c && typeof c.number === 'number') return c.number;
   const t = ((c && c.text) || '').trim();
@@ -351,10 +357,12 @@ function mapData(raw) {
       staffId: staffIds[0] || null, from: d.from, to: d.to, halfDay: halfDayFromLabel(lab(c[REQ.halfDay])),
       decision: decisionFromLabel(lab(c[REQ.decision])), daysOverride: num(c[REQ.override]),
       notes: txt(c[REQ.notes]) || '', createdAt: it.created_at, email: txt(c[REQ.email]),
+      imported: /^imported from/i.test(txt(c[REQ.notes]) || ''),   // added from the old leave record, not sent with the form
       cur: {
         suggested: lab(c[REQ.suggested]), allowanceCheck: lab(c[REQ.allowanceCheck]), groupCheck: lab(c[REQ.groupCheck]),
         workingDays: num(c[REQ.workingDays]), leftAfter: num(c[REQ.leftAfter]), leaveGroup: txt(c[REQ.leaveGroup]),
         details: txt(c[REQ.details]), staffIds, decidedOn, managersNote: txt(c[REQ.managersNote]),
+        decidedAt: changedAt(c[REQ.decision]),   // when the Decision last changed: when it was accepted, denied or cancelled
       },
     };
   });
