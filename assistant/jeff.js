@@ -133,16 +133,26 @@ document.body.appendChild(host);
 // Follow a page's own light/dark switch (the Fleet page's data-mode, others' data-theme), otherwise the device; and step
 // aside while a page shows its own dialog or sheet (Annual Leave and the Fitter Schedule mark theirs with html.overlay-open).
 const pageModal = () => { try { return !!document.querySelector('dialog:modal'); } catch (e) { return false; } };
+// Fleet Management's map on a phone (720px or less, the page's own switch): its details sheet, tab bar and map controls
+// fill the screen, so he steps aside there until another view is open (the plan's F15 and F18).
+const mqMapPhone = matchMedia('(max-width: 720px)');
+const onPhoneMap = () => PAGE === 'speeding' && mqMapPhone.matches && !!document.querySelector('#view-map:not(.off)');
 function syncPage() {
   const h = document.documentElement, m = h.getAttribute('data-mode') || h.getAttribute('data-theme');
   if (m === 'dark' || m === 'light') host.setAttribute('data-scheme', m); else host.removeAttribute('data-scheme');
-  const covered = h.classList.contains('overlay-open') || pageModal();
+  const covered = h.classList.contains('overlay-open') || pageModal() || onPhoneMap();
   host.toggleAttribute('data-covered', covered);
   if (covered && panel.open && !panel.matches(':modal')) close();
 }
 syncPage();
 new MutationObserver(syncPage).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme', 'class'] });
 new MutationObserver(syncPage).observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
+if (PAGE === 'speeding') {   // the map view opening and closing (its class), and the phone switch
+  addEventListener('hashchange', () => setTimeout(syncPage, 0));
+  mqMapPhone.addEventListener('change', syncPage);
+  const views = document.getElementById('view-map');
+  if (views) new MutationObserver(syncPage).observe(views, { attributes: true, attributeFilter: ['class'] });
+}
 
 // Keep clear of what a page keeps in the bottom-right corner. Tab bars at the bottom come for free: those pages set
 // --tabbar-h, which the button's position adds (assistant.css). These are the rest: the Estimator's sticky bar with
