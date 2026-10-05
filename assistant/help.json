@@ -593,7 +593,7 @@
         "approved",
         "quotestate"
       ],
-      "answer": "On the Cost Estimator’s Projects page, search by quote ID, client or site, or pick a group: “All”, “Recently edited”, “Drafts”, “Ready to quote”, “Approved” or “Archived”. Choose yourself under “All estimators” to see only yours, then press “Open” or the quote ID.",
+      "answer": "On the Cost Estimator’s Projects page, search by quote ID, client or site, or pick a group: “All”, “Drafts”, “Ready to quote”, “Approved” or “Archived”. “Your drafts” at the top are quotes you made or that are assigned to you; empty drafts are folded into one line until you press “Show”. Choose yourself under “All estimators” to see only yours, then press “Open” or the quote ID.",
       "link": {
         "href": "estimator/",
         "label": "Open the Cost Estimator"
