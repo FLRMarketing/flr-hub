@@ -150,7 +150,7 @@ a{color:var(--tint)}
   background:linear-gradient(145deg,rgba(0,9,139,.075),rgba(0,9,139,.015));
 }
 @media (prefers-color-scheme:dark){
-  .home::before{background:linear-gradient(145deg,rgba(0,9,139,.28),rgba(0,9,139,.035))}
+  .home::before{background:linear-gradient(145deg,rgba(0,9,139,.33),rgba(0,9,139,.045))}
 }
 @media (max-width:600px){
   .home::before{top:100px;right:-140px;width:360px;opacity:.6}
