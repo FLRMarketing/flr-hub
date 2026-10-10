@@ -140,7 +140,24 @@ a{color:var(--tint)}
 .link:active{opacity:.55}
 
 /* ---------------------------------------------------------------- home */
-.home{padding-block:18px 32px}
+.home{position:relative;isolation:isolate;padding-block:18px 32px}
+/* A quiet FLR diamond behind the home screen; never intercepts tool controls. */
+.home::before{
+  content:"";position:fixed;z-index:-1;pointer-events:none;
+  top:72px;right:max(-100px,calc((100vw - 1200px)/2));
+  width:min(64vw,680px);aspect-ratio:1;
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  background:linear-gradient(145deg,rgba(0,9,139,.075),rgba(0,9,139,.015));
+}
+@media (prefers-color-scheme:dark){
+  .home::before{background:linear-gradient(145deg,rgba(0,9,139,.28),rgba(0,9,139,.035))}
+}
+@media (max-width:600px){
+  .home::before{top:100px;right:-140px;width:360px;opacity:.6}
+}
+@media (prefers-contrast:more),(forced-colors:active){
+  .home::before{display:none}
+}
 .home-head{display:flex;flex-direction:column;gap:2px;margin-bottom:28px}
 .eyebrow{margin:0;color:var(--ink-2);font:600 15px/1.3 var(--font-text);letter-spacing:-.006em}
 .section-label{margin:0 0 12px;color:var(--ink-2);font:600 15px/1.3 var(--font-text);letter-spacing:-.006em}
