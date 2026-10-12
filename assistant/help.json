@@ -364,6 +364,38 @@
       ]
     },
     {
+      "id": "likkle-jeff-switch",
+      "tool": "hub",
+      "title": "Switch Likkle Jeff on or off",
+      "ask": [
+        "how do I turn likkle jeff off",
+        "turn off the assistant",
+        "hide likkle jeff",
+        "switch likkle jeff off for everyone",
+        "how do I get likkle jeff back",
+        "turn the help button back on",
+        "can I hide the help button",
+        "where is the likkle jeff switch",
+        "why has likkle jeff disappeared",
+        "stop the assistant showing"
+      ],
+      "keys": [
+        "switch",
+        "hide",
+        "turn off",
+        "help button"
+      ],
+      "answer": "Super Admins switch Likkle Jeff on or off for everyone in Hub settings, under “Likkle Jeff”. The change shows the next time each page is opened or refreshed, on every Hub page and the Fitter Schedule. If you’re not a Super Admin, ask one.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "hub-settings",
+        "assistant-about"
+      ]
+    },
+    {
       "id": "approve-account",
       "tool": "hub",
       "who": "superadmin",

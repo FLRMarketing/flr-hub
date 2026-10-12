@@ -99,7 +99,7 @@
     $('#gate').hidden = false; $('#gate-message').hidden = false;
     $('#gate-title').textContent = title; $('#gate-text').textContent = text;
     $('#gate-retry').hidden = !o.retry;
-    $('#accounts-section').hidden = true; $('#registration-section').hidden = true; $('#waiting-section').hidden = true;
+    $('#accounts-section').hidden = true; $('#registration-section').hidden = true; $('#jeff-section').hidden = true; $('#waiting-section').hidden = true;
   }
 
   function switchEl(on, label, data) {
@@ -205,6 +205,20 @@
     if (openFor === a.id) fillSheet(a);
   }
 
+  // Likkle Jeff's switch (Hub migration 2.4). S.jeff: true / false, or null when the database hasn't got the switch yet.
+  function renderJeff() {
+    const btn = $('#jeff-on'), sub = $('#jeff-on-sub');
+    btn.disabled = S.jeff === null;
+    btn.setAttribute('aria-checked', S.jeff ? 'true' : 'false');
+    sub.textContent = S.jeff === null ? 'Needs the “Likkle Jeff switch” update to the FLR database (Hub migration 2.4).'
+      : S.jeff ? 'Showing on every page for everyone.' : 'Hidden for everyone until you switch him back on.';
+    sub.classList.toggle('is-warn', S.jeff === null);
+  }
+  async function loadJeff() {
+    try { S.jeff = (await call('likkle_jeff_on')) !== false; } catch (e) { S.jeff = null; }
+    renderJeff();
+  }
+
   function renderSettings() {
     const s = S.settings;
     $('#reg-open').setAttribute('aria-checked', s.registrationOpen ? 'true' : 'false');
@@ -259,8 +273,8 @@
       return gate('Hub settings didn’t load', offline(e) ? 'Can’t reach the FLR database. Check your connection and try again.' : 'Something went wrong. Try again in a moment.', { retry: true });
     }
     $('#gate').hidden = true;
-    $('#accounts-section').hidden = false; $('#registration-section').hidden = false;
-    renderSettings(); renderAccounts(); renderPre();
+    $('#accounts-section').hidden = false; $('#registration-section').hidden = false; $('#jeff-section').hidden = false;
+    renderSettings(); renderAccounts(); renderPre(); loadJeff();
     view('ready');
   }
   async function reloadAccounts() {
@@ -446,6 +460,20 @@
     catch (err) { toast(said(err)); }
   }
   $('#ap-refuse').addEventListener('click', () => { const id = approveFor; sheets.close($('#sheet-approve')); setTimeout(() => refuse(id), reduced() ? 0 : 300); });
+
+  /* ---------------------------------------------------------------- Likkle Jeff */
+  $('#jeff-on').addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    if (btn.getAttribute('aria-busy') === 'true' || S.jeff === null) return;
+    const on = !S.jeff;
+    btn.setAttribute('aria-busy', 'true'); btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    try {
+      S.jeff = (await call('admin_set_likkle_jeff', { p_on: on })) !== false;
+      if (window.FLR_LIKKLE_JEFF_SEEN) window.FLR_LIKKLE_JEFF_SEEN(S.jeff);   // this browser follows at once
+      renderJeff(); toast(S.jeff ? 'Likkle Jeff is on for everyone' : 'Likkle Jeff is off for everyone');
+    } catch (err) { renderJeff(); toast(said(err)); }
+    finally { btn.removeAttribute('aria-busy'); }
+  });
 
   /* ---------------------------------------------------------------- registration */
   $('#reg-open').addEventListener('click', async e => {
