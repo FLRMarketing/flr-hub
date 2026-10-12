@@ -81,6 +81,7 @@ button,input{font:inherit;color:inherit}
 .fab.nudge .fab-nudge{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}
 .fab.nudge .fab-label{opacity:0!important}
 /* a page's own sheet is open: step aside until it closes */
+:host([data-docked]) .fab{display:none}   /* the page has its own button for him (jeff.js, flr-assist-dock) */
 :host([data-covered]) .fab{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility 0s .3s}
 /* a dot when there are next steps waiting for you on this page (after following one of its links on a phone) */
 .fab.note::after{content:"";position:absolute;top:8px;right:6px;width:13px;height:13px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 2px #fff}

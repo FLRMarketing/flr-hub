@@ -6,54 +6,67 @@
 <title>Order Tracker · FLR Hub</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="flr-assist-nudge" content="off">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="flr-assist-dock" content="tabbar">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#f3a26d">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="../hub.css?v=2.0">
-<link rel="stylesheet" href="orders.css?v=0.2">
+<link rel="stylesheet" href="orders.css?v=1.0">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="rules.js?v=0.2" defer></script>
-<script src="orders.js?v=0.2" defer></script>
+<script src="rules.js?v=1.0" defer></script>
+<script src="orders.js?v=1.0" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
 <svg class="defs" aria-hidden="true" focusable="false">
+  <!-- FLR mark (as on the Hub) -->
+  <symbol id="flr-mark" viewBox="4 8 143 164"><path fill="#a7a9ac" fill-rule="evenodd" d="M 13.99 170.7 L 146.26 170.7 L 146.26 16.51 L 13.99 16.51 Z M 13.99 170.7 "/><path fill="#001796" fill-rule="evenodd" d="M 5.39 43.18 L 40.73 9.45 L 76.07 43.18 L 40.73 76.92 Z M 5.39 43.18 "/><path fill="#ffffff" fill-rule="nonzero" d="M 31.05 131.55 L 31.05 142.08 L 53.86 142.08 L 53.86 148.14 L 31.05 148.14 L 31.05 164.14 L 21.23 164.14 L 21.23 125.32 L 55.09 125.32 L 55.09 131.55 Z M 31.05 131.55 "/><path fill="#ffffff" fill-rule="nonzero" d="M 71.25 125.32 L 71.25 157.62 L 94.97 157.62 L 94.97 164.14 L 61.27 164.14 L 61.27 125.32 Z M 71.25 125.32 "/><path fill="#ffffff" fill-rule="nonzero" d="M 100.07 164.14 L 100.07 125.32 L 124.95 125.32 C 130.84 125.36 135.09 126.22 137.7 127.91 C 140.31 129.6 141.61 132.75 141.61 137.37 L 141.61 138.82 C 141.61 139.32 141.56 139.83 141.46 140.34 C 141.36 141.42 141.09 142.49 140.66 143.54 C 140.22 144.59 139.46 145.46 138.39 146.16 C 137.77 146.54 137.1 146.86 136.36 147.09 C 135.61 147.32 134.86 147.52 134.09 147.67 C 133.78 147.71 133.49 147.76 133.21 147.82 C 132.93 147.88 132.63 147.92 132.32 147.96 L 132.32 148.14 C 135.34 148.33 137.54 149.07 138.93 150.35 C 140.31 151.63 141 153.41 141 155.7 L 141 164.14 L 131.1 164.14 L 131.1 157.1 L 131.17 156.23 C 131.12 154.29 130.39 152.96 128.98 152.27 C 127.57 151.57 125.72 151.22 123.42 151.22 L 109.59 151.16 L 109.59 164.14 Z M 109.59 144.93 L 123.42 144.93 C 126.44 144.97 128.55 144.54 129.75 143.62 C 130.95 142.71 131.55 141.17 131.55 139 C 131.55 136.59 131.21 134.8 130.52 133.61 C 129.83 132.43 127.66 131.84 124.03 131.84 L 109.59 131.78 Z M 109.59 144.93 "/></symbol>
+
+  <!-- interface -->
   <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5.5 8.5 12l6.5 6.5"/></symbol>
-  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
-  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01" stroke-width="2.6"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5 10.2 16.7 18 8.2"/></symbol>
-  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4.2h-4.2"/></symbol>
-  <symbol id="i-warehouse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5 12 4.5l8.5 5V20h-17z"/><path d="M7.5 20v-6.5h9V20M7.5 16.5h9"/></symbol>
-  <symbol id="i-site" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></symbol>
-  <symbol id="i-collect" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5z"/><path d="M4 8.5l8 4.5 8-4.5M12 13v7"/></symbol>
-  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5z"/><path d="M4 8.5l8 4.5 8-4.5M12 13v7M8 6.3l8 4.4"/></symbol>
-  <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16.5 7.5M9.5 7.5h7v7"/></symbol>
-  <symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5h14v10H10l-5 4z"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5 12 15.5 18 9.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01" stroke-width="2.8"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5 10.2 16.7 18 8.2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4.2h-4.2"/></symbol>
+  <symbol id="i-warehouse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5 12 4.5l8.5 5V20h-17z"/><path d="M7.5 20v-6.5h9V20M7.5 16.5h9"/></symbol>
+  <symbol id="i-site" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+  <symbol id="i-collect" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l-1.2 11H6.2z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5h11v9H3zM14 10.5h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.8h17M8 3.2v3.6M16 3.2v3.6"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13.5 6.5 5h11l2.5 8.5V19H4z"/><path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c-4.8 0-8.5 3.3-8.5 7.5 0 2.2 1 4.1 2.6 5.5l-.8 3.7 3.9-1.9c.9.3 1.8.4 2.8.4 4.8 0 8.5-3.3 8.5-7.7S16.8 3.6 12 3.6z"/><path d="M9.8 9.3a2.25 2.25 0 1 1 3.2 2c-.6.3-1 .8-1 1.5v.3"/><path stroke-width="2.6" d="M12 15.8h.01"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16.5 7.5M9.5 7.5h7v7"/></symbol>
+
+  <!-- materials: small illustrations, by what the product name says it is -->
+  <symbol id="m-roll" viewBox="0 0 64 64"><path d="M14 44h30l12 8H26z" fill="#8f877e"/><rect x="10" y="22" width="36" height="22" rx="11" fill="#e4ddd3"/><path d="M10 33a11 11 0 0 1 11-11h14v22H21a11 11 0 0 1-11-11z" fill="#f1ebe3"/><ellipse cx="46" cy="33" rx="7" ry="11" fill="#c7beb2"/><ellipse cx="46" cy="33" rx="2.6" ry="4.2" fill="#5f574f"/><path d="M18 27h18" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/></symbol>
+  <symbol id="m-tile" viewBox="0 0 64 64"><path d="M10 35v6l22 11 22-11v-6L32 46z" fill="#2f3a46"/><path d="M32 40 54 29v6L32 46 10 35v-6z" fill="#3e4b5a"/><path d="M10 29 32 18l22 11-22 11z" fill="#7f95ad"/><path d="M32 33 54 22v6L32 39 10 28v-6z" fill="#4b5c6e"/><path d="M10 22 32 11l22 11-22 11z" fill="#9db1c6"/><path d="M21 16.5 43 27.5M43 16.5 21 27.5" stroke="#c7d5e3" stroke-width="1.4" opacity=".7"/></symbol>
+  <symbol id="m-plank" viewBox="0 0 64 64"><path d="M8 40 40 22l16 8-32 18z" fill="#a8774a"/><path d="M8 32 40 14l16 8-32 18z" fill="#d9a46f"/><path d="M8 32v8l16 8v-8z" fill="#8a5f39"/><path d="M24 40v8l32-18v-8z" fill="#9b6c42"/><path d="M16 28.5l26-14.6M22 31.8l26-14.6M30 36l18-10" stroke="#b9844f" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="m-tub" viewBox="0 0 64 64"><path d="M22 15c0-5 20-5 20 0" fill="none" stroke="#8f877e" stroke-width="2.4"/><path d="M16 22h32l-3.5 28a4 4 0 0 1-4 3.5H23.5a4 4 0 0 1-4-3.5z" fill="#ece6dd"/><path d="M16 22h32l-.7 5.5H16.7z" fill="#d3cbc0"/><rect x="13" y="15" width="38" height="8" rx="3" fill="#f39a5b"/><rect x="22" y="31" width="20" height="11" rx="2.5" fill="#f39a5b" opacity=".85"/><path d="M26 36.5h12" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="m-trim" viewBox="0 0 64 64"><path d="M10 40 46 18l8 5-36 22z" fill="#dfe4ea"/><path d="M10 40v6l8 4v-5z" fill="#9aa4ae"/><path d="M18 45v5l36-22v-5z" fill="#b8c1ca"/><path d="M20 39 44 24.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/></symbol>
+  <symbol id="m-tape" viewBox="0 0 64 64"><path d="M50 30 58 46l-6 1-5-12" fill="#e1bb5c"/><ellipse cx="32" cy="38" rx="20" ry="9" fill="#c9a24a"/><rect x="12" y="26" width="40" height="12" fill="#e9c35f"/><ellipse cx="32" cy="26" rx="20" ry="9" fill="#f4d37c"/><ellipse cx="32" cy="26" rx="8" ry="3.6" fill="#6b5a35"/></symbol>
+  <symbol id="m-mat" viewBox="0 0 64 64"><path d="M8 38v5l22 11v-5zM30 49v5l26-14v-5z" fill="#36404a"/><path d="M8 38 34 24l22 11-26 14z" fill="#55626f"/><path d="M14 38.5 37 26.2M19 41 42 28.8M24 43.6 47 31.4M29 46.2 52 34" stroke="#7a8896" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="m-tool" viewBox="0 0 64 64"><path d="M10 40l14 8v3L10 43z" fill="#97a1ab"/><path d="M24 48 48 34v3L24 51z" fill="#b2bbc4"/><path d="M10 40 34 26l14 8-24 14z" fill="#cfd6dd"/><path d="M28 36 36 18" stroke="#6f7881" stroke-width="3" stroke-linecap="round"/><rect x="33" y="8" width="9" height="14" rx="4" transform="rotate(22 37.5 15)" fill="#f39a5b"/></symbol>
+  <symbol id="m-box" viewBox="0 0 64 64"><path d="M10 22 32 32v22L10 44z" fill="#a8743f"/><path d="M32 32 54 22v22L32 54z" fill="#b98049"/><path d="M10 22 32 12l22 10-22 10z" fill="#dba776"/><path d="M21 17 43 27v6" stroke="#f1d3b0" stroke-width="4" fill="none"/></symbol>
 </svg>
 
-<header class="bar" id="bar">
-  <div class="wrap bar-inner">
-    <a class="back" href="../" id="back"><svg aria-hidden="true"><use href="#i-back"/></svg><span id="back-label">Hub</span></a>
-    <p class="bar-title" id="bar-title" aria-hidden="true">Order Tracker</p>
-    <span class="bar-end"><button class="iconbtn" type="button" id="refresh" aria-label="Check for updates now" title="Check for updates now" hidden><svg aria-hidden="true"><use href="#i-refresh"/></svg></button></span>
-  </div>
-</header>
-
-<main class="wrap ord" id="main" tabindex="-1">
+<div class="app" id="app">
   <div class="gate" id="gate" role="status" aria-live="polite">
-    <div class="gate-loading" id="gate-loading" aria-label="Loading orders"><span class="skeleton-line"></span><span class="skeleton-line short"></span><span class="skeleton-block"></span><span class="skeleton-block"></span></div>
+    <div class="gate-loading" id="gate-loading" aria-label="Loading deliveries">
+      <div class="sk sk-head"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div>
+    </div>
     <div class="gate-message" id="gate-message" hidden>
-      <h2 class="gate-title" id="gate-title"></h2>
+      <a class="brand brand-gate" href="../" aria-label="Back to the FLR Hub"><svg class="brand-mark" aria-hidden="true"><use href="#flr-mark"/></svg></a>
+      <h1 class="gate-title" id="gate-title"></h1>
       <p class="gate-text" id="gate-text"></p>
-      <p class="gate-actions"><a class="btn btn-primary" id="gate-home" href="../">Back to the Hub</a><button class="btn btn-plain" type="button" id="gate-retry" hidden>Try again</button></p>
+      <p class="gate-actions"><a class="btn btn-peach" href="../">Back to the Hub</a><button class="btn btn-dark" type="button" id="gate-retry" hidden>Try again</button></p>
     </div>
   </div>
-  <div id="view" hidden></div>
-</main>
+  <main id="view" class="view" tabindex="-1" hidden></main>
+  <nav class="tabs" id="tabs" aria-label="Deliveries" hidden></nav>
+</div>
 
 <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
 <noscript><p class="noscript">The Order Tracker needs JavaScript switched on.</p></noscript>

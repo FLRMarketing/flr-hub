@@ -164,7 +164,7 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
 
 ## Order Tracker (draft, not live)
 
-- Page `orders/` (index.html, orders.js, orders.css), built on hub.css like Onboarding. Tile `orders`, icon `i-orders`,
+- Page `orders/` (index.html, orders.js, orders.css, rules.js): its own look (charcoal, peach header, material pictures by kind), not hub.css. Phones: Today / Coming up / Received tabs and a Help tab for Likkle Jeff (`<meta name="flr-assist-dock">` docks him there; jeff.js hides his floating button while `html[data-flr-assist-docked]` is set); a tapped delivery opens on its own. Wide screens: the list beside the chosen delivery. The FLR mark goes back to the Hub. Tile `orders`, icon `i-orders`,
   Hub settings label "Orders". It only reads: `public.orders_board()` answers active accounts on the tile's list.
 - The data comes from the `flr-orders` Edge Function and migration `20261012200000_flr_order_tracker.sql` in the
   Estimator repo (branch `feature/order-tracker`); its README maps every Goods In column to the page.

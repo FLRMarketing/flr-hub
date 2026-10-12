@@ -1815,7 +1815,7 @@
         "delivery",
         "coming in"
       ],
-      "answer": "The Order Tracker shows the deliveries due today from the Monday “FLR - Goods In” board: the supplier, order number, job, materials, where it’s going and when it’s expected. Late or delayed orders sit under the day’s deliveries, and what came in today has its own list. It only reads Monday, every 5 minutes; change an order on Monday itself.",
+      "answer": "The Order Tracker shows what’s arriving from the Monday “FLR - Goods In” board: Today’s deliveries with a time where Monday has one, late or delayed ones under “Needs attention”, and Coming up and Received tabs. Tap a delivery for its materials, what’s still to arrive, the supplier, order reference and WFM job. It only reads Monday, every 5 minutes; change an order on Monday itself.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"
@@ -1876,7 +1876,7 @@
         "received",
         "new date"
       ],
-      "answer": "Overdue: its date passed and it isn’t all received. Delayed: its first date has gone and Monday gives a later one. Date moved: moved later before its first date came, so not late. Part received: a product is still to come or “Item missing” is logged; it stays with the orders still to come. Once everything is in, it shows as received. Earlier deliveries are under “Received earlier”.",
+      "answer": "Overdue: its date passed and it isn’t all received. Delayed: its first date has gone and Monday gives a later one. Date moved: moved later before its first date came, so not late. Part received: an item is still to arrive or “Item missing” is logged; it stays on Today until everything is in. Late orders are under “Needs attention”; received ones in the Received tab.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"

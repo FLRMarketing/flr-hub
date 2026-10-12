@@ -129,6 +129,17 @@ const fab = $('.fab'), panel = $('.panel'), logEl = $('.log'), suggestEl = $('.s
 // If his picture can't load, the button falls back to a plain round one, so it's never an invisible button.
 fab.querySelector('.f-default').addEventListener('error', () => fab.classList.add('noart'));
 document.body.appendChild(host);
+// A page with its own place for him (the Order Tracker's tab bar on phones) has <meta name="flr-assist-dock">. While it
+// sets html[data-flr-assist-docked], his floating button steps aside, so it never sits over the page, and the page's
+// own button opens him with a 'flr-assist:open' event on document; closing gives the focus back to that button.
+const DOCKABLE = !!document.querySelector('meta[name="flr-assist-dock"]');
+let dockOpener = null;
+if (DOCKABLE) {
+  const dock = () => host.toggleAttribute('data-docked', document.documentElement.hasAttribute('data-flr-assist-docked'));
+  new MutationObserver(dock).observe(document.documentElement, { attributes: true, attributeFilter: ['data-flr-assist-docked'] });
+  dock();
+  document.addEventListener('flr-assist:open', ev => { dockOpener = ev.target instanceof HTMLElement ? ev.target : null; open(); });
+}
 
 // Follow a page's own light/dark switch (the Fleet page's data-mode, others' data-theme), otherwise the device; and step
 // aside while a page shows its own dialog or sheet (Annual Leave and the Fitter Schedule mark theirs with html.overlay-open).
@@ -668,7 +679,8 @@ function close(velocity = 0) {
     fab.setAttribute('aria-expanded', 'false');
     thinking(false);
     mood('land');                                      // back in his corner: a small settle
-    if (!coarse()) fab.focus({ preventScroll: true });
+    if (host.hasAttribute('data-docked') && dockOpener && dockOpener.isConnected) dockOpener.focus({ preventScroll: true });
+    else if (!coarse()) fab.focus({ preventScroll: true });
   };
   if (reduced()) { anim = panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' }); anim.onfinish = done; return; }
   anim = narrow()
