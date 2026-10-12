@@ -1,0 +1,192 @@
+/* ============================================================================
+   FLR Order Tracker. Built on hub.css (tokens, buttons, bar, toast): only what
+   this page adds is here, in the same pattern as Onboarding (a card per item
+   with a coloured edge for its state). The expected arrival and the state are
+   the largest things on each card.
+   ========================================================================== */
+:root{
+  --amber:#9a5300; --amber-soft:rgba(255,159,10,.14); --amber-edge:#ff9f0a;
+  --blue:#0058c4; --blue-soft:rgba(0,122,255,.12); --blue-edge:#007aff;
+  --grey-edge:#c7c7cc; --green-edge:#34c759; --red-edge:#ff3b30;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --amber:#ffb340; --amber-soft:rgba(255,159,10,.18); --blue:#64b0ff; --blue-soft:rgba(10,132,255,.2); --grey-edge:#48484a; }
+}
+
+/* ---------------------------------------------------------------- bar (as Onboarding) */
+.bar-inner{display:grid;grid-template-columns:1fr auto 1fr}
+.back{display:inline-flex;align-items:center;gap:2px;justify-self:start;margin-left:-8px;padding:8px 10px 8px 4px;border-radius:10px;color:var(--tint);
+  font:400 17px/1 var(--font-text);letter-spacing:-.012em;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.back svg{width:24px;height:24px}
+.back:active{opacity:.55}
+.bar-title{margin:0;font:600 17px/1 var(--font-text);letter-spacing:-.02em;opacity:var(--bar-mat,0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.bar-end{justify-self:end;display:flex;gap:8px}
+.iconbtn{border:0;cursor:pointer}
+.iconbtn[aria-busy="true"] svg{animation:spin .9s linear infinite}
+@media (prefers-reduced-motion:reduce){.iconbtn[aria-busy="true"] svg{animation:none;opacity:.5}}
+
+/* ---------------------------------------------------------------- page, loading and messages */
+.ord{padding-block:8px 56px;outline:none}
+.gate-loading{display:flex;flex-direction:column;gap:12px}
+.skeleton-line,.skeleton-block{display:block;border-radius:8px;background:var(--skeleton)}
+.skeleton-line{width:44%;height:30px}
+.skeleton-line.short{width:26%;height:14px}
+.skeleton-block{height:150px;border-radius:16px}
+@media (prefers-reduced-motion:no-preference){
+  .skeleton-line,.skeleton-block{background:linear-gradient(90deg,var(--skeleton) 30%,var(--skeleton-hi) 50%,var(--skeleton) 70%) 0 0/300% 100%;animation:shimmer 1.4s linear infinite}
+}
+body:not([data-view="loading"]) .gate-loading{display:none}
+.gate-message{padding:28px 24px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);text-align:center}
+.gate-title{margin:0 0 6px;font:650 21px/1.25 var(--font-display);letter-spacing:-.017em}
+.gate-text{margin:0 auto 18px;max-width:46ch;color:var(--ink-2);font-size:16px;line-height:1.45}
+.gate-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0}
+a.btn{text-decoration:none}
+.btn svg{flex:none;width:18px;height:18px}
+.btn-plain{background:var(--fill);color:var(--tint)}
+@media (hover:hover){.btn-plain:hover{background:var(--fill-2)}}
+
+.page-head{margin:6px 0 20px}
+.page-head .eyebrow{margin-bottom:4px}
+.lede-line{margin:8px 0 0;color:var(--ink-2);font-size:17px}
+.empty{margin:0;padding:18px 20px;border-radius:16px;background:var(--surface);box-shadow:var(--sh-card);color:var(--ink-2);font-size:16px}
+
+/* how fresh the orders are */
+.fresh-note{display:flex;align-items:flex-start;gap:10px;margin:0 0 16px;padding:12px 14px;border-radius:14px;font-size:15px;line-height:1.4}
+.fresh-note svg{flex:none;width:19px;height:19px;margin-top:1px}
+.fresh-note b{font-weight:600}
+.fresh-note span{flex:1}
+.fresh-note .link{flex:none;padding-block:0;font-weight:600}
+.fresh-warn{background:var(--amber-soft);color:var(--ink)}
+.fresh-warn svg{color:var(--amber)}
+.fresh-bad{background:var(--red-soft);color:var(--ink)}
+.fresh-bad svg{color:var(--red)}
+.src{margin:34px 2px 0;color:var(--ink-3);font-size:13.5px;line-height:1.45}
+.src p{margin:0 0 4px}
+
+/* ---------------------------------------------------------------- sections */
+.sec{margin:0 0 30px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 10px}
+.sec-title{margin:0;font:700 22px/1.2 var(--font-display);letter-spacing:-.018em}
+.sec-count{margin:0;color:var(--ink-3);font-size:15px;font-variant-numeric:tabular-nums}
+.sec-note{margin:-4px 0 12px;max-width:70ch;color:var(--ink-2);font-size:14.5px;line-height:1.45}
+
+/* ---------------------------------------------------------------- an order card */
+.cards{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+@media (min-width:860px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.oc{--edge:var(--blue-edge);position:relative;border-radius:16px;background:var(--surface);box-shadow:var(--sh-card);overflow:hidden;
+  transition:box-shadow .2s var(--ease-out),transform .28s var(--ease-out)}
+.oc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--edge)}
+.oc[data-kind="overdue"]{--edge:var(--red-edge)}
+.oc[data-kind="delayed"],.oc[data-kind="partly"],.oc[data-kind="issues"]{--edge:var(--amber-edge)}
+.oc[data-kind="received"]{--edge:var(--green-edge)}
+.oc[data-kind="nodate"]{--edge:var(--grey-edge)}
+@media (hover:hover){.oc:hover{box-shadow:var(--sh-card-hover)}}
+.oc:active{transform:scale(.99);transition-duration:.1s}
+.oc-link{position:relative;display:block;padding:15px 40px 15px 22px;color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent;border-radius:inherit}
+.oc-link:focus-visible{outline-offset:-3px}
+.oc-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+.oc-when{margin:0;font:650 20px/1.25 var(--font-display);letter-spacing:-.017em;font-variant-numeric:tabular-nums}
+.oc-sub{margin:2px 0 0;color:var(--ink-2);font-size:14.5px}
+.oc-job{margin:10px 0 0;font:600 16px/1.3 var(--font-text);letter-spacing:-.01em;overflow-wrap:anywhere}
+.oc-wfm{color:var(--ink-3);font-weight:400}
+.oc-meta{display:flex;flex-wrap:wrap;align-items:center;gap:2px 7px;margin:4px 0 0;color:var(--ink-2);font-size:14.5px}
+.oc-meta .sep{color:var(--ink-3)}
+.oc-dest{display:flex;align-items:center;gap:5px;margin:3px 0 0;color:var(--ink-2);font-size:14.5px}
+.oc-dest svg{width:15px;height:15px}
+.card-mat{margin:10px 0 0;padding:9px 0 0;list-style:none;border-top:var(--hair) solid var(--sep);color:var(--ink-2);font-size:14px;line-height:1.4}
+.card-mat li{display:flex;gap:6px;overflow-wrap:anywhere}
+.card-mat li.more{color:var(--ink-3)}
+.card-mat-none{color:var(--ink-3)}
+.got-tick{flex:none;width:15px;height:15px;margin-top:2px;color:var(--green)}
+.oc-chev{position:absolute;right:14px;top:50%;width:18px;height:18px;margin-top:-9px;color:var(--ink-3)}
+
+/* state chips */
+.st{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font:600 13.5px/1.3 var(--font-text);letter-spacing:-.002em;white-space:nowrap}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st-waiting{background:var(--blue-soft);color:var(--blue)}
+.st-overdue{background:var(--red-soft);color:var(--red)}
+.st-delayed,.st-partly,.st-issues{background:var(--amber-soft);color:var(--amber)}
+.st-received{background:var(--green-soft);color:var(--green)}
+.st-nodate{background:var(--fill);color:var(--ink-2)}
+
+/* links to the other lists */
+.more-nav{margin:6px 0 0;border-radius:var(--r-group);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.more-row{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;padding:0 14px 0 18px;color:var(--ink);text-decoration:none;font-size:17px}
+.more-row + .more-row::before{content:"";position:absolute;top:0;left:18px;right:0;height:var(--hair);background:var(--sep)}
+.more-row span:first-child{flex:1}
+.more-n{color:var(--ink-3);font-variant-numeric:tabular-nums}
+.more-row svg{width:17px;height:17px;color:var(--ink-3)}
+.more-row:active{background:var(--press)}
+@media (hover:hover){.more-row:hover{background:var(--press)}}
+
+/* ---------------------------------------------------------------- one order */
+.hero{--edge:var(--blue-edge);position:relative;margin:6px 0 18px;padding:20px 22px 20px 26px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.hero::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--edge)}
+.hero[data-kind="overdue"]{--edge:var(--red-edge)}
+.hero[data-kind="delayed"],.hero[data-kind="partly"],.hero[data-kind="issues"]{--edge:var(--amber-edge)}
+.hero[data-kind="received"]{--edge:var(--green-edge)}
+.hero[data-kind="nodate"]{--edge:var(--grey-edge)}
+.hero-job{margin:0 0 6px;color:var(--ink-2);font:600 15px/1.3 var(--font-text);overflow-wrap:anywhere}
+.hero-when{margin:0;font:700 30px/1.15 var(--font-display);letter-spacing:-.022em;text-wrap:balance;font-variant-numeric:tabular-nums}
+@media (min-width:700px){.hero-when{font-size:34px}}
+.hero-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:12px 0 0}
+.hero-sub{color:var(--ink-2);font-size:15px}
+.hero-dest{display:flex;align-items:center;gap:6px;margin:14px 0 0;color:var(--ink-2);font-size:15px}
+.hero-dest svg{flex:none;width:18px;height:18px}
+
+.delay{margin:0 0 18px;padding:14px 16px;border-radius:16px;font-size:15.5px;line-height:1.45}
+.delay p{margin:6px 0 0}
+.delay-moved{background:var(--amber-soft)}
+.delay-overdue{background:var(--red-soft)}
+.delay-title{display:flex;align-items:center;gap:8px;margin:0;font:650 17px/1.3 var(--font-text);letter-spacing:-.012em}
+.delay-title svg{flex:none;width:20px;height:20px}
+.delay-moved .delay-title svg{color:var(--amber)}
+.delay-overdue .delay-title svg{color:var(--red)}
+.delay-why b{font-weight:600}
+.delay-why.none{color:var(--ink-2)}
+
+.blk{margin:0 0 26px}
+.blk-title{margin:0 2px 10px;color:var(--ink-2);font:600 15px/1.3 var(--font-text);letter-spacing:-.006em}
+.blk-count{color:var(--ink-3);font-weight:400}
+.blk-note{margin:10px 4px 0;color:var(--ink-3);font-size:13.5px;line-height:1.45}
+
+/* the progress timeline */
+.steps{margin:0;padding:6px 18px 6px 16px;list-style:none;border-radius:var(--r-group);background:var(--surface);box-shadow:var(--sh-card)}
+.step{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px 0}
+.step:not(:last-child)::after{content:"";position:absolute;left:13px;top:40px;bottom:-10px;width:2px;border-radius:1px;background:var(--sep)}
+.step-done:not(:last-child)::after{background:var(--green-edge)}
+.step-dot{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--grey-edge);background:var(--surface)}
+.step-dot svg{width:16px;height:16px;color:#fff}
+.step-done .step-dot{background:var(--green-edge);box-shadow:none}
+.step-now .step-dot{box-shadow:inset 0 0 0 2px var(--tint),0 0 0 4px var(--tint-soft)}
+.step-now .step-dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--tint)}
+.step-untracked .step-dot{box-shadow:inset 0 0 0 2px var(--grey-edge);background:repeating-linear-gradient(135deg,transparent 0 3px,var(--fill) 3px 5px)}
+.step-title{margin:3px 0 0;font:600 16.5px/1.3 var(--font-text);letter-spacing:-.01em}
+.step-untracked .step-title,.step-todo .step-title{color:var(--ink-2)}
+.step-text{margin:2px 0 0;color:var(--ink-2);font-size:14.5px;line-height:1.4}
+.step-untracked .step-text{color:var(--ink-3)}
+
+/* materials, details, updates */
+.mats,.updates{margin:0;padding:0;list-style:none;border-radius:var(--r-group);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.mats li{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;padding:12px 16px;font-size:16px}
+.mats li + li::before,.updates li + li::before,.drow + .drow::before{content:"";position:absolute;top:0;left:16px;right:0;height:var(--hair);background:var(--sep)}
+.mat-name{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.mat-state{display:inline-flex;align-items:center;gap:4px;color:var(--ink-3);font-size:14px}
+.mats li.got .mat-state{color:var(--green)}
+.mat-state svg{width:15px;height:15px}
+.details{margin:0;border-radius:var(--r-group);background:var(--surface);box-shadow:var(--sh-card);overflow:hidden}
+.drow{position:relative;display:grid;grid-template-columns:minmax(120px,34%) minmax(0,1fr);gap:12px;padding:12px 16px;font-size:16px}
+.drow dt{color:var(--ink-2)}
+.drow dd{margin:0;overflow-wrap:anywhere}
+.drow dd.bad{color:var(--red);font-weight:600}
+.none{color:var(--ink-3)}
+@media (max-width:420px){.drow{grid-template-columns:1fr;gap:2px}.drow dt{font-size:14px}}
+.updates li{position:relative;padding:12px 16px}
+.up-text{margin:0;font-size:16px;line-height:1.45;white-space:pre-line;overflow-wrap:anywhere}
+.up-meta{margin:4px 0 0;color:var(--ink-3);font-size:13.5px}
+.open-monday{margin:4px 0 0}
+.open-monday .btn{min-height:46px}
+
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){.oc{transition:none}}
+@media (forced-colors:active){.oc::before,.hero::before{background:CanvasText}.st{border:1px solid CanvasText}}

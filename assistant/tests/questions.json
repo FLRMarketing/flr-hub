@@ -600,5 +600,21 @@
  {
   "q": "How often do the counts on the Hub home update?",
   "expect": "hub-attention"
+ },
+ {
+  "q": "which deliveries are coming in today?",
+  "expect": "about-orders"
+ },
+ {
+  "q": "why does my order say time not confirmed",
+  "expect": "orders-progress"
+ },
+ {
+  "q": "what does overdue mean on the order tracker",
+  "expect": "orders-late"
+ },
+ {
+  "q": "why isn't dispatched ticked on my order",
+  "expect": "orders-progress"
  }
 ]

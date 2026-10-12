@@ -1791,6 +1791,90 @@
         "tile": "fitters",
         "label": "Open the Fitter Schedule"
       }
+    },
+    {
+      "id": "about-orders",
+      "tool": "orders",
+      "title": "About the Order Tracker",
+      "ask": [
+        "what is the order tracker",
+        "which deliveries are coming in today",
+        "what's arriving today",
+        "what does the order tracker show",
+        "which deliveries are due today",
+        "where are my orders",
+        "track a delivery",
+        "what is coming in today",
+        "goods in today"
+      ],
+      "keys": [
+        "order tracker",
+        "orders",
+        "deliveries",
+        "goods in",
+        "delivery",
+        "coming in"
+      ],
+      "answer": "The Order Tracker shows the deliveries due today from the Monday “FLR - Goods In” board: the supplier, order number, job, materials, where it’s going and when it’s expected. Late or delayed orders sit under the day’s deliveries, and what came in today has its own list. It only reads Monday, every 5 minutes; change an order on Monday itself.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      },
+      "related": [
+        "orders-progress",
+        "orders-late"
+      ]
+    },
+    {
+      "id": "orders-progress",
+      "tool": "orders",
+      "title": "What the delivery steps mean",
+      "ask": [
+        "what does order confirmed mean",
+        "why isn't dispatched ticked",
+        "what does out for delivery mean",
+        "delivery progress steps",
+        "why is the arrival time not confirmed",
+        "when will my delivery arrive"
+      ],
+      "keys": [
+        "dispatched",
+        "out for delivery",
+        "confirmed",
+        "progress",
+        "time not confirmed",
+        "arrival"
+      ],
+      "answer": "Order confirmed is ticked when the order has a supplier order number on Monday. Received is ticked when someone ticks Received on the Goods In board. Dispatched and Out for delivery aren’t recorded on the board, so they’re never ticked. A time only shows when one is set on the order’s Date on Monday; otherwise it says “time not confirmed”.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "orders-late",
+      "tool": "orders",
+      "title": "Late, delayed and received orders",
+      "ask": [
+        "what does overdue mean on the order tracker",
+        "what does delayed mean",
+        "where are yesterday's deliveries",
+        "my order has disappeared",
+        "where are received orders",
+        "order still waiting for a new date"
+      ],
+      "keys": [
+        "overdue",
+        "delayed",
+        "late",
+        "received",
+        "new date"
+      ],
+      "answer": "Overdue means its date has passed and it isn’t ticked as received or given a new date on Monday: it stays under “Late or delayed” until someone does. Delayed means its date on Monday was moved later; the order shows the first date, the new one and the latest note. Deliveries received today are listed on the main screen, and earlier ones under “Received earlier”.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
     }
   ]
 }

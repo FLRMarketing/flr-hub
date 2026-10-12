@@ -30,6 +30,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `speeding/` | The Speeding Report page, built by `scripts/sync-speeding.py` from `../flr-speeding-report` with no photos or names; `bridge.js`, which answers the page's data requests from the FLR database; and `map/`, the OpenStreetMap road and place packs (public map data). |
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `onboarding/` | Onboarding: each new starter's checklist (forms, FLR documents, uploads, acknowledgements), and the reviews, checks and internal setup behind it. `content.js` holds the wording taken from FLR's source forms. Draft on branch `feature/onboarding`; see "Onboarding" below. |
+| `orders/` | Order Tracker: deliveries due today from the Monday “FLR - Goods In” board, late or delayed orders, received today, and each order’s progress. Read-only; data from `orders_board()` (flr-orders function, every 5 minutes). Draft on branch `feature/order-tracker`; see "Order Tracker" below. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
@@ -160,6 +161,17 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
 - Uploads are kept in the database (private schema, up to 10 MB each), not in this repository; nothing private is
   written to the audit trail, notifications or the console.
 - Preview: `build/onboarding-demo.ts` (Estimator repository) fills the mock Supabase with made-up people.
+
+## Order Tracker (draft, not live)
+
+- Page `orders/` (index.html, orders.js, orders.css), built on hub.css like Onboarding. Tile `orders`, icon `i-orders`,
+  Hub settings label "Orders". It only reads: `public.orders_board()` answers active accounts on the tile's list.
+- The data comes from the `flr-orders` Edge Function and migration `20261012200000_flr_order_tracker.sql` in the
+  Estimator repo (branch `feature/order-tracker`); its README maps every Goods In column to the page.
+- What the page claims: Order confirmed = an order number on Monday; Received = Received ticked; Dispatched and Out for
+  delivery aren't on the board, so they're never ticked; a time only when the Monday date has one; "today" is
+  Europe/London; Delayed = the date was moved later (activity log); Overdue = the date passed and nothing received.
+- Local preview: launch config `flr-hub-orders-preview` (port 8871, ORDERS=1 in build/mock-supabase.ts).
 
 ## Likkle Jeff (the help button, first called Ask the Hub)
 
