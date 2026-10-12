@@ -168,9 +168,13 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   Hub settings label "Orders". It only reads: `public.orders_board()` answers active accounts on the tile's list.
 - The data comes from the `flr-orders` Edge Function and migration `20261012200000_flr_order_tracker.sql` in the
   Estimator repo (branch `feature/order-tracker`); its README maps every Goods In column to the page.
-- What the page claims: Order confirmed = an order number on Monday; Received = Received ticked; Dispatched and Out for
-  delivery aren't on the board, so they're never ticked; a time only when the Monday date has one; "today" is
-  Europe/London; Delayed = the date was moved later (activity log); Overdue = the date passed and nothing received.
+- What the page claims (rules in `orders/rules.js`, tests `node --test orders/tests/rules.test.mjs`): Order reference
+  recorded = an order number on Monday (not supplier confirmation); Delivery date set, with its moves; Received =
+  Received ticked with nothing outstanding. Supplier confirmation, dispatch and out for delivery aren't on the board, so
+  they aren't shown. A time only when the Monday date has one; "today" is Europe/London. Delayed = moved later after its
+  first date came, while still outstanding; Date moved = moved before its first date (not late); Overdue = date passed
+  and not all received; Part received = a product not ticked or "Item missing" logged: stays with the outstanding
+  orders, never with the received ones.
 - Local preview: launch config `flr-hub-orders-preview` (port 8871, ORDERS=1 in build/mock-supabase.ts).
 
 ## Likkle Jeff (the help button, first called Ask the Hub)

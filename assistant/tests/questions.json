@@ -614,7 +614,11 @@
   "expect": "orders-late"
  },
  {
-  "q": "why isn't dispatched ticked on my order",
+  "q": "has the supplier confirmed my order?",
   "expect": "orders-progress"
+ },
+ {
+  "q": "only part of my order arrived, where is it",
+  "expect": "orders-late"
  }
 ]

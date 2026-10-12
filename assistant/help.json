@@ -1828,16 +1828,18 @@
     {
       "id": "orders-progress",
       "tool": "orders",
-      "title": "What the delivery steps mean",
+      "title": "What the order steps mean",
       "ask": [
-        "what does order confirmed mean",
-        "why isn't dispatched ticked",
-        "what does out for delivery mean",
-        "delivery progress steps",
+        "what does order reference recorded mean",
+        "does the order tracker show dispatch",
+        "why is there no out for delivery step",
+        "order progress steps",
         "why is the arrival time not confirmed",
-        "when will my delivery arrive"
+        "when will my delivery arrive",
+        "has the supplier confirmed my order"
       ],
       "keys": [
+        "reference",
         "dispatched",
         "out for delivery",
         "confirmed",
@@ -1845,7 +1847,7 @@
         "time not confirmed",
         "arrival"
       ],
-      "answer": "Order confirmed is ticked when the order has a supplier order number on Monday. Received is ticked when someone ticks Received on the Goods In board. Dispatched and Out for delivery aren’t recorded on the board, so they’re never ticked. A time only shows when one is set on the order’s Date on Monday; otherwise it says “time not confirmed”.",
+      "answer": "The Order Tracker shows what the Goods In board records: Order reference recorded (an order number is on Monday; that doesn’t mean the supplier confirmed it), Delivery date set (with any moves) and Received. Supplier confirmation, dispatch and out for delivery aren’t on the board, so it doesn’t show them. A time shows only when one is set on Monday; otherwise “time not confirmed”.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"
@@ -1854,23 +1856,27 @@
     {
       "id": "orders-late",
       "tool": "orders",
-      "title": "Late, delayed and received orders",
+      "title": "Late, delayed, moved and part-received orders",
       "ask": [
         "what does overdue mean on the order tracker",
         "what does delayed mean",
+        "what does date moved mean",
         "where are yesterday's deliveries",
         "my order has disappeared",
         "where are received orders",
-        "order still waiting for a new date"
+        "order still waiting for a new date",
+        "only part of my order arrived"
       ],
       "keys": [
         "overdue",
         "delayed",
         "late",
+        "date moved",
+        "part received",
         "received",
         "new date"
       ],
-      "answer": "Overdue means its date has passed and it isn’t ticked as received or given a new date on Monday: it stays under “Late or delayed” until someone does. Delayed means its date on Monday was moved later; the order shows the first date, the new one and the latest note. Deliveries received today are listed on the main screen, and earlier ones under “Received earlier”.",
+      "answer": "Overdue: its date passed and it isn’t all received. Delayed: its first date has gone and Monday gives a later one. Date moved: moved later before its first date came, so not late. Part received: a product is still to come or “Item missing” is logged; it stays with the orders still to come. Once everything is in, it shows as received. Earlier deliveries are under “Received earlier”.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"

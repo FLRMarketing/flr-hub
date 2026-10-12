@@ -7,12 +7,14 @@
    Monday. "Today" is always the day in Europe/London.
 
    What the board can and can't say, and so what the page claims:
-   - Order confirmed: the order has a supplier order reference on Monday.
-   - Dispatched / Out for delivery: never recorded on the board, so never ticked.
-   - Received: Received is ticked (with Received At, and any problems found).
+   - Order reference recorded: the order has an order number on Monday. That's
+     the reference staff typed in; it doesn't show the supplier confirmed it.
+   - Delivery date set, with any moves (the board's activity log).
+   - Received: Received ticked, with any products or problems still outstanding.
+   - Supplier confirmation, dispatch and out for delivery aren't on the board,
+     so the page doesn't show them as stages at all.
    - An expected time only when Monday's Date has a time; never a made-up one.
-   - Delayed: the Date was moved later (the board's activity log); overdue: the
-     date has passed and nothing was received or re-dated.
+   - Delayed / Date moved / Overdue / part received: rules.js.
    ========================================================================== */
 (function () {
   'use strict';
@@ -47,9 +49,7 @@
   }
 
   /* ---------------------------------------------------------------- dates, always in Europe/London */
-  const parts = (d, o) => Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, ...o }).formatToParts(d).map(p => [p.type, p.value]));
-  const londonDay = (d = new Date()) => { const p = parts(d, { year: 'numeric', month: '2-digit', day: '2-digit' }); return `${p.year}-${p.month}-${p.day}`; };
-  const addDays = (day, n) => { const [y, m, d] = day.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
+  const londonDay = d => window.FLR_ORDER_RULES.londonDay(d);
   const daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 864e5);
   // A day ("2026-10-13") read as that calendar day, shown the British way.
   const asDay = (day, o) => new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { timeZone: 'UTC', ...o });
@@ -68,7 +68,7 @@
     const d = londonDay(new Date(iso));
     return d === today ? clock(iso) : `${relDay(d, today)} at ${clock(iso)}`;
   }
-  const whenAt = (iso, today) => { const w = when(iso, today); return /^\d/.test(w) ? `at ${w}` : w; };   // "at 14:36", "yesterday at 14:36"
+  const whenAt = (iso, today) => { const w = when(iso, today); return /^\d/.test(w) ? `at ${w}` : /^(today|yesterday|tomorrow)/.test(w) ? w : `on ${w}`; };   // "at 14:36", "yesterday at 14:36", "on Fri 9 Oct at 14:36"
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many || one + 's'}`;
 
   /* ---------------------------------------------------------------- talking to the database */
@@ -92,19 +92,16 @@
     return data;
   }
 
-  /* ---------------------------------------------------------------- what each order's state is, today */
-  // kind: received | overdue | today | upcoming | nodate. Never more than the board says.
-  function status(o, today) {
-    const lines = o.items || [];
-    const gotLines = lines.filter(i => i.received).length;
-    const delayed = !!(o.firstDay && o.day && o.day > o.firstDay);
-    const lastMove = (o.moves || []).length ? o.moves[o.moves.length - 1] : null;
-    const base = { delayed, lastMove, gotLines, lines: lines.length, partly: !o.received && gotLines > 0 };
-    if (o.received) return { ...base, kind: 'received', recDay: o.receivedAt ? londonDay(new Date(o.receivedAt)) : o.receivedDay || null };
-    if (!o.day) return { ...base, kind: 'nodate' };
-    if (o.day < today) return { ...base, kind: 'overdue', late: daysBetween(o.day, today) };
-    if (o.day === today) return { ...base, kind: 'today' };
-    return { ...base, kind: 'upcoming' };
+  /* ---------------------------------------------------------------- what each order's state is, today (rules.js) */
+  const R = window.FLR_ORDER_RULES;
+  const status = R.status;
+  const outText = s => s.outstanding.length ? `${plural(s.outstanding.length, 'product')} still to come` : '“Item missing” logged';
+  // What has and hasn't arrived, in a line.
+  function partText(o, s) {
+    if (!s.lines) return '“Item missing” logged on monday.com';
+    if (o.received && !s.got) return 'Ticked as received, but none of its products are';
+    if (!s.outstanding.length) return '“Item missing” logged on monday.com';
+    return `${s.got} of ${s.lines} received · ${outText(s)}`;
   }
   // The big line: when it's expected (or was received), only as precisely as Monday knows.
   function arrival(o, s, today) {
@@ -113,7 +110,7 @@
       return { main: 'Received', sub: 'Time not recorded' };
     }
     if (s.kind === 'nodate') return { main: 'No delivery date yet', sub: null };
-    if (s.kind === 'overdue') return { main: `Was due ${relDay(o.day, today)}`, sub: 'Awaiting a new delivery date' };
+    if (s.kind === 'overdue') return { main: `Was due ${relDay(o.day, today)}`, sub: s.partial ? null : 'Awaiting a new delivery date' };
     const day = s.kind === 'today' ? 'Due today' : `Due ${relDay(o.day, today)}`;
     if (o.at && londonDay(new Date(o.at)) === o.day) return { main: `${day} · ${clock(o.at)}`, sub: 'Time set on monday.com' };
     return { main: `${day} · time not confirmed`, sub: null };
@@ -122,10 +119,21 @@
     const issues = (o.issues || []).length;
     if (s.kind === 'received') return issues ? ['issues', `Received · ${plural(issues, 'problem')}`] : ['received', 'Received'];
     if (s.kind === 'overdue') return ['overdue', s.late === 1 ? '1 day overdue' : `${s.late} days overdue`];
-    if (s.partly) return ['partly', `Part received · ${s.gotLines} of ${s.lines}`];
-    if (s.delayed) return ['delayed', 'Delayed'];
+    if (s.partial) return ['partly', 'Part received'];
+    if (s.delay === 'active') return ['delayed', 'Delayed'];
+    if (s.delay === 'moved') return ['moved', 'Date moved'];
     if (s.kind === 'nodate') return ['nodate', 'Awaiting date'];
     return ['waiting', 'Awaiting delivery'];
+  }
+  // The second line on a card: what's still to come, or why the date isn't the first one.
+  function subLines(o, s, a, today) {
+    const out = [a.sub];
+    if (s.partial) out.push(partText(o, s));
+    if (s.kind !== 'received' && s.kind !== 'overdue') {
+      if (s.delay === 'active') out.push(`Was due ${relDay(o.firstDay, today)}`);
+      else if (s.delay === 'moved') out.push(`Moved from ${dayShort(o.firstDay)}`);
+    }
+    return out.filter(Boolean);
   }
   const DEST = { Warehouse: ['i-warehouse', 'FLR warehouse'], Site: ['i-site', 'Delivered to site'], Collection: ['i-collect', 'For collection'] };
   const destText = o => (DEST[o.destination] || [null, o.destination || 'Destination not set'])[1];
@@ -201,31 +209,37 @@
   }
 
   /* ---------------------------------------------------------------- one order as a card */
-  function materials(o, max) {
+  function materials(o, max, s) {
     const lines = o.items || [];
     if (!lines.length) return h('p', { class: 'card-mat card-mat-none' }, 'No products listed on monday.com');
+    if (s && s.partial && s.outstanding.length) {   // what's still to come first; what's in, as a count
+      const out = s.outstanding.slice(0, max);
+      return h('ul', { class: 'card-mat card-mat-out' }, h('li', { class: 'mat-head' }, 'Still to come'),
+        out.map(i => h('li', null, h('span', null, i.name))),
+        s.outstanding.length > max ? h('li', { class: 'more' }, `+ ${plural(s.outstanding.length - max, 'more product')} to come`) : null,
+        s.got ? h('li', { class: 'more got' }, icon('i-check', 'got-tick'), h('span', null, `${plural(s.got, 'product')} received`)) : null);
+    }
     const shown = lines.slice(0, max);
     return h('ul', { class: 'card-mat' }, shown.map(i => h('li', { class: i.received ? 'got' : null }, i.received ? icon('i-check', 'got-tick') : null, h('span', null, i.name), i.received ? h('span', { class: 'sr' }, ' (received)') : null)),
       lines.length > max ? h('li', { class: 'more' }, `+ ${plural(lines.length - max, 'more product')}`) : null);
   }
   function card(o, today) {
     const s = status(o, today), a = arrival(o, s, today), [ck, cl] = chip(o, s);
-    const sub = [a.sub];
-    if (s.delayed && s.kind !== 'received' && s.kind !== 'overdue') sub.push(`Was due ${relDay(o.firstDay, today)}`);
-    const label = `${o.job}. ${a.main}. ${cl}.`;
+    const sub = subLines(o, s, a, today);
+    const label = `${o.job}. ${a.main}. ${cl}.${sub.length ? ' ' + sub.join('. ') + '.' : ''}`;
     return h('li', { class: 'oc', dataset: { kind: ck } },
       h('a', { class: 'oc-link', href: `#order/${encodeURIComponent(o.id)}`, 'aria-label': label },
         h('div', { class: 'oc-top' },
           h('p', { class: 'oc-when' }, a.main),
           h('span', { class: `st st-${ck}` }, cl)),
-        sub.filter(Boolean).length ? h('p', { class: 'oc-sub' }, sub.filter(Boolean).join(' · ')) : null,
+        sub.length ? h('p', { class: 'oc-sub' }, sub.join(' · ')) : null,
         h('p', { class: 'oc-job' }, o.job, o.wfm ? h('span', { class: 'oc-wfm' }, ` · WFM ${o.wfm}`) : null),
         h('p', { class: 'oc-meta' },
           h('span', null, o.supplier || 'Supplier not set'),
           h('span', { class: 'sep', 'aria-hidden': 'true' }, '·'),
-          h('span', null, o.ref ? `Order ${o.ref}` : 'No order number')),
+          h('span', null, o.ref ? `Ref ${o.ref}` : 'No order reference')),
         h('p', { class: 'oc-dest' }, icon(destIcon(o)), destText(o)),
-        materials(o, 2),
+        materials(o, 2, s),
         icon('i-chevron', 'oc-chev')));
   }
   function section(title, list, today, o = {}) {
@@ -242,17 +256,15 @@
   function todayView() {
     const today = londonDay(), orders = S.data.orders;
     bar({ title: 'Order Tracker' });
-    const st = new Map(orders.map(o => [o.id, status(o, today)]));
-    const dueToday = orders.filter(o => st.get(o.id).kind === 'today').sort(byTime);
-    const overdue = orders.filter(o => st.get(o.id).kind === 'overdue').sort((a, b) => a.day.localeCompare(b.day) || a.job.localeCompare(b.job));
-    // Delayed: it should have come by now (its first date has passed) but has a new, later date.
-    const delayed = orders.filter(o => { const s = st.get(o.id); return s.kind === 'upcoming' && s.delayed && o.firstDay <= today; }).sort((a, b) => a.day.localeCompare(b.day));
-    const gotToday = orders.filter(o => { const s = st.get(o.id); return s.kind === 'received' && s.recDay === today; })
-      .sort((a, b) => (b.receivedAt || '').localeCompare(a.receivedAt || ''));
-    const upcoming = orders.filter(o => st.get(o.id).kind === 'upcoming').length;
-    const noDate = orders.filter(o => st.get(o.id).kind === 'nodate').length;
+    const b = new Map(orders.map(o => [o.id, R.bucket(o, status(o, today), today)]));
+    const inB = k => orders.filter(o => b.get(o.id) === k);
+    const dueToday = inB('dueToday').sort(byTime);
+    // Overdue first (oldest first), then delayed orders that now have a later date.
+    const overdueFirst = (x, y) => Number(y.day < today) - Number(x.day < today) || x.day.localeCompare(y.day) || x.job.localeCompare(y.job);
+    const attention = inB('late').sort(overdueFirst);
+    const gotToday = inB('receivedToday').sort((x, y) => (y.receivedAt || '').localeCompare(x.receivedAt || ''));
+    const upcoming = inB('upcoming').length, noDate = inB('nodate').length;
 
-    const attention = [...overdue, ...delayed];
     const summary = [dueToday.length ? plural(dueToday.length, 'delivery', 'deliveries') + ' still to come' : gotToday.length ? 'Nothing more to come' : 'No deliveries due today'];
     if (attention.length) summary.push(`${attention.length} late or delayed`);
     if (gotToday.length) summary.push(`${gotToday.length} received`);
@@ -260,11 +272,11 @@
       h('p', { class: 'eyebrow' }, dayLong(today)),
       h('h1', { class: 'display' }, 'Orders due today'),
       h('p', { class: 'lede-line' }, summary.join(' · ')));
-    const earlier = orders.filter(o => { const s = st.get(o.id); return s.kind === 'received' && s.recDay !== today; }).length;
+    const earlier = inB('receivedEarlier').length;
     return [head, freshness(today),
       section('Still to arrive', dueToday, today, { empty: gotToday.length ? 'Everything due today has arrived.' : 'Nothing is due today.' }),
       attention.length ? section('Late or delayed', attention, today, {
-        note: 'Overdue: the date has passed and nothing is ticked as received or given a new date on monday.com. Delayed: its date on monday.com was moved later.' }) : null,
+        note: 'Overdue: its date has passed and it isn’t all ticked as received. Delayed: its first date has come and gone, and monday.com now gives a later one.' }) : null,
       section('Received today', gotToday, today),
       h('nav', { class: 'more-nav', 'aria-label': 'Other orders' },
         h('a', { class: 'more-row', href: '#upcoming' }, h('span', null, 'Coming up'), h('span', { class: 'more-n' }, upcoming + noDate ? String(upcoming + noDate) : 'None'), icon('i-chevron')),
@@ -276,12 +288,14 @@
   function upcomingView() {
     const today = londonDay(), orders = S.data.orders;
     bar({ title: 'Coming up', back: '#', backLabel: 'Today' });
-    const up = orders.filter(o => status(o, today).kind === 'upcoming').sort((a, b) => a.day.localeCompare(b.day) || byTime(a, b));
+    const bk = o => R.bucket(o, status(o, today), today);
+    const up = orders.filter(o => bk(o) === 'upcoming').sort((a, b) => a.day.localeCompare(b.day) || byTime(a, b));
     const days = [...new Set(up.map(o => o.day))];
-    const noDate = orders.filter(o => status(o, today).kind === 'nodate');
+    const noDate = orders.filter(o => bk(o) === 'nodate');
     return [h('div', { class: 'page-head' }, h('p', { class: 'eyebrow' }, 'Order Tracker'), h('h1', { class: 'display' }, 'Coming up')),
       freshness(today),
-      days.length ? days.map(d => section(daysBetween(today, d) === 1 ? `Tomorrow, ${dayShort(d)}` : dayLong(d), up.filter(o => o.day === d), today)) : h('p', { class: 'empty' }, 'Nothing is booked in after today.'),
+      h('p', { class: 'lede-line' }, 'Delayed orders are on the main screen until they arrive.'),
+      days.length ? days.map(d => section(daysBetween(today, d) === 1 ? `Tomorrow, ${dayShort(d)}` : dayLong(d), up.filter(o => o.day === d), today)) : h('p', { class: 'empty' }, 'Nothing else is booked in after today.'),
       section('No delivery date yet', noDate, today),
       footer(today)];
   }
@@ -292,7 +306,7 @@
       .sort(([a, x], [b, y]) => (y.recDay || '').localeCompare(x.recDay || '') || (b.receivedAt || '').localeCompare(a.receivedAt || ''));
     const days = [...new Set(got.map(([, s]) => s.recDay || ''))];
     return [h('div', { class: 'page-head' }, h('p', { class: 'eyebrow' }, 'Order Tracker'), h('h1', { class: 'display' }, 'Received earlier'),
-      h('p', { class: 'lede-line' }, 'Everything ticked as received on monday.com before today, newest first.')),
+      h('p', { class: 'lede-line' }, 'Fully received before today, newest first. Anything with products still to come stays on the main screen.')),
       freshness(today),
       got.length ? days.map(d => section(d ? (daysBetween(d, today) === 1 ? `Yesterday, ${dayShort(d)}` : dayLong(d)) : 'Date not recorded', got.filter(([, s]) => (s.recDay || '') === d).map(([o]) => o), today))
         : h('p', { class: 'empty' }, 'Nothing was received before today.'),
@@ -304,21 +318,29 @@
     return h('li', { class: `step step-${state}` },
       h('span', { class: 'step-dot', 'aria-hidden': 'true' }, state === 'done' ? icon('i-check') : null),
       h('div', { class: 'step-body' },
-        h('p', { class: 'step-title' }, title, h('span', { class: 'sr' }, state === 'done' ? ' (done)' : state === 'now' ? ' (in progress)' : state === 'untracked' ? ' (not recorded)' : ' (not yet)')),
+        h('p', { class: 'step-title' }, title, h('span', { class: 'sr' }, state === 'done' ? ' (done)' : state === 'now' ? ' (in progress)' : ' (not yet)')),
         text ? h('p', { class: 'step-text' }, text) : null, extra || null));
   }
+  // Only what monday.com records: the reference, the delivery date (and its moves), and what has been received.
   function timeline(o, s, today) {
-    const confirmed = !!o.ref;
-    const recState = s.kind === 'received' ? 'done' : s.partly ? 'now' : 'todo';
+    const timed = o.at && londonDay(new Date(o.at)) === o.day;
+    const dateText = o.day ? [`${dayLong(o.day)}${timed ? `, ${clock(o.at)}` : ', time not confirmed'}.`,
+      s.moved ? `First due ${dayLong(o.firstDay)}${s.lastMove ? `; changed ${whenAt(s.lastMove.at, today)}` : ''}.` : ''].filter(Boolean).join(' ') : 'No delivery date on monday.com yet.';
+    const recState = s.kind === 'received' ? 'done' : s.partial ? 'now' : 'todo';
     const recText = s.kind === 'received'
       ? [o.receivedAt ? `Received ${when(o.receivedAt, today)}` : 'Ticked as received; the time wasn’t recorded', (o.issues || []).length ? `Problems found: ${o.issues.join(', ')}` : 'No problems recorded'].join('. ') + '.'
-      : s.partly ? `${s.gotLines} of ${s.lines} products ticked as received.`
-      : arrival(o, s, today).main + '.';
-    return h('ol', { class: 'steps', 'aria-label': 'Delivery progress' },
-      step(confirmed ? 'done' : 'now', 'Order confirmed', confirmed ? `Order ${o.ref}${o.supplier ? ` with ${o.supplier}` : ''}.` : 'No supplier order number on monday.com yet.'),
-      step('untracked', 'Dispatched', 'Not recorded on the Goods In board.'),
-      step('untracked', 'Out for delivery', 'Not recorded on the Goods In board.'),
-      step(recState, 'Received', recText));
+      : s.partial ? `${partText(o, s)}.`
+      : 'Not ticked as received on monday.com yet.';
+    return h('ol', { class: 'steps', 'aria-label': 'What monday.com records' },
+      step(o.ref ? 'done' : 'todo', 'Order reference recorded', o.ref ? `Reference ${o.ref}${o.supplier ? ` for ${o.supplier}` : ''}.` : 'No order reference on monday.com yet.'),
+      step(o.day ? 'done' : 'todo', 'Delivery date set', dateText),
+      step(recState, s.partial ? 'Part received' : 'Received', recText));
+  }
+  function matList(list, today) {
+    return h('ul', { class: 'mats' }, list.map(i => h('li', { class: i.received ? 'got' : null },
+      h('span', { class: 'mat-name' }, i.name),
+      h('span', { class: 'mat-state' }, i.received ? [icon('i-check'), i.receivedAt ? `Received ${when(i.receivedAt, today)}` : 'Received'] : 'Not received yet',
+        (i.issues || []).length ? h('span', { class: 'mat-issue' }, ` · ${i.issues.join(', ')}`) : null))));
   }
   function row(label, value, o = {}) {
     return h('div', { class: 'drow' }, h('dt', null, label), h('dd', { class: o.cls || null }, value == null || value === '' ? h('span', { class: 'none' }, o.none || 'Not on monday.com') : value));
@@ -342,37 +364,44 @@
       h('div', { class: 'hero-line' }, h('span', { class: `st st-${ck}` }, cl), a.sub ? h('span', { class: 'hero-sub' }, a.sub) : null),
       h('p', { class: 'hero-dest' }, icon(destIcon(o)), destText(o), o.supplier ? ` · from ${o.supplier}` : ''));
 
+    // Late, delayed or just moved: only while something is still to come.
     let delay = null;
-    if (s.kind !== 'received' && (s.delayed || s.kind === 'overdue')) {
-      const m = s.lastMove;
-      delay = h('section', { class: `delay delay-${s.kind === 'overdue' ? 'overdue' : 'moved'}`, 'aria-labelledby': 'delay-title' },
-        h('h2', { class: 'delay-title', id: 'delay-title' }, icon('i-alert'), s.kind === 'overdue' ? 'Overdue, awaiting a new date' : 'Delivery date moved later'),
-        s.kind === 'overdue'
-          ? h('p', null, `It was due ${dayLong(o.day)} and isn’t ticked as received. Nobody has given it a new date on monday.com yet.`)
-          : h('p', null, `First due ${dayLong(o.firstDay)}, now ${dayLong(o.day)}.`, m ? ` Changed on monday.com ${whenAt(m.at, today)}.` : ''),
+    if (s.kind !== 'received' && (s.kind === 'overdue' || s.delay)) {
+      const m = s.lastMove, kind = s.kind === 'overdue' ? 'overdue' : s.delay === 'active' ? 'active' : 'moved';
+      const title = { overdue: s.partial ? 'Overdue: not all of it has arrived' : 'Overdue, awaiting a new date', active: `Delayed: now due ${dayShort(o.day)}`, moved: 'Delivery date moved' }[kind];
+      const text = {
+        overdue: s.partial ? `It was due ${dayLong(o.day)}. ${s.outstanding.length ? `Part of it has arrived; ${outText(s)}` : 'It’s ticked as received, but “Item missing” is logged'}, and there’s no new date on monday.com.`
+          : `It was due ${dayLong(o.day)} and isn’t ticked as received. Nobody has given it a new date on monday.com yet.`,
+        active: `It was first due ${dayLong(o.firstDay)} and should have arrived by now. monday.com now says ${dayLong(o.day)}.`,
+        moved: `First due ${dayLong(o.firstDay)}, now ${dayLong(o.day)}. It isn’t late: the first date hasn’t come yet.`,
+      }[kind];
+      delay = h('section', { class: `delay delay-${kind}`, 'aria-labelledby': 'delay-title' },
+        h('h2', { class: 'delay-title', id: 'delay-title' }, icon(kind === 'moved' ? 'i-note' : 'i-alert'), title),
+        h('p', null, text, m && kind !== 'overdue' ? ` Changed on monday.com ${whenAt(m.at, today)}.` : ''),
         latest ? h('p', { class: 'delay-why' }, h('b', null, 'Latest note: '), `“${latest.text}”`) : h('p', { class: 'delay-why none' }, 'No reason has been noted on monday.com.'));
     }
 
     const mats = o.items || [];
     return [hero, delay,
       h('section', { class: 'blk', 'aria-labelledby': 'tl-title' }, h('h2', { class: 'blk-title', id: 'tl-title' }, 'Progress'), timeline(o, s, today),
-        h('p', { class: 'blk-note' }, 'The Goods In board records when an order is placed and when it arrives. Dispatch and out-for-delivery aren’t recorded there, so they’re never ticked here.')),
+        h('p', { class: 'blk-note' }, 'These are the three things the Goods In board records. It doesn’t record whether the supplier has confirmed, dispatched or sent out the order, so the tracker doesn’t show those.')),
       h('section', { class: 'blk', 'aria-labelledby': 'mat-title' }, h('h2', { class: 'blk-title', id: 'mat-title' }, 'Materials', mats.length ? h('span', { class: 'blk-count' }, ` ${mats.length}`) : null),
-        mats.length ? h('ul', { class: 'mats' }, mats.map(i => h('li', { class: i.received ? 'got' : null },
-          h('span', { class: 'mat-name' }, i.name),
-          h('span', { class: 'mat-state' }, i.received ? [icon('i-check'), i.receivedAt ? `Received ${when(i.receivedAt, today)}` : 'Received'] : (i.issues || []).length ? i.issues.join(', ') : ''))))
+        s.partial && s.outstanding.length ? [h('h3', { class: 'mat-group' }, `Still to come · ${s.outstanding.length}`), matList(s.outstanding, today),
+          s.got ? [h('h3', { class: 'mat-group' }, `Received · ${s.got}`), matList(mats.filter(i => !s.outstanding.includes(i)), today)] : null]
+          : mats.length ? matList(mats, today)
           : h('p', { class: 'empty' }, 'No products are listed for this order on monday.com.'),
+        s.missingReported ? h('p', { class: 'mat-missing' }, icon('i-alert'), '“Item missing” is logged on this order on monday.com.') : null,
         mats.length ? h('p', { class: 'blk-note' }, 'Quantities are as written in each product’s name on monday.com.') : null),
       h('section', { class: 'blk', 'aria-labelledby': 'det-title' }, h('h2', { class: 'blk-title', id: 'det-title' }, 'Order details'),
         h('dl', { class: 'details' },
           row('Supplier', o.supplier),
-          row('Order number', o.ref, { none: 'No order number on monday.com' }),
+          row('Order reference', o.ref, { none: 'No order reference on monday.com' }),
           row('Job', o.job),
           row('WFM job', o.wfm),
           row('Destination', o.destination ? destText(o) : null),
           row('Expected', o.day ? `${dayLong(o.day)}${o.at && londonDay(new Date(o.at)) === o.day ? `, ${clock(o.at)}` : ', time not confirmed'}` : null, { none: 'No date yet' }),
-          s.delayed ? row('First due', dayLong(o.firstDay)) : null,
-          s.kind === 'received' ? row('Received', o.receivedAt ? `${dayLong(londonDay(new Date(o.receivedAt)))}, ${clock(o.receivedAt)}` : 'Yes, time not recorded') : null,
+          s.moved ? row('First due', `${dayLong(o.firstDay)} (moved${s.lastMove ? ` ${whenAt(s.lastMove.at, today)}` : ''})`) : null,
+          o.received ? row(s.partial ? 'Ticked as received' : 'Received', o.receivedAt ? `${dayLong(londonDay(new Date(o.receivedAt)))}, ${clock(o.receivedAt)}` : 'Yes, time not recorded') : null,
           (o.issues || []).length ? row('Problems found', o.issues.join(', '), { cls: 'bad' }) : null)),
       h('section', { class: 'blk', 'aria-labelledby': 'up-title' }, h('h2', { class: 'blk-title', id: 'up-title' }, 'Latest updates'),
         (o.updates || []).length ? h('ul', { class: 'updates' }, o.updates.map(u => h('li', null,
