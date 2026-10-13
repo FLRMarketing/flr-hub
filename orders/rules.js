@@ -55,38 +55,82 @@
     return 'nodate';
   }
 
-  /** Receipts recorded on the Hub are the record of what arrived, as the database treats them (it won't take the
-   *  same materials twice): every receipt marks its products as arrived, with their condition, and the order as
-   *  received once everything has arrived, whether or not Monday shows it yet. Each order also gets its receipts (for
-   *  History), whether one is still being written (pending/failed), and a mismatch when Monday has been read since a
-   *  receipt was written but doesn't show it (someone unticked it there, or the change didn't stick). */
+  /** Receipts recorded on the Hub are the record of what arrived, as the database treats them; a correction (Order
+   *  Tracker 1.2) changes that record without changing the receipt. What the Hub says about each material comes from
+   *  every receipt and correction in the order they were made: the database works it out (orders_board's 'hub', the
+   *  same as private.orders_hub_state) and foldHub does the same here when it isn't given. Monday's order is then
+   *  shown as the Hub has it, whether or not Monday shows it yet: arrived (with its condition) or back to still to
+   *  arrive; a problem the Hub recorded comes off a material when the Hub no longer has it, and off the order when no
+   *  material still has it. Each order also gets its receipts and corrections (for History), the notes as they now
+   *  stand, whether a change is still being written (pending/failed), and a mismatch when Monday has been read since a
+   *  change was written but doesn't show it (someone changed it there, or the change didn't stick). */
   const PROBLEMS = ['Damaged', 'Wrong colour', 'Wrong quantity', 'Wrong location'];
-  function applyReceipts(orders, receipts, readAt) {
+  function foldHub(events) {
+    const lines = {}, notes = {};
+    const evs = [...events].sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+    for (const r of evs) {
+      const corr = r.kind === 'correction';
+      if (!corr) notes[r.id] = r.note ?? null; else if (r.noteChanged) notes[r.corrects] = r.note ?? null;
+      for (const l of r.lines || []) {
+        const cur = lines[l.id] || { id: l.id, name: l.name, labels: [] };
+        const to = corr ? l.to : l.condition;
+        if (to === 'outstanding') Object.assign(cur, { received: false, condition: null, at: null, receipt: null, event: r.id });
+        else Object.assign(cur, { received: true, condition: to, event: r.id, at: corr ? cur.at : r.at, receipt: corr ? cur.receipt : r.id,
+          labels: to === 'good' || cur.labels.includes(to) ? cur.labels : [...cur.labels, to] });
+        lines[l.id] = cur;
+      }
+    }
+    return { lines, notes };
+  }
+  function applyReceipts(orders, receipts, readAt, hub) {
     const by = new Map();
     for (const r of receipts || []) { if (!by.has(r.order)) by.set(r.order, []); by.get(r.order).push(r); }
     const read = readAt ? Date.parse(readAt) : 0;
     return (orders || []).map(o => {
       const rs = by.get(o.id);
       if (!rs) return o;
-      const onMonday = l => l.id === 'order' ? !!o.received : !!((o.items || []).find(i => i.id === l.id) || {}).received;
-      const mismatch = rs.filter(r => r.state === 'sent' && r.sentAt && Date.parse(r.sentAt) < read && (r.lines || []).some(l => !onMonday(l)));
+      const st = (hub && hub[o.id]) || foldHub(rs);
       const n = { ...o, items: (o.items || []).map(i => ({ ...i, issues: [...(i.issues || [])] })), issues: [...(o.issues || [])], hubReceipts: rs,
-        hubPending: rs.some(r => r.state === 'pending'), hubFailed: rs.some(r => r.state === 'failed'), hubMismatch: mismatch.length > 0 };
-      for (const r of rs) {
-        for (const l of r.lines || []) {
-          const bad = PROBLEMS.includes(l.condition) ? [l.condition] : [];
-          if (l.id === 'order') { n.received = true; n.receivedAt = n.receivedAt || r.at; }
-          const i = n.items.find(x => x.id === l.id);
-          if (i) { i.received = true; i.receivedAt = i.receivedAt || r.at; for (const b of bad) if (!i.issues.includes(b)) i.issues.push(b); }
-          for (const b of bad) if (!n.issues.includes(b)) n.issues.push(b);
+        hubPending: rs.some(r => r.state === 'pending'), hubFailed: rs.some(r => r.state === 'failed') };
+      const xs = Object.values(st.lines || {});
+      const everLabels = new Set(xs.flatMap(x => x.labels || []));
+      const now = [];   // problems the Hub records now
+      let backOut = false, latest = null, mismatch = false;
+      for (const x of xs) {
+        const want = x.received && PROBLEMS.includes(x.condition) ? [x.condition] : [];
+        now.push(...want);
+        if (!x.received) backOut = true; else if (!latest || String(x.at) > latest) latest = x.at;
+        const ev = rs.find(r => r.id === x.event) || (x.event == null ? rs[rs.length - 1] : null);
+        const sent = ev && ev.state === 'sent' && ev.sentAt && Date.parse(ev.sentAt) < read;
+        if (x.id === 'order') {
+          if (sent && !!o.received !== !!x.received) mismatch = true;
+          n.received = !!x.received; n.receivedAt = x.received ? (o.receivedAt || x.at) : null;
+          continue;
         }
-        if (r.whole) { n.received = true; n.receivedAt = n.receivedAt || r.at; }
+        const i = n.items.find(y => y.id === x.id);
+        if (!i) continue;
+        const onMon = !!((o.items || []).find(y => y.id === x.id) || {}).received;
+        if (sent && onMon !== !!x.received) mismatch = true;
+        i.received = !!x.received;
+        i.receivedAt = x.received ? (i.receivedAt || x.at) : null;
+        i.issues = [...new Set([...i.issues.filter(b => !(x.labels || []).includes(b)), ...want])];
       }
+      const onItems = new Set(n.items.flatMap(i => i.issues));
+      n.issues = [...new Set([...n.issues.filter(b => !everLabels.has(b) || onItems.has(b)), ...now])];
+      if (backOut && n.items.length) { n.received = false; n.receivedAt = null; }
+      else if (n.items.length && n.items.every(i => i.received)) { n.received = true; n.receivedAt = n.receivedAt || latest; }
+      n.hubMismatch = mismatch;
+      n.hubNotes = rs.filter(r => r.kind !== 'correction').map(r => {
+        const fix = [...rs].reverse().find(c => c.kind === 'correction' && c.corrects === r.id && c.noteChanged);
+        const text = Object.prototype.hasOwnProperty.call(st.notes || {}, r.id) ? st.notes[r.id] : r.note;
+        return text ? { text, at: fix ? fix.at : r.at, by: fix ? fix.by : r.by } : null;
+      }).filter(Boolean);
+      n.hubState = st;
       return n;
     });
   }
 
-  const api = { TZ, MISSING, PROBLEMS, londonDay, daysBetween, status, bucket, applyReceipts };
+  const api = { TZ, MISSING, PROBLEMS, londonDay, daysBetween, status, bucket, foldHub, applyReceipts };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.FLR_ORDER_RULES = api;
 })(typeof window !== 'undefined' ? window : globalThis);

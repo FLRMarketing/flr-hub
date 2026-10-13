@@ -628,5 +628,13 @@
  {
   "q": "some of the delivery was damaged, how do I report it",
   "expect": "orders-record"
+ },
+ {
+  "q": "I recorded a delivery by mistake, how do I undo it?",
+  "expect": "orders-correct"
+ },
+ {
+  "q": "the adhesive wasn't damaged after all, can I change it",
+  "expect": "orders-correct"
  }
 ]

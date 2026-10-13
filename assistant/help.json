@@ -1909,6 +1909,34 @@
         "tile": "orders",
         "label": "Open the Order Tracker"
       }
+    },
+    {
+      "id": "orders-correct",
+      "tool": "orders",
+      "title": "Correct a delivery recorded by mistake",
+      "ask": [
+        "I recorded a delivery by mistake",
+        "undo a receipt",
+        "correct a receipt",
+        "I ticked the wrong material as arrived",
+        "change the condition of a delivery",
+        "it wasn't damaged after all",
+        "unticking on monday doesn't change the tracker"
+      ],
+      "keys": [
+        "correct receipt",
+        "correct",
+        "mistake",
+        "undo",
+        "wrong",
+        "untick",
+        "reverse"
+      ],
+      "answer": "Open the delivery in the Order Tracker and choose Correct receipt. For each material choose Didn’t arrive (back to still to arrive) or the right condition, change the note if needed, and say why. The original record stays in History, with your correction showing who, when and why, and monday.com is updated to match. Unticking on monday.com alone doesn’t change the tracker.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
     }
   ]
 }

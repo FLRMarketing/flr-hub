@@ -403,6 +403,17 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .rec-err{margin:0;padding:10px 14px;border-radius:var(--r-m);background:var(--red-soft);color:var(--ink);font-size:15px}
 .rec-sum{margin:2px 2px 0;color:var(--ink-2);font-size:14.5px;line-height:1.4}
 .rec-who{margin:0 2px;color:var(--ink-3);font-size:13px;line-height:1.4}
+/* correcting a receipt: the same sheet; a material's row lists what it should be, the changed ones marked */
+.od-acts{display:flex;flex-direction:column;gap:8px}
+.btn-quiet{min-height:46px;background:transparent;color:var(--brand-ink);box-shadow:inset 0 0 0 2px var(--brand-soft);font-size:16px}
+@media (hover:hover){.btn-quiet:hover{background:var(--brand-soft)}}
+.fix-name{min-height:52px;cursor:default}
+.rec-line.on:not(.fix-changed){box-shadow:none}
+.rec-line .fix-name + .rec-cond{padding-left:14px}
+.rec-opt-out[aria-checked="true"]{background:var(--amber-soft);color:var(--amber);box-shadow:inset 0 0 0 2px var(--amber)}
+.fix-which{display:flex;flex-wrap:wrap;gap:6px}
+.fix-which .rec-opt[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand-ink);box-shadow:inset 0 0 0 2px var(--brand)}
+.hist li.hist-fix .hist-text{padding-left:10px;box-shadow:inset 3px 0 0 var(--amber)}
 
 /* ---------------------------------------------------------------- toast, motion, contrast */
 .toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom,0px));z-index:40;margin:0;padding:12px 20px;border-radius:999px;

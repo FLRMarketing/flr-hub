@@ -100,3 +100,48 @@ test('a receipt shows at once: arrived products and their condition; the rest st
   assert.equal(m.hubReceipts.length, 1);
   assert.deepEqual(R.applyReceipts([o], [], null), [o]);
 });
+
+test('a correction: a material put back to still to arrive, a condition changed, damage kept while another has it', () => {
+  const items = [{ id: 'a', name: 'A', received: true, issues: ['Damaged'] }, { id: 'b', name: 'B', received: true, issues: ['Damaged'] }, { id: 'c', name: 'C', received: true, issues: [] }];
+  const o = order({ id: '8', day: T, received: true, receivedAt: '2026-10-12T09:00:05Z', items, issues: ['Damaged'] });   // Monday after the receipt was written
+  const rec = { id: 1, order: '8', kind: 'receipt', at: '2026-10-12T09:00:00Z', by: 'Ola', state: 'sent', sentAt: '2026-10-12T09:00:05Z', whole: true, note: 'Two boxes crushed.',
+    lines: [{ id: 'a', name: 'A', condition: 'Damaged' }, { id: 'b', name: 'B', condition: 'Damaged' }, { id: 'c', name: 'C', condition: 'good' }] };
+  const back = { id: 2, order: '8', kind: 'correction', corrects: 1, at: '2026-10-12T11:00:00Z', by: 'Sam', state: 'pending', reason: 'C went to another job', lines: [{ id: 'c', name: 'C', from: 'good', to: 'outstanding' }] };
+  const [p] = R.applyReceipts([o], [rec, back], '2026-10-12T10:00:00Z');
+  const s = R.status(p, T);
+  assert.equal(p.received, false, 'no longer received, though Monday still has it ticked');
+  assert.equal(s.kind, 'today'); assert.equal(s.partial, true); assert.deepEqual(s.outstanding.map(i => i.id), ['c']);
+  assert.equal(R.bucket(p, s, T), 'dueToday'); assert.equal(p.hubPending, true); assert.equal(p.hubMismatch, false);
+  // the adhesive was fine: Damaged comes off A, the order keeps it (B is still damaged); then B too, and it comes off the order
+  const fixA = { id: 3, order: '8', kind: 'correction', corrects: 1, at: '2026-10-12T11:05:00Z', by: 'Sam', state: 'pending', reason: 'A is fine', lines: [{ id: 'a', from: 'Damaged', to: 'good' }] };
+  const [q] = R.applyReceipts([o], [rec, back, fixA], '2026-10-12T10:00:00Z');
+  assert.deepEqual(q.items.map(i => i.issues), [[], ['Damaged'], []]); assert.deepEqual(q.issues, ['Damaged']);
+  const fixB = { id: 4, order: '8', kind: 'correction', corrects: 1, at: '2026-10-12T11:06:00Z', by: 'Sam', state: 'pending', reason: 'B is the wrong colour', noteChanged: true, note: 'B is grey, not white.', lines: [{ id: 'b', from: 'Damaged', to: 'Wrong colour' }] };
+  const [r] = R.applyReceipts([o], [rec, back, fixA, fixB], '2026-10-12T10:00:00Z');
+  assert.deepEqual(r.items.map(i => i.issues), [[], ['Wrong colour'], []]); assert.deepEqual(r.issues, ['Wrong colour']);
+  assert.deepEqual(r.hubNotes, [{ text: 'B is grey, not white.', at: '2026-10-12T11:06:00Z', by: 'Sam' }], 'the note as it now stands, by who changed it');
+  assert.equal(r.hubReceipts.length, 4, 'the receipt and every correction stay for History');
+  // the order of events decides, whatever order they arrive in
+  assert.deepEqual(R.applyReceipts([o], [fixB, back, rec, fixA], '2026-10-12T10:00:00Z')[0].items.map(i => [i.received, i.issues]), r.items.map(i => [i.received, i.issues]));
+  // the database's state, when given, is used
+  const hub = { '8': R.foldHub([rec, back, fixA, fixB]) };
+  assert.deepEqual(R.applyReceipts([o], [rec, back, fixA, fixB], '2026-10-12T10:00:00Z', hub)[0].items, r.items);
+  // the correction written and Monday read since, but Monday still shows C received: a warning
+  const sent = { ...back, state: 'sent', sentAt: '2026-10-12T11:00:05Z' };
+  const [m] = R.applyReceipts([o], [rec, sent], '2026-10-12T11:01:00Z');
+  assert.equal(m.hubMismatch, true); assert.equal(m.items[2].received, false);
+  const onMon = { ...o, received: false, receivedAt: null, items: [items[0], items[1], { ...items[2], received: false }] };
+  assert.equal(R.applyReceipts([onMon], [rec, sent], '2026-10-12T11:01:00Z')[0].hubMismatch, false);
+  // recorded again when it does come: received again, whole
+  const again = { id: 5, order: '8', kind: 'receipt', at: '2026-10-13T08:00:00Z', by: 'Ola', state: 'pending', whole: true, lines: [{ id: 'c', name: 'C', condition: 'good' }] };
+  const [g] = R.applyReceipts([onMon], [rec, sent, again], '2026-10-12T11:01:00Z');
+  assert.equal(R.status(g, T).kind, 'received');
+});
+
+test('a whole delivery with no products, put back to still to arrive', () => {
+  const o = order({ id: '9', day: T, received: true, receivedAt: '2026-10-12T09:00:05Z', items: [] });
+  const rec = { id: 1, order: '9', at: '2026-10-12T09:00:00Z', state: 'sent', sentAt: '2026-10-12T09:00:05Z', whole: true, lines: [{ id: 'order', condition: 'good' }] };
+  const back = { id: 2, order: '9', kind: 'correction', corrects: 1, at: '2026-10-12T10:00:00Z', state: 'pending', reason: 'Wrong job', lines: [{ id: 'order', from: 'good', to: 'outstanding' }] };
+  const [p] = R.applyReceipts([o], [rec, back], '2026-10-12T09:30:00Z');
+  assert.equal(p.received, false); assert.equal(R.status(p, T).kind, 'today');
+});

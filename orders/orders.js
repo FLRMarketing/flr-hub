@@ -175,7 +175,7 @@
   /* ---------------------------------------------------------------- the orders as shown: Monday's, plus Hub receipts Monday hasn't caught up with */
   let shownCache = null, shownFor = null;
   function shown() {
-    if (shownFor !== S.data) { shownCache = R.applyReceipts(S.data.orders, S.data.receipts || [], S.data.readAt); shownFor = S.data; }
+    if (shownFor !== S.data) { shownCache = R.applyReceipts(S.data.orders, S.data.receipts || [], S.data.readAt, S.data.hub); shownFor = S.data; }
     return shownCache;
   }
   const findOrder = id => shown().find(o => o.id === id);
@@ -327,20 +327,28 @@
   // What monday.com recorded, newest first: the reference, date moves, receipt and the older updates.
   // Notes, newest first: the receiver's own note from the Hub, and Monday updates (not the ones the Hub posted itself,
   // which repeat its receipts).
-  const HUB_UPDATE = /^Delivery recorded on the FLR Hub by /;
+  const HUB_UPDATE = /^Delivery record(ed on| corrected on) the FLR Hub by /;
   const notesOf = o => [...(o.updates || []).filter(u => !HUB_UPDATE.test(u.text || '')),
-    ...(o.hubReceipts || []).filter(r => r.note).map(r => ({ text: r.note, at: r.at, by: r.by }))].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    ...(o.hubNotes || [])].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const condWord = c => c === 'good' ? 'good' : c === 'Wrong location' ? 'wrong place' : String(c).toLowerCase();
+  // A receipt as it was recorded, and a correction: who, why and what changed. The receipt's own entry never changes.
+  function hubEvent(r) {
+    if (r.kind !== 'correction') return `Recorded on the Hub by ${r.by}: ${r.lines.map(l => `${product(l.name).title}${l.condition === 'good' ? '' : ` (${condWord(l.condition)})`}`).join(', ')} arrived${r.remaining.length ? `; ${plural(r.remaining.length, 'item')} still to come` : ''}${r.note ? `. “${r.note}”` : ''}`;
+    const what = r.lines.map(l => l.to === 'outstanding' ? `${product(l.name).title} back to still to arrive` : `${product(l.name).title} ${condWord(l.from)} → ${condWord(l.to)}`);
+    if (r.noteChanged) what.push(r.note ? `note now “${r.note}”` : 'note removed');
+    return `Receipt corrected by ${r.by}: ${what.join('; ')}. Reason: “${r.reason}”`;
+  }
   function history(o, s, today, shownNote) {
     const ev = [];
     for (const m of o.moves || []) ev.push([m.at, `Delivery date moved from ${dayShort(m.from)} to ${dayShort(m.to)}`]);
     if (o.receivedAt) ev.push([o.receivedAt, s.partial ? 'Ticked as received, with items still to arrive' : 'Received']);
     for (const u of o.updates || []) if (!HUB_UPDATE.test(u.text || '') && !(shownNote && u.text === shownNote.text && u.at === shownNote.at)) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
-    for (const r of o.hubReceipts || []) ev.push([r.at, `Recorded on the Hub by ${r.by}: ${r.lines.map(l => `${product(l.name).title}${l.condition === 'good' ? '' : ` (${l.condition.toLowerCase()})`}`).join(', ')} arrived${r.remaining.length ? `; ${plural(r.remaining.length, 'item')} still to come` : ''}${r.note ? `. “${r.note}”` : ''}`]);
+    for (const r of o.hubReceipts || []) ev.push([r.at, hubEvent(r), r.kind === 'correction' ? 'hist-fix' : null]);
     ev.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
     const fixed = [o.day ? ['', `Delivery date on monday.com: ${dayLong(o.day)}${timed(o) ? `, ${clock(o.at)}` : ''}`] : null,
       o.ref ? ['', `Order reference recorded: ${o.ref}`] : ['', 'No order reference recorded yet']].filter(Boolean);
-    return fold('History', null, h('ul', { class: 'hist' }, [...ev, ...fixed].map(([at, text]) =>
-      h('li', null, h('span', { class: 'hist-when' }, at ? when(at, today) : 'Recorded'), h('span', { class: 'hist-text' }, text)))));
+    return fold('History', null, h('ul', { class: 'hist' }, [...ev, ...fixed].map(([at, text, cls]) =>
+      h('li', cls ? { class: cls } : null, h('span', { class: 'hist-when' }, at ? when(at, today) : 'Recorded'), h('span', { class: 'hist-text' }, text)))));
   }
   function orderView(o, today, opt = {}) {
     const s = status(o, today), t = titleOf(o, s), a = arrival(o, s, today);
@@ -369,8 +377,10 @@
           latest ? note(latest, today) : null,
           o.hubFailed ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), 'Saved on the Hub; monday.com hasn’t been updated yet. It will try again.')
             : o.hubPending ? h('p', { class: 'fact' }, icon('i-refresh'), 'Saved on the Hub; updating monday.com…')
-            : o.hubMismatch ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), `Recorded on the Hub, but monday.com no longer shows it as received. Check the order on monday.com.`) : null),
-        s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
+            : o.hubMismatch ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), `Recorded on the Hub, but monday.com shows it differently. Check the order on monday.com.`) : null),
+        s.kind !== 'received' || correctable(o).length ? h('div', { class: 'od-acts' },
+          s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
+          correctable(o).length ? h('button', { class: 'btn btn-quiet btn-wide', type: 'button', onclick: () => openCorrect(o.id) }, icon('i-edit'), 'Correct receipt') : null) : null,
         lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
           h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),
           matRows(showOut ? out : lines, today, !s.partial)) : h('p', { class: 'od-none' }, 'No products listed on monday.com.'),
@@ -444,6 +454,87 @@
       err, summary, go,
       h('p', { class: 'rec-who' }, `Recorded as ${S.data.you || 'you'}, at the time you press Record. It’s added to the order on monday.com.`));
     noteBox.addEventListener('input', draw);
+    dlg.append(form);
+    dlg.addEventListener('close', () => dlg.remove());
+    document.body.append(dlg);
+    draw();
+    dlg.showModal();
+  }
+
+  /* ---------------------------------------------------------------- correcting a receipt */
+  // A receipt recorded by mistake is corrected, never changed: each material on it can go back to still to arrive or
+  // get the right condition, and its note can change; a reason is always needed. The database stamps who and when
+  // (orders_correct_receipt), keeps the original in History, and monday.com is updated to match.
+  // Correctable: the Hub's receipts with a material still shown as arrived because of them.
+  const correctable = o => (o.hubReceipts || []).filter(r => r.kind !== 'correction'
+    && Object.values((o.hubState || {}).lines || {}).some(x => x.received && x.receipt === r.id));
+  const FIX = [['good', 'Good condition'], ...CONDITIONS, ['outstanding', 'Didn’t arrive']];
+  function openCorrect(id, which) {
+    const o = findOrder(id);
+    if (!o) return;
+    const recs = correctable(o);
+    if (!recs.length) return toast('Nothing on this order can be corrected');
+    const r = recs.find(x => x.id === which) || recs[recs.length - 1];
+    const st = o.hubState.lines, notes = o.hubState.notes || {};
+    const lines = r.lines.filter(l => st[l.id] && st[l.id].received && st[l.id].receipt === r.id).map(l => ({ id: l.id, name: l.name, was: st[l.id].condition }));
+    const pick = new Map(lines.map(l => [l.id, l.was]));
+    const oldNote = (Object.prototype.hasOwnProperty.call(notes, r.id) ? notes[r.id] : r.note) || '';
+    const dlg = h('dialog', { class: 'rec', 'aria-labelledby': 'fix-title' });
+    const err = h('p', { class: 'rec-err', role: 'alert', hidden: true });
+    const noteBox = h('textarea', { id: 'fix-note', class: 'rec-note', rows: 2, maxlength: 500, placeholder: 'What was wrong, e.g. “Tile box crushed on one corner”' });
+    noteBox.value = oldNote;
+    const why = h('textarea', { id: 'fix-why', class: 'rec-note', rows: 2, maxlength: 300, required: true, placeholder: 'e.g. “Ticked the wrong order: the trim hasn’t come”' });
+    const summary = h('p', { class: 'rec-sum', 'aria-live': 'polite' });
+    const go = h('button', { class: 'btn btn-brand btn-wide', type: 'submit' }, 'Save correction');
+    const list = h('ul', { class: 'rec-lines' });
+    const label = x => (FIX.find(f => f[0] === x) || [x, x])[1];
+    function draw() {
+      list.replaceChildren(...lines.map(l => {
+        const p = l.id === 'order' ? { title: 'The whole delivery', qty: '' } : product(l.name), now = pick.get(l.id);
+        return h('li', { class: `rec-line on${now !== l.was ? ' fix-changed' : ''}` },
+          h('div', { class: 'rec-tick fix-name' }, h('span', { class: 'rec-name' }, h('b', null, p.title), h('small', null, `${p.qty ? p.qty + ' · ' : ''}recorded as ${label(l.was).toLowerCase()}`))),
+          h('div', { class: 'rec-cond', role: 'radiogroup', 'aria-label': `What ${p.title} should be` },
+            ...FIX.map(([v, text]) => h('button', { type: 'button', role: 'radio', class: `rec-opt${v === 'good' ? '' : v === 'outstanding' ? ' rec-opt-out' : ' rec-opt-bad'}`,
+              'aria-checked': now === v ? 'true' : 'false', onclick: () => { pick.set(l.id, v); draw(); } }, text))));
+      }));
+      const changes = lines.filter(l => pick.get(l.id) !== l.was);
+      const noteChanged = noteBox.value.trim() !== oldNote.trim();
+      const bad = lines.some(l => !['good', 'outstanding'].includes(pick.get(l.id)));
+      const needNote = bad && !noteBox.value.trim(), needWhy = !why.value.trim();
+      noteBox.closest('.rec-note-wrap').classList.toggle('need', bad);
+      const back = changes.filter(l => pick.get(l.id) === 'outstanding').length;
+      summary.textContent = !changes.length && !noteChanged ? 'Change what was recorded wrongly, then say why.'
+        : `${changes.length ? plural(changes.length, 'change') : 'Note changed'}${back ? ` · ${back} back to still to arrive` : ''}.${needNote ? ' Add a note about the problem.' : ''}${needWhy ? ' Say why it’s being corrected.' : ''}`;
+      go.disabled = (!changes.length && !noteChanged) || needNote || needWhy;
+    }
+    const form = h('form', { class: 'rec-form', novalidate: true, onsubmit: async e => {
+      e.preventDefault(); err.hidden = true; go.setAttribute('aria-busy', 'true'); go.disabled = true;
+      const p_changes = lines.filter(l => pick.get(l.id) !== l.was).map(l => ({ id: l.id, to: pick.get(l.id) }));
+      const p_note = noteBox.value.trim() !== oldNote.trim() ? noteBox.value.trim() : null;
+      try {
+        const { error } = await client().rpc('orders_correct_receipt', { p_receipt: r.id, p_changes, p_reason: why.value.trim(), p_note });
+        if (error) throw error;
+        dlg.close(); toast('Receipt corrected');
+        await refresh(false); setTimeout(() => refresh(false), 6000);
+      } catch (x) {
+        const code = flrCode(x);
+        err.textContent = code === 'FLR_VALIDATION' && x.details ? x.details : code === 'FLR_FORBIDDEN' ? 'You can’t correct deliveries.' : offline(x) ? 'Can’t reach the FLR database. Nothing was changed; try again.' : 'That didn’t save. Nothing was changed; try again.';
+        err.hidden = false; go.removeAttribute('aria-busy'); draw();
+      }
+    } },
+      h('div', { class: 'rec-head' }, h('h2', { class: 'rec-title', id: 'fix-title' }, 'Correct receipt'),
+        h('button', { class: 'round rec-x', type: 'button', 'aria-label': 'Close without correcting', onclick: () => dlg.close() }, icon('i-back'))),
+      h('p', { class: 'rec-job' }, o.job),
+      recs.length > 1 ? h('div', { class: 'fix-which', role: 'group', 'aria-label': 'Which delivery record' },
+        ...recs.map(x => h('button', { type: 'button', class: 'rec-opt', 'aria-pressed': x.id === r.id ? 'true' : 'false',
+          onclick: () => { if (x.id !== r.id) { dlg.close(); openCorrect(id, x.id); } } }, `${when(x.at, R.londonDay())} · ${x.by}`))) : null,
+      h('p', { class: 'rec-q' }, `Recorded by ${r.by}, ${when(r.at, R.londonDay())}. What should it say?`),
+      list,
+      h('div', { class: 'rec-note-wrap' }, h('label', { for: 'fix-note', class: 'rec-label' }, 'Note', h('span', { class: 'rec-label-hint' }, ' · needed for any problem')), noteBox),
+      h('div', { class: 'rec-note-wrap need' }, h('label', { for: 'fix-why', class: 'rec-label' }, 'Reason for the correction', h('span', { class: 'rec-label-hint' }, ' · always needed')), why),
+      err, summary, go,
+      h('p', { class: 'rec-who' }, `Saved as ${S.data.you || 'you'}, at the time you press Save. The original record stays in History, and monday.com is updated to match.`));
+    noteBox.addEventListener('input', draw); why.addEventListener('input', draw);
     dlg.append(form);
     dlg.addEventListener('close', () => dlg.remove());
     document.body.append(dlg);
