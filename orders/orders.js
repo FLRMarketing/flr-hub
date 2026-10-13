@@ -134,15 +134,18 @@
     return ['calm', 'Awaiting delivery', false];
   }
   // The arrival, as large text and a line under it: never more precise than Monday.
+  // { label, big, small }: the label says what the big time or date is. A time is only ever the one set on Monday or
+  // the recorded receipt, never an estimate; "Received" only with Received ticked (and nothing outstanding).
   function arrival(o, s, today) {
     if (s.kind === 'received') {
-      const d = o.receivedAt ? londonDay(new Date(o.receivedAt)) : null;
-      return { big: o.receivedAt ? clock(o.receivedAt) : 'Received', small: o.receivedAt ? (d === today ? 'Received today' : `Received ${dayShort(d)}`) : 'Time not recorded' };
+      if (!o.receivedAt) return { label: 'Ticked as received', big: 'Received', small: 'Time not recorded' };
+      const d = londonDay(new Date(o.receivedAt));
+      return { label: d === today ? 'Received today at' : `Received on ${dayShort(d)} at`, big: clock(o.receivedAt), small: null };
     }
-    if (s.kind === 'nodate') return { big: 'No date yet', small: 'Awaiting a delivery date' };
-    if (s.kind === 'overdue') return { big: dayShort(o.day), small: 'Was due' };
-    if (s.kind === 'today') return timed(o) ? { big: clock(o.at), small: 'Today' } : { big: 'Due today', small: 'Time not confirmed' };
-    return { big: dayShort(o.day), small: timed(o) ? clock(o.at) : 'Time not confirmed' };
+    if (s.kind === 'nodate') return { label: null, big: 'No date yet', small: 'Awaiting a delivery date' };
+    if (s.kind === 'overdue') return { label: 'Was due', big: dayLong(o.day), small: null, date: true };
+    if (s.kind === 'today') return timed(o) ? { label: 'Expected today at', big: clock(o.at), small: null } : { label: null, big: 'Due today', small: 'Time not confirmed' };
+    return { label: 'Expected arrival', big: dayLong(o.day), small: timed(o) ? `at ${clock(o.at)}` : 'Time not confirmed', date: true };
   }
   /* ---------------------------------------------------------------- state and routes: #/today, #/upcoming, #/received, each with /<order id> */
   const S = { data: null, gotAt: 0, err: null, busy: false, timer: 0, tab: 'today', id: null, attnAll: false, scroll: {} };
@@ -237,9 +240,10 @@
       h('span', { class: 'row-main' },
         h('span', { class: 'row-title' }, t.title, t.more ? h('span', { class: 'row-more' }, ` +${t.more}`) : null),
         h('span', { class: 'row-job' }, ord.job),
-        late ? h('span', { class: 'row-late' }, late) : null),
+        late ? h('span', { class: 'row-late' }, late) : null,
+        b ? h('span', { class: `pill pill-${b[0]} pill-in`, 'aria-hidden': 'true' }, b[1]) : null),   // narrow screens: under the text
       h('span', { class: 'row-end' },
-        b ? h('span', { class: `pill pill-${b[0]}` }, b[1]) : null,
+        b ? h('span', { class: `pill pill-${b[0]} pill-out`, 'aria-hidden': 'true' }, b[1]) : null,
         when ? h('span', { class: 'row-when' }, when) : null)));
   }
   const list = (items, today, o) => h('ul', { class: 'rows' }, items.map(x => row(x, today, o)));
@@ -322,7 +326,8 @@
             h('button', { class: 'round', type: 'button', 'aria-label': 'Help from Likkle Jeff', onclick: askJeff }, icon('i-help')),
             h('a', { class: 'brand brand-solo', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('flr-mark', 'brand-mark')))) : null,
         h('div', { class: 'od-top' },
-          h('div', { class: 'od-when' }, h('p', { class: 'od-big' }, a.big), a.small && a.small !== 'Today' ? h('p', { class: 'od-small' }, a.small) : null),
+          h('div', { class: 'od-when' }, a.label ? h('p', { class: 'od-label' }, a.label) : null,
+            h('p', { class: `od-big${a.date ? ' od-big-date' : ''}` }, a.big), a.small ? h('p', { class: 'od-small' }, a.small) : null),
           thumb(t.kind, 'thumb-hero')),
         h('h1', { class: 'od-title', id, tabindex: '-1' }, t.title, t.more ? h('span', { class: 'od-more' }, ` +${t.more} more`) : null),
         h('p', { class: 'od-job' }, o.job)),
@@ -351,9 +356,15 @@
     if (!S.data) return;
     const r = parseRoute(), prevTab = S.tab, prevId = S.id;
     if (!prevId || wide.matches) S.scroll[prevTab] = scrollY;   // where the list was, to come back to it
-    S.tab = r.tab; S.id = r.id;
+    S.tab = r.tab;
     const today = londonDay(), g = sorted(today);
-    const counts = { today: g.due.length + g.late.length, upcoming: g.upcoming.length + g.nodate.length, received: g.gotToday.length };
+    // On a wide screen the panel is never empty: the address's order if there is one, otherwise the first of this
+    // view (Today: due today, then needs attention, then any order). Not called "next": the board doesn't know the order.
+    const first = { today: [g.due, g.late, g.upcoming, g.nodate, g.gotToday, g.gotEarlier], upcoming: [g.upcoming, g.nodate], received: [g.gotToday, g.gotEarlier] }[S.tab]
+      .map(l => l[0]).find(Boolean);
+    S.id = r.id || (wide.matches && first ? first.o.id : null);
+    // Today's badge: orders with materials still to come that are due today. "Needs attention" has its own count.
+    const counts = { today: g.due.length, upcoming: g.upcoming.length + g.nodate.length, received: g.gotToday.length };
     const order = S.id ? S.data.orders.find(o => o.id === S.id) : null;
     const v = $('#view');
     document.body.dataset.view = 'page';

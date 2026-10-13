@@ -328,6 +328,17 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .fold > .mon{margin:0 12px 10px}
 .meta div{background:var(--s3)}
 @media (max-width:440px){.row .thumb-sm{width:44px;height:44px} .row .thumb-sm svg{width:33px;height:33px}}
+.od-label{margin:0 0 4px;color:var(--on-peach-2);font:700 15px/1.2 var(--font)}
+.od-big-date{font-size:32px;line-height:1.08;letter-spacing:-.03em;text-wrap:balance}
+.pill-in{display:none}
+/* narrow screens: labels go under the text, and job names wrap instead of being cut short */
+@media (max-width:560px){
+  .pill-out{display:none}
+  .pill-in{display:inline-flex;margin-top:6px}
+  .row-title{display:block;-webkit-line-clamp:unset;overflow:visible}
+  .row-job{display:block;-webkit-line-clamp:unset;overflow:visible}
+  .row{align-items:center}
+}
 
 @media (min-width:960px){
   .head{padding:10px 18px 14px;border-radius:var(--r-l)}
@@ -341,6 +352,7 @@ body:not([data-view="loading"]) .gate-loading{display:none}
   .col-body{padding:16px 0 0}
   .col-detail .od-hero{padding:18px 24px 20px}
   .col-detail .od-big{font-size:48px}
+  .col-detail .od-big-date{font-size:38px}
   .col-detail .od-title{font-size:26px}
   .col-detail .thumb-hero{width:92px;height:92px} .col-detail .thumb-hero svg{width:72px;height:72px}
   .col-detail .od-body{padding:18px 22px 22px}
