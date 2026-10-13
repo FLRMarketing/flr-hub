@@ -329,7 +329,10 @@
   // Notes, newest first: the receiver's own note from the Hub, and Monday updates (not the ones the Hub posted itself,
   // which repeat its receipts).
   const HUB_UPDATE = /^Delivery record(ed on| corrected on) the FLR Hub by /;
-  const notesOf = o => [...(o.updates || []).filter(u => !HUB_UPDATE.test(u.text || '')),
+  // For Admins and Super Admins the problems sent from the Hub have their own section, so their monday.com copy isn't repeated as a note.
+  const HUB_PROBLEM = /^Problem reported on the FLR Hub by /;
+  const hubPosted = u => HUB_UPDATE.test(u.text || '') || (!!(S.data && S.data.seesAllProblems) && HUB_PROBLEM.test(u.text || ''));
+  const notesOf = o => [...(o.updates || []).filter(u => !hubPosted(u)),
     ...(o.hubNotes || [])].sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const condWord = c => c === 'good' ? 'good' : c === 'Wrong location' ? 'wrong place' : String(c).toLowerCase();
   // A receipt as it was recorded, and a correction: who, why and what changed. The receipt's own entry never changes.
@@ -343,7 +346,7 @@
     const ev = [];
     for (const m of o.moves || []) ev.push([m.at, `Delivery date moved from ${dayShort(m.from)} to ${dayShort(m.to)}`]);
     if (o.receivedAt) ev.push([o.receivedAt, s.partial ? 'Ticked as received, with items still to arrive' : 'Received']);
-    for (const u of o.updates || []) if (!HUB_UPDATE.test(u.text || '') && !(shownNote && u.text === shownNote.text && u.at === shownNote.at)) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
+    for (const u of o.updates || []) if (!hubPosted(u) && !(shownNote && u.text === shownNote.text && u.at === shownNote.at)) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
     for (const r of o.hubReceipts || []) ev.push([r.at, hubEvent(r), r.kind === 'correction' ? 'hist-fix' : null]);
     ev.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
     const fixed = [o.day ? ['', `Delivery date on monday.com: ${dayLong(o.day)}${timed(o) ? `, ${clock(o.at)}` : ''}`] : null,
@@ -382,6 +385,7 @@
         s.kind !== 'received' || correctable(o).length ? h('div', { class: 'od-acts' },
           s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
           correctable(o).length ? h('button', { class: 'btn btn-quiet btn-wide', type: 'button', onclick: () => openCorrect(o.id) }, icon('i-edit'), 'Correct receipt') : null) : null,
+        problemsAbout(o, today),
         h('button', { class: 'od-problem', type: 'button', onclick: () => openProblem(o.id) }, icon('i-help'), 'Have a problem with this delivery?'),
         lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
           h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),
@@ -559,6 +563,19 @@
     if (p.state === 'failed') return ['Saved. Not sent yet; it will try again in a few minutes', 'warn'];
     return ['Sending…', 'wait'];
   }
+  // Admins and Super Admins: the problems sent about a delivery, on the delivery itself.
+  function problemsAbout(o, today) {
+    if (!S.data.seesAllProblems) return null;
+    const ps = (S.data.allProblems || []).filter(p => p.order === o.id).reverse();
+    if (!ps.length) return null;
+    return h('section', { class: 'od-sec od-probs', 'aria-label': 'Problems reported' },
+      h('h2', { class: 'od-h' }, 'Problems reported', h('span', { class: 'od-n' }, String(ps.length))),
+      h('ul', { class: 'probs' }, ps.map(p => {
+        const [st, tone] = problemStatus(p);
+        return h('li', { class: 'prob' }, h('p', { class: 'prob-head' }, h('b', null, p.mine ? 'You' : p.by), h('span', null, when(p.at, today))),
+          h('p', { class: 'prob-text' }, p.message), h('p', { class: `prob-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st));
+      })));
+  }
   function openProblem(orderId) {
     if (!S.data) return;
     let about = orderId ? findOrder(orderId) : null;
@@ -570,8 +587,36 @@
     const send = h('button', { class: 'chat-send', type: 'submit', 'aria-label': 'Send' }, icon('i-send'));
     const aboutRow = h('div', { class: 'chat-about' });
     const quick = h('div', { class: 'chat-quick', role: 'group', 'aria-label': 'Quick starts' });
+    const all = !!S.data.seesAllProblems;
+    let mode = 'mine';
+    const seg = all ? h('div', { class: 'chat-seg', role: 'tablist', 'aria-label': 'Which messages' }) : null;
+    const compose = h('div', { class: 'chat-compose' });
     const bubble = (who, text, meta, cls = '') => h('div', { class: `bub bub-${who} ${cls}` }, h('p', { class: 'bub-text' }, text), meta ? h('p', { class: 'bub-meta' }, meta) : null);
+    function drawSeg() {
+      if (!seg) return;
+      const n = (S.data.allProblems || []).length;
+      seg.replaceChildren(...[['mine', 'Your messages'], ['all', `Everyone’s${n ? ` (${n})` : ''}`]].map(([k, label]) =>
+        h('button', { type: 'button', role: 'tab', class: 'chat-seg-b', 'aria-selected': mode === k ? 'true' : 'false', onclick: () => { mode = k; drawSeg(); drawLog(); } }, label)));
+      compose.hidden = mode === 'all';
+    }
+    function drawAll() {
+      const ps = [...(S.data.allProblems || [])].reverse();
+      if (!ps.length) return log.replaceChildren(bubble('them', 'No problems have been sent in the last 60 days.'));
+      log.replaceChildren(...ps.map(p => {
+        const [st, tone] = problemStatus(p);
+        const o = p.order ? findOrder(p.order) : null;
+        const ab = p.order ? `${product(p.what || '').title || 'Delivery'} · ${p.job}` : 'Not about one delivery';
+        return h('div', { class: 'prob' },
+          h('p', { class: 'prob-head' }, h('b', null, p.mine ? 'You' : p.by), h('span', null, when(p.at, today))),
+          o ? h('a', { class: 'prob-about', href: href(S.tab, o.id), onclick: () => dlg.close() }, icon('i-box'), ab) : h('p', { class: 'prob-about prob-about-none' }, ab),
+          h('p', { class: 'prob-text' }, p.message),
+          h('p', { class: `prob-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st));
+      }));
+      log.scrollTop = 0;
+    }
     function drawLog() {
+      drawSeg();
+      if (mode === 'all') return drawAll();
       const mine = (S.data.problems || []).slice(-20);
       const hello = bubble('them', `Hi ${(S.data.you || '').split(' ')[0] || 'there'}. What’s the problem? ${contactsText()} will be told straight away and will get back to you.`);
       log.replaceChildren(hello, ...mine.flatMap(p => {
@@ -610,9 +655,8 @@
         h('div', { class: 'chat-faces', 'aria-hidden': 'true' }, ...contacts().map(n => h('span', { class: 'chat-face' }, n.split(' ').map(w => w[0]).join('').slice(0, 2)))),
         h('div', { class: 'chat-titles' }, h('h2', { class: 'rec-title', id: 'chat-title' }, 'Have a problem?'), h('p', { class: 'chat-sub' }, andList(contacts()))),
         h('button', { class: 'round rec-x', type: 'button', 'aria-label': 'Close', onclick: () => dlg.close() }, icon('i-back'))),
-      log,
-      h('div', { class: 'chat-compose' }, aboutRow, quick, err,
-        h('div', { class: 'chat-row' }, box, send)));
+      seg, log, compose);
+    compose.append(aboutRow, quick, err, h('div', { class: 'chat-row' }, box, send));
     box.addEventListener('input', drawCompose);
     box.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !send.disabled) form.requestSubmit(); });
     dlg.append(form);
