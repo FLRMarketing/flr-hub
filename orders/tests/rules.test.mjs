@@ -85,10 +85,18 @@ test('a receipt shows at once: arrived products and their condition; the rest st
   assert.equal(ws.kind, 'received'); assert.equal(R.bucket(w, ws, T), 'receivedToday');
   assert.deepEqual(w.issues, ['Damaged'], 'a damaged delivery that has all arrived keeps its flag');
   assert.equal(w.hubFailed, true);
-  // once Monday has been read after the write, Monday's own record is what shows
+  // written and read back from Monday: still recorded, no warning
   const sent = { ...part, state: 'sent', sentAt: '2026-10-12T09:00:05Z' };
-  const [m] = R.applyReceipts([o], [sent], '2026-10-12T09:01:00Z');
-  assert.equal(m.items[0].received, false, 'Monday is the record once it has been read again');
+  const onMon = { ...o, items: [{ id: 'a', name: 'A', received: true, issues: ['Damaged'] }, o.items[1]], issues: ['Damaged'] };
+  const [m] = R.applyReceipts([onMon], [sent], '2026-10-12T09:01:00Z');
+  assert.equal(m.items[0].received, true); assert.equal(m.hubMismatch, false); assert.equal(m.hubPending, false);
+  // Monday read since the write but doesn't show it (unticked there, or the board was reset): the Hub's record stays,
+  // with a warning, so the page and the database agree on what can still be recorded
+  const [x] = R.applyReceipts([o], [sent], '2026-10-12T09:01:00Z');
+  assert.equal(x.items[0].received, true); assert.equal(x.hubMismatch, true);
+  assert.deepEqual(R.status(x, T).outstanding.map(i => i.id), ['b']);
+  // written but not read back yet: no warning
+  assert.equal(R.applyReceipts([o], [sent], '2026-10-12T08:59:00Z')[0].hubMismatch, false);
   assert.equal(m.hubReceipts.length, 1);
   assert.deepEqual(R.applyReceipts([o], [], null), [o]);
 });

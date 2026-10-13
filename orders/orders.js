@@ -282,7 +282,7 @@
     return [
       late.length ? h('section', { class: 'block attn', 'aria-labelledby': 'attn-title' },
         h('h2', { class: 'block-title attn-title', id: 'attn-title' }, h('span', { class: 'attn-dot', 'aria-hidden': 'true' }), 'Needs attention', h('span', { class: 'block-n' }, String(late.length))),
-        list(shown, today, { late: true }),
+        grouped(shown, today, { late: true }),
         late.length > ATTN_SHOWN ? h('button', { class: 'more-btn', type: 'button', 'aria-expanded': S.attnAll ? 'true' : 'false',
           onclick: () => { S.attnAll = !S.attnAll; render(); } }, S.attnAll ? 'Show fewer' : `Show all ${late.length}`) : null) : null,
       h('section', { class: 'block', 'aria-labelledby': 'due-title' },
@@ -368,7 +368,8 @@
           h('p', { class: `fact fact-${tone}` }, icon(tone === 'good' ? 'i-check' : tone === 'calm' ? 'i-calendar' : 'i-alert'), line),
           latest ? note(latest, today) : null,
           o.hubFailed ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), 'Saved on the Hub; monday.com hasn’t been updated yet. It will try again.')
-            : o.hubPending ? h('p', { class: 'fact' }, icon('i-refresh'), 'Saved on the Hub; updating monday.com…') : null),
+            : o.hubPending ? h('p', { class: 'fact' }, icon('i-refresh'), 'Saved on the Hub; updating monday.com…')
+            : o.hubMismatch ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), `Recorded on the Hub, but monday.com no longer shows it as received. Check the order on monday.com.`) : null),
         s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
         lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
           h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),

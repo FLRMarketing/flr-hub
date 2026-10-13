@@ -55,9 +55,11 @@
     return 'nodate';
   }
 
-  /** Receipts recorded on the Hub, shown before Monday has caught up: a receipt not yet written to Monday, or written
-   *  after the last read, marks its products as arrived (with their condition) and the order as received if it was
-   *  the last of them. Every order gets its Hub receipts (for History) and whether one is still being written. */
+  /** Receipts recorded on the Hub are the record of what arrived, as the database treats them (it won't take the
+   *  same materials twice): every receipt marks its products as arrived, with their condition, and the order as
+   *  received once everything has arrived, whether or not Monday shows it yet. Each order also gets its receipts (for
+   *  History), whether one is still being written (pending/failed), and a mismatch when Monday has been read since a
+   *  receipt was written but doesn't show it (someone unticked it there, or the change didn't stick). */
   const PROBLEMS = ['Damaged', 'Wrong colour', 'Wrong quantity', 'Wrong location'];
   function applyReceipts(orders, receipts, readAt) {
     const by = new Map();
@@ -66,10 +68,11 @@
     return (orders || []).map(o => {
       const rs = by.get(o.id);
       if (!rs) return o;
-      const fresh = rs.filter(r => r.state !== 'sent' || !r.sentAt || Date.parse(r.sentAt) > read);
+      const onMonday = l => l.id === 'order' ? !!o.received : !!((o.items || []).find(i => i.id === l.id) || {}).received;
+      const mismatch = rs.filter(r => r.state === 'sent' && r.sentAt && Date.parse(r.sentAt) < read && (r.lines || []).some(l => !onMonday(l)));
       const n = { ...o, items: (o.items || []).map(i => ({ ...i, issues: [...(i.issues || [])] })), issues: [...(o.issues || [])], hubReceipts: rs,
-        hubPending: fresh.some(r => r.state === 'pending'), hubFailed: fresh.some(r => r.state === 'failed') };
-      for (const r of fresh) {
+        hubPending: rs.some(r => r.state === 'pending'), hubFailed: rs.some(r => r.state === 'failed'), hubMismatch: mismatch.length > 0 };
+      for (const r of rs) {
         for (const l of r.lines || []) {
           const bad = PROBLEMS.includes(l.condition) ? [l.condition] : [];
           if (l.id === 'order') { n.received = true; n.receivedAt = n.receivedAt || r.at; }

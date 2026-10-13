@@ -177,9 +177,11 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   orders, never with the received ones.
 - Recording a delivery (Order Tracker 1.1): "Record delivery" on an outstanding order opens a sheet: tick what arrived,
   choose each one's condition (a problem needs a note); nothing starts ticked. It calls `orders_record_receipt`, which
-  stamps the person and the time; flr-orders then writes it to Monday. Until Monday has been read again the page shows
-  the receipt itself (`rules.js` applyReceipts), with "Saved on the Hub; updating monday.com…".
-- Lists are grouped by destination (FLR warehouse, each site = its job, For collection, Destination not confirmed).
+  stamps the person and the time; flr-orders then writes it to Monday. The Hub's receipts are the record of what
+  arrived, on the page as in the database (`rules.js` applyReceipts): shown at once, kept after a reload, with
+  "Saved on the Hub; updating monday.com…" while it's being written, and a warning if Monday later stops showing it.
+- Lists are grouped by destination (FLR warehouse, each site = its job, For collection, Destination not confirmed),
+  Needs attention included.
   FLR blue (the Hub's tint) for the chosen delivery, tabs and the main action.
 - Local preview: launch config `flr-hub-orders-preview` (port 8871, ORDERS=1 in build/mock-supabase.ts).
 
