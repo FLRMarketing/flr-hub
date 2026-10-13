@@ -106,21 +106,32 @@
 
   /* ---------------------------------------------------------------- what to say about an order (rules.js decides the state) */
   const status = R.status;
-  const DEST = { Warehouse: ['i-warehouse', 'FLR warehouse'], Site: ['i-site', 'Delivered to site'], Collection: ['i-collect', 'For collection'] };
-  const destText = o => (DEST[o.destination] || [null, o.destination || 'Destination not set'])[1];
+  // "Delivered" only once receipt is recorded; until then it's where the delivery is going.
+  const DEST = { Warehouse: ['i-warehouse', 'Delivery to FLR warehouse', 'Delivered to FLR warehouse'], Site: ['i-site', 'Delivery to site', 'Delivered to site'],
+    Collection: ['i-collect', 'For collection', 'Collected'] };
+  const destText = (o, s) => { const d = DEST[o.destination]; return d ? d[s && s.kind === 'received' ? 2 : 1] : o.destination || 'Destination not set'; };
   const destIcon = o => (DEST[o.destination] || ['i-warehouse'])[0];
   const PROBLEM = { 'Item missing': 'item missing', 'Wrong colour': 'wrong colour', 'Wrong quantity': 'wrong quantity', Damaged: 'damage reported', 'Wrong location': 'wrong location' };
   const problems = o => (o.issues || []).map(i => PROBLEM[i] || i.toLowerCase());
   const stillToCome = s => s.outstanding.length ? `${plural(s.outstanding.length, 'item')} still to arrive` : 'Item missing reported';
 
-  // The short status, only when there's something to say. [tone, text]
+  // The list's label, only for an exception: [tone, text] or null.
   function badge(o, s) {
-    if (s.kind === 'received') return problems(o).length ? ['warn', `Received · ${problems(o)[0]}`] : null;
+    if (s.kind === 'received') return problems(o).length ? ['warn', cap(problems(o)[0])] : null;
     if (s.partial) return ['warn', 'Part received'];
     if (s.kind === 'overdue') return ['bad', 'Overdue'];
     if (s.delay === 'active') return ['warn', 'Delayed'];
-    if (s.delay === 'moved') return ['calm', 'Date moved'];
     return null;
+  }
+  // The order's current status in one line, saying each fact once: [tone, text, exception?]
+  function statusLine(o, s) {
+    if (s.kind === 'received') return problems(o).length ? ['warn', `Received · ${problems(o).join(', ')}`, true] : ['good', 'Everything received', false];
+    if (s.partial) return [s.kind === 'overdue' ? 'bad' : 'warn', `Part received · ${stillToCome(s)}`, true];
+    if (s.kind === 'overdue') return ['bad', 'Overdue · no new delivery date yet', true];
+    if (s.delay === 'active') return ['warn', `Delayed · first due ${dayLong(o.firstDay)}`, true];
+    if (s.delay === 'moved') return ['calm', `Date moved from ${dayLong(o.firstDay)} · not late`, true];
+    if (s.kind === 'nodate') return ['calm', 'Awaiting a delivery date', false];
+    return ['calm', 'Awaiting delivery', false];
   }
   // The arrival, as large text and a line under it: never more precise than Monday.
   function arrival(o, s, today) {
@@ -133,21 +144,6 @@
     if (s.kind === 'today') return timed(o) ? { big: clock(o.at), small: 'Today' } : { big: 'Due today', small: 'Time not confirmed' };
     return { big: dayShort(o.day), small: timed(o) ? clock(o.at) : 'Time not confirmed' };
   }
-  // What has gone off the plan, in a few words, saying only what the arrival and status above don't. [tone, title, line];
-  // the latest note goes under the first.
-  function exceptions(o, s) {
-    const out = [];
-    if (s.kind === 'received') {
-      if (problems(o).length) out.push(['warn', `Received · ${problems(o).join(', ')}.`, null]);
-      return out;
-    }
-    if (s.partial) out.push([s.kind === 'overdue' ? 'bad' : 'warn', `${stillToCome(s)}.`, null]);
-    else if (s.kind === 'overdue') out.push(['bad', 'No new delivery date yet.', null]);
-    if (s.kind !== 'overdue' && s.delay === 'active') out.push(['warn', `First due ${dayLong(o.firstDay)}.`, null]);
-    if (s.kind !== 'overdue' && s.delay === 'moved') out.push(['calm', `First due ${dayLong(o.firstDay)}.`, 'Moved before that date, so it isn’t late.']);
-    return out;
-  }
-
   /* ---------------------------------------------------------------- state and routes: #/today, #/upcoming, #/received, each with /<order id> */
   const S = { data: null, gotAt: 0, err: null, busy: false, timer: 0, tab: 'today', id: null, attnAll: false, scroll: {} };
   const TABS = [['today', 'Today', 'i-today'], ['upcoming', 'Coming up', 'i-calendar'], ['received', 'Received', 'i-inbox']];
@@ -202,8 +198,7 @@
         h('a', { class: 'brand', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('i-back', 'brand-back'), icon('flr-mark', 'brand-mark'), h('span', { class: 'brand-word' }, 'Hub')),
         h('div', { class: 'head-tools' }, updated(today),
           h('button', { class: 'round', type: 'button', id: 'refresh', 'aria-label': 'Check for updates now', title: 'Check for updates now', onclick: () => refresh(true) }, icon('i-refresh')))),
-      h('h1', { class: 'head-title' }, title),
-      sub ? h('p', { class: 'head-sub' }, sub) : null,
+      h('div', { class: 'head-titles' }, h('h1', { class: 'head-title' }, title), sub ? h('p', { class: 'head-sub' }, sub) : null),
       h('nav', { class: 'seg', 'aria-label': 'Deliveries' }, TABS.map(([k, label]) =>
         h('a', { class: 'seg-item', href: href(k), 'aria-current': S.tab === k ? 'page' : null }, label, counts[k] ? h('span', { class: 'seg-n' }, String(counts[k])) : null))));
   }
@@ -228,36 +223,42 @@
   }
 
   /* ---------------------------------------------------------------- one delivery in a list */
+  // Material and job; on the right only a recorded time (or, for late orders, the day they were or are now due);
+  // a label only for an exception. No "Due today" on every row: the section says it.
   function row(x, today, o = {}) {
     const { o: ord, s } = x, t = titleOf(ord, s), b = badge(ord, s);
-    let big, small;
-    if (o.late) [big, small] = [dayShort(ord.day), s.kind === 'overdue' ? 'Was due' : 'Now due'];
-    else if (o.upcoming) [big, small] = !ord.day ? ['', 'No date yet'] : timed(ord) ? [clock(ord.at), ''] : ['', 'Time not confirmed'];
-    else { const a = arrival(ord, s, today); [big, small] = [a.big, a.small === 'Today' ? 'Expected' : a.small]; }
-    const label = [t.title + (t.more ? ` and ${plural(t.more, 'more product')}` : ''), ord.job, big, small, b && b[1]].filter(Boolean).join('. ');
-    return h('li', null, h('a', { class: `row${o.compact ? ' row-compact' : ''}`, href: href(S.tab, ord.id), 'aria-current': S.id === ord.id ? 'true' : null, 'aria-label': label },
-      thumb(t.kind, o.compact ? 'thumb-sm' : ''),
+    let when = '';
+    const late = o.late ? `${s.kind === 'overdue' ? 'Was due' : 'Now due'} ${dayShort(ord.day)}` : '';
+    if (s.kind === 'received') when = ord.receivedAt ? clock(ord.receivedAt) : '';
+    else if (!o.late && timed(ord)) when = clock(ord.at);
+    const label = [t.title + (t.more ? ` and ${plural(t.more, 'more product')}` : ''), ord.job, late, b && b[1], when && `${s.kind === 'received' ? 'received' : 'expected'} ${when}`].filter(Boolean).join('. ');
+    return h('li', null, h('a', { class: 'row', href: href(S.tab, ord.id), 'aria-current': S.id === ord.id ? 'true' : null, 'aria-label': label },
+      thumb(t.kind, 'thumb-sm'),
       h('span', { class: 'row-main' },
         h('span', { class: 'row-title' }, t.title, t.more ? h('span', { class: 'row-more' }, ` +${t.more}`) : null),
         h('span', { class: 'row-job' }, ord.job),
-        b && !o.late ? h('span', { class: `pill pill-${b[0]}` }, b[1]) : null),
-      h('span', { class: `row-when${o.late ? ' row-when-late' : ''}` }, big ? h('b', null, big) : null, small ? h('small', null, small) : null)));
+        late ? h('span', { class: 'row-late' }, late) : null),
+      h('span', { class: 'row-end' },
+        b ? h('span', { class: `pill pill-${b[0]}` }, b[1]) : null,
+        when ? h('span', { class: 'row-when' }, when) : null)));
   }
   const list = (items, today, o) => h('ul', { class: 'rows' }, items.map(x => row(x, today, o)));
+  // Said once, beside the heading, when some rows have no time.
+  const timeNote = items => items.some(x => !timed(x.o)) ? h('p', { class: 'block-note' }, items.some(x => timed(x.o)) ? 'Times show only where monday.com has one; the rest aren’t confirmed.' : 'Arrival times aren’t confirmed.') : null;
   const empty = (title, text) => h('div', { class: 'empty' }, thumb('box', 'thumb-lg'), h('p', { class: 'empty-title' }, title), text ? h('p', { class: 'empty-text' }, text) : null);
 
   /* ---------------------------------------------------------------- the three screens */
   function todayScreen(g, today) {
     const late = g.late, shown = S.attnAll ? late : late.slice(0, ATTN_SHOWN);
     return [
-      late.length ? h('section', { class: 'attn', 'aria-labelledby': 'attn-title' },
-        h('h2', { class: 'attn-title', id: 'attn-title' }, icon('i-alert'), 'Needs attention', h('span', { class: 'attn-n' }, String(late.length))),
-        list(shown, today, { late: true, compact: true }),
-        late.length > ATTN_SHOWN ? h('button', { class: 'attn-more', type: 'button', 'aria-expanded': S.attnAll ? 'true' : 'false',
+      late.length ? h('section', { class: 'block attn', 'aria-labelledby': 'attn-title' },
+        h('h2', { class: 'block-title attn-title', id: 'attn-title' }, h('span', { class: 'attn-dot', 'aria-hidden': 'true' }), 'Needs attention', h('span', { class: 'block-n' }, String(late.length))),
+        list(shown, today, { late: true }),
+        late.length > ATTN_SHOWN ? h('button', { class: 'more-btn', type: 'button', 'aria-expanded': S.attnAll ? 'true' : 'false',
           onclick: () => { S.attnAll = !S.attnAll; render(); } }, S.attnAll ? 'Show fewer' : `Show all ${late.length}`) : null) : null,
       h('section', { class: 'block', 'aria-labelledby': 'due-title' },
         h('h2', { class: 'block-title', id: 'due-title' }, 'Still to arrive', g.due.length ? h('span', { class: 'block-n' }, String(g.due.length)) : null),
-        g.due.length ? list(g.due, today, {}) : empty(g.gotToday.length ? 'Everything due today is in' : 'Nothing due today')),
+        g.due.length ? [timeNote(g.due), list(g.due, today, {})] : empty(g.gotToday.length ? 'Everything due today is in' : 'Nothing due today')),
       g.gotToday.length ? h('a', { class: 'got-link', href: href('received') }, icon('i-check', 'got-ic'),
         h('span', null, `${plural(g.gotToday.length, 'delivery', 'deliveries')} received today`), icon('i-chevron', 'got-chev')) : null,
     ];
@@ -266,6 +267,7 @@
     const days = [...new Set(g.upcoming.map(x => x.o.day))];
     if (!days.length && !g.nodate.length) return [empty('Nothing booked in after today')];
     return [
+      timeNote(g.upcoming),
       days.map(d => h('section', { class: 'block' }, h('h2', { class: 'block-title' }, daysBetween(today, d) === 1 ? 'Tomorrow' : dayLong(d)),
         list(g.upcoming.filter(x => x.o.day === d), today, { upcoming: true }))),
       g.nodate.length ? h('section', { class: 'block' }, h('h2', { class: 'block-title' }, 'No date yet'), list(g.nodate, today, { upcoming: true })) : null,
@@ -282,14 +284,7 @@
   }
 
   /* ---------------------------------------------------------------- one order */
-  function progress(o, s) {
-    const steps = [['Reference', o.ref ? 'done' : 'todo'], ['Date set', o.day ? 'done' : 'todo'],
-      [s.partial ? 'Part received' : 'Received', s.kind === 'received' ? 'done' : s.partial ? 'part' : 'todo']];
-    return h('ol', { class: 'prog', 'aria-label': 'What monday.com records' }, steps.map(([label, st]) =>
-      h('li', { class: `prog-${st}` }, h('span', { class: 'prog-bar' }), h('span', { class: 'prog-label' }, st === 'done' ? icon('i-check') : null, label,
-        h('span', { class: 'sr' }, st === 'done' ? ' (done)' : st === 'part' ? ' (in part)' : ' (not yet)')))));
-  }
-  const note = (u, today) => u ? h('p', { class: 'ex-note' }, h('span', { class: 'ex-quote' }, `“${u.text}”`), h('span', { class: 'ex-by' }, [u.by, u.at ? when(u.at, today) : ''].filter(Boolean).join(' · '))) : null;
+  const note = (u, today) => u ? h('p', { class: 'note' }, h('span', { class: 'note-quote' }, `“${u.text}”`), h('span', { class: 'note-by' }, [u.by, u.at ? when(u.at, today) : ''].filter(Boolean).join(' · '))) : null;
   function matRows(items, today, showGot) {
     return h('ul', { class: 'mats' }, items.map(i => {
       const p = product(i.name), probs = (i.issues || []).map(x => PROBLEM[x] || x.toLowerCase());
@@ -299,25 +294,27 @@
         showGot && i.received ? h('span', { class: 'mat-got' }, icon('i-check'), i.receivedAt ? clock(i.receivedAt) : '', h('span', { class: 'sr' }, ' received')) : null);
     }));
   }
-  function history(o, s, today) {
+  const fold = (title, n, body) => h('details', { class: 'fold' }, h('summary', null, title, n != null ? h('span', { class: 'fold-n' }, String(n)) : null, icon('i-down', 'fold-ic')), body);
+  // What monday.com recorded, newest first: the reference, date moves, receipt and the older updates.
+  function history(o, s, today, shownNote) {
     const ev = [];
-    for (const m of o.moves || []) ev.push([m.at, `Date moved from ${dayShort(m.from)} to ${dayShort(m.to)}`]);
+    for (const m of o.moves || []) ev.push([m.at, `Delivery date moved from ${dayShort(m.from)} to ${dayShort(m.to)}`]);
     if (o.receivedAt) ev.push([o.receivedAt, s.partial ? 'Ticked as received, with items still to arrive' : 'Received']);
-    for (const u of o.updates || []) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
+    for (const u of o.updates || []) if (u !== shownNote) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
     ev.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
-    if (!ev.length) return null;
-    return h('details', { class: 'fold' }, h('summary', null, 'History', h('span', { class: 'fold-n' }, String(ev.length)), icon('i-down', 'fold-ic')),
-      h('ul', { class: 'hist' }, ev.map(([at, text]) => h('li', null, h('span', { class: 'hist-when' }, at ? when(at, today) : ''), h('span', { class: 'hist-text' }, text)))));
+    const fixed = [o.day ? ['', `Delivery date on monday.com: ${dayLong(o.day)}${timed(o) ? `, ${clock(o.at)}` : ''}`] : null,
+      o.ref ? ['', `Order reference recorded: ${o.ref}`] : ['', 'No order reference recorded yet']].filter(Boolean);
+    return fold('History', null, h('ul', { class: 'hist' }, [...ev, ...fixed].map(([at, text]) =>
+      h('li', null, h('span', { class: 'hist-when' }, at ? when(at, today) : 'Recorded'), h('span', { class: 'hist-text' }, text)))));
   }
   function orderView(o, today, opt = {}) {
-    const s = status(o, today), t = titleOf(o, s), a = arrival(o, s, today), b = badge(o, s), ex = exceptions(o, s);
-    const latest = (o.updates || [])[0];
+    const s = status(o, today), t = titleOf(o, s), a = arrival(o, s, today);
+    const [tone, line, exception] = statusLine(o, s);
+    const latest = exception ? (o.updates || [])[0] : null;   // the explanation goes right under the exception
     const lines = o.items || [];
     const out = s.partial ? s.outstanding : [], got = lines.filter(i => !out.includes(i));
-    const stateText = s.kind === 'received' ? 'Received' : b ? b[1] : s.kind === 'nodate' ? 'Awaiting a date' : 'Awaiting delivery';
-    const tone = s.kind === 'received' ? (problems(o).length ? 'warn' : 'good') : b ? b[0] : 'calm';
-    const id = 'od-' + o.id;
     const showOut = s.partial && out.length > 0;
+    const id = 'od-' + o.id;
     return h('article', { class: `od od-${tone}`, 'aria-labelledby': id },
       h('div', { class: 'od-hero' },
         opt.back ? h('div', { class: 'od-bar' }, h('a', { class: 'od-back', href: href(S.tab) }, icon('i-back'), TABS.find(x => x[0] === S.tab)[1]),
@@ -325,30 +322,26 @@
             h('button', { class: 'round', type: 'button', 'aria-label': 'Help from Likkle Jeff', onclick: askJeff }, icon('i-help')),
             h('a', { class: 'brand brand-solo', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('flr-mark', 'brand-mark')))) : null,
         h('div', { class: 'od-top' },
-          h('div', { class: 'od-when' }, h('p', { class: 'od-big' }, a.big), h('p', { class: 'od-small' }, a.small)),
+          h('div', { class: 'od-when' }, h('p', { class: 'od-big' }, a.big), a.small && a.small !== 'Today' ? h('p', { class: 'od-small' }, a.small) : null),
           thumb(t.kind, 'thumb-hero')),
         h('h1', { class: 'od-title', id, tabindex: '-1' }, t.title, t.more ? h('span', { class: 'od-more' }, ` +${t.more} more`) : null),
         h('p', { class: 'od-job' }, o.job)),
       h('div', { class: 'od-body' },
         h('div', { class: 'facts' },
-          h('p', { class: 'fact' }, icon(destIcon(o)), destText(o)),
-          h('p', { class: `fact fact-${tone}` }, icon(tone === 'good' ? 'i-check' : tone === 'calm' ? 'i-calendar' : 'i-alert'), stateText)),
-        ex.map(([et, title, line], i) => h('div', { class: `ex ex-${et}` },
-          h('p', { class: 'ex-title' }, title), line ? h('p', { class: 'ex-line' }, line) : null, i === 0 ? note(latest, today) : null)),
-        progress(o, s),
+          h('p', { class: 'fact' }, icon(destIcon(o)), destText(o, s)),
+          h('p', { class: `fact fact-${tone}` }, icon(tone === 'good' ? 'i-check' : tone === 'calm' ? 'i-calendar' : 'i-alert'), line),
+          latest ? note(latest, today) : null),
         lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
           h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),
-          matRows(showOut ? out : lines, today, !s.partial),
-          showOut && got.length ? h('details', { class: 'fold' }, h('summary', null, 'Received', h('span', { class: 'fold-n' }, String(got.length)), icon('i-down', 'fold-ic')), matRows(got, today, true)) : null)
-          : h('p', { class: 'od-none' }, 'No products listed on monday.com.'),
-        h('section', { class: 'od-sec', 'aria-label': 'Order details' },
-          h('h2', { class: 'od-h' }, 'Order details'),
-          h('dl', { class: 'meta' },
+          matRows(showOut ? out : lines, today, !s.partial)) : h('p', { class: 'od-none' }, 'No products listed on monday.com.'),
+        h('div', { class: 'folds' },
+          showOut && got.length ? fold('Received', got.length, matRows(got, today, true)) : null,
+          fold('Order details', null, [h('dl', { class: 'meta' },
             h('div', null, h('dt', null, 'Supplier'), h('dd', null, o.supplier || '—')),
             h('div', null, h('dt', null, 'Order ref'), h('dd', null, o.ref || 'None yet')),
             h('div', null, h('dt', null, 'WFM job'), h('dd', null, o.wfm || '—'))),
-          o.url ? h('a', { class: 'mon', href: o.url, target: '_blank', rel: 'noopener' }, 'Open in monday.com', icon('i-external')) : null),
-        history(o, s, today)));
+            o.url ? h('a', { class: 'mon', href: o.url, target: '_blank', rel: 'noopener' }, 'Open in monday.com', icon('i-external')) : null]),
+          history(o, s, today, latest))));
   }
   const placeholder = () => h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'Choose a delivery'), h('p', { class: 'pick-text' }, 'Its arrival, materials and details show here.'));
 

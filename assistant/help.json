@@ -1847,7 +1847,7 @@
         "time not confirmed",
         "arrival"
       ],
-      "answer": "The Order Tracker shows what the Goods In board records: Order reference recorded (an order number is on Monday; that doesn’t mean the supplier confirmed it), Delivery date set (with any moves) and Received. Supplier confirmation, dispatch and out for delivery aren’t on the board, so it doesn’t show them. A time shows only when one is set on Monday; otherwise “time not confirmed”.",
+      "answer": "Each delivery shows one status line from the Goods In board: awaiting delivery, part received, delayed, overdue or received. Supplier confirmation, dispatch and out for delivery aren’t on the board, so it doesn’t show them. The order reference, date changes and older notes are under History. A time shows only when one is set on Monday; otherwise “Time not confirmed”.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"
