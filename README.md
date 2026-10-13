@@ -175,6 +175,12 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   first date came, while still outstanding; Date moved = moved before its first date (not late); Overdue = date passed
   and not all received; Part received = a product not ticked or "Item missing" logged: stays with the outstanding
   orders, never with the received ones.
+- Recording a delivery (Order Tracker 1.1): "Record delivery" on an outstanding order opens a sheet: tick what arrived,
+  choose each one's condition (a problem needs a note); nothing starts ticked. It calls `orders_record_receipt`, which
+  stamps the person and the time; flr-orders then writes it to Monday. Until Monday has been read again the page shows
+  the receipt itself (`rules.js` applyReceipts), with "Saved on the Hub; updating monday.com…".
+- Lists are grouped by destination (FLR warehouse, each site = its job, For collection, Destination not confirmed).
+  FLR blue (the Hub's tint) for the chosen delivery, tabs and the main action.
 - Local preview: launch config `flr-hub-orders-preview` (port 8871, ORDERS=1 in build/mock-supabase.ts).
 
 ## Likkle Jeff (the help button, first called Ask the Hub)

@@ -1881,6 +1881,34 @@
         "tile": "orders",
         "label": "Open the Order Tracker"
       }
+    },
+    {
+      "id": "orders-record",
+      "tool": "orders",
+      "title": "Record a delivery when it arrives",
+      "ask": [
+        "how do I record a delivery",
+        "a delivery has arrived",
+        "mark an order as received",
+        "record damaged materials",
+        "only some of the delivery came",
+        "report a problem with a delivery",
+        "tick goods in as received"
+      ],
+      "keys": [
+        "record delivery",
+        "received",
+        "arrived",
+        "damaged",
+        "damage",
+        "condition",
+        "goods in"
+      ],
+      "answer": "Open the delivery in the Order Tracker and choose Record delivery. Tick each material that arrived and choose its condition: good, damaged, wrong colour, wrong quantity or wrong place. A problem needs a short note. Anything you don’t tick stays outstanding. Your name and the time are added for you, and the tracker updates the order on monday.com.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
     }
   ]
 }

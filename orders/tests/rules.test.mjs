@@ -70,3 +70,25 @@ test('every order is in exactly one list, and only fully received ones in the re
     if (s.partial) assert.ok(!b.startsWith('received'));
   }
 });
+
+test('a receipt shows at once: arrived products and their condition; the rest stay to come; whole means received', () => {
+  const o = order({ id: '7', day: T, items: [{ id: 'a', name: 'A', received: false, issues: [] }, { id: 'b', name: 'B', received: false, issues: [] }] });
+  const part = { order: '7', at: '2026-10-12T09:00:00Z', state: 'pending', whole: false, lines: [{ id: 'a', condition: 'Damaged' }] };
+  const [p] = R.applyReceipts([o], [part], '2026-10-12T08:55:00Z');
+  const s = R.status(p, T);
+  assert.equal(s.partial, true); assert.deepEqual(s.outstanding.map(i => i.id), ['b']);
+  assert.deepEqual(p.items[0].issues, ['Damaged']); assert.deepEqual(p.issues, ['Damaged']);
+  assert.equal(p.hubPending, true); assert.equal(R.bucket(p, s, T), 'dueToday');
+  const rest = { order: '7', at: '2026-10-12T10:00:00Z', state: 'failed', whole: true, lines: [{ id: 'b', condition: 'good' }] };
+  const [w] = R.applyReceipts([o], [part, rest], '2026-10-12T08:55:00Z');
+  const ws = R.status(w, T);
+  assert.equal(ws.kind, 'received'); assert.equal(R.bucket(w, ws, T), 'receivedToday');
+  assert.deepEqual(w.issues, ['Damaged'], 'a damaged delivery that has all arrived keeps its flag');
+  assert.equal(w.hubFailed, true);
+  // once Monday has been read after the write, Monday's own record is what shows
+  const sent = { ...part, state: 'sent', sentAt: '2026-10-12T09:00:05Z' };
+  const [m] = R.applyReceipts([o], [sent], '2026-10-12T09:01:00Z');
+  assert.equal(m.items[0].received, false, 'Monday is the record once it has been read again');
+  assert.equal(m.hubReceipts.length, 1);
+  assert.deepEqual(R.applyReceipts([o], [], null), [o]);
+});

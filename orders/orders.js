@@ -126,7 +126,7 @@
   // The order's current status in one line, saying each fact once: [tone, text, exception?]
   function statusLine(o, s) {
     if (s.kind === 'received') return problems(o).length ? ['warn', `Received · ${problems(o).join(', ')}`, true] : ['good', 'Everything received', false];
-    if (s.partial) return [s.kind === 'overdue' ? 'bad' : 'warn', `Part received · ${stillToCome(s)}`, true];
+    if (s.partial) return [s.kind === 'overdue' ? 'bad' : 'warn', [`Part received · ${stillToCome(s)}`, ...problems(o).filter(p => p !== 'item missing')].join(' · '), true];
     if (s.kind === 'overdue') return ['bad', 'Overdue · no new delivery date yet', true];
     if (s.delay === 'active') return ['warn', `Delayed · first due ${dayLong(o.firstDay)}`, true];
     if (s.delay === 'moved') return ['calm', `Date moved from ${dayLong(o.firstDay)} · not late`, true];
@@ -172,9 +172,34 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
   }
 
+  /* ---------------------------------------------------------------- the orders as shown: Monday's, plus Hub receipts Monday hasn't caught up with */
+  let shownCache = null, shownFor = null;
+  function shown() {
+    if (shownFor !== S.data) { shownCache = R.applyReceipts(S.data.orders, S.data.receipts || [], S.data.readAt); shownFor = S.data; }
+    return shownCache;
+  }
+  const findOrder = id => shown().find(o => o.id === id);
+
+  /* ---------------------------------------------------------------- grouped by where they're going (Monday's Delivery Location) */
+  // Monday records Warehouse, Site or Collection; for a site delivery the site is the job.
+  function destKey(o) {
+    if (o.destination === 'Warehouse') return ['0', 'FLR warehouse', 'i-warehouse', null];
+    if (o.destination === 'Site') return ['1' + o.job.toUpperCase(), o.job, 'i-site', 'Site'];
+    if (o.destination === 'Collection') return ['2', 'For collection', 'i-collect', null];
+    return ['3', 'Destination not confirmed', 'i-alert', null];
+  }
+  function grouped(items, today, o) {
+    const groups = new Map();
+    for (const x of items) { const k = destKey(x.o); if (!groups.has(k[0])) groups.set(k[0], { k, items: [] }); groups.get(k[0]).items.push(x); }
+    return [...groups.values()].sort((a, b) => a.k[0].localeCompare(b.k[0])).map(({ k, items: xs }) =>
+      h('div', { class: 'dest' },
+        h('h3', { class: 'dest-head' }, icon(k[2]), h('span', { class: 'dest-name' }, k[1]), k[3] ? h('span', { class: 'dest-kind' }, k[3]) : null, h('span', { class: 'dest-n' }, String(xs.length))),
+        list(xs, today, o)));
+  }
+
   /* ---------------------------------------------------------------- sorting orders into the screens */
   function sorted(today) {
-    const all = S.data.orders.map(o => ({ o, s: status(o, today) })).map(x => ({ ...x, b: R.bucket(x.o, x.s, today) }));
+    const all = shown().map(o => ({ o, s: status(o, today) })).map(x => ({ ...x, b: R.bucket(x.o, x.s, today) }));
     const byTime = (x, y) => (x.o.at || '9').localeCompare(y.o.at || '9') || x.o.job.localeCompare(y.o.job);
     const pick = k => all.filter(x => x.b === k);
     return {
@@ -262,7 +287,7 @@
           onclick: () => { S.attnAll = !S.attnAll; render(); } }, S.attnAll ? 'Show fewer' : `Show all ${late.length}`) : null) : null,
       h('section', { class: 'block', 'aria-labelledby': 'due-title' },
         h('h2', { class: 'block-title', id: 'due-title' }, 'Still to arrive', g.due.length ? h('span', { class: 'block-n' }, String(g.due.length)) : null),
-        g.due.length ? [timeNote(g.due), list(g.due, today, {})] : empty(g.gotToday.length ? 'Everything due today is in' : 'Nothing due today')),
+        g.due.length ? [timeNote(g.due), grouped(g.due, today, {})] : empty(g.gotToday.length ? 'Everything due today is in' : 'Nothing due today')),
       g.gotToday.length ? h('a', { class: 'got-link', href: href('received') }, icon('i-check', 'got-ic'),
         h('span', null, `${plural(g.gotToday.length, 'delivery', 'deliveries')} received today`), icon('i-chevron', 'got-chev')) : null,
     ];
@@ -273,8 +298,8 @@
     return [
       timeNote(g.upcoming),
       days.map(d => h('section', { class: 'block' }, h('h2', { class: 'block-title' }, daysBetween(today, d) === 1 ? 'Tomorrow' : dayLong(d)),
-        list(g.upcoming.filter(x => x.o.day === d), today, { upcoming: true }))),
-      g.nodate.length ? h('section', { class: 'block' }, h('h2', { class: 'block-title' }, 'No date yet'), list(g.nodate, today, { upcoming: true })) : null,
+        grouped(g.upcoming.filter(x => x.o.day === d), today, { upcoming: true }))),
+      g.nodate.length ? h('section', { class: 'block' }, h('h2', { class: 'block-title' }, 'No date yet'), grouped(g.nodate, today, { upcoming: true })) : null,
     ];
   }
   function receivedScreen(g, today) {
@@ -300,11 +325,17 @@
   }
   const fold = (title, n, body) => h('details', { class: 'fold' }, h('summary', null, title, n != null ? h('span', { class: 'fold-n' }, String(n)) : null, icon('i-down', 'fold-ic')), body);
   // What monday.com recorded, newest first: the reference, date moves, receipt and the older updates.
+  // Notes, newest first: the receiver's own note from the Hub, and Monday updates (not the ones the Hub posted itself,
+  // which repeat its receipts).
+  const HUB_UPDATE = /^Delivery recorded on the FLR Hub by /;
+  const notesOf = o => [...(o.updates || []).filter(u => !HUB_UPDATE.test(u.text || '')),
+    ...(o.hubReceipts || []).filter(r => r.note).map(r => ({ text: r.note, at: r.at, by: r.by }))].sort((a, b) => String(b.at).localeCompare(String(a.at)));
   function history(o, s, today, shownNote) {
     const ev = [];
     for (const m of o.moves || []) ev.push([m.at, `Delivery date moved from ${dayShort(m.from)} to ${dayShort(m.to)}`]);
     if (o.receivedAt) ev.push([o.receivedAt, s.partial ? 'Ticked as received, with items still to arrive' : 'Received']);
-    for (const u of o.updates || []) if (u !== shownNote) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
+    for (const u of o.updates || []) if (!HUB_UPDATE.test(u.text || '') && !(shownNote && u.text === shownNote.text && u.at === shownNote.at)) ev.push([u.at, `“${u.text}”${u.by ? ` · ${u.by}` : ''}`]);
+    for (const r of o.hubReceipts || []) ev.push([r.at, `Recorded on the Hub by ${r.by}: ${r.lines.map(l => `${product(l.name).title}${l.condition === 'good' ? '' : ` (${l.condition.toLowerCase()})`}`).join(', ')} arrived${r.remaining.length ? `; ${plural(r.remaining.length, 'item')} still to come` : ''}${r.note ? `. “${r.note}”` : ''}`]);
     ev.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
     const fixed = [o.day ? ['', `Delivery date on monday.com: ${dayLong(o.day)}${timed(o) ? `, ${clock(o.at)}` : ''}`] : null,
       o.ref ? ['', `Order reference recorded: ${o.ref}`] : ['', 'No order reference recorded yet']].filter(Boolean);
@@ -314,7 +345,7 @@
   function orderView(o, today, opt = {}) {
     const s = status(o, today), t = titleOf(o, s), a = arrival(o, s, today);
     const [tone, line, exception] = statusLine(o, s);
-    const latest = exception ? (o.updates || [])[0] : null;   // the explanation goes right under the exception
+    const latest = exception ? notesOf(o)[0] || null : null;   // the explanation goes right under the exception
     const lines = o.items || [];
     const out = s.partial ? s.outstanding : [], got = lines.filter(i => !out.includes(i));
     const showOut = s.partial && out.length > 0;
@@ -335,7 +366,10 @@
         h('div', { class: 'facts' },
           h('p', { class: 'fact' }, icon(destIcon(o)), destText(o, s)),
           h('p', { class: `fact fact-${tone}` }, icon(tone === 'good' ? 'i-check' : tone === 'calm' ? 'i-calendar' : 'i-alert'), line),
-          latest ? note(latest, today) : null),
+          latest ? note(latest, today) : null,
+          o.hubFailed ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), 'Saved on the Hub; monday.com hasn’t been updated yet. It will try again.')
+            : o.hubPending ? h('p', { class: 'fact' }, icon('i-refresh'), 'Saved on the Hub; updating monday.com…') : null),
+        s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
         lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
           h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),
           matRows(showOut ? out : lines, today, !s.partial)) : h('p', { class: 'od-none' }, 'No products listed on monday.com.'),
@@ -349,6 +383,72 @@
           history(o, s, today, latest))));
   }
   const placeholder = () => h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'Choose a delivery'), h('p', { class: 'pick-text' }, 'Its arrival, materials and details show here.'));
+
+  /* ---------------------------------------------------------------- recording a delivery */
+  // The person receiving it chooses what arrived and its condition. Nothing is ticked to start with; what isn't
+  // chosen stays outstanding. Who and when are set by the database (orders_record_receipt), not by this page.
+  const CONDITIONS = [['Damaged', 'Damaged'], ['Wrong colour', 'Wrong colour'], ['Wrong quantity', 'Wrong quantity'], ['Wrong location', 'Wrong place']];
+  function openRecord(id) {
+    const o = findOrder(id);
+    if (!o) return;
+    const lines = (o.items || []).length ? o.items.filter(i => !i.received) : [{ id: 'order', name: o.job, whole: true }];
+    if (!lines.length) return toast('Everything on this delivery is already recorded');
+    const pick = new Map(lines.map(l => [l.id, { arrived: false, cond: null }]));   // cond: 'good' | a problem | null
+    const dlg = h('dialog', { class: 'rec', 'aria-labelledby': 'rec-title' });
+    const err = h('p', { class: 'rec-err', role: 'alert', hidden: true });
+    const noteBox = h('textarea', { id: 'rec-note', class: 'rec-note', rows: 3, maxlength: 500, placeholder: 'What was wrong, e.g. “Two tubs split in the box”' });
+    const summary = h('p', { class: 'rec-sum', 'aria-live': 'polite' });
+    const go = h('button', { class: 'btn btn-brand btn-wide', type: 'submit' }, 'Record delivery');
+    const list = h('ul', { class: 'rec-lines' });
+    function draw() {
+      list.replaceChildren(...lines.map(l => {
+        const st = pick.get(l.id), p = l.whole ? { title: 'The whole delivery', qty: '' } : product(l.name);
+        const toggle = h('button', { type: 'button', class: 'rec-tick', role: 'checkbox', 'aria-checked': st.arrived ? 'true' : 'false',
+          'aria-label': `${p.title}${p.qty ? ', ' + p.qty : ''} arrived`, onclick: () => { st.arrived = !st.arrived; if (!st.arrived) st.cond = null; draw(); } },
+          h('span', { class: 'rec-box', 'aria-hidden': 'true' }, st.arrived ? icon('i-check') : null),
+          h('span', { class: 'rec-name' }, h('b', null, p.title), p.qty ? h('small', null, p.qty) : null));
+        const cond = st.arrived ? h('div', { class: 'rec-cond', role: 'radiogroup', 'aria-label': `Condition of ${p.title}` },
+          h('button', { type: 'button', role: 'radio', class: 'rec-opt', 'aria-checked': st.cond === 'good' ? 'true' : 'false', onclick: () => { st.cond = 'good'; draw(); } }, 'Good condition'),
+          ...CONDITIONS.map(([v, label]) => h('button', { type: 'button', role: 'radio', class: 'rec-opt rec-opt-bad', 'aria-checked': st.cond === v ? 'true' : 'false', onclick: () => { st.cond = v; draw(); } }, label))) : null;
+        return h('li', { class: `rec-line${st.arrived ? ' on' : ''}` }, toggle, cond);
+      }));
+      const chosen = [...pick.values()].filter(x => x.arrived), bad = chosen.filter(x => x.cond && x.cond !== 'good');
+      const missingCond = chosen.some(x => !x.cond), needNote = bad.length > 0 && !noteBox.value.trim();
+      noteBox.closest('.rec-note-wrap').classList.toggle('need', bad.length > 0);
+      summary.textContent = !chosen.length ? 'Choose what arrived. Anything not chosen stays outstanding.'
+        : missingCond ? 'Choose the condition of each material that arrived.'
+        : `${chosen.length} of ${lines.length} ${lines.length === 1 && lines[0].whole ? 'delivery' : 'items'} arrived${bad.length ? ` · ${plural(bad.length, 'problem')}` : ''}${chosen.length < lines.length ? ' · the rest stays outstanding' : ''}.${needNote ? ' Add a note about the problem.' : ''}`;
+      go.disabled = !chosen.length || missingCond || needNote;
+    }
+    const form = h('form', { class: 'rec-form', novalidate: true, onsubmit: async e => {
+      e.preventDefault(); err.hidden = true; go.setAttribute('aria-busy', 'true'); go.disabled = true;
+      const p_lines = lines.filter(l => pick.get(l.id).arrived).map(l => ({ id: l.id, condition: pick.get(l.id).cond }));
+      try {
+        const { error } = await client().rpc('orders_record_receipt', { p_order: o.id, p_lines, p_note: noteBox.value.trim() || null });
+        if (error) throw error;
+        dlg.close(); toast('Delivery recorded');
+        await refresh(false); setTimeout(() => refresh(false), 6000);
+      } catch (x) {
+        const code = flrCode(x);
+        err.textContent = code === 'FLR_VALIDATION' && x.details ? x.details : code === 'FLR_FORBIDDEN' ? 'You can’t record deliveries.' : offline(x) ? 'Can’t reach the FLR database. Nothing was recorded; try again.' : 'That didn’t save. Nothing was recorded; try again.';
+        err.hidden = false; go.removeAttribute('aria-busy'); draw();
+      }
+    } },
+      h('div', { class: 'rec-head' }, h('h2', { class: 'rec-title', id: 'rec-title' }, 'Record delivery'),
+        h('button', { class: 'round rec-x', type: 'button', 'aria-label': 'Close without recording', onclick: () => dlg.close() }, icon('i-back'))),
+      h('p', { class: 'rec-job' }, o.job),
+      h('p', { class: 'rec-q' }, (o.items || []).length ? 'Which materials arrived?' : 'Did the delivery arrive?'),
+      list,
+      h('div', { class: 'rec-note-wrap' }, h('label', { for: 'rec-note', class: 'rec-label' }, 'Note', h('span', { class: 'rec-label-hint' }, ' · needed for any problem')), noteBox),
+      err, summary, go,
+      h('p', { class: 'rec-who' }, `Recorded as ${S.data.you || 'you'}, at the time you press Record. It’s added to the order on monday.com.`));
+    noteBox.addEventListener('input', draw);
+    dlg.append(form);
+    dlg.addEventListener('close', () => dlg.remove());
+    document.body.append(dlg);
+    draw();
+    dlg.showModal();
+  }
 
   /* ---------------------------------------------------------------- putting a screen together */
   let lastKey = '';
@@ -365,13 +465,13 @@
     S.id = r.id || (wide.matches && first ? first.o.id : null);
     // Today's badge: orders with materials still to come that are due today. "Needs attention" has its own count.
     const counts = { today: g.due.length, upcoming: g.upcoming.length + g.nodate.length, received: g.gotToday.length };
-    const order = S.id ? S.data.orders.find(o => o.id === S.id) : null;
+    const order = S.id ? findOrder(S.id) : null;
     const v = $('#view');
     document.body.dataset.view = 'page';
     $('#gate').hidden = true; v.hidden = false;
 
     const missing = S.id && !order ? h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'That delivery isn’t on the board now'),
-      h('p', { class: 'pick-text' }, 'It may have been deleted on monday.com.'), h('a', { class: 'btn btn-peach', href: href(S.tab) }, 'Back to the list')) : null;
+      h('p', { class: 'pick-text' }, 'It may have been deleted on monday.com.'), h('a', { class: 'btn btn-brand', href: href(S.tab) }, 'Back to the list')) : null;
 
     const focused = !wide.matches && !!S.id;   // a phone: the order on its own
     tabbar(counts);
@@ -386,7 +486,7 @@
       document.title = `${order ? titleOf(order, status(order, today)).title : 'Delivery'} · Order Tracker`;
       v.replaceChildren(h('div', { class: 'solo' }, notices(today), order ? orderView(order, today, { back: true }) : missing));
     } else {
-      const titles = { today: ['Today’s deliveries', dayLong(today)], upcoming: ['Coming up', 'After today'], received: ['Received', 'Ticked as received on monday.com'] };
+      const titles = { today: ['Today’s deliveries', dayLong(today)], upcoming: ['Coming up', 'After today'], received: ['Received', 'Recorded on the Hub or monday.com'] };
       const [title, sub] = titles[S.tab];
       document.title = `${title} · Order Tracker`;
       const body = S.tab === 'today' ? todayScreen(g, today) : S.tab === 'upcoming' ? upcomingScreen(g, today) : receivedScreen(g, today);

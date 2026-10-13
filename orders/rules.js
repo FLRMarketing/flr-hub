@@ -55,7 +55,35 @@
     return 'nodate';
   }
 
-  const api = { TZ, MISSING, londonDay, daysBetween, status, bucket };
+  /** Receipts recorded on the Hub, shown before Monday has caught up: a receipt not yet written to Monday, or written
+   *  after the last read, marks its products as arrived (with their condition) and the order as received if it was
+   *  the last of them. Every order gets its Hub receipts (for History) and whether one is still being written. */
+  const PROBLEMS = ['Damaged', 'Wrong colour', 'Wrong quantity', 'Wrong location'];
+  function applyReceipts(orders, receipts, readAt) {
+    const by = new Map();
+    for (const r of receipts || []) { if (!by.has(r.order)) by.set(r.order, []); by.get(r.order).push(r); }
+    const read = readAt ? Date.parse(readAt) : 0;
+    return (orders || []).map(o => {
+      const rs = by.get(o.id);
+      if (!rs) return o;
+      const fresh = rs.filter(r => r.state !== 'sent' || !r.sentAt || Date.parse(r.sentAt) > read);
+      const n = { ...o, items: (o.items || []).map(i => ({ ...i, issues: [...(i.issues || [])] })), issues: [...(o.issues || [])], hubReceipts: rs,
+        hubPending: fresh.some(r => r.state === 'pending'), hubFailed: fresh.some(r => r.state === 'failed') };
+      for (const r of fresh) {
+        for (const l of r.lines || []) {
+          const bad = PROBLEMS.includes(l.condition) ? [l.condition] : [];
+          if (l.id === 'order') { n.received = true; n.receivedAt = n.receivedAt || r.at; }
+          const i = n.items.find(x => x.id === l.id);
+          if (i) { i.received = true; i.receivedAt = i.receivedAt || r.at; for (const b of bad) if (!i.issues.includes(b)) i.issues.push(b); }
+          for (const b of bad) if (!n.issues.includes(b)) n.issues.push(b);
+        }
+        if (r.whole) { n.received = true; n.receivedAt = n.receivedAt || r.at; }
+      }
+      return n;
+    });
+  }
+
+  const api = { TZ, MISSING, PROBLEMS, londonDay, daysBetween, status, bucket, applyReceipts };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.FLR_ORDER_RULES = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -620,5 +620,13 @@
  {
   "q": "only part of my order arrived, where is it",
   "expect": "orders-late"
+ },
+ {
+  "q": "how do I record that a delivery has arrived?",
+  "expect": "orders-record"
+ },
+ {
+  "q": "some of the delivery was damaged, how do I report it",
+  "expect": "orders-record"
  }
 ]

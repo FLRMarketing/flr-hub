@@ -8,15 +8,15 @@
 <meta name="flr-assist-nudge" content="off">
 <meta name="flr-assist-dock" content="tabbar">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f3a26d">
+<meta name="theme-color" content="#00098b">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="orders.css?v=1.3">
+<link rel="stylesheet" href="orders.css?v=1.4">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="rules.js?v=1.0" defer></script>
-<script src="orders.js?v=1.2" defer></script>
+<script src="rules.js?v=1.1" defer></script>
+<script src="orders.js?v=1.3" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -44,11 +44,11 @@
   <symbol id="m-roll" viewBox="0 0 64 64"><path d="M14 44h30l12 8H26z" fill="#8f877e"/><rect x="10" y="22" width="36" height="22" rx="11" fill="#e4ddd3"/><path d="M10 33a11 11 0 0 1 11-11h14v22H21a11 11 0 0 1-11-11z" fill="#f1ebe3"/><ellipse cx="46" cy="33" rx="7" ry="11" fill="#c7beb2"/><ellipse cx="46" cy="33" rx="2.6" ry="4.2" fill="#5f574f"/><path d="M18 27h18" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/></symbol>
   <symbol id="m-tile" viewBox="0 0 64 64"><path d="M10 35v6l22 11 22-11v-6L32 46z" fill="#2f3a46"/><path d="M32 40 54 29v6L32 46 10 35v-6z" fill="#3e4b5a"/><path d="M10 29 32 18l22 11-22 11z" fill="#7f95ad"/><path d="M32 33 54 22v6L32 39 10 28v-6z" fill="#4b5c6e"/><path d="M10 22 32 11l22 11-22 11z" fill="#9db1c6"/><path d="M21 16.5 43 27.5M43 16.5 21 27.5" stroke="#c7d5e3" stroke-width="1.4" opacity=".7"/></symbol>
   <symbol id="m-plank" viewBox="0 0 64 64"><path d="M8 40 40 22l16 8-32 18z" fill="#a8774a"/><path d="M8 32 40 14l16 8-32 18z" fill="#d9a46f"/><path d="M8 32v8l16 8v-8z" fill="#8a5f39"/><path d="M24 40v8l32-18v-8z" fill="#9b6c42"/><path d="M16 28.5l26-14.6M22 31.8l26-14.6M30 36l18-10" stroke="#b9844f" stroke-width="1.6" stroke-linecap="round"/></symbol>
-  <symbol id="m-tub" viewBox="0 0 64 64"><path d="M22 15c0-5 20-5 20 0" fill="none" stroke="#8f877e" stroke-width="2.4"/><path d="M16 22h32l-3.5 28a4 4 0 0 1-4 3.5H23.5a4 4 0 0 1-4-3.5z" fill="#ece6dd"/><path d="M16 22h32l-.7 5.5H16.7z" fill="#d3cbc0"/><rect x="13" y="15" width="38" height="8" rx="3" fill="#f39a5b"/><rect x="22" y="31" width="20" height="11" rx="2.5" fill="#f39a5b" opacity=".85"/><path d="M26 36.5h12" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="m-tub" viewBox="0 0 64 64"><path d="M22 15c0-5 20-5 20 0" fill="none" stroke="#8f877e" stroke-width="2.4"/><path d="M16 22h32l-3.5 28a4 4 0 0 1-4 3.5H23.5a4 4 0 0 1-4-3.5z" fill="#ece6dd"/><path d="M16 22h32l-.7 5.5H16.7z" fill="#d3cbc0"/><rect x="13" y="15" width="38" height="8" rx="3" fill="#4a5cf0"/><rect x="22" y="31" width="20" height="11" rx="2.5" fill="#4a5cf0" opacity=".85"/><path d="M26 36.5h12" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="m-trim" viewBox="0 0 64 64"><path d="M10 40 46 18l8 5-36 22z" fill="#dfe4ea"/><path d="M10 40v6l8 4v-5z" fill="#9aa4ae"/><path d="M18 45v5l36-22v-5z" fill="#b8c1ca"/><path d="M20 39 44 24.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/></symbol>
   <symbol id="m-tape" viewBox="0 0 64 64"><path d="M50 30 58 46l-6 1-5-12" fill="#e1bb5c"/><ellipse cx="32" cy="38" rx="20" ry="9" fill="#c9a24a"/><rect x="12" y="26" width="40" height="12" fill="#e9c35f"/><ellipse cx="32" cy="26" rx="20" ry="9" fill="#f4d37c"/><ellipse cx="32" cy="26" rx="8" ry="3.6" fill="#6b5a35"/></symbol>
   <symbol id="m-mat" viewBox="0 0 64 64"><path d="M8 38v5l22 11v-5zM30 49v5l26-14v-5z" fill="#36404a"/><path d="M8 38 34 24l22 11-26 14z" fill="#55626f"/><path d="M14 38.5 37 26.2M19 41 42 28.8M24 43.6 47 31.4M29 46.2 52 34" stroke="#7a8896" stroke-width="2" stroke-linecap="round"/></symbol>
-  <symbol id="m-tool" viewBox="0 0 64 64"><path d="M10 40l14 8v3L10 43z" fill="#97a1ab"/><path d="M24 48 48 34v3L24 51z" fill="#b2bbc4"/><path d="M10 40 34 26l14 8-24 14z" fill="#cfd6dd"/><path d="M28 36 36 18" stroke="#6f7881" stroke-width="3" stroke-linecap="round"/><rect x="33" y="8" width="9" height="14" rx="4" transform="rotate(22 37.5 15)" fill="#f39a5b"/></symbol>
+  <symbol id="m-tool" viewBox="0 0 64 64"><path d="M10 40l14 8v3L10 43z" fill="#97a1ab"/><path d="M24 48 48 34v3L24 51z" fill="#b2bbc4"/><path d="M10 40 34 26l14 8-24 14z" fill="#cfd6dd"/><path d="M28 36 36 18" stroke="#6f7881" stroke-width="3" stroke-linecap="round"/><rect x="33" y="8" width="9" height="14" rx="4" transform="rotate(22 37.5 15)" fill="#4a5cf0"/></symbol>
   <symbol id="m-box" viewBox="0 0 64 64"><path d="M10 22 32 32v22L10 44z" fill="#a8743f"/><path d="M32 32 54 22v22L32 54z" fill="#b98049"/><path d="M10 22 32 12l22 10-22 10z" fill="#dba776"/><path d="M21 17 43 27v6" stroke="#f1d3b0" stroke-width="4" fill="none"/></symbol>
 </svg>
 
@@ -61,7 +61,7 @@
       <a class="brand brand-gate" href="../" aria-label="Back to the FLR Hub"><svg class="brand-mark" aria-hidden="true"><use href="#flr-mark"/></svg></a>
       <h1 class="gate-title" id="gate-title"></h1>
       <p class="gate-text" id="gate-text"></p>
-      <p class="gate-actions"><a class="btn btn-peach" href="../">Back to the Hub</a><button class="btn btn-dark" type="button" id="gate-retry" hidden>Try again</button></p>
+      <p class="gate-actions"><a class="btn btn-brand" href="../">Back to the Hub</a><button class="btn btn-dark" type="button" id="gate-retry" hidden>Try again</button></p>
     </div>
   </div>
   <main id="view" class="view" tabindex="-1" hidden></main>
