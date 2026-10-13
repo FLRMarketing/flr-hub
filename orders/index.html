@@ -5,19 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Order Tracker · FLR Hub</title>
 <meta name="robots" content="noindex, nofollow">
-<meta name="flr-assist-nudge" content="off">
-<meta name="flr-assist-dock" content="tabbar">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#00098b">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="orders.css?v=1.5">
+<link rel="stylesheet" href="orders.css?v=1.6">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
 <script src="rules.js?v=1.3" defer></script>
-<script src="orders.js?v=1.5" defer></script>
-<script type="module" src="../assistant/assistant.js?v=2.2"></script>
+<script src="orders.js?v=1.6" defer></script>
 </head>
 <body data-view="loading">
 <svg class="defs" aria-hidden="true" focusable="false">
@@ -39,6 +36,8 @@
   <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.8h17M8 3.2v3.6M16 3.2v3.6"/></symbol>
   <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13.5 6.5 5h11l2.5 8.5V19H4z"/><path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20"/></symbol>
   <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c-4.8 0-8.5 3.3-8.5 7.5 0 2.2 1 4.1 2.6 5.5l-.8 3.7 3.9-1.9c.9.3 1.8.4 2.8.4 4.8 0 8.5-3.3 8.5-7.7S16.8 3.6 12 3.6z"/><path d="M9.8 9.3a2.25 2.25 0 1 1 3.2 2c-.6.3-1 .8-1 1.5v.3"/><path stroke-width="2.6" d="M12 15.8h.01"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5.5 11.5 12 5l6.5 6.5"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></symbol>
   <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16.5 7.5M9.5 7.5h7v7"/></symbol>
 
   <!-- materials: small illustrations, by what the product name says it is -->

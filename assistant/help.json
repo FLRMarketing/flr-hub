@@ -1815,7 +1815,7 @@
         "delivery",
         "coming in"
       ],
-      "answer": "The Order Tracker shows what’s arriving from the Monday “FLR - Goods In” board: Today’s deliveries with a time where Monday has one, late or delayed ones under “Needs attention”, and Coming up and Received tabs. Tap a delivery for its materials, what’s still to arrive, the supplier, order reference and WFM job. It only reads Monday, every 5 minutes; change an order on Monday itself.",
+      "answer": "The Order Tracker shows what’s arriving from the Monday “FLR - Goods In” board: Today’s deliveries, late or delayed ones under “Needs attention”, and Coming up and Received tabs. Tap a delivery for its materials, what’s still to arrive, the supplier, order reference and WFM job. It reads Monday every 5 minutes; deliveries recorded or corrected on the Hub, and problems reported, are added to the order there.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"
@@ -1933,6 +1933,32 @@
         "reverse"
       ],
       "answer": "Open the delivery in the Order Tracker and choose Correct receipt. For each material choose Didn’t arrive (back to still to arrive) or the right condition, change the note if needed, and say why. The original record stays in History, with your correction showing who, when and why, and monday.com is updated to match. Unticking on monday.com alone doesn’t change the tracker.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "orders-problem",
+      "tool": "orders",
+      "title": "Report a problem with a delivery",
+      "ask": [
+        "who do I tell about a delivery problem",
+        "the delivery hasn't turned up",
+        "the driver needs help",
+        "report a problem with an order",
+        "contact goods in",
+        "something is wrong with a delivery"
+      ],
+      "keys": [
+        "have a problem",
+        "problem",
+        "contact",
+        "tell",
+        "message",
+        "goods in"
+      ],
+      "answer": "In the Order Tracker, choose Have a problem? (the tab at the bottom on a phone, or the ? button). Open it from a delivery and your message is about that delivery. Write what’s wrong and press send: the people who look after Goods In are told straight away on monday.com, and the chat shows when it’s been sent.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"

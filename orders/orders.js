@@ -225,6 +225,7 @@
       h('div', { class: 'head-bar' },
         h('a', { class: 'brand', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('i-back', 'brand-back'), icon('flr-mark', 'brand-mark'), h('span', { class: 'brand-word' }, 'Hub')),
         h('div', { class: 'head-tools' }, updated(today),
+          h('button', { class: 'round only-wide', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, title: 'Have a problem?', onclick: () => openProblem(S.id || null) }, icon('i-help')),
           h('button', { class: 'round', type: 'button', id: 'refresh', 'aria-label': 'Check for updates now', title: 'Check for updates now', onclick: () => refresh(true) }, icon('i-refresh')))),
       h('div', { class: 'head-titles' }, h('h1', { class: 'head-title' }, title), sub ? h('p', { class: 'head-sub' }, sub) : null),
       h('nav', { class: 'seg', 'aria-label': 'Deliveries' }, TABS.map(([k, label]) =>
@@ -242,12 +243,12 @@
       h('span', null, h('b', null, 'May be out of date. '), `Last read from monday.com ${sinceText(d.readAt, today)}.`)));
     return out.length ? h('div', { class: 'notices' }, out) : null;
   }
-  // Likkle Jeff lives in the tab bar on phones (and in the order's own bar), so he never floats over a delivery.
-  const askJeff = ev => ev.currentTarget.dispatchEvent(new CustomEvent('flr-assist:open', { bubbles: true }));
+  // "Have a problem?" lives in the tab bar on phones, in the order's own bar, and next to Check for updates on wide
+  // screens. It messages Georgia and Luke (openProblem, below).
   function tabbar(counts) {
     $('#tabs').replaceChildren(...TABS.map(([k, label, ic]) => h('a', { class: 'tab', href: href(k), 'aria-current': S.tab === k ? 'page' : null },
       h('span', { class: 'tab-ic' }, icon(ic), counts[k] ? h('span', { class: 'tab-n' }, String(counts[k])) : null), h('span', { class: 'tab-label' }, label))),
-      h('button', { class: 'tab', type: 'button', 'aria-label': 'Help from Likkle Jeff', onclick: askJeff }, h('span', { class: 'tab-ic' }, icon('i-help')), h('span', { class: 'tab-label' }, 'Help')));
+      h('button', { class: 'tab tab-problem', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, onclick: () => openProblem(null) }, h('span', { class: 'tab-ic' }, icon('i-help')), h('span', { class: 'tab-label' }, 'Have a problem?')));
   }
 
   /* ---------------------------------------------------------------- one delivery in a list */
@@ -362,7 +363,7 @@
       h('div', { class: 'od-hero' },
         opt.back ? h('div', { class: 'od-bar' }, h('a', { class: 'od-back', href: href(S.tab) }, icon('i-back'), TABS.find(x => x[0] === S.tab)[1]),
           h('span', { class: 'od-bar-end' },
-            h('button', { class: 'round', type: 'button', 'aria-label': 'Help from Likkle Jeff', onclick: askJeff }, icon('i-help')),
+            h('button', { class: 'round', type: 'button', 'aria-label': `Have a problem with this delivery? Message ${contactsText()}`, onclick: () => openProblem(o.id) }, icon('i-help')),
             h('a', { class: 'brand brand-solo', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('flr-mark', 'brand-mark')))) : null,
         h('div', { class: 'od-top' },
           h('div', { class: 'od-when' }, a.label ? h('p', { class: 'od-label' }, a.label) : null,
@@ -381,6 +382,7 @@
         s.kind !== 'received' || correctable(o).length ? h('div', { class: 'od-acts' },
           s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
           correctable(o).length ? h('button', { class: 'btn btn-quiet btn-wide', type: 'button', onclick: () => openCorrect(o.id) }, icon('i-edit'), 'Correct receipt') : null) : null,
+        h('button', { class: 'od-problem', type: 'button', onclick: () => openProblem(o.id) }, icon('i-help'), 'Have a problem with this delivery?'),
         lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
           h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),
           matRows(showOut ? out : lines, today, !s.partial)) : h('p', { class: 'od-none' }, 'No products listed on monday.com.'),
@@ -542,6 +544,86 @@
     dlg.showModal();
   }
 
+  /* ---------------------------------------------------------------- "Have a problem?" */
+  // A chat with Georgia and Luke: the person writes what's wrong, about one delivery or in general. The database keeps
+  // it with who sent it and when (orders_report_problem), and flr-orders tells Georgia and Luke on monday.com (and by
+  // email when that's set up). The person's own messages from the last 30 days show as the chat, with whether each got through.
+  const contacts = () => (S.data && S.data.contacts && S.data.contacts.length ? S.data.contacts : ['Georgia Latham', 'Luke Parker']);
+  const firstNames = () => contacts().map(n => n.split(' ')[0]);
+  const andList = xs => xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+  const contactsText = () => andList(firstNames());
+  const QUICK = ['Something’s missing', 'It arrived damaged', 'It’s the wrong delivery', 'I can’t find the delivery', 'The driver needs help'];
+  let chatOpen = null;   // redraws the open chat when new data arrives
+  function problemStatus(p) {
+    if (p.state === 'sent') return [`Sent to ${contactsText()}${p.email === 'sent' ? ' · emailed' : ''}`, 'ok'];
+    if (p.state === 'failed') return ['Saved. Not sent yet; it will try again in a few minutes', 'warn'];
+    return ['Sending…', 'wait'];
+  }
+  function openProblem(orderId) {
+    if (!S.data) return;
+    let about = orderId ? findOrder(orderId) : null;
+    const today = R.londonDay();
+    const dlg = h('dialog', { class: 'rec chat', 'aria-labelledby': 'chat-title' });
+    const log = h('div', { class: 'chat-log', role: 'log', 'aria-live': 'polite' });
+    const err = h('p', { class: 'rec-err', role: 'alert', hidden: true });
+    const box = h('textarea', { id: 'chat-text', class: 'chat-text', rows: 2, maxlength: 1000, placeholder: 'Write what’s wrong…', 'aria-label': `Message to ${contactsText()}` });
+    const send = h('button', { class: 'chat-send', type: 'submit', 'aria-label': 'Send' }, icon('i-send'));
+    const aboutRow = h('div', { class: 'chat-about' });
+    const quick = h('div', { class: 'chat-quick', role: 'group', 'aria-label': 'Quick starts' });
+    const bubble = (who, text, meta, cls = '') => h('div', { class: `bub bub-${who} ${cls}` }, h('p', { class: 'bub-text' }, text), meta ? h('p', { class: 'bub-meta' }, meta) : null);
+    function drawLog() {
+      const mine = (S.data.problems || []).slice(-20);
+      const hello = bubble('them', `Hi ${(S.data.you || '').split(' ')[0] || 'there'}. What’s the problem? ${contactsText()} will be told straight away and will get back to you.`);
+      log.replaceChildren(hello, ...mine.flatMap(p => {
+        const [st, tone] = problemStatus(p);
+        const ab = p.order ? `About ${product(p.what || '').title || p.job} · ${p.job}` : 'Not about one delivery';
+        const out = [h('p', { class: 'chat-day' }, when(p.at, today)), bubble('me', p.message, [ab, h('span', { class: `bub-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st)])];
+        if (p.state === 'sent') out.push(bubble('them', `Thanks, ${andList(firstNames())} have your message${p.order ? ' and it’s on the delivery in monday.com' : ''}.`, null, 'bub-auto'));
+        return out;
+      }));
+      log.scrollTop = log.scrollHeight;
+    }
+    function drawCompose() {
+      aboutRow.replaceChildren(about
+        ? h('span', { class: 'chat-chip' }, icon('i-box'), h('span', null, h('b', null, titleOf(about, status(about, today)).title), ` · ${about.job}`),
+            h('button', { type: 'button', class: 'chat-chip-x', 'aria-label': 'Not about this delivery', onclick: () => { about = null; drawCompose(); } }, '×'))
+        : h('span', { class: 'chat-chip chat-chip-none' }, 'Not about one delivery'));
+      quick.hidden = !!box.value.trim();
+      quick.replaceChildren(...QUICK.map(q => h('button', { type: 'button', class: 'rec-opt chat-q', onclick: () => { box.value = q + '. '; box.focus(); drawCompose(); } }, q)));
+      send.disabled = !box.value.trim();
+    }
+    const form = h('form', { class: 'chat-form', novalidate: true, onsubmit: async e => {
+      e.preventDefault(); err.hidden = true; send.setAttribute('aria-busy', 'true'); send.disabled = true;
+      try {
+        const { error } = await client().rpc('orders_report_problem', { p_order: about ? about.id : null, p_message: box.value.trim() });
+        if (error) throw error;
+        box.value = ''; drawCompose();
+        await refresh(false); drawLog();
+        for (const ms of [3000, 8000, 20000]) setTimeout(async () => { if (chatOpen === drawLog) { await refresh(false); } }, ms);
+      } catch (x) {
+        const code = flrCode(x);
+        err.textContent = code === 'FLR_VALIDATION' && x.details ? x.details : code === 'FLR_FORBIDDEN' ? 'You can’t send messages from the Order Tracker.' : offline(x) ? 'Can’t reach the FLR database. Nothing was sent; try again.' : 'That didn’t send. Try again.';
+        err.hidden = false;
+      } finally { send.removeAttribute('aria-busy'); drawCompose(); }
+    } },
+      h('div', { class: 'rec-head chat-head' },
+        h('div', { class: 'chat-faces', 'aria-hidden': 'true' }, ...contacts().map(n => h('span', { class: 'chat-face' }, n.split(' ').map(w => w[0]).join('').slice(0, 2)))),
+        h('div', { class: 'chat-titles' }, h('h2', { class: 'rec-title', id: 'chat-title' }, 'Have a problem?'), h('p', { class: 'chat-sub' }, andList(contacts()))),
+        h('button', { class: 'round rec-x', type: 'button', 'aria-label': 'Close', onclick: () => dlg.close() }, icon('i-back'))),
+      log,
+      h('div', { class: 'chat-compose' }, aboutRow, quick, err,
+        h('div', { class: 'chat-row' }, box, send)));
+    box.addEventListener('input', drawCompose);
+    box.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !send.disabled) form.requestSubmit(); });
+    dlg.append(form);
+    dlg.addEventListener('close', () => { chatOpen = null; dlg.remove(); });
+    document.body.append(dlg);
+    chatOpen = drawLog;
+    drawLog(); drawCompose();
+    dlg.showModal();
+    box.focus();
+  }
+
   /* ---------------------------------------------------------------- putting a screen together */
   let lastKey = '';
   function render() {
@@ -570,7 +652,6 @@
     $('#tabs').hidden = focused;
     document.documentElement.style.setProperty('--tabbar-h', focused || wide.matches ? '0px' : 'calc(64px + env(safe-area-inset-bottom, 0px))');
     document.body.dataset.screen = focused ? 'order' : 'list';
-    document.documentElement.toggleAttribute('data-flr-assist-docked', !wide.matches);
 
     const key = `${S.tab}:${focused ? S.id : ''}`, same = key === lastKey; lastKey = key;
     const y = scrollY;
@@ -632,6 +713,7 @@
       S.data = d; S.gotAt = Date.now(); S.err = null;
       if (!d.readAt && !d.orders.length) gate('No deliveries yet', d.failing ? `The tracker couldn’t read monday.com yet. ${d.failing}` : 'The tracker hasn’t read the Goods In board yet. It does every 5 minutes.', { retry: true });
       else render();
+      if (chatOpen) chatOpen();
       if (byHand) toast(d.failing ? 'monday.com still isn’t answering' : 'Up to date');
     } catch (e) {
       const code = flrCode(e);

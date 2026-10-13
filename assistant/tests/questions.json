@@ -636,5 +636,13 @@
  {
   "q": "the adhesive wasn't damaged after all, can I change it",
   "expect": "orders-correct"
+ },
+ {
+  "q": "who do I tell if a delivery hasn't turned up?",
+  "expect": "orders-problem"
+ },
+ {
+  "q": "how do I report a problem with an order",
+  "expect": "orders-problem"
  }
 ]

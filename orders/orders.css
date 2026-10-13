@@ -421,3 +421,50 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .noscript{padding:24px;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (forced-colors:active){.row,.od,.fact,.mat,.meta div,.ex{border:1px solid CanvasText}}
+
+/* ---------------------------------------------------------------- "Have a problem?": a chat with Georgia and Luke */
+.only-wide{display:none}
+@media (min-width:960px){.only-wide{display:grid}}
+.od-problem{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:44px;margin:-4px 0 0;padding:0 4px;border:0;background:none;color:var(--brand-ink);font:700 15px/1.2 var(--font);cursor:pointer}
+.od-problem svg{width:19px;height:19px}
+.rec.chat{height:min(720px,92dvh)}
+.chat-form{display:flex;flex-direction:column;height:100%;padding:0}
+.chat-head{padding:14px 14px 12px 16px;border-bottom:1px solid var(--line);justify-content:flex-start}
+.chat-head .rec-x{margin-left:auto}
+.chat-faces{display:flex;flex:none}
+.chat-face{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--brand);color:var(--on-brand);font:800 14px/1 var(--font);box-shadow:0 0 0 3px var(--s1)}
+.chat-face + .chat-face{margin-left:-5px;background:var(--brand-2)}
+.chat-titles{min-width:0}
+.chat-titles .rec-title{font-size:20px}
+.chat-sub{margin:2px 0 0;color:var(--ink-2);font-size:14px}
+.chat-log{flex:1;display:flex;flex-direction:column;gap:8px;padding:16px;overflow-y:auto;overscroll-behavior:contain}
+.chat-day{align-self:center;margin:8px 0 0;color:var(--ink-3);font:700 12.5px/1 var(--font)}
+.bub{max-width:82%;padding:10px 14px;border-radius:20px}
+.bub-them{align-self:flex-start;background:var(--s2);border-bottom-left-radius:6px}
+.bub-me{align-self:flex-end;background:var(--brand);color:var(--on-brand);border-bottom-right-radius:6px}
+.bub-auto{opacity:.9}
+.bub-text{margin:0;font-size:16px;line-height:1.38;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub-meta{display:flex;flex-direction:column;gap:2px;margin:6px 0 0;font-size:12.5px;line-height:1.3;opacity:.85}
+.bub-st{display:inline-flex;align-items:center;gap:4px;font-weight:700}
+.bub-st svg{width:14px;height:14px}
+.bub-st-warn{color:#ffd28a}
+.chat-compose{display:flex;flex-direction:column;gap:8px;padding:10px 12px max(12px,env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--s1)}
+.chat-about{display:flex}
+.chat-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:32px;padding:0 6px 0 10px;border-radius:999px;background:var(--brand-soft);color:var(--brand-ink);font-size:13.5px}
+.chat-chip > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-chip svg{flex:none;width:16px;height:16px}
+.chat-chip-none{padding-right:10px;background:var(--s2);color:var(--ink-2)}
+.chat-chip-x{flex:none;display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:inherit;font:700 18px/1 var(--font);cursor:pointer}
+.chat-quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:0 12px}
+.chat-quick[hidden]{display:none}
+.chat-q{flex:none;min-height:36px;font-size:13.5px}
+.chat-row{display:flex;align-items:flex-end;gap:8px}
+.chat-text{flex:1;min-height:46px;max-height:140px;padding:12px 16px;border:0;border-radius:23px;background:var(--s2);color:var(--ink);font:400 16px/1.35 var(--font);resize:none}
+.chat-text:focus{outline:2px solid var(--focus);outline-offset:0}
+.chat-send{flex:none;display:grid;place-items:center;width:46px;height:46px;border:0;border-radius:50%;background:var(--brand);color:var(--on-brand);cursor:pointer;transition:transform .2s var(--ease)}
+.chat-send svg{width:22px;height:22px}
+.chat-send[disabled]{opacity:.4;cursor:not-allowed}
+.chat-send:active{transform:scale(.92)}
+.tab-label{text-align:center;line-height:1.1}
+.tab-problem .tab-label{white-space:nowrap;font-size:11.5px;letter-spacing:-.01em}
+@media (prefers-color-scheme:light){.bub-st-warn{color:#fff3d6}}
