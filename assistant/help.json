@@ -1908,7 +1908,7 @@
         "tick",
         "checklist"
       ],
-      "answer": "Open the job in the Order Tracker and tick each material as it arrives. Your name and the time are saved, and the tracker ticks it on monday.com. Materials you don't tick stay outstanding; an order is received once everything on it is ticked. A tick only says it arrived, not its condition: for anything damaged, wrong or missing, use the help line under the materials.",
+      "answer": "Open the job in the Order Tracker and tick each material as it arrives. Your name and the time are saved, and the tracker ticks it on monday.com. Materials you don't tick stay outstanding, and tapping a tick again unticks it; an order is received once everything on it is ticked. A tick only says it arrived, not its condition: for anything damaged, wrong or missing, use the help line under the materials.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"
@@ -1917,7 +1917,7 @@
     {
       "id": "orders-correct",
       "tool": "orders",
-      "title": "Undo a tick made by mistake",
+      "title": "Untick a material ticked by mistake",
       "ask": [
         "I recorded a delivery by mistake",
         "undo a receipt",
@@ -1927,7 +1927,9 @@
         "it wasn't damaged after all",
         "unticking on monday doesn't change the tracker",
         "undo a tick",
-        "I ticked the wrong material"
+        "I ticked the wrong material",
+        "untick a material",
+        "how do I untick something"
       ],
       "keys": [
         "correct receipt",
@@ -1939,7 +1941,7 @@
         "reverse",
         "tick"
       ],
-      "answer": "Next to a material you ticked on the Hub, choose Undo: it goes back to still to arrive, on monday.com too. The tick and the undo both stay in the order's History, with who did them and when. A material ticked on monday.com itself is changed on monday.com.",
+      "answer": "Tap a ticked box again to untick it: the material goes back to still to arrive, on monday.com too. That works for ticks made on the Hub and for ones made on monday.com. The tick and the untick both stay in the order's History, with who did them and when.",
       "link": {
         "tile": "orders",
         "label": "Open the Order Tracker"

@@ -69,8 +69,8 @@
     const lines = {}, notes = {};
     const evs = [...events].sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
     for (const r of evs) {
-      const corr = r.kind === 'correction';
-      if (!corr) notes[r.id] = r.note ?? null; else if (r.noteChanged) notes[r.corrects] = r.note ?? null;
+      const corr = r.kind === 'correction' || r.kind === 'untick';   // an untick (1.6) is like a correction with no receipt
+      if (r.kind === 'receipt' || !r.kind) notes[r.id] = r.note ?? null; else if (r.noteChanged) notes[r.corrects] = r.note ?? null;
       for (const l of r.lines || []) {
         const cur = lines[l.id] || { id: l.id, name: l.name, labels: [] };
         const to = corr ? l.to : l.condition;

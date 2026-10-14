@@ -157,3 +157,12 @@ test('a tick (arrived) is received with no label; Undo puts it back', () => {
   const [q] = R.applyReceipts([o], [tick, undo], null);
   assert.equal(q.items[0].received, false); assert.equal(R.status(q, T).partial, false);
 });
+
+test('1.6: an untick of a material ticked on monday.com puts it back to still to arrive', () => {
+  const o = order({ id: '11', day: T, received: true, receivedAt: '2026-10-12T08:00:00Z', items: [{ id: 'a', name: 'A', received: true, issues: [] }] });
+  const un = { id: 3, order: '11', kind: 'untick', at: '2026-10-12T09:00:00Z', by: 'Ola', state: 'pending', reason: 'Unticked on the Hub', lines: [{ id: 'a', name: 'A', from: 'monday', to: 'outstanding' }] };
+  const [p] = R.applyReceipts([o], [un], null);
+  assert.equal(p.items[0].received, false); assert.equal(p.received, false); assert.equal(R.status(p, T).kind, 'today');
+  const again = { id: 4, order: '11', kind: 'receipt', at: '2026-10-12T10:00:00Z', by: 'Ola', state: 'pending', whole: true, lines: [{ id: 'a', name: 'A', condition: 'arrived' }] };
+  assert.equal(R.status(R.applyReceipts([o], [un, again], null)[0], T).kind, 'received');
+});

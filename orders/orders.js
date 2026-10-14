@@ -380,12 +380,13 @@
     ...(o.hubNotes || [])].sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const condWord = c => c === 'good' ? 'good' : c === 'Wrong location' ? 'wrong place' : String(c).toLowerCase();
   // A receipt as it was recorded, and a correction: who, why and what changed. The receipt's own entry never changes.
-  const isTick = r => r.kind !== 'correction' && (r.lines || []).every(l => l.condition === 'arrived');
+  const isTick = r => (r.kind === 'receipt' || !r.kind) && (r.lines || []).every(l => l.condition === 'arrived');
   const isUndo = r => r.kind === 'correction' && /^Ticked by mistake/.test(r.reason || '') && (r.lines || []).every(l => l.to === 'outstanding');
   const mname = l => l.id === 'order' ? 'the whole delivery' : product(l.name).title;
   function hubEvent(r) {
     if (isTick(r)) return `Ticked as arrived by ${r.by}: ${r.lines.map(mname).join(', ')}`;
     if (isUndo(r)) return `Tick undone by ${r.by}: ${r.lines.map(mname).join(', ')} back to still to arrive`;
+    if (r.kind === 'untick') return `Unticked by ${r.by}: ${r.lines.map(mname).join(', ')} (it had been ticked on monday.com) back to still to arrive`;
     if (r.kind !== 'correction') return `Recorded on the Hub by ${r.by}: ${r.lines.map(l => `${product(l.name).title}${l.condition === 'good' ? '' : ` (${condWord(l.condition)})`}`).join(', ')} arrived${r.remaining.length ? `; ${plural(r.remaining.length, 'item')} still to come` : ''}${r.note ? `. “${r.note}”` : ''}`;
     const what = r.lines.map(l => l.to === 'outstanding' ? `${product(l.name).title} back to still to arrive` : `${product(l.name).title} ${condWord(l.from)} → ${condWord(l.to)}`);
     if (r.noteChanged) what.push(r.note ? `note now “${r.note}”` : 'note removed');
@@ -403,8 +404,9 @@
     return fold('History', null, h('ul', { class: 'hist' }, [...ev, ...fixed].map(([at, text, cls]) =>
       h('li', cls ? { class: cls } : null, h('span', { class: 'hist-when' }, at ? when(at, today) : 'Recorded'), h('span', { class: 'hist-text' }, text)))));
   }
-  // One material in the checklist: a big tick box. Ticked on the Hub: who and when, and Undo. Ticked on monday.com:
-  // when, no Undo here. A condition an earlier receipt recorded still shows.
+  // One material in the checklist: a big tick box that ticks and unticks. Ticked on the Hub: who and when; tapping it
+  // again undoes the tick. Ticked on monday.com: when; tapping it unticks it (on monday.com too). A condition an earlier
+  // receipt recorded still shows.
   function tickRow(o, i, today) {
     const k = `${o.id}:${i.id}`, busy = S.saving.get(k);
     const x = o.hubState && o.hubState.lines ? o.hubState.lines[i.id] : null;
@@ -416,16 +418,16 @@
     const who = busy === 'tick' ? 'Saving…' : busy === 'undo' ? 'Undoing…'
       : r ? `Ticked by ${r.by === S.data.you ? 'you' : r.by}, ${when(r.at, today)}${sync}`
       : i.received ? `Received${i.receivedAt ? `, ${when(i.receivedAt, today)}` : ''} · ticked on monday.com` : '';
+    const press = () => on ? (r ? untick(o, i, r) : untickMonday(o, i)) : tick(o, i);
     const label = `${p.title}${p.qty && !i.whole ? ', ' + p.qty : ''}`;
     return h('li', { class: `tick${on ? ' on' : ''}${busy ? ' busy' : ''}` },
-      h('button', { type: 'button', class: 'tick-box', role: 'checkbox', 'aria-checked': on ? 'true' : 'false', disabled: !!busy || (i.received && !r),
-        'aria-label': `${label}: ${on ? 'arrived' : 'still to arrive'}`, onclick: () => on ? null : tick(o, i) },
+      h('button', { type: 'button', class: 'tick-box', role: 'checkbox', 'aria-checked': on ? 'true' : 'false', disabled: !!busy,
+        'aria-label': `${label}: ${on ? 'arrived. Tap to untick' : 'still to arrive. Tap to tick'}`, onclick: press },
         h('span', { class: 'tick-mark', 'aria-hidden': 'true' }, on ? icon('i-check') : null)),
       h('span', { class: 'tick-main' },
         h('span', { class: 'tick-name' }, p.title), p.qty ? h('span', { class: 'tick-qty' }, p.qty) : null,
         probs.length ? h('span', { class: 'mat-bad' }, cap(probs.join(', '))) : null,
-        who ? h('span', { class: 'tick-who' }, who) : null),
-      r && !busy ? h('button', { type: 'button', class: 'tick-undo', 'aria-label': `Undo the tick on ${label}`, onclick: () => untick(o, i, r) }, 'Undo') : null);
+        who ? h('span', { class: 'tick-who' }, who) : null));
   }
   // One order of the job: its reference, destination and date, its checklist, the help line, its details and history.
   function orderBlock(o, today, solo) {
@@ -477,7 +479,7 @@
         h('p', { class: 'od-job' }, [job.wfm ? `WFM ${job.wfm}${job.stock ? ' (FLR stock)' : ''}` : 'No WFM job number', plural(job.orders.length, 'order'), `${got} of ${plural(mats.length, 'material')} in`].join(' · '),
           job.names.length > 1 ? h('span', { class: 'od-aka' }, `Also on monday.com as ${job.names.slice(1).join(', ')}`) : null)),
       h('div', { class: 'od-body' },
-        h('p', { class: 'tick-help' }, 'Tick each material as it arrives. A tick records that it arrived, not its condition; anything wrong, use the help line.'),
+        h('p', { class: 'tick-help' }, 'Tick each material as it arrives; tap again to untick. A tick records that it arrived, not its condition; anything wrong, use the help line.'),
         ...[...open, ...done].map(x => orderBlock(x.o, today, job.orders.length === 1))));
   }
   const placeholder = () => h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'Choose a job'), h('p', { class: 'pick-text' }, 'Its orders and a checklist of its materials show here.'));
@@ -503,8 +505,19 @@
     try {
       const { error } = await client().rpc('orders_correct_receipt', { p_receipt: r.id, p_changes: [{ id: i.id, to: 'outstanding' }], p_reason: 'Ticked by mistake (Undo on the Hub)' });
       if (error) throw error;
-      S.saving.delete(k); await refresh(false); later(); toast('Tick undone');
+      S.saving.delete(k); await refresh(false); later(); toast('Unticked');
     } catch (x) { S.saving.delete(k); render(); toast(saveError(x, 'The tick wasn’t undone')); }
+  }
+  // A material ticked on monday.com itself (no Hub tick to undo): orders_untick (1.6) puts it back to still to arrive.
+  async function untickMonday(o, i) {
+    const k = `${o.id}:${i.id}`;
+    if (S.saving.has(k)) return;
+    S.saving.set(k, 'undo'); render();
+    try {
+      const { error } = await client().rpc('orders_untick', { p_order: o.id, p_line: i.id });
+      if (error) throw error;
+      S.saving.delete(k); await refresh(false); later(); toast('Unticked');
+    } catch (x) { S.saving.delete(k); render(); toast(saveError(x, 'It wasn’t unticked')); }
   }
   // monday.com is written within seconds: look again shortly so "saving to monday.com" turns into the tick.
   let laterTimer = 0;
