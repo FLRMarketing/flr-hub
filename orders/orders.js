@@ -148,7 +148,7 @@
     return { label: 'Expected arrival', big: dayLong(o.day), small: timed(o) ? `at ${clock(o.at)}` : 'Time not confirmed', date: true };
   }
   /* ---------------------------------------------------------------- state and routes: #/today, #/upcoming, #/received, each with /<order id> */
-  const S = { data: null, gotAt: 0, err: null, busy: false, timer: 0, tab: 'today', id: null, attnAll: false, scroll: {} };
+  const S = { data: null, gotAt: 0, err: null, busy: false, again: false, timer: 0, tab: 'today', id: null, attnAll: false, scroll: {}, saving: new Map() };
   const TABS = [['today', 'Today', 'i-today'], ['upcoming', 'Coming up', 'i-calendar'], ['received', 'Received', 'i-inbox']];
   function parseRoute() {
     const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -180,20 +180,50 @@
   }
   const findOrder = id => shown().find(o => o.id === id);
 
+  /* ---------------------------------------------------------------- jobs: the tracker lists jobs, not products */
+  // A job is Monday's WFM Number: the WorkflowMax job (checked 14 Oct 2026: 72967 is one job typed two ways on Monday,
+  // "GLJ UNIT 1 HEMEL" and "UNIT 1 HORIZON"). Its orders keep their own reference, destination and date. An order with no
+  // WFM Number is a job on its own: names alone never combine orders.
+  const jobKey = o => o.wfm ? 'w' + o.wfm : 'o' + o.id;
+  let jobsCache = null, jobsFor = null;
+  function jobs() {
+    const all = shown();
+    if (jobsFor === all) return jobsCache;
+    const m = new Map();
+    for (const o of all) { const k = jobKey(o); if (!m.has(k)) m.set(k, { key: k, wfm: o.wfm || null, orders: [] }); m.get(k).orders.push(o); }
+    for (const j of m.values()) {
+      const n = new Map(); for (const o of j.orders) n.set(o.job, (n.get(o.job) || 0) + 1);
+      j.names = [...n.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(x => x[0]);
+      j.name = j.names[0];
+    }
+    jobsCache = m; jobsFor = all;
+    return m;
+  }
+  const findJob = key => key ? (jobs().get(key) || (findOrder(key) ? jobs().get(jobKey(findOrder(key))) : null)) : null;   // also old links to an order
+  // The materials of an order as the checklist shows them; an order with no products listed is one line, the delivery.
+  const linesOf = o => (o.items || []).length ? o.items : [{ id: 'order', name: 'The whole delivery', whole: true, received: !!o.received, receivedAt: o.receivedAt, issues: o.issues || [] }];
+
   /* ---------------------------------------------------------------- grouped by where they're going (Monday's Delivery Location) */
   // Monday records Warehouse, Site or Collection; for a site delivery the site is the job.
   function destKey(o) {
     if (o.destination === 'Warehouse') return ['0', 'FLR warehouse', 'i-warehouse', null];
-    if (o.destination === 'Site') return ['1' + o.job.toUpperCase(), o.job, 'i-site', 'Site'];
+    if (o.destination === 'Site') return ['1', 'To site', 'i-site', null];
     if (o.destination === 'Collection') return ['2', 'For collection', 'i-collect', null];
     return ['3', 'Destination not confirmed', 'i-alert', null];
   }
+  // One card per job: the orders of a job in this list (and destination) together, in the order they came.
+  function byJob(items) {
+    const m = new Map();
+    for (const x of items) { const k = jobKey(x.o); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }
+    return [...m.entries()].map(([k, xs]) => ({ job: jobs().get(k), xs }));
+  }
+  const jobCount = items => new Set(items.map(x => jobKey(x.o))).size;
   function grouped(items, today, o) {
     const groups = new Map();
     for (const x of items) { const k = destKey(x.o); if (!groups.has(k[0])) groups.set(k[0], { k, items: [] }); groups.get(k[0]).items.push(x); }
     return [...groups.values()].sort((a, b) => a.k[0].localeCompare(b.k[0])).map(({ k, items: xs }) =>
       h('div', { class: 'dest' },
-        h('h3', { class: 'dest-head' }, icon(k[2]), h('span', { class: 'dest-name' }, k[1]), k[3] ? h('span', { class: 'dest-kind' }, k[3]) : null, h('span', { class: 'dest-n' }, String(xs.length))),
+        h('h3', { class: 'dest-head' }, icon(k[2]), h('span', { class: 'dest-name' }, k[1]), k[3] ? h('span', { class: 'dest-kind' }, k[3]) : null, h('span', { class: 'dest-n' }, String(jobCount(xs)))),
         list(xs, today, o)));
   }
 
@@ -225,7 +255,7 @@
       h('div', { class: 'head-bar' },
         h('a', { class: 'brand', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('i-back', 'brand-back'), icon('flr-mark', 'brand-mark'), h('span', { class: 'brand-word' }, 'Hub')),
         h('div', { class: 'head-tools' }, updated(today),
-          h('button', { class: 'round only-wide', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, title: 'Have a problem?', onclick: () => openProblem(S.id || null) }, icon('i-help')),
+          h('button', { class: 'round only-wide', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, title: 'Have a problem?', onclick: () => { const j = findJob(S.id); openProblem(j ? j.orders[0].id : null); } }, icon('i-help')),
           h('button', { class: 'round', type: 'button', id: 'refresh', 'aria-label': 'Check for updates now', title: 'Check for updates now', onclick: () => refresh(true) }, icon('i-refresh')))),
       h('div', { class: 'head-titles' }, h('h1', { class: 'head-title' }, title), sub ? h('p', { class: 'head-sub' }, sub) : null),
       h('nav', { class: 'seg', 'aria-label': 'Deliveries' }, TABS.map(([k, label]) =>
@@ -251,46 +281,54 @@
       h('button', { class: 'tab tab-problem', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, onclick: () => openProblem(null) }, h('span', { class: 'tab-ic' }, icon('i-help')), h('span', { class: 'tab-label' }, 'Have a problem?')));
   }
 
-  /* ---------------------------------------------------------------- one delivery in a list */
-  // Material and job; on the right only a recorded time (or, for late orders, the day they were or are now due);
-  // a label only for an exception. No "Due today" on every row: the section says it.
-  function row(x, today, o = {}) {
-    const { o: ord, s } = x, t = titleOf(ord, s), b = badge(ord, s);
+  /* ---------------------------------------------------------------- one job in a list */
+  // The job's name; under it its materials in this list and how many are in; on the right a recorded time (or, for
+  // late orders, the day they were or are now due); a label only for an exception (the worst of its orders).
+  const RANK = { bad: 3, warn: 2 };
+  function row({ job, xs }, today, o = {}) {
+    const mats = xs.flatMap(x => linesOf(x.o)), got = mats.filter(i => i.received).length;
+    const names = mats.map(i => i.whole ? 'Delivery' : product(i.name).title);
+    const b = xs.map(x => badge(x.o, x.s)).filter(Boolean).sort((p, q) => (RANK[q[0]] || 0) - (RANK[p[0]] || 0))[0] || null;
+    const lead = xs[0];
     let when = '';
-    const late = o.late ? `${s.kind === 'overdue' ? 'Was due' : 'Now due'} ${dayShort(ord.day)}` : '';
-    if (s.kind === 'received') when = ord.receivedAt ? clock(ord.receivedAt) : '';
-    else if (!o.late && timed(ord)) when = clock(ord.at);
-    const label = [t.title + (t.more ? ` and ${plural(t.more, 'more product')}` : ''), ord.job, late, b && b[1], when && `${s.kind === 'received' ? 'received' : 'expected'} ${when}`].filter(Boolean).join('. ');
-    return h('li', null, h('a', { class: 'row', href: href(S.tab, ord.id), 'aria-current': S.id === ord.id ? 'true' : null, 'aria-label': label },
-      thumb(t.kind, 'thumb-sm'),
+    const late = o.late ? `${lead.s.kind === 'overdue' ? 'Was due' : 'Now due'} ${dayShort(lead.o.day)}` : '';
+    if (lead.s.kind === 'received') when = lead.o.receivedAt ? clock(lead.o.receivedAt) : '';
+    else if (!o.late && timed(lead.o)) when = clock(lead.o.at);
+    const what = `${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2}` : ''}`;
+    const count = got && got < mats.length ? `${got} of ${mats.length} in` : plural(mats.length, 'material');
+    const label = [job.name, what, count, xs.length > 1 ? plural(xs.length, 'order') : '', late, b && b[1], when && `${lead.s.kind === 'received' ? 'received' : 'expected'} ${when}`].filter(Boolean).join('. ');
+    const kind = (mats.find(i => !i.received) || mats[0]);
+    return h('li', null, h('a', { class: 'row', href: href(S.tab, job.key), 'aria-current': S.id === job.key ? 'true' : null, 'aria-label': label },
+      thumb(kind && !kind.whole ? product(kind.name).kind : 'box', 'thumb-sm'),
       h('span', { class: 'row-main' },
-        h('span', { class: 'row-title' }, t.title, t.more ? h('span', { class: 'row-more' }, ` +${t.more}`) : null),
-        h('span', { class: 'row-job' }, ord.job),
+        h('span', { class: 'row-title' }, job.name),
+        h('span', { class: 'row-job' }, what, h('span', { class: 'row-count' }, ` · ${count}${xs.length > 1 ? ` · ${plural(xs.length, 'order')}` : ''}`)),
         late ? h('span', { class: 'row-late' }, late) : null,
-        b ? h('span', { class: `pill pill-${b[0]} pill-in`, 'aria-hidden': 'true' }, b[1]) : null),   // narrow screens: under the text
+        b ? h('span', { class: `pill pill-${b[0]} pill-in`, 'aria-hidden': 'true' }, b[1]) : null),
       h('span', { class: 'row-end' },
         b ? h('span', { class: `pill pill-${b[0]} pill-out`, 'aria-hidden': 'true' }, b[1]) : null,
         when ? h('span', { class: 'row-when' }, when) : null)));
   }
-  const list = (items, today, o) => h('ul', { class: 'rows' }, items.map(x => row(x, today, o)));
+  const list = (items, today, o) => h('ul', { class: 'rows' }, byJob(items).map(x => row(x, today, o)));
   // Said once, beside the heading, when some rows have no time.
   const timeNote = items => items.some(x => !timed(x.o)) ? h('p', { class: 'block-note' }, items.some(x => timed(x.o)) ? 'Times show only where monday.com has one; the rest aren’t confirmed.' : 'Arrival times aren’t confirmed.') : null;
   const empty = (title, text) => h('div', { class: 'empty' }, thumb('box', 'thumb-lg'), h('p', { class: 'empty-title' }, title), text ? h('p', { class: 'empty-text' }, text) : null);
 
   /* ---------------------------------------------------------------- the three screens */
   function todayScreen(g, today) {
-    const late = g.late, shown = S.attnAll ? late : late.slice(0, ATTN_SHOWN);
+    const late = g.late, firstJobs = [...new Set(late.map(x => jobKey(x.o)))].slice(0, ATTN_SHOWN);
+    const shown = S.attnAll ? late : late.filter(x => firstJobs.includes(jobKey(x.o)));
     return [
       late.length ? h('section', { class: 'block attn', 'aria-labelledby': 'attn-title' },
-        h('h2', { class: 'block-title attn-title', id: 'attn-title' }, h('span', { class: 'attn-dot', 'aria-hidden': 'true' }), 'Needs attention', h('span', { class: 'block-n' }, String(late.length))),
+        h('h2', { class: 'block-title attn-title', id: 'attn-title' }, h('span', { class: 'attn-dot', 'aria-hidden': 'true' }), 'Needs attention', h('span', { class: 'block-n' }, String(jobCount(late)))),
         grouped(shown, today, { late: true }),
-        late.length > ATTN_SHOWN ? h('button', { class: 'more-btn', type: 'button', 'aria-expanded': S.attnAll ? 'true' : 'false',
-          onclick: () => { S.attnAll = !S.attnAll; render(); } }, S.attnAll ? 'Show fewer' : `Show all ${late.length}`) : null) : null,
+        jobCount(late) > ATTN_SHOWN ? h('button', { class: 'more-btn', type: 'button', 'aria-expanded': S.attnAll ? 'true' : 'false',
+          onclick: () => { S.attnAll = !S.attnAll; render(); } }, S.attnAll ? 'Show fewer' : `Show all ${jobCount(late)}`) : null) : null,
       h('section', { class: 'block', 'aria-labelledby': 'due-title' },
-        h('h2', { class: 'block-title', id: 'due-title' }, 'Still to arrive', g.due.length ? h('span', { class: 'block-n' }, String(g.due.length)) : null),
+        h('h2', { class: 'block-title', id: 'due-title' }, 'Still to arrive', g.due.length ? h('span', { class: 'block-n' }, String(jobCount(g.due))) : null),
         g.due.length ? [timeNote(g.due), grouped(g.due, today, {})] : empty(g.gotToday.length ? 'Everything due today is in' : 'Nothing due today')),
       g.gotToday.length ? h('a', { class: 'got-link', href: href('received') }, icon('i-check', 'got-ic'),
-        h('span', null, `${plural(g.gotToday.length, 'delivery', 'deliveries')} received today`), icon('i-chevron', 'got-chev')) : null,
+        h('span', null, `${plural(jobCount(g.gotToday), 'job')} with deliveries received today`), icon('i-chevron', 'got-chev')) : null,
     ];
   }
   function upcomingScreen(g, today) {
@@ -328,7 +366,7 @@
   // What monday.com recorded, newest first: the reference, date moves, receipt and the older updates.
   // Notes, newest first: the receiver's own note from the Hub, and Monday updates (not the ones the Hub posted itself,
   // which repeat its receipts).
-  const HUB_UPDATE = /^Delivery record(ed on| corrected on) the FLR Hub by /;
+  const HUB_UPDATE = /^(Delivery record(ed on| corrected on)|Ticked as arrived on) the FLR Hub by /;
   // For Admins and Super Admins the problems sent from the Hub have their own section, so their monday.com copy isn't repeated as a note.
   const HUB_PROBLEM = /^Problem reported on the FLR Hub by /;
   const hubPosted = u => HUB_UPDATE.test(u.text || '') || (!!(S.data && S.data.seesAllProblems) && HUB_PROBLEM.test(u.text || ''));
@@ -336,7 +374,12 @@
     ...(o.hubNotes || [])].sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const condWord = c => c === 'good' ? 'good' : c === 'Wrong location' ? 'wrong place' : String(c).toLowerCase();
   // A receipt as it was recorded, and a correction: who, why and what changed. The receipt's own entry never changes.
+  const isTick = r => r.kind !== 'correction' && (r.lines || []).every(l => l.condition === 'arrived');
+  const isUndo = r => r.kind === 'correction' && /^Ticked by mistake/.test(r.reason || '') && (r.lines || []).every(l => l.to === 'outstanding');
+  const mname = l => l.id === 'order' ? 'the whole delivery' : product(l.name).title;
   function hubEvent(r) {
+    if (isTick(r)) return `Ticked as arrived by ${r.by}: ${r.lines.map(mname).join(', ')}`;
+    if (isUndo(r)) return `Tick undone by ${r.by}: ${r.lines.map(mname).join(', ')} back to still to arrive`;
     if (r.kind !== 'correction') return `Recorded on the Hub by ${r.by}: ${r.lines.map(l => `${product(l.name).title}${l.condition === 'good' ? '' : ` (${condWord(l.condition)})`}`).join(', ')} arrived${r.remaining.length ? `; ${plural(r.remaining.length, 'item')} still to come` : ''}${r.note ? `. “${r.note}”` : ''}`;
     const what = r.lines.map(l => l.to === 'outstanding' ? `${product(l.name).title} back to still to arrive` : `${product(l.name).title} ${condWord(l.from)} → ${condWord(l.to)}`);
     if (r.noteChanged) what.push(r.note ? `note now “${r.note}”` : 'note removed');
@@ -354,199 +397,116 @@
     return fold('History', null, h('ul', { class: 'hist' }, [...ev, ...fixed].map(([at, text, cls]) =>
       h('li', cls ? { class: cls } : null, h('span', { class: 'hist-when' }, at ? when(at, today) : 'Recorded'), h('span', { class: 'hist-text' }, text)))));
   }
-  function orderView(o, today, opt = {}) {
-    const s = status(o, today), t = titleOf(o, s), a = arrival(o, s, today);
-    const [tone, line, exception] = statusLine(o, s);
-    const latest = exception ? notesOf(o)[0] || null : null;   // the explanation goes right under the exception
-    const lines = o.items || [];
-    const out = s.partial ? s.outstanding : [], got = lines.filter(i => !out.includes(i));
-    const showOut = s.partial && out.length > 0;
-    const id = 'od-' + o.id;
+  // One material in the checklist: a big tick box. Ticked on the Hub: who and when, and Undo. Ticked on monday.com:
+  // when, no Undo here. A condition an earlier receipt recorded still shows.
+  function tickRow(o, i, today) {
+    const k = `${o.id}:${i.id}`, busy = S.saving.get(k);
+    const x = o.hubState && o.hubState.lines ? o.hubState.lines[i.id] : null;
+    const r = x && x.received && x.receipt ? (o.hubReceipts || []).find(e => e.id === x.receipt) : null;
+    const on = busy === 'tick' ? true : busy === 'undo' ? false : !!i.received;
+    const p = i.whole ? { title: 'The whole delivery', qty: 'No materials listed on monday.com', kind: 'box' } : product(i.name);
+    const probs = (i.issues || []).map(v => PROBLEM[v] || v.toLowerCase());
+    const sync = r && r.state !== 'sent' ? (r.state === 'failed' ? ' · not on monday.com yet, it will try again' : ' · saving to monday.com…') : '';
+    const who = busy === 'tick' ? 'Saving…' : busy === 'undo' ? 'Undoing…'
+      : r ? `Ticked by ${r.by === S.data.you ? 'you' : r.by}, ${when(r.at, today)}${sync}`
+      : i.received ? `Received${i.receivedAt ? `, ${when(i.receivedAt, today)}` : ''} · ticked on monday.com` : '';
+    const label = `${p.title}${p.qty && !i.whole ? ', ' + p.qty : ''}`;
+    return h('li', { class: `tick${on ? ' on' : ''}${busy ? ' busy' : ''}` },
+      h('button', { type: 'button', class: 'tick-box', role: 'checkbox', 'aria-checked': on ? 'true' : 'false', disabled: !!busy || (i.received && !r),
+        'aria-label': `${label}: ${on ? 'arrived' : 'still to arrive'}`, onclick: () => on ? null : tick(o, i) },
+        h('span', { class: 'tick-mark', 'aria-hidden': 'true' }, on ? icon('i-check') : null)),
+      h('span', { class: 'tick-main' },
+        h('span', { class: 'tick-name' }, p.title), p.qty ? h('span', { class: 'tick-qty' }, p.qty) : null,
+        probs.length ? h('span', { class: 'mat-bad' }, cap(probs.join(', '))) : null,
+        who ? h('span', { class: 'tick-who' }, who) : null),
+      r && !busy ? h('button', { type: 'button', class: 'tick-undo', 'aria-label': `Undo the tick on ${label}`, onclick: () => untick(o, i, r) }, 'Undo') : null);
+  }
+  // One order of the job: its reference, destination and date, its checklist, the help line, its details and history.
+  function orderBlock(o, today, solo) {
+    const s = status(o, today), [tone, line, exception] = statusLine(o, s);
+    const latest = exception ? notesOf(o)[0] || null : null;
+    const lines = linesOf(o), got = lines.filter(i => i.received).length;
+    const date = s.kind === 'received' ? null : o.day ? (o.day === today ? `Due today${timed(o) ? ` at ${clock(o.at)}` : ''}` : `${s.kind === 'overdue' ? 'Was due' : 'Due'} ${dayLong(o.day)}${timed(o) ? ` at ${clock(o.at)}` : ''}`) : 'No delivery date yet';
+    return h('section', { class: `jo jo-${tone}`, 'aria-label': `Order ${o.ref || 'with no reference'}` },
+      h('div', { class: 'jo-head' },
+        h('h2', { class: 'jo-ref' }, o.ref ? `Order ${o.ref}` : 'No order reference yet', o.supplier ? h('span', { class: 'jo-sup' }, ` · ${o.supplier}`) : null),
+        h('span', { class: 'jo-count' }, `${got} of ${lines.length} in`)),
+      h('div', { class: 'facts' },
+        h('p', { class: 'fact' }, icon(destIcon(o)), solo ? destText(o, s) : `${destText(o, s)}${date ? ` · ${date}` : ''}`),
+        solo && date ? h('p', { class: 'fact' }, icon('i-calendar'), date) : null,
+        tone !== 'calm' || exception ? h('p', { class: `fact fact-${tone}` }, icon(tone === 'good' ? 'i-check' : tone === 'calm' ? 'i-calendar' : 'i-alert'), line) : null,
+        latest ? note(latest, today) : null,
+        o.hubMismatch ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), 'Ticked on the Hub, but monday.com shows it differently. Check the order on monday.com.') : null),
+      h('ul', { class: 'ticks', 'aria-label': 'Materials: tick each one when it arrives' }, lines.map(i => tickRow(o, i, today))),
+      h('button', { class: 'od-problem', type: 'button', onclick: () => openProblem(o.id) }, icon('i-help'), 'Problem with a material? Contact the help line'),
+      problemsAbout(o, today),
+      h('div', { class: 'folds' },
+        fold('Order details', null, [h('dl', { class: 'meta' },
+          h('div', null, h('dt', null, 'Supplier'), h('dd', null, o.supplier || '—')),
+          h('div', null, h('dt', null, 'Order ref'), h('dd', null, o.ref || 'None yet')),
+          h('div', null, h('dt', null, 'WFM job'), h('dd', null, o.wfm || '—'))),
+          o.url ? h('a', { class: 'mon', href: o.url, target: '_blank', rel: 'noopener' }, 'Open in monday.com', icon('i-external')) : null]),
+        history(o, s, today, latest)));
+  }
+  function jobView(job, today, opt = {}) {
+    const all = job.orders.map(o => ({ o, s: status(o, today) }));
+    const open = all.filter(x => x.s.kind !== 'received').sort((x, y) => (x.o.day || '9').localeCompare(y.o.day || '9') || (x.o.at || '9').localeCompare(y.o.at || '9'));
+    const done = all.filter(x => x.s.kind === 'received').sort((x, y) => (y.o.receivedAt || '').localeCompare(x.o.receivedAt || ''));
+    const lead = open[0] || done[0], a = arrival(lead.o, lead.s, today);
+    const mats = job.orders.flatMap(linesOf), got = mats.filter(i => i.received).length;
+    const tone = open.some(x => x.s.kind === 'overdue') ? 'bad' : open.length ? (open.some(x => x.s.partial || x.s.delay === 'active') ? 'warn' : 'calm') : 'good';
+    const first = mats.find(i => !i.received) || mats[0];
+    const id = 'od-' + job.key;
     return h('article', { class: `od od-${tone}`, 'aria-labelledby': id },
       h('div', { class: 'od-hero' },
         opt.back ? h('div', { class: 'od-bar' }, h('a', { class: 'od-back', href: href(S.tab) }, icon('i-back'), TABS.find(x => x[0] === S.tab)[1]),
           h('span', { class: 'od-bar-end' },
-            h('button', { class: 'round', type: 'button', 'aria-label': `Have a problem with this delivery? Message ${contactsText()}`, onclick: () => openProblem(o.id) }, icon('i-help')),
+            h('button', { class: 'round', type: 'button', 'aria-label': `Have a problem with this job? Message ${contactsText()}`, onclick: () => openProblem(lead.o.id) }, icon('i-help')),
             h('a', { class: 'brand brand-solo', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('flr-mark', 'brand-mark')))) : null,
         h('div', { class: 'od-top' },
-          h('div', { class: 'od-when' }, a.label ? h('p', { class: 'od-label' }, a.label) : null,
+          h('div', { class: 'od-when' }, a.label ? h('p', { class: 'od-label' }, open.length > 1 ? `Next: ${a.label.toLowerCase()}` : a.label) : null,
             h('p', { class: `od-big${a.date ? ' od-big-date' : ''}` }, a.big), a.small ? h('p', { class: 'od-small' }, a.small) : null),
-          thumb(t.kind, 'thumb-hero')),
-        h('h1', { class: 'od-title', id, tabindex: '-1' }, t.title, t.more ? h('span', { class: 'od-more' }, ` +${t.more} more`) : null),
-        h('p', { class: 'od-job' }, o.job)),
+          thumb(first && !first.whole ? product(first.name).kind : 'box', 'thumb-hero')),
+        h('h1', { class: 'od-title', id, tabindex: '-1' }, job.name),
+        h('p', { class: 'od-job' }, [job.wfm ? `WFM ${job.wfm}` : 'No WFM job number', plural(job.orders.length, 'order'), `${got} of ${plural(mats.length, 'material')} in`].join(' · '),
+          job.names.length > 1 ? h('span', { class: 'od-aka' }, `Also on monday.com as ${job.names.slice(1).join(', ')}`) : null)),
       h('div', { class: 'od-body' },
-        h('div', { class: 'facts' },
-          h('p', { class: 'fact' }, icon(destIcon(o)), destText(o, s)),
-          h('p', { class: `fact fact-${tone}` }, icon(tone === 'good' ? 'i-check' : tone === 'calm' ? 'i-calendar' : 'i-alert'), line),
-          latest ? note(latest, today) : null,
-          o.hubFailed ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), 'Saved on the Hub; monday.com hasn’t been updated yet. It will try again.')
-            : o.hubPending ? h('p', { class: 'fact' }, icon('i-refresh'), 'Saved on the Hub; updating monday.com…')
-            : o.hubMismatch ? h('p', { class: 'fact fact-warn' }, icon('i-alert'), `Recorded on the Hub, but monday.com shows it differently. Check the order on monday.com.`) : null),
-        s.kind !== 'received' || correctable(o).length ? h('div', { class: 'od-acts' },
-          s.kind !== 'received' ? h('button', { class: 'btn btn-brand btn-wide', type: 'button', onclick: () => openRecord(o.id) }, icon('i-check'), 'Record delivery') : null,
-          correctable(o).length ? h('button', { class: 'btn btn-quiet btn-wide', type: 'button', onclick: () => openCorrect(o.id) }, icon('i-edit'), 'Correct receipt') : null) : null,
-        problemsAbout(o, today),
-        h('button', { class: 'od-problem', type: 'button', onclick: () => openProblem(o.id) }, icon('i-help'), 'Have a problem with this delivery?'),
-        lines.length ? h('section', { class: 'od-sec', 'aria-label': showOut ? 'Still to arrive' : 'Materials' },
-          h('h2', { class: 'od-h' }, showOut ? 'Still to arrive' : 'Materials', h('span', { class: 'od-n' }, String(showOut ? out.length : lines.length))),
-          matRows(showOut ? out : lines, today, !s.partial)) : h('p', { class: 'od-none' }, 'No products listed on monday.com.'),
-        h('div', { class: 'folds' },
-          showOut && got.length ? fold('Received', got.length, matRows(got, today, true)) : null,
-          fold('Order details', null, [h('dl', { class: 'meta' },
-            h('div', null, h('dt', null, 'Supplier'), h('dd', null, o.supplier || '—')),
-            h('div', null, h('dt', null, 'Order ref'), h('dd', null, o.ref || 'None yet')),
-            h('div', null, h('dt', null, 'WFM job'), h('dd', null, o.wfm || '—'))),
-            o.url ? h('a', { class: 'mon', href: o.url, target: '_blank', rel: 'noopener' }, 'Open in monday.com', icon('i-external')) : null]),
-          history(o, s, today, latest))));
+        h('p', { class: 'tick-help' }, 'Tick each material as it arrives. A tick records that it arrived, not its condition; anything wrong, use the help line.'),
+        ...[...open, ...done].map(x => orderBlock(x.o, today, job.orders.length === 1))));
   }
-  const placeholder = () => h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'Choose a delivery'), h('p', { class: 'pick-text' }, 'Its arrival, materials and details show here.'));
+  const placeholder = () => h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'Choose a job'), h('p', { class: 'pick-text' }, 'Its orders and a checklist of its materials show here.'));
 
-  /* ---------------------------------------------------------------- recording a delivery */
-  // The person receiving it chooses what arrived and its condition. Nothing is ticked to start with; what isn't
-  // chosen stays outstanding. Who and when are set by the database (orders_record_receipt), not by this page.
-  const CONDITIONS = [['Damaged', 'Damaged'], ['Wrong colour', 'Wrong colour'], ['Wrong quantity', 'Wrong quantity'], ['Wrong location', 'Wrong place']];
-  function openRecord(id) {
-    const o = findOrder(id);
-    if (!o) return;
-    const lines = (o.items || []).length ? o.items.filter(i => !i.received) : [{ id: 'order', name: o.job, whole: true }];
-    if (!lines.length) return toast('Everything on this delivery is already recorded');
-    const pick = new Map(lines.map(l => [l.id, { arrived: false, cond: null }]));   // cond: 'good' | a problem | null
-    const dlg = h('dialog', { class: 'rec', 'aria-labelledby': 'rec-title' });
-    const err = h('p', { class: 'rec-err', role: 'alert', hidden: true });
-    const noteBox = h('textarea', { id: 'rec-note', class: 'rec-note', rows: 3, maxlength: 500, placeholder: 'What was wrong, e.g. “Two tubs split in the box”' });
-    const summary = h('p', { class: 'rec-sum', 'aria-live': 'polite' });
-    const go = h('button', { class: 'btn btn-brand btn-wide', type: 'submit' }, 'Record delivery');
-    const list = h('ul', { class: 'rec-lines' });
-    function draw() {
-      list.replaceChildren(...lines.map(l => {
-        const st = pick.get(l.id), p = l.whole ? { title: 'The whole delivery', qty: '' } : product(l.name);
-        const toggle = h('button', { type: 'button', class: 'rec-tick', role: 'checkbox', 'aria-checked': st.arrived ? 'true' : 'false',
-          'aria-label': `${p.title}${p.qty ? ', ' + p.qty : ''} arrived`, onclick: () => { st.arrived = !st.arrived; if (!st.arrived) st.cond = null; draw(); } },
-          h('span', { class: 'rec-box', 'aria-hidden': 'true' }, st.arrived ? icon('i-check') : null),
-          h('span', { class: 'rec-name' }, h('b', null, p.title), p.qty ? h('small', null, p.qty) : null));
-        const cond = st.arrived ? h('div', { class: 'rec-cond', role: 'radiogroup', 'aria-label': `Condition of ${p.title}` },
-          h('button', { type: 'button', role: 'radio', class: 'rec-opt', 'aria-checked': st.cond === 'good' ? 'true' : 'false', onclick: () => { st.cond = 'good'; draw(); } }, 'Good condition'),
-          ...CONDITIONS.map(([v, label]) => h('button', { type: 'button', role: 'radio', class: 'rec-opt rec-opt-bad', 'aria-checked': st.cond === v ? 'true' : 'false', onclick: () => { st.cond = v; draw(); } }, label))) : null;
-        return h('li', { class: `rec-line${st.arrived ? ' on' : ''}` }, toggle, cond);
-      }));
-      const chosen = [...pick.values()].filter(x => x.arrived), bad = chosen.filter(x => x.cond && x.cond !== 'good');
-      const missingCond = chosen.some(x => !x.cond), needNote = bad.length > 0 && !noteBox.value.trim();
-      noteBox.closest('.rec-note-wrap').classList.toggle('need', bad.length > 0);
-      summary.textContent = !chosen.length ? 'Choose what arrived. Anything not chosen stays outstanding.'
-        : missingCond ? 'Choose the condition of each material that arrived.'
-        : `${chosen.length} of ${lines.length} ${lines.length === 1 && lines[0].whole ? 'delivery' : 'items'} arrived${bad.length ? ` · ${plural(bad.length, 'problem')}` : ''}${chosen.length < lines.length ? ' · the rest stays outstanding' : ''}.${needNote ? ' Add a note about the problem.' : ''}`;
-      go.disabled = !chosen.length || missingCond || needNote;
-    }
-    const form = h('form', { class: 'rec-form', novalidate: true, onsubmit: async e => {
-      e.preventDefault(); err.hidden = true; go.setAttribute('aria-busy', 'true'); go.disabled = true;
-      const p_lines = lines.filter(l => pick.get(l.id).arrived).map(l => ({ id: l.id, condition: pick.get(l.id).cond }));
-      try {
-        const { error } = await client().rpc('orders_record_receipt', { p_order: o.id, p_lines, p_note: noteBox.value.trim() || null });
-        if (error) throw error;
-        dlg.close(); toast('Delivery recorded');
-        await refresh(false); setTimeout(() => refresh(false), 6000);
-      } catch (x) {
-        const code = flrCode(x);
-        err.textContent = code === 'FLR_VALIDATION' && x.details ? x.details : code === 'FLR_FORBIDDEN' ? 'You can’t record deliveries.' : offline(x) ? 'Can’t reach the FLR database. Nothing was recorded; try again.' : 'That didn’t save. Nothing was recorded; try again.';
-        err.hidden = false; go.removeAttribute('aria-busy'); draw();
-      }
-    } },
-      h('div', { class: 'rec-head' }, h('h2', { class: 'rec-title', id: 'rec-title' }, 'Record delivery'),
-        h('button', { class: 'round rec-x', type: 'button', 'aria-label': 'Close without recording', onclick: () => dlg.close() }, icon('i-back'))),
-      h('p', { class: 'rec-job' }, o.job),
-      h('p', { class: 'rec-q' }, (o.items || []).length ? 'Which materials arrived?' : 'Did the delivery arrive?'),
-      list,
-      h('div', { class: 'rec-note-wrap' }, h('label', { for: 'rec-note', class: 'rec-label' }, 'Note', h('span', { class: 'rec-label-hint' }, ' · needed for any problem')), noteBox),
-      err, summary, go,
-      h('p', { class: 'rec-who' }, `Recorded as ${S.data.you || 'you'}, at the time you press Record. It’s added to the order on monday.com.`));
-    noteBox.addEventListener('input', draw);
-    dlg.append(form);
-    dlg.addEventListener('close', () => dlg.remove());
-    document.body.append(dlg);
-    draw();
-    dlg.showModal();
+  /* ---------------------------------------------------------------- ticking materials off */
+  // A tick is a receipt of one material with the condition 'arrived' (orders_record_receipt): the database stamps who
+  // and when, flr-orders ticks it on monday.com, and the order is received once everything on it has arrived. Undo is a
+  // correction back to still to arrive (orders_correct_receipt), so History keeps both. Problems go to the help line.
+  async function tick(o, i) {
+    const k = `${o.id}:${i.id}`;
+    if (S.saving.has(k)) return;
+    S.saving.set(k, 'tick'); render();
+    try {
+      const { error } = await client().rpc('orders_record_receipt', { p_order: o.id, p_lines: [{ id: i.id, condition: 'arrived' }], p_note: null });
+      if (error) throw error;
+      S.saving.delete(k); await refresh(false); later();
+    } catch (x) { S.saving.delete(k); render(); toast(saveError(x, 'The tick wasn’t saved')); }
   }
-
-  /* ---------------------------------------------------------------- correcting a receipt */
-  // A receipt recorded by mistake is corrected, never changed: each material on it can go back to still to arrive or
-  // get the right condition, and its note can change; a reason is always needed. The database stamps who and when
-  // (orders_correct_receipt), keeps the original in History, and monday.com is updated to match.
-  // Correctable: the Hub's receipts with a material still shown as arrived because of them.
-  const correctable = o => (o.hubReceipts || []).filter(r => r.kind !== 'correction'
-    && Object.values((o.hubState || {}).lines || {}).some(x => x.received && x.receipt === r.id));
-  const FIX = [['good', 'Good condition'], ...CONDITIONS, ['outstanding', 'Didn’t arrive']];
-  function openCorrect(id, which) {
-    const o = findOrder(id);
-    if (!o) return;
-    const recs = correctable(o);
-    if (!recs.length) return toast('Nothing on this order can be corrected');
-    const r = recs.find(x => x.id === which) || recs[recs.length - 1];
-    const st = o.hubState.lines, notes = o.hubState.notes || {};
-    const lines = r.lines.filter(l => st[l.id] && st[l.id].received && st[l.id].receipt === r.id).map(l => ({ id: l.id, name: l.name, was: st[l.id].condition }));
-    const pick = new Map(lines.map(l => [l.id, l.was]));
-    const oldNote = (Object.prototype.hasOwnProperty.call(notes, r.id) ? notes[r.id] : r.note) || '';
-    const dlg = h('dialog', { class: 'rec', 'aria-labelledby': 'fix-title' });
-    const err = h('p', { class: 'rec-err', role: 'alert', hidden: true });
-    const noteBox = h('textarea', { id: 'fix-note', class: 'rec-note', rows: 2, maxlength: 500, placeholder: 'What was wrong, e.g. “Tile box crushed on one corner”' });
-    noteBox.value = oldNote;
-    const why = h('textarea', { id: 'fix-why', class: 'rec-note', rows: 2, maxlength: 300, required: true, placeholder: 'e.g. “Ticked the wrong order: the trim hasn’t come”' });
-    const summary = h('p', { class: 'rec-sum', 'aria-live': 'polite' });
-    const go = h('button', { class: 'btn btn-brand btn-wide', type: 'submit' }, 'Save correction');
-    const list = h('ul', { class: 'rec-lines' });
-    const label = x => (FIX.find(f => f[0] === x) || [x, x])[1];
-    function draw() {
-      list.replaceChildren(...lines.map(l => {
-        const p = l.id === 'order' ? { title: 'The whole delivery', qty: '' } : product(l.name), now = pick.get(l.id);
-        return h('li', { class: `rec-line on${now !== l.was ? ' fix-changed' : ''}` },
-          h('div', { class: 'rec-tick fix-name' }, h('span', { class: 'rec-name' }, h('b', null, p.title), h('small', null, `${p.qty ? p.qty + ' · ' : ''}recorded as ${label(l.was).toLowerCase()}`))),
-          h('div', { class: 'rec-cond', role: 'radiogroup', 'aria-label': `What ${p.title} should be` },
-            ...FIX.map(([v, text]) => h('button', { type: 'button', role: 'radio', class: `rec-opt${v === 'good' ? '' : v === 'outstanding' ? ' rec-opt-out' : ' rec-opt-bad'}`,
-              'aria-checked': now === v ? 'true' : 'false', onclick: () => { pick.set(l.id, v); draw(); } }, text))));
-      }));
-      const changes = lines.filter(l => pick.get(l.id) !== l.was);
-      const noteChanged = noteBox.value.trim() !== oldNote.trim();
-      const bad = lines.some(l => !['good', 'outstanding'].includes(pick.get(l.id)));
-      const needNote = bad && !noteBox.value.trim(), needWhy = !why.value.trim();
-      noteBox.closest('.rec-note-wrap').classList.toggle('need', bad);
-      const back = changes.filter(l => pick.get(l.id) === 'outstanding').length;
-      summary.textContent = !changes.length && !noteChanged ? 'Change what was recorded wrongly, then say why.'
-        : `${changes.length ? plural(changes.length, 'change') : 'Note changed'}${back ? ` · ${back} back to still to arrive` : ''}.${needNote ? ' Add a note about the problem.' : ''}${needWhy ? ' Say why it’s being corrected.' : ''}`;
-      go.disabled = (!changes.length && !noteChanged) || needNote || needWhy;
-    }
-    const form = h('form', { class: 'rec-form', novalidate: true, onsubmit: async e => {
-      e.preventDefault(); err.hidden = true; go.setAttribute('aria-busy', 'true'); go.disabled = true;
-      const p_changes = lines.filter(l => pick.get(l.id) !== l.was).map(l => ({ id: l.id, to: pick.get(l.id) }));
-      const p_note = noteBox.value.trim() !== oldNote.trim() ? noteBox.value.trim() : null;
-      try {
-        const { error } = await client().rpc('orders_correct_receipt', { p_receipt: r.id, p_changes, p_reason: why.value.trim(), p_note });
-        if (error) throw error;
-        dlg.close(); toast('Receipt corrected');
-        await refresh(false); setTimeout(() => refresh(false), 6000);
-      } catch (x) {
-        const code = flrCode(x);
-        err.textContent = code === 'FLR_VALIDATION' && x.details ? x.details : code === 'FLR_FORBIDDEN' ? 'You can’t correct deliveries.' : offline(x) ? 'Can’t reach the FLR database. Nothing was changed; try again.' : 'That didn’t save. Nothing was changed; try again.';
-        err.hidden = false; go.removeAttribute('aria-busy'); draw();
-      }
-    } },
-      h('div', { class: 'rec-head' }, h('h2', { class: 'rec-title', id: 'fix-title' }, 'Correct receipt'),
-        h('button', { class: 'round rec-x', type: 'button', 'aria-label': 'Close without correcting', onclick: () => dlg.close() }, icon('i-back'))),
-      h('p', { class: 'rec-job' }, o.job),
-      recs.length > 1 ? h('div', { class: 'fix-which', role: 'group', 'aria-label': 'Which delivery record' },
-        ...recs.map(x => h('button', { type: 'button', class: 'rec-opt', 'aria-pressed': x.id === r.id ? 'true' : 'false',
-          onclick: () => { if (x.id !== r.id) { dlg.close(); openCorrect(id, x.id); } } }, `${when(x.at, R.londonDay())} · ${x.by}`))) : null,
-      h('p', { class: 'rec-q' }, `Recorded by ${r.by}, ${when(r.at, R.londonDay())}. What should it say?`),
-      list,
-      h('div', { class: 'rec-note-wrap' }, h('label', { for: 'fix-note', class: 'rec-label' }, 'Note', h('span', { class: 'rec-label-hint' }, ' · needed for any problem')), noteBox),
-      h('div', { class: 'rec-note-wrap need' }, h('label', { for: 'fix-why', class: 'rec-label' }, 'Reason for the correction', h('span', { class: 'rec-label-hint' }, ' · always needed')), why),
-      err, summary, go,
-      h('p', { class: 'rec-who' }, `Saved as ${S.data.you || 'you'}, at the time you press Save. The original record stays in History, and monday.com is updated to match.`));
-    noteBox.addEventListener('input', draw); why.addEventListener('input', draw);
-    dlg.append(form);
-    dlg.addEventListener('close', () => dlg.remove());
-    document.body.append(dlg);
-    draw();
-    dlg.showModal();
+  async function untick(o, i, r) {
+    const k = `${o.id}:${i.id}`;
+    if (S.saving.has(k)) return;
+    S.saving.set(k, 'undo'); render();
+    try {
+      const { error } = await client().rpc('orders_correct_receipt', { p_receipt: r.id, p_changes: [{ id: i.id, to: 'outstanding' }], p_reason: 'Ticked by mistake (Undo on the Hub)' });
+      if (error) throw error;
+      S.saving.delete(k); await refresh(false); later(); toast('Tick undone');
+    } catch (x) { S.saving.delete(k); render(); toast(saveError(x, 'The tick wasn’t undone')); }
   }
+  // monday.com is written within seconds: look again shortly so "saving to monday.com" turns into the tick.
+  let laterTimer = 0;
+  const later = () => { clearTimeout(laterTimer); laterTimer = setTimeout(() => refresh(false), 5000); };
+  const saveError = (x, what) => {
+    const code = flrCode(x);
+    return code === 'FLR_VALIDATION' && x.details ? `${what}: ${x.details}` : code === 'FLR_FORBIDDEN' ? 'You can’t tick deliveries.' : offline(x) ? `${what}: can’t reach the FLR database.` : `${what}. Try again.`;
+  };
 
   /* ---------------------------------------------------------------- "Have a problem?" */
   // A chat with Georgia and Luke: the person writes what's wrong, about one delivery or in general. The database keeps
@@ -630,7 +590,7 @@
     }
     function drawCompose() {
       aboutRow.replaceChildren(about
-        ? h('span', { class: 'chat-chip' }, icon('i-box'), h('span', null, h('b', null, titleOf(about, status(about, today)).title), ` · ${about.job}`),
+        ? h('span', { class: 'chat-chip' }, icon('i-box'), h('span', null, h('b', null, about.job), about.ref ? ` · Order ${about.ref}` : ''),
             h('button', { type: 'button', class: 'chat-chip-x', 'aria-label': 'Not about this delivery', onclick: () => { about = null; drawCompose(); } }, '×'))
         : h('span', { class: 'chat-chip chat-chip-none' }, 'Not about one delivery'));
       quick.hidden = !!box.value.trim();
@@ -680,15 +640,16 @@
     // view (Today: due today, then needs attention, then any order). Not called "next": the board doesn't know the order.
     const first = { today: [g.due, g.late, g.upcoming, g.nodate, g.gotToday, g.gotEarlier], upcoming: [g.upcoming, g.nodate], received: [g.gotToday, g.gotEarlier] }[S.tab]
       .map(l => l[0]).find(Boolean);
-    S.id = r.id || (wide.matches && first ? first.o.id : null);
-    // Today's badge: orders with materials still to come that are due today. "Needs attention" has its own count.
-    const counts = { today: g.due.length, upcoming: g.upcoming.length + g.nodate.length, received: g.gotToday.length };
-    const order = S.id ? findOrder(S.id) : null;
+    S.id = r.id || (wide.matches && first ? jobKey(first.o) : null);
+    // Today's badge: jobs with materials still to come that are due today. "Needs attention" has its own count.
+    const counts = { today: jobCount(g.due), upcoming: jobCount([...g.upcoming, ...g.nodate]), received: jobCount(g.gotToday) };
+    const job = findJob(S.id);
+    if (job && S.id !== job.key) S.id = job.key;   // an old link to one order opens its job
     const v = $('#view');
     document.body.dataset.view = 'page';
     $('#gate').hidden = true; v.hidden = false;
 
-    const missing = S.id && !order ? h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'That delivery isn’t on the board now'),
+    const missing = S.id && !job ? h('div', { class: 'pick' }, thumb('box', 'thumb-lg'), h('p', { class: 'pick-title' }, 'That job isn’t on the board now'),
       h('p', { class: 'pick-text' }, 'It may have been deleted on monday.com.'), h('a', { class: 'btn btn-brand', href: href(S.tab) }, 'Back to the list')) : null;
 
     const focused = !wide.matches && !!S.id;   // a phone: the order on its own
@@ -700,8 +661,8 @@
     const key = `${S.tab}:${focused ? S.id : ''}`, same = key === lastKey; lastKey = key;
     const y = scrollY;
     if (focused) {
-      document.title = `${order ? titleOf(order, status(order, today)).title : 'Delivery'} · Order Tracker`;
-      v.replaceChildren(h('div', { class: 'solo' }, notices(today), order ? orderView(order, today, { back: true }) : missing));
+      document.title = `${job ? job.name : 'Job'} · Order Tracker`;
+      v.replaceChildren(h('div', { class: 'solo' }, notices(today), job ? jobView(job, today, { back: true }) : missing));
     } else {
       const titles = { today: ['Today’s deliveries', dayLong(today)], upcoming: ['Coming up', 'After today'], received: ['Received', 'Recorded on the Hub or monday.com'] };
       const [title, sub] = titles[S.tab];
@@ -709,7 +670,7 @@
       const body = S.tab === 'today' ? todayScreen(g, today) : S.tab === 'upcoming' ? upcomingScreen(g, today) : receivedScreen(g, today);
       const listCol = h('div', { class: 'col-list' }, header(title, sub, counts, today), notices(today), h('div', { class: 'col-body' }, body));
       v.replaceChildren(wide.matches ? h('div', { class: 'split' }, listCol,
-        h('aside', { class: 'col-detail', 'aria-label': 'Selected delivery' }, order ? orderView(order, today) : missing || placeholder())) : listCol);
+        h('aside', { class: 'col-detail', 'aria-label': 'Selected job' }, job ? jobView(job, today) : missing || placeholder())) : listCol);
     }
     if (same) scrollTo(0, y);
     else if (focused) { scrollTo(0, 0); const t = $('.od-title'); if (t) t.focus({ preventScroll: true }); }
@@ -748,7 +709,7 @@
     return gate('The deliveries didn’t load', 'Something went wrong getting them. Try again in a moment.', { retry: true });
   }
   async function refresh(byHand) {
-    if (S.busy) return;
+    if (S.busy) { S.again = true; return; }
     S.busy = true;
     const busy = on => { const b = $('#refresh'); if (b) on ? b.setAttribute('aria-busy', 'true') : b.removeAttribute('aria-busy'); };
     busy(true);
@@ -765,6 +726,7 @@
       else { S.err = e; render(); if (byHand) toast('Couldn’t refresh'); }
     } finally {
       S.busy = false; busy(false);
+      if (S.again) { S.again = false; refresh(false); }
     }
   }
   function schedule() {

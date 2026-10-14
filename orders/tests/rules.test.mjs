@@ -145,3 +145,15 @@ test('a whole delivery with no products, put back to still to arrive', () => {
   const [p] = R.applyReceipts([o], [rec, back], '2026-10-12T09:30:00Z');
   assert.equal(p.received, false); assert.equal(R.status(p, T).kind, 'today');
 });
+
+test('a tick (arrived) is received with no label; Undo puts it back', () => {
+  const o = order({ id: '10', day: T, items: [{ id: 'a', name: 'A', received: false, issues: [] }, { id: 'b', name: 'B', received: false, issues: [] }] });
+  const tick = { id: 1, order: '10', kind: 'receipt', at: '2026-10-12T09:00:00Z', by: 'Ola', state: 'pending', whole: false, lines: [{ id: 'a', name: 'A', condition: 'arrived' }] };
+  const [p] = R.applyReceipts([o], [tick], null);
+  assert.equal(p.items[0].received, true); assert.deepEqual(p.items[0].issues, []); assert.deepEqual(p.issues, []);
+  assert.deepEqual(R.foldHub([tick]).lines.a.labels, []);
+  assert.equal(R.status(p, T).partial, true);
+  const undo = { id: 2, order: '10', kind: 'correction', corrects: 1, at: '2026-10-12T09:01:00Z', by: 'Ola', state: 'pending', reason: 'Ticked by mistake', lines: [{ id: 'a', from: 'arrived', to: 'outstanding' }] };
+  const [q] = R.applyReceipts([o], [tick, undo], null);
+  assert.equal(q.items[0].received, false); assert.equal(R.status(q, T).partial, false);
+});

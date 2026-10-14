@@ -485,3 +485,32 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .prob-st svg{width:14px;height:14px}
 .prob-st.bub-st-ok{color:var(--green)}
 .prob-st.bub-st-warn{color:var(--amber)}
+
+/* ---------------------------------------------------------------- job first: one card per job, a checklist per order */
+.row-count{color:var(--ink-3)}
+.od-aka{display:block;margin-top:4px;font-size:13.5px;opacity:.8}
+.tick-help{margin:0;color:var(--ink-2);font-size:14.5px;line-height:1.4}
+.jo{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:var(--r-l, 20px);background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}
+.jo-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.jo-ref{margin:0;font:800 18px/1.25 var(--font);letter-spacing:-.01em;overflow-wrap:anywhere}
+.jo-sup{color:var(--ink-2);font-weight:600}
+.jo-count{flex:none;color:var(--ink-3);font:700 13.5px/1 var(--font);white-space:nowrap}
+.jo .facts{margin:0}
+.ticks{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.tick{display:flex;align-items:center;gap:14px;min-height:64px;padding:10px 12px;border-radius:var(--r-m);background:var(--s2)}
+.tick.on{background:color-mix(in srgb, var(--brand) 12%, var(--s2))}
+.tick-box{flex:none;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;background:transparent;box-shadow:inset 0 0 0 2.5px var(--ink-3);color:var(--on-brand);cursor:pointer;transition:transform .15s var(--ease),background-color .15s}
+.tick-box:active{transform:scale(.92)}
+.tick.on .tick-box{background:var(--brand);box-shadow:none}
+.tick-box[disabled]{cursor:default}
+.tick.busy .tick-box{opacity:.6}
+.tick-mark svg{width:26px;height:26px}
+.tick-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.tick-name{font:700 16.5px/1.25 var(--font);overflow-wrap:anywhere}
+.tick-qty{color:var(--ink-2);font-size:14px}
+.tick-who{color:var(--ink-3);font-size:13px;line-height:1.3}
+.tick.on .tick-who{color:var(--brand-ink)}
+.tick-undo{flex:none;min-height:40px;padding:0 14px;border:0;border-radius:999px;background:var(--s3);color:var(--ink);font:700 14px/1 var(--font);cursor:pointer}
+@media (hover:hover){.tick-undo:hover{background:var(--s4)}}
+.jo .od-problem{margin:0}
+.jo .folds{margin-top:2px}

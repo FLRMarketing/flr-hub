@@ -76,7 +76,7 @@
         const to = corr ? l.to : l.condition;
         if (to === 'outstanding') Object.assign(cur, { received: false, condition: null, at: null, receipt: null, event: r.id });
         else Object.assign(cur, { received: true, condition: to, event: r.id, at: corr ? cur.at : r.at, receipt: corr ? cur.receipt : r.id,
-          labels: to === 'good' || cur.labels.includes(to) ? cur.labels : [...cur.labels, to] });
+          labels: !PROBLEMS.includes(to) || cur.labels.includes(to) ? cur.labels : [...cur.labels, to] });
         lines[l.id] = cur;
       }
     }
