@@ -30,7 +30,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `speeding/` | The Speeding Report page, built by `scripts/sync-speeding.py` from `../flr-speeding-report` with no photos or names; `bridge.js`, which answers the page's data requests from the FLR database; and `map/`, the OpenStreetMap road and place packs (public map data). |
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `onboarding/` | Onboarding: each new starter's checklist (forms, FLR documents, uploads, acknowledgements), and the reviews, checks and internal setup behind it. `content.js` holds the wording taken from FLR's source forms. Draft on branch `feature/onboarding`; see "Onboarding" below. |
-| `orders/` | Order Tracker: deliveries due today from the Monday “FLR - Goods In” board, late or delayed orders, received today, and each order’s progress. Read-only; data from `orders_board()` (flr-orders function, every 5 minutes). Draft on branch `feature/order-tracker`; see "Order Tracker" below. |
+| `orders/` | Order Tracker: jobs from the Monday “FLR - Goods In” board (due today, needs attention, coming up, received), each with a checklist to tick materials off as they arrive, and "Have a problem?" to Georgia and Luke. Data from `orders_board()` (flr-orders function, every 5 minutes); see "Order Tracker" below. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
@@ -162,28 +162,30 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   written to the audit trail, notifications or the console.
 - Preview: `build/onboarding-demo.ts` (Estimator repository) fills the mock Supabase with made-up people.
 
-## Order Tracker (draft, not live)
+## Order Tracker (live for the people on the Orders list)
 
-- Page `orders/` (index.html, orders.js, orders.css, rules.js): its own look (charcoal, peach header, material pictures by kind), not hub.css. Phones: Today / Coming up / Received tabs and a Help tab for Likkle Jeff (`<meta name="flr-assist-dock">` docks him there; jeff.js hides his floating button while `html[data-flr-assist-docked]` is set); a tapped delivery opens on its own. Wide screens: the list beside the chosen delivery. The FLR mark goes back to the Hub. Tile `orders`, icon `i-orders`,
-  Hub settings label "Orders". It only reads: `public.orders_board()` answers active accounts on the tile's list.
-- The data comes from the `flr-orders` Edge Function and migration `20261012200000_flr_order_tracker.sql` in the
-  Estimator repo (branch `feature/order-tracker`); its README maps every Goods In column to the page.
-- What the page claims (rules in `orders/rules.js`, tests `node --test orders/tests/rules.test.mjs`): Order reference
-  recorded = an order number on Monday (not supplier confirmation); Delivery date set, with its moves; Received =
-  Received ticked with nothing outstanding. Supplier confirmation, dispatch and out for delivery aren't on the board, so
-  they aren't shown. A time only when the Monday date has one; "today" is Europe/London. Delayed = moved later after its
-  first date came, while still outstanding; Date moved = moved before its first date (not late); Overdue = date passed
-  and not all received; Part received = a product not ticked or "Item missing" logged: stays with the outstanding
-  orders, never with the received ones.
-- Recording a delivery (Order Tracker 1.1): "Record delivery" on an outstanding order opens a sheet: tick what arrived,
-  choose each one's condition (a problem needs a note); nothing starts ticked. It calls `orders_record_receipt`, which
-  stamps the person and the time; flr-orders then writes it to Monday. The Hub's receipts are the record of what
-  arrived, on the page as in the database (`rules.js` applyReceipts): shown at once, kept after a reload, with
-  "Saved on the Hub; updating monday.com…" while it's being written, and a warning if Monday later stops showing it.
-- Lists are grouped by destination (FLR warehouse, each site = its job, For collection, Destination not confirmed),
-  Needs attention included.
-  FLR blue (the Hub's tint) for the chosen delivery, tabs and the main action.
-- Local preview: launch config `flr-hub-orders-preview` (port 8871, ORDERS=1 in build/mock-supabase.ts).
+- Page `orders/` (index.html, orders.js, orders.css, rules.js), FLR blue, light and dark. Tile `orders`, Hub settings
+  label "Orders": `public.orders_board()` answers active accounts with Orders switched on. Data: the `flr-orders` Edge
+  Function (every 5 minutes) and the Order Tracker migrations 1.0 to 1.5 in the Estimator repo; its
+  `supabase/functions/flr-orders/README.md` maps every Goods In column.
+- **Job first.** Each card is a job: Monday's WFM Number, the WorkflowMax job. Its orders keep their own reference,
+  destination and date; a job typed more than one way on Monday is still one card ("Also on monday.com as …"). An order
+  with no WFM Number is a card on its own: names alone never combine orders. Lists: Today (Needs attention, Still to
+  arrive), Coming up, Received; grouped by destination (FLR warehouse, To site, For collection, Destination not
+  confirmed). Every count is the number of cards shown.
+- **Ticking off.** A job opens a checklist per order with a big tick box per material. A tick calls
+  `orders_record_receipt` with condition `arrived` (arrival only, never a claim about condition): the database stamps who
+  and when, flr-orders ticks it on Monday (one update per tick), and an order is received only once everything on it is
+  ticked. Undo calls `orders_correct_receipt` (back to still to arrive); History keeps both. Problems go to "Have a
+  problem?" (Georgia and Luke): the help line under each order's materials, the ? button and the tab.
+- **The FLR stock job.** FLR's yearly catch-all stock job is shared by separate requests, so on it each Monday name is its
+  own card (STOCK LP, JW LINDS, STOCK ST, Stock GL) instead of one job. It's set in `orders/orders.js`:
+  `const STOCK_WFM = new Set(['72508']);   // FLR - STOCK APR 2026 (1 Apr 2026 to 31 Mar 2027)`.
+  When next year's stock job is opened in WorkflowMax (e.g. "FLR - STOCK APR 2027"), add its WFM number to that set and
+  keep the old one while its orders are still on the board, e.g. `new Set(['72508', '7xxxx'])`; bump `orders.js?v=` in
+  `orders/index.html`, then publish the Hub as usual. Nothing else changes (no database or function change).
+- Rules and tests: `node --test orders/tests/rules.test.mjs`. Local preview: launch config `flr-hub-orders-preview` (port
+  8871, ORDERS=1 in build/mock-supabase.ts, the stand-in Monday).
 
 ## Likkle Jeff (the help button, first called Ask the Hub)
 
