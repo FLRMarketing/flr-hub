@@ -181,16 +181,21 @@
   const findOrder = id => shown().find(o => o.id === id);
 
   /* ---------------------------------------------------------------- jobs: the tracker lists jobs, not products */
-  // A job is Monday's WFM Number: the WorkflowMax job (checked 14 Oct 2026: 72967 is one job typed two ways on Monday,
-  // "GLJ UNIT 1 HEMEL" and "UNIT 1 HORIZON"). Its orders keep their own reference, destination and date. An order with no
-  // WFM Number is a job on its own: names alone never combine orders.
-  const jobKey = o => o.wfm ? 'w' + o.wfm : 'o' + o.id;
+  // A job is Monday's WFM Number: the WorkflowMax job. Checked in WorkflowMax on 14 Oct 2026, these are one job each,
+  // typed more than one way on Monday: 72967 (GLJ UNIT 1 HEMEL, UNIT 1 HORIZON), 73106 (107 LAKER ROAD, GLJ 107 LAKER RD)
+  // and 73299 (THOMAS BULLOCK SCHOOL, THOMAS BULLOCK). Its orders keep their own reference, destination and date.
+  // Except FLR's catch-all stock job, which many separate requests share: there each Monday name is its own card
+  // (STOCK LP, JW LINDS, STOCK ST, Stock GL stay apart). Add next year's stock WFM number here when it's opened.
+  // An order with no WFM Number is a job on its own: names alone never combine orders.
+  const STOCK_WFM = new Set(['72508']);   // FLR - STOCK APR 2026 (1 Apr 2026 to 31 Mar 2027)
+  const nameKey = n => String(n || '').trim().replace(/\s+/g, ' ').toUpperCase();
+  const jobKey = o => !o.wfm ? 'o' + o.id : STOCK_WFM.has(o.wfm) ? `s${o.wfm}-${nameKey(o.job)}` : 'w' + o.wfm;
   let jobsCache = null, jobsFor = null;
   function jobs() {
     const all = shown();
     if (jobsFor === all) return jobsCache;
     const m = new Map();
-    for (const o of all) { const k = jobKey(o); if (!m.has(k)) m.set(k, { key: k, wfm: o.wfm || null, orders: [] }); m.get(k).orders.push(o); }
+    for (const o of all) { const k = jobKey(o); if (!m.has(k)) m.set(k, { key: k, wfm: o.wfm || null, stock: STOCK_WFM.has(o.wfm), orders: [] }); m.get(k).orders.push(o); }
     for (const j of m.values()) {
       const n = new Map(); for (const o of j.orders) n.set(o.job, (n.get(o.job) || 0) + 1);
       j.names = [...n.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(x => x[0]);
@@ -217,7 +222,8 @@
     for (const x of items) { const k = jobKey(x.o); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }
     return [...m.entries()].map(([k, xs]) => ({ job: jobs().get(k), xs }));
   }
-  const jobCount = items => new Set(items.map(x => jobKey(x.o))).size;
+  // The number of cards a list shows: one per job in each destination group (Received has no destination groups).
+  const jobCount = (items, byDest = true) => new Set(items.map(x => (byDest ? destKey(x.o)[0] + '|' : '') + jobKey(x.o))).size;
   function grouped(items, today, o) {
     const groups = new Map();
     for (const x of items) { const k = destKey(x.o); if (!groups.has(k[0])) groups.set(k[0], { k, items: [] }); groups.get(k[0]).items.push(x); }
@@ -328,7 +334,7 @@
         h('h2', { class: 'block-title', id: 'due-title' }, 'Still to arrive', g.due.length ? h('span', { class: 'block-n' }, String(jobCount(g.due))) : null),
         g.due.length ? [timeNote(g.due), grouped(g.due, today, {})] : empty(g.gotToday.length ? 'Everything due today is in' : 'Nothing due today')),
       g.gotToday.length ? h('a', { class: 'got-link', href: href('received') }, icon('i-check', 'got-ic'),
-        h('span', null, `${plural(jobCount(g.gotToday), 'job')} with deliveries received today`), icon('i-chevron', 'got-chev')) : null,
+        h('span', null, `${plural(jobCount(g.gotToday, false), 'job')} with deliveries received today`), icon('i-chevron', 'got-chev')) : null,
     ];
   }
   function upcomingScreen(g, today) {
@@ -468,7 +474,7 @@
             h('p', { class: `od-big${a.date ? ' od-big-date' : ''}` }, a.big), a.small ? h('p', { class: 'od-small' }, a.small) : null),
           thumb(first && !first.whole ? product(first.name).kind : 'box', 'thumb-hero')),
         h('h1', { class: 'od-title', id, tabindex: '-1' }, job.name),
-        h('p', { class: 'od-job' }, [job.wfm ? `WFM ${job.wfm}` : 'No WFM job number', plural(job.orders.length, 'order'), `${got} of ${plural(mats.length, 'material')} in`].join(' · '),
+        h('p', { class: 'od-job' }, [job.wfm ? `WFM ${job.wfm}${job.stock ? ' (FLR stock)' : ''}` : 'No WFM job number', plural(job.orders.length, 'order'), `${got} of ${plural(mats.length, 'material')} in`].join(' · '),
           job.names.length > 1 ? h('span', { class: 'od-aka' }, `Also on monday.com as ${job.names.slice(1).join(', ')}`) : null)),
       h('div', { class: 'od-body' },
         h('p', { class: 'tick-help' }, 'Tick each material as it arrives. A tick records that it arrived, not its condition; anything wrong, use the help line.'),
@@ -642,7 +648,7 @@
       .map(l => l[0]).find(Boolean);
     S.id = r.id || (wide.matches && first ? jobKey(first.o) : null);
     // Today's badge: jobs with materials still to come that are due today. "Needs attention" has its own count.
-    const counts = { today: jobCount(g.due), upcoming: jobCount([...g.upcoming, ...g.nodate]), received: jobCount(g.gotToday) };
+    const counts = { today: jobCount(g.due), upcoming: jobCount([...g.upcoming, ...g.nodate]), received: jobCount(g.gotToday, false) };
     const job = findJob(S.id);
     if (job && S.id !== job.key) S.id = job.key;   // an old link to one order opens its job
     const v = $('#view');
