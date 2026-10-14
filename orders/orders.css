@@ -514,3 +514,16 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 @media (hover:hover){.tick-undo:hover{background:var(--s4)}}
 .jo .od-problem{margin:0}
 .jo .folds{margin-top:2px}
+
+/* each job's surveyor (1.7): their Annual Leave photo, or initials */
+.sv-face{display:inline-grid;place-items:center;flex:none;border-radius:50%;object-fit:cover;background:var(--s2);color:var(--ink-2);font:700 12px/1 var(--font);letter-spacing:.02em}
+.sv-sm{width:22px;height:22px;font-size:9.5px}
+.sv-md{width:40px;height:40px;font-size:14px;box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.row-sv{display:flex;align-items:center;gap:6px;margin-top:5px;color:var(--ink-2);font:600 13.5px/1.2 var(--font);min-width:0}
+.row-sv .sv-face + .sv-face{margin-left:-10px}
+.od-sv{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sv-chip{display:inline-flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;border-radius:999px;background:rgba(255,255,255,.14)}
+.sv-chip .sv-initials{background:rgba(255,255,255,.22);color:var(--on-brand)}
+.sv-text{display:flex;flex-direction:column;gap:2px}
+.sv-role{color:var(--on-brand-2);font:600 12px/1 var(--font);text-transform:uppercase;letter-spacing:.06em}
+.sv-name{color:var(--on-brand);font:700 16px/1.15 var(--font)}
