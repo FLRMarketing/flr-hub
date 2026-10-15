@@ -3115,24 +3115,25 @@ function leftAfterHtml(c) {
   });
   return lines.length ? `<p>${lines.join(' ')}</p>` : '';
 }
-// Your leave group on those days, from the FLR server (on the Hub): who else is off, whose requests are waiting, and
+// Your leave group on those days, from the FLR server (on the Hub): how many others are off (never who), how many are waiting, and
 // whether the group's "max off at once" is already reached by accepted annual leave. A newer question wins.
 let groupAsk = 0, groupTimer = 0;
-const listNames = (names) => andList(names.map((n) => esc(n)), false);
+const offText = (n) => (n === 1 ? 'Someone in your group is off' : `${n} people in your group are off`);
+const waitText = (n) => (n === 1 ? '1 request waiting for a decision' : `${n} requests waiting for a decision`);
 function groupHtml(r) {
   if (!r || !r.linked) return '';
   if (!r.groups.length) return '<p class="subtle">You’re not in a leave group, so there’s no limit to check.</p>';
   return r.groups.map((g) => {
-    const days = r.days.map((d) => ({ date: d.date, ...(d.groups.find((x) => x.name === g.name) || { off: [], waiting: [], full: false }) }));
-    const full = days.filter((d) => d.full), busy = days.filter((d) => d.off.length || d.waiting.length);
+    const days = r.days.map((d) => ({ date: d.date, ...(d.groups.find((x) => x.name === g.name) || { off: 0, waiting: 0, full: false }) }));
+    const full = days.filter((d) => d.full), busy = days.filter((d) => d.off || d.waiting);
     const head = `<p class="cg-head">${full.length ? `<span class="pill deny">Full on ${esc(plural(full.length, 'day'))}</span>` : '<span class="pill ok">Available</span>'}
       <span><b>${esc(g.name)}</b> · max ${g.max} off at once</span></p>`;
     if (!busy.length) return `<section class="cg">${head}<p class="subtle">No one else in ${esc(g.name)} is off on those days.</p></section>`;
     const rows = busy.slice(0, 12).map((d) => `<li${d.full ? ' class="full"' : ''}><span class="cg-day">${esc(fmtDate(d.date, false))}</span><span>${
-      [d.off.length ? `${listNames(d.off)} off` : '', d.waiting.length ? `waiting: ${listNames(d.waiting)}` : ''].filter(Boolean).join(' · ')}${d.full ? ' · <b>full</b>' : ''}</span></li>`).join('');
+      esc([d.off ? offText(d.off) : '', d.waiting ? waitText(d.waiting) : ''].filter(Boolean).join(' · '))}${d.full ? ' · <b>full</b>' : ''}</span></li>`).join('');
     const more = busy.length > 12 ? `<li class="cg-more">and ${busy.length - 12} more days with someone off</li>` : '';
     const notes = [full.length ? `On a full day, ${g.max === 1 ? 'someone is' : `${g.max} people are`} already off: the group’s limit.` : '',
-      busy.some((d) => d.waiting.length) ? 'Waiting requests don’t count until they’re accepted.' : ''].filter(Boolean).join(' ');
+      busy.some((d) => d.waiting) ? 'Waiting requests don’t count until they’re accepted.' : ''].filter(Boolean).join(' ');
     return `<section class="cg">${head}<ul class="cg-list">${rows}${more}</ul>${notes ? `<p class="subtle">${esc(notes)}</p>` : ''}</section>`;
   }).join('');
 }
