@@ -1972,6 +1972,106 @@
         "tile": "orders",
         "label": "Open the Order Tracker"
       }
+    },
+    {
+      "id": "about-capacity",
+      "tool": "capacity",
+      "title": "About Fitter Capacity",
+      "ask": [
+        "what is fitter capacity",
+        "what does fitter capacity show",
+        "how many fitters are booked each day",
+        "are we fully booked next week",
+        "how busy are the fitters this month",
+        "fitter capacity calendar",
+        "why out of 23",
+        "how many fitters do we have each day",
+        "is fitter capacity real data",
+        "how many fitters are booked on a day",
+        "how many fitters are booked next week",
+        "what is on the capacity page"
+      ],
+      "keys": [
+        "fitter capacity",
+        "capacity",
+        "booked",
+        "fully booked",
+        "out of 23",
+        "23",
+        "sample data",
+        "battery",
+        "capacity page"
+      ],
+      "answer": "Fitter Capacity is a month calendar of how many fitters are booked each weekday, out of 23 (the fitters available a day). Each day has a battery that fills as fitters are booked, and a badge such as 18/23. Weekends aren’t counted. For now it shows sample data, labelled “Sample data”: the totals are made up for trying it out, not from the Work Programme or monday.com.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open Fitter Capacity"
+      },
+      "related": [
+        "capacity-key",
+        "capacity-access"
+      ]
+    },
+    {
+      "id": "capacity-key",
+      "tool": "capacity",
+      "title": "What the capacity batteries mean",
+      "ask": [
+        "what does the red battery mean",
+        "what does the question mark mean on fitter capacity",
+        "what does over capacity mean",
+        "why is a day red on fitter capacity",
+        "what do the battery colours mean",
+        "why is a battery dashed",
+        "are we over capacity",
+        "which days are over capacity"
+      ],
+      "keys": [
+        "red",
+        "over capacity",
+        "question mark",
+        "incomplete",
+        "dashed",
+        "colours",
+        "key",
+        "full"
+      ],
+      "answer": "An empty grey battery: nothing booked. It fills from yellow to green as fitters are booked, and is full at 23. Red with a warning sign: over capacity, more than 23 fitters booked. A gold “?” (and a dashed battery): incomplete, some work that day has no fitter count, so the real total may be higher. The key under the calendar shows each one.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open Fitter Capacity"
+      },
+      "related": [
+        "about-capacity"
+      ]
+    },
+    {
+      "id": "capacity-access",
+      "tool": "capacity",
+      "title": "Who can see Fitter Capacity",
+      "ask": [
+        "who can see fitter capacity",
+        "why can't I see fitter capacity",
+        "how do I get fitter capacity",
+        "give someone fitter capacity",
+        "switch on fitter capacity for someone",
+        "fitter capacity isn't on my hub"
+      ],
+      "keys": [
+        "fitter capacity",
+        "capacity",
+        "access",
+        "switch on"
+      ],
+      "answer": "Fitter Capacity starts with FLR Super Admins only. A Super Admin can switch it on for anyone else in Hub settings, with the “Capacity” switch beside their name, like the other apps. If it isn’t on your Hub and you need it, ask an FLR Super Admin.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-capacity",
+        "hub-settings"
+      ]
     }
   ]
 }

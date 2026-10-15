@@ -29,7 +29,7 @@ const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
 const LOG_KEY = 'flr-assist:log', GUIDE_KEY = 'flr-assist:guide';
-const NAMES = { hub: 'the Hub', settings: 'Hub settings', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule', orders: 'the Order Tracker' };
+const NAMES = { hub: 'the Hub', settings: 'Hub settings', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule', orders: 'the Order Tracker', capacity: 'Fitter Capacity' };
 const PAGE = location.pathname.includes('/fitter-schedule/') ? 'fitters'
   : (location.pathname.startsWith(HUB.pathname) ? location.pathname.slice(HUB.pathname.length).split('/')[0] : '') || 'hub';
 // The Fitter Schedule has its own way in (a team passcode) and lives outside the Hub's folder: people use it without
@@ -338,6 +338,7 @@ function starters(ctx) {
     case 'annual-leave': return ['leave-request', 'leave-balance', 'leave-diary', 'leave-approve'];
     case 'fitters': return ['fitters-free', 'fitters-jobs', 'fitters-views', 'fitters-passcode'];
     case 'orders': return ['about-orders', 'orders-progress', 'orders-late'];
+    case 'capacity': return ['about-capacity', 'capacity-key', 'capacity-access'];
     default: return ['leave-request', 'estimate-new', 'fleet-find', 'fitters-free'];
   }
 }

@@ -644,5 +644,29 @@
  {
   "q": "how do I report a problem with an order",
   "expect": "orders-problem"
+ },
+ {
+  "q": "how many fitters are booked next tuesday?",
+  "expect": "about-capacity"
+ },
+ {
+  "q": "are we over capacity next week",
+  "expect": "capacity-key"
+ },
+ {
+  "q": "what does the gold question mark mean on the capacity calendar",
+  "expect": "capacity-key"
+ },
+ {
+  "q": "is the fitter capacity data real?",
+  "expect": "about-capacity"
+ },
+ {
+  "q": "why can't I see fitter capacity on my hub",
+  "expect": "capacity-access"
+ },
+ {
+  "q": "what does the capacity page show",
+  "expect": "about-capacity"
  }
 ]
