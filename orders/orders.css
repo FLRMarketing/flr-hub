@@ -520,10 +520,19 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .sv-sm{width:22px;height:22px;font-size:9.5px}
 .sv-md{width:40px;height:40px;font-size:14px;box-shadow:0 0 0 2px rgba(255,255,255,.55)}
 .row-sv{display:flex;align-items:center;gap:6px;margin-top:5px;color:var(--ink-2);font:600 13.5px/1.2 var(--font);min-width:0}
-.row-sv .sv-face + .sv-face{margin-left:-10px}
+.row-sv{flex-wrap:wrap;column-gap:14px;row-gap:4px}
+.row-person{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%}
+.row-person-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-stack{display:inline-flex;flex:none}
+.sv-stack .sv-face + .sv-face{margin-left:-8px;box-shadow:0 0 0 2px var(--s1,var(--bg))}
+.row-fitters-last{opacity:.7}
 .od-sv{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .sv-chip{display:inline-flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;border-radius:999px;background:rgba(255,255,255,.14)}
 .sv-chip .sv-initials{background:rgba(255,255,255,.22);color:var(--on-brand)}
 .sv-text{display:flex;flex-direction:column;gap:2px}
 .sv-role{color:var(--on-brand-2);font:600 12px/1 var(--font);text-transform:uppercase;letter-spacing:.06em}
 .sv-name{color:var(--on-brand);font:700 16px/1.15 var(--font)}
+
+/* the fitters on each job (1.8) */
+.od-ft{margin-top:12px}
+.ft-head{margin:0 0 -4px;color:var(--on-brand-2);font:700 12px/1 var(--font);text-transform:uppercase;letter-spacing:.06em}
