@@ -1976,8 +1976,11 @@
     {
       "id": "about-capacity",
       "tool": "capacity",
-      "title": "About Fitter Capacity",
+      "title": "About the Planner",
       "ask": [
+        "what is the planner",
+        "what does the planner show",
+        "open the planner",
         "what is fitter capacity",
         "what does fitter capacity show",
         "how many fitters are booked each day",
@@ -1992,6 +1995,7 @@
         "what is on the capacity page"
       ],
       "keys": [
+        "planner",
         "fitter capacity",
         "capacity",
         "booked",
@@ -2002,10 +2006,10 @@
         "battery",
         "capacity page"
       ],
-      "answer": "Fitter Capacity is a month calendar of how many fitters are booked each weekday, out of 23 (the fitters available a day). Each day has a battery that fills as fitters are booked, and a badge such as 18/23. Weekends aren’t counted. For now it shows sample data, labelled “Sample data”: the totals are made up for trying it out, not from the Work Programme or monday.com.",
+      "answer": "The Planner is a month calendar of how many fitters are booked each weekday, out of 23 (the fitters available a day). Each day has a battery that fills as fitters are booked, and a badge such as 18/23. Weekends aren’t counted. For now it shows sample data, labelled “Sample data”: the totals are made up for trying it out, not from the Work Programme or monday.com.",
       "link": {
         "tile": "capacity",
-        "label": "Open Fitter Capacity"
+        "label": "Open the Planner"
       },
       "related": [
         "capacity-key",
@@ -2017,6 +2021,8 @@
       "tool": "capacity",
       "title": "What the capacity batteries mean",
       "ask": [
+        "what does the question mark mean on the planner",
+        "why is a day red on the planner",
         "what does the red battery mean",
         "what does the question mark mean on fitter capacity",
         "what does over capacity mean",
@@ -2039,7 +2045,7 @@
       "answer": "An empty grey battery: nothing booked. It fills from yellow to green as fitters are booked, and is full at 23. Red with a warning sign: over capacity, more than 23 fitters booked. A gold “?” (and a dashed battery): incomplete, some work that day has no fitter count, so the real total may be higher. The key under the calendar shows each one.",
       "link": {
         "tile": "capacity",
-        "label": "Open Fitter Capacity"
+        "label": "Open the Planner"
       },
       "related": [
         "about-capacity"
@@ -2048,22 +2054,21 @@
     {
       "id": "capacity-access",
       "tool": "capacity",
-      "title": "Who can see Fitter Capacity",
+      "title": "Who can see the Planner",
       "ask": [
-        "who can see fitter capacity",
-        "why can't I see fitter capacity",
-        "how do I get fitter capacity",
-        "give someone fitter capacity",
-        "switch on fitter capacity for someone",
-        "fitter capacity isn't on my hub"
+        "who can see the planner",
+        "why can't I see the planner",
+        "how do I get the planner",
+        "give someone the planner",
+        "switch on the planner for someone"
       ],
       "keys": [
-        "fitter capacity",
+        "planner",
         "capacity",
         "access",
         "switch on"
       ],
-      "answer": "Fitter Capacity starts with FLR Super Admins only. A Super Admin can switch it on for anyone else in Hub settings, with the “Capacity” switch beside their name, like the other apps. If it isn’t on your Hub and you need it, ask an FLR Super Admin.",
+      "answer": "The Planner starts with FLR Super Admins only. A Super Admin can switch it on for anyone else in Hub settings, with the “Planner” switch beside their name, like the other apps. If it isn’t on your Hub and you need it, ask an FLR Super Admin.",
       "link": {
         "href": "settings/",
         "label": "Open Hub settings"

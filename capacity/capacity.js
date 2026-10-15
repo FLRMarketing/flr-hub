@@ -1,5 +1,5 @@
 /* ============================================================================
-   FLR Hub: Fitter Capacity. A month calendar of how many fitters are booked
+   FLR Hub: the Planner (Hub tile 'capacity'). A month calendar of how many fitters are booked
    each weekday, out of 23. The calendar is the approved page
    (flr-job-planner/index.html) with the same look and behaviour; this file
    adds the Hub's sign-in and access check.
@@ -182,7 +182,7 @@
   $('#next').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() + 1, 1); render(); });
   $('#thisMonth').addEventListener('click', () => { shown = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
 
-  /* ================================================================ the Hub: signed in, and Fitter Capacity is theirs */
+  /* ================================================================ the Hub: signed in, and the Planner is theirs */
   function gate(title, text, o = {}) {
     document.body.dataset.view = 'gate';
     $('#view').hidden = true; $('#gate-message').hidden = false;
@@ -216,9 +216,9 @@
     if (expired(e) || code === 'FLR_SIGN_IN_REQUIRED') return location.replace(SIGN_IN);
     if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR Super Admin to switch it back on.');
     if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR Super Admin.');
-    if (missingFunction(e)) return gate('Fitter Capacity isn’t ready yet', 'The FLR database doesn’t have the Hub’s apps yet.');
+    if (missingFunction(e)) return gate('The Planner isn’t ready yet', 'The FLR database doesn’t have the Hub’s apps yet.');
     if (offline(e)) return gate('Can’t reach the FLR database', 'Check your connection and try again.', { retry: true });
-    return gate('Fitter Capacity didn’t load', 'Something went wrong checking your access. Try again in a moment.', { retry: true });
+    return gate('The Planner didn’t load', 'Something went wrong checking your access. Try again in a moment.', { retry: true });
   }
   // hub_home() lists only the tiles this account may use (and refuses a switched-off account).
   async function check() {
@@ -227,7 +227,7 @@
       if (error) return failGate(error);
       if (data && data.waiting) return gate('Your account is waiting for a Super Admin', 'An FLR Super Admin needs to check who you are before you can use the Hub’s apps.');
       const tiles = (data && Array.isArray(data.tiles)) ? data.tiles : [];
-      if (!tiles.some(t => t && t.id === TILE)) return gate('You don’t have access to Fitter Capacity', 'It’s switched on for the FLR staff who need it. If you think you should have it, ask an FLR Super Admin.');
+      if (!tiles.some(t => t && t.id === TILE)) return gate('You don’t have access to the Planner', 'It’s switched on for the FLR staff who need it. If you think you should have it, ask an FLR Super Admin.');
       await show();
     } catch (e) { failGate(e); }
   }
@@ -235,7 +235,7 @@
 
   async function boot() {
     const c = client();
-    if (!c) return gate('Fitter Capacity isn’t set up here', 'This copy of the Hub has no FLR sign-in settings.');
+    if (!c) return gate('The Planner isn’t set up here', 'This copy of the Hub has no FLR sign-in settings.');
     let session = null;
     try { session = (await c.auth.getSession()).data.session; } catch (e) { /* treated as signed out */ }
     if (!session) return location.replace(SIGN_IN);

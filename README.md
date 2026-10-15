@@ -31,7 +31,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `onboarding/` | Onboarding: each new starter's checklist (forms, FLR documents, uploads, acknowledgements), and the reviews, checks and internal setup behind it. `content.js` holds the wording taken from FLR's source forms. Draft on branch `feature/onboarding`; see "Onboarding" below. |
 | `orders/` | Order Tracker: jobs from the Monday “FLR - Goods In” board (due today, needs attention, coming up, received), each with a checklist to tick materials off as they arrive, and "Have a problem?" to Georgia and Luke. Data from `orders_board()` (flr-orders function, every 5 minutes); see "Order Tracker" below. |
-| `capacity/` | Fitter Capacity: a month calendar of how many fitters are booked each weekday, out of 23, with a battery per day (red over capacity, a gold “?” when a job has no fitter count). Sample data for now, labelled “Sample data”; see "Fitter Capacity" below. |
+| `capacity/` | Planner (Hub tile `capacity`; renamed from Fitter Capacity on 15 Oct 2026): a month calendar of how many fitters are booked each weekday, out of 23, with a battery per day (red over capacity, a gold “?” when a job has no fitter count). Sample data for now, labelled “Sample data”; see "Fitter Capacity" below. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
@@ -188,7 +188,7 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
 - Rules and tests: `node --test orders/tests/rules.test.mjs`. Local preview: launch config `flr-hub-orders-preview` (port
   8871, ORDERS=1 in build/mock-supabase.ts, the stand-in Monday).
 
-## Fitter Capacity (draft, branch `feature/fitter-capacity`, not live)
+## Planner, Hub tile `capacity` (live for Super Admins since 15 Oct 2026; first called Fitter Capacity)
 
 - Page `capacity/` (index.html, capacity.js, capacity.css): the approved calendar from `flr-job-planner/index.html`, same
   look and behaviour, light and dark with the device. Each weekday: a battery and a badge, booked fitters out of 23
@@ -199,7 +199,7 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   (`private.require_app('capacity')`, as `orders_board()` has), and the label goes (`USING_SAMPLE_DATA`).
 - Tile `capacity` (listed, sort 70), Hub settings label "Capacity": Super Admins (active, role `admin`) when the
   migration runs, others switched on in Hub settings. The page asks `public.hub_home()` and shows the calendar only when
-  `capacity` is one of the person's tiles; otherwise "You don't have access to Fitter Capacity". Migration:
+  `capacity` is one of the person's tiles; otherwise "You don't have access to the Planner". Migration:
   `20261015400000_flr_fitter_capacity.sql` in the Estimator repo (adds the tile and 'capacity' to the five Hub settings
   functions' app list, with an md5 guard and an undo in `supabase/restore/`).
 

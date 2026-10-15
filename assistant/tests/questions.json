@@ -662,7 +662,7 @@
   "expect": "about-capacity"
  },
  {
-  "q": "why can't I see fitter capacity on my hub",
+  "q": "why can't I see the planner on my hub",
   "expect": "capacity-access"
  },
  {

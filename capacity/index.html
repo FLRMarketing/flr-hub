@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fitter Capacity · FLR Hub</title>
+<title>Planner · FLR Hub</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="capacity.css?v=1.0">
+<link rel="stylesheet" href="capacity.css?v=1.1">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="capacity.js?v=1.0" defer></script>
+<script src="capacity.js?v=1.1" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -31,7 +31,7 @@
 
 <!-- Signing in, checking access, or why the page can't show: capacity.js fills it -->
 <div class="gate" id="gate" role="status" aria-live="polite">
-  <div class="gate-loading" aria-label="Loading Fitter Capacity">
+  <div class="gate-loading" aria-label="Loading the Planner">
     <div class="sk sk-title"></div><div class="sk sk-nav"></div><div class="sk sk-cal"></div>
   </div>
   <div class="gate-message" id="gate-message" hidden>
@@ -46,7 +46,7 @@
   <a class="brand" href="../" aria-label="Back to the FLR Hub" title="Back to the FLR Hub"><svg class="brand-back" aria-hidden="true"><use href="#i-back"/></svg><svg class="brand-mark" aria-hidden="true"><use href="#flr-mark"/></svg><span class="brand-word">Hub</span></a>
 
   <header class="head">
-    <h1>Fitter capacity</h1>
+    <h1>Planner</h1>
     <span class="sample" id="sampleLabel" title="These totals come from demonstration records, not the Work Programme">Sample data</span>
     <p>Fitters booked each day, out of 23.</p>
   </header>
@@ -69,6 +69,6 @@
   </div>
 </main>
 
-<noscript><p class="noscript">Fitter Capacity needs JavaScript switched on.</p></noscript>
+<noscript><p class="noscript">The Planner needs JavaScript switched on.</p></noscript>
 </body>
 </html>
