@@ -109,11 +109,36 @@
       || BOOKINGS.find(x => regsOf(x.code).includes(key));
     return b ? b.fitter : (v.driver || null);
   }
-  function vanBadge(reg, small) { return h('span', { class: `van${small ? ' small' : ''}`, title: `Van ${reg}` }, icon('i-van'), reg); }
-  function codeBadge(b, small) {
+  // Fleet Management's look: a yellow UK plate (FLR - Fleet's plate when the van is on the board, else FleetView's reg),
+  // the staff photo (Fleet Management's photos) and the top-down vehicle picture.
+  const plateOf = v => v.plate || v.reg;
+  function plateEl(text, big) { return h('span', { class: `plate${big ? ' big' : ''}` }, h('span', { class: 'sr' }, 'Registration '), text); }
+  function codeBadge(b, big) {
     const v = vanForBooking(b);
-    if (v) return vanBadge(v.reg, small);
-    return b.code ? h('span', { class: `van code${small ? ' small' : ''}`, title: 'Van code on the Fitter label (not seen in FleetView)' }, b.code) : null;
+    if (v) return plateEl(plateOf(v), big);
+    return b.code ? h('span', { class: 'plate code', title: 'Van code on the Fitter label (not seen in FleetView)' }, b.code) : null;
+  }
+  const slug = n => String(n || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  let PHOTOS = {};
+  function face(name, cls) {
+    const src = PHOTOS[slug(name)];
+    if (src && /^data:image\//.test(src)) return h('img', { class: `face ${cls || ''}`, src, alt: '' });
+    const s = document.createElementNS(SVG, 'svg');
+    s.setAttribute('class', `face ${cls || ''}`); s.setAttribute('viewBox', '0 0 48 48'); s.setAttribute('aria-hidden', 'true');
+    for (const [tag, at] of [['rect', { width: 48, height: 48, fill: 'var(--ph-bg)' }], ['circle', { cx: 24, cy: 19, r: 8, fill: 'none', stroke: 'var(--ph-line)', 'stroke-width': 2 }],
+      ['path', { d: 'M9 46c0-9 6.7-15 15-15s15 6 15 15', fill: 'none', stroke: 'var(--ph-line)', 'stroke-width': 2 }]]) {
+      const e = document.createElementNS(SVG, tag); for (const [k, v] of Object.entries(at)) e.setAttribute(k, v); s.append(e);
+    }
+    return s;
+  }
+  const VEH = window.FLR_VEH_IMG || {};
+  // The vehicle picture, as Fleet Management's vehKind(): from the FLR - Fleet make and model.
+  function vehKind(v) {
+    const t = `${v.make || ''} ${v.model || ''}`.toLowerCase();
+    if (/dispatch/.test(t)) return 'dispatch';
+    if (/crafter|relay|transit|sprinter|vivaro|trafic/.test(t)) return 'van';
+    if (/bmw/.test(t)) return /ix3/.test(t) ? 'bmw-ix3' : /\bi4\b/.test(t) ? 'bmw-i4' : /x5/.test(t) ? 'bmw-x5' : /x1|\b1\d\d\b/.test(t) ? 'bmw-x1' : /5 series|\b5\d\de?\b/.test(t) ? 'bmw-530e' : 'bmw-330e';
+    return VEH.van ? 'van' : '';
   }
   // "Driving · seen 10:44", "Parked since 07:27", "Last seen Thu 15 Oct, 19:58"
   function vanState(v) {
@@ -141,7 +166,7 @@
     for (const b of bookings) if (!b.pos && b.postcode) { const dd = DISTRICTS.get(b.postcode.split(' ')[0]); if (dd) { b.pos = { lat: dd.lat, lon: dd.lon }; b.rough = true; } }
     const vans = Array.isArray(d.vans) ? d.vans.filter(v => v && str(v.reg) && num(v.lat) != null && num(v.lon) != null && !isNaN(new Date(v.seenAt))).map(v => ({
       reg: v.reg, driver: str(v.driver) || null, pos: { lat: v.lat, lon: v.lon }, ignition: v.ignition === true, speed: num(v.speed),
-      seenAt: v.seenAt, stopAt: v.stopAt || null, stopSeen: v.stopSeen === true })) : [];
+      seenAt: v.seenAt, stopAt: v.stopAt || null, stopSeen: v.stopSeen === true, make: str(v.make), model: str(v.model), plate: str(v.plate) })) : [];
     return { readAt: d.readAt || null, failingSince: d.failingSince || null, bookings, vansAllowed: d.vansAllowed === true,
       fleetview: d.fleetview && typeof d.fleetview === 'object' ? d.fleetview : null, vans };
   }
@@ -198,45 +223,145 @@
     if (!site) site = { lat: district.lat, lon: district.lon, how: 'district' };
     lastSearch = text;
     hint(site.how === 'district' && pc.full ? 'postcodes.io didn’t answer, so this uses the centre of the postcode district.' : '');
-    render(pc, district, site, known);
+    render(pc, district, site, known, quiet);
   }
 
-  function render(pc, district, site, known) {
+  /* ---------------------------------------------------------------- the map (Fleet Management's satellite and street maps) */
+  const ESRI_KEY = String(window.FLR_MAP_KEY || '').trim();
+  const tok = ESRI_KEY ? `?token=${encodeURIComponent(ESRI_KEY)}` : '';
+  const esri = path => ESRI_KEY ? `https://ibasemaps-api.arcgis.com/arcgis/rest/services/${path}/MapServer/tile/{z}/{y}/{x}${tok}`
+    : `https://server.arcgisonline.com/ArcGIS/rest/services/${path}/MapServer/tile/{z}/{y}/{x}`;
+  const esriStyle = style => `https://static-map-tiles-api.arcgis.com/arcgis/rest/services/static-basemap-tiles-service/v1/${style}/static/tile/{z}/{y}/{x}${tok}`;
+  const ESRI_CREDIT = 'Tiles © Esri — Esri, Maxar, Earthstar Geographics, HERE, Garmin, © OpenStreetMap contributors and the GIS User Community';
+  const darkMode = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  let MAP = null, base = (() => { try { return localStorage.getItem('flr-map-base') === 'streets' ? 'streets' : 'sat'; } catch (e) { return 'sat'; } })();
+  function mapInit() {
+    if (MAP || !window.L) return MAP;
+    const map = L.map($('#map'), { zoomControl: true, attributionControl: true, minZoom: 5, maxZoom: 19, zoomSnap: 0.5 });
+    map.zoomControl.setPosition('bottomright');
+    map.attributionControl.setPrefix('Leaflet');
+    const tl = (path, o = {}) => L.tileLayer(esri(path), { maxZoom: 19, crossOrigin: true, attribution: ESRI_CREDIT, ...o });
+    const ts = style => L.tileLayer(esriStyle(style), { tileSize: 512, zoomOffset: -1, maxZoom: 19, crossOrigin: true });
+    const bases = ESRI_KEY
+      ? { sat: L.layerGroup([tl('World_Imagery'), ts('arcgis/imagery/labels')]), streets: L.layerGroup([L.tileLayer(esriStyle(darkMode() ? 'arcgis/streets-night' : 'arcgis/streets'), { tileSize: 512, zoomOffset: -1, maxZoom: 19, crossOrigin: true, attribution: ESRI_CREDIT })]) }
+      : { sat: L.layerGroup([tl('World_Imagery'), tl('Reference/World_Transportation'), tl('Reference/World_Boundaries_and_Places')]), streets: L.layerGroup([tl('World_Street_Map')]) };
+    const Switch = L.Control.extend({ options: { position: 'bottomright' }, onAdd() {
+      const d = h('div', { class: 'mbase', role: 'group', 'aria-label': 'Map style' },
+        [['sat', 'Satellite'], ['streets', 'Streets']].map(([k, t]) => h('button', { type: 'button', 'data-base': k, 'aria-pressed': String(k === base) }, t)));
+      L.DomEvent.disableClickPropagation(d);
+      d.addEventListener('click', e => { const b = e.target.closest('button[data-base]'); if (b) setBase(b.dataset.base); });
+      return d;
+    } });
+    function setBase(k) {
+      base = k; try { localStorage.setItem('flr-map-base', k); } catch (e) { /* not kept */ }
+      for (const [n, g] of Object.entries(bases)) { if (n === k) g.addTo(map); else g.remove(); }
+      map.getContainer().querySelectorAll('.mbase button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.base === k)));
+    }
+    new Switch().addTo(map);
+    setBase(base);
+    MAP = { map, layer: L.layerGroup().addTo(map), marks: new Map() };
+    return MAP;
+  }
+  function vanIcon(v, sel) {
+    const kind = vehKind(v), im = VEH[kind];
+    const ageMin = (Date.now() - new Date(v.seenAt)) / 60000, moving = v.ignition && (v.speed || 0) > 3;
+    const cls = ['vmark', moving ? 'moving' : 'parked', ageMin > 30 ? 'old' : '', sel ? 'sel' : ''].filter(Boolean).join(' ');
+    const html = h('div', null, h('span', { class: 'halo' }), im ? h('img', { class: `vimg vk-${kind}`, src: im[1], alt: '' }) : icon('i-van', 'vimg'));
+    return L.divIcon({ className: cls, html, iconSize: [0, 0] });
+  }
+  function drawMap(site, list, todays, keepView) {
+    const M = mapInit();
+    if (!M) return;
+    M.layer.clearLayers(); M.marks.clear();
+    const siteSvg = h('div', null, icon('i-site'));
+    L.marker([site.lat, site.lon], { icon: L.divIcon({ className: 'sitemark', html: siteSvg, iconSize: [0, 0] }), zIndexOffset: 1000, keyboard: false, title: 'The site' }).addTo(M.layer);
+    const pts = [[site.lat, site.lon]];
+    if (DATA.vansAllowed) {
+      list.forEach((v, i) => {
+        const m = L.marker([v.pos.lat, v.pos.lon], { icon: vanIcon(v, false), title: `${v.who || 'Unassigned'} · ${plateOf(v)}` }).addTo(M.layer);
+        m.bindTooltip(`${v.who || 'Unassigned'} · ${plateOf(v)} · ${fmtMiles(v.miles)} mi`, { className: 'vt', direction: 'top', offset: [0, -22] });
+        m.on('click', () => pick(v.reg, false));
+        M.marks.set(v.reg, { m, v });
+        if (i < 4) pts.push([v.pos.lat, v.pos.lon]);
+      });
+    } else {
+      // No live positions for this account: where today's bookings are, with each fitter's photo.
+      todays.slice(0, 12).forEach((b, i) => {
+        const m = L.marker([b.pos.lat, b.pos.lon], { icon: L.divIcon({ className: 'jobmark', html: h('div', null, face(b.fitter, 'sm')), iconSize: [0, 0] }), title: b.fitter }).addTo(M.layer);
+        m.bindTooltip(`${b.fitter} · ${b.job}`, { className: 'vt', direction: 'top', offset: [0, -20] });
+        if (i < 4) pts.push([b.pos.lat, b.pos.lon]);
+      });
+    }
+    M.fit = L.latLngBounds(pts).pad(0.15);
+    if (!keepView) frame();   // a refresh every 2 minutes moves the vans, not the view
+  }
+  // Frame the site and the nearest few, leaving room for the panel on the left (on phones the panel sits under the map).
+  function frame() {
+    if (!MAP || !MAP.fit) return;
+    const narrow = matchMedia('(max-width:760px)').matches;
+    MAP.map.invalidateSize();
+    MAP.map.fitBounds(MAP.fit, { paddingTopLeft: narrow ? [20, 30] : [350, 30], paddingBottomRight: [40, 40], maxZoom: 13, animate: false });
+  }
+  let framed = 0;
+  new ResizeObserver(() => { clearTimeout(framed); framed = setTimeout(frame, 150); }).observe(document.getElementById('map'));
+  function pick(reg, fly = true) {
+    if (!MAP) return;
+    for (const [r, o] of MAP.marks) o.m.setIcon(vanIcon(o.v, r === reg));
+    document.querySelectorAll('.mp-row').forEach(b => b.setAttribute('aria-current', String(b.dataset.reg === reg)));
+    const o = MAP.marks.get(reg);
+    if (o && fly) MAP.map.flyTo([o.v.pos.lat, o.v.pos.lon], Math.max(MAP.map.getZoom(), 13), { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.6 });
+    if (o) o.m.openTooltip();
+  }
+
+  /* ---------------------------------------------------------------- the results */
+  function person(name, plate, extra, cls) {
+    return h('span', { class: 'person' }, face(name, cls), h('span', { class: 'pt' }, h('span', { class: 'pn' }, name, plate), extra));
+  }
+  function render(pc, district, site, known, quiet) {
     const label = pc.full || pc.outcode;
     $('#site').replaceChildren(
       h('span', { class: 'eyebrow' }, known ? 'Site · on the Work Programme' : site.how === 'district' ? 'Site · postcode district' : 'Site'),
       h('span', { class: 'site-name' }, known ? (known.address || known.job) : (site.area || district.area)),
       h('span', { class: 'site-meta' }, h('span', { class: 'pc' }, label), ` · ${district.area}`));
 
-    // Right now: FleetView
-    const now = $('#now');
-    if (!DATA.vansAllowed) now.replaceChildren();
-    else if (!VANS.length) now.replaceChildren(h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('span', { class: 'none' }, 'No van positions from FleetView yet.'));
-    else {
-      const list = VANS.map(v => ({ ...v, miles: miles(site, v.pos), who: whoInVan(v) })).sort((a, z) => a.miles - z.miles);
-      const top = list[0];
-      now.replaceChildren(
-        h('span', { class: 'eyebrow' }, 'Nearest van right now · FleetView'),
-        h('span', { class: 'who' }, top.who || 'Unassigned van', vanBadge(top.reg)),
-        h('span', { class: 'far' }, h('span', { class: 'miles' }, `${fmtMiles(top.miles)} miles`), ` away · about ${fmtDrive(top.miles)} drive`),
-        vanState(top),
-        list.length > 1 ? h('div', { class: 'also' }, h('span', { class: 'eyebrow' }, 'Next nearest vans'),
-          list.slice(1, 6).map(v => h('div', { class: 'mate' },
-            h('span', { class: 'nm' }, vanBadge(v.reg, true), h('b', null, v.who || 'Unassigned'), vanState(v)),
-            h('span', { class: 'miles' }, `${fmtMiles(v.miles)} mi`)))) : null);
+    const todays = nearestOn(TODAY, site);
+    const vans = VANS.map(v => ({ ...v, miles: miles(site, v.pos), who: whoInVan(v) })).sort((a, z) => a.miles - z.miles);
+
+    // The map's panel: the nearest vans right now (FleetView) or, without live positions, who is working nearest today
+    const panel = $('#mappanel');
+    if (DATA.vansAllowed && vans.length) {
+      const [top, ...rest] = vans;
+      panel.replaceChildren(
+        h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'Nearest van'),
+          h('p', null, `${vans.length} vehicles with a position`)),
+        h('div', { class: 'mp-first' },
+          person(top.who || 'Unassigned vehicle', plateEl(plateOf(top), true), vanState(top), 'lg'),
+          h('span', { class: 'far' }, h('span', { class: 'miles' }, `${fmtMiles(top.miles)} miles`), ` away · about ${fmtDrive(top.miles)} drive`)),
+        h('ul', { class: 'mp-list', 'aria-label': 'Next nearest vehicles' }, rest.slice(0, 12).map(v => h('li', null,
+          h('button', { type: 'button', class: 'mp-row', 'data-reg': v.reg },
+            person(v.who || 'Unassigned', plateEl(plateOf(v)), vanState(v), 'sm'),
+            h('span', { class: 'mi' }, `${fmtMiles(v.miles)} mi`, h('span', null, `~${fmtDrive(v.miles)}`)))))));
+      panel.querySelectorAll('.mp-row').forEach(b => b.addEventListener('click', () => pick(b.dataset.reg)));
+    } else if (DATA.vansAllowed) {
+      panel.replaceChildren(h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'No van positions yet')));
+    } else {
+      panel.replaceChildren(
+        h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, `Today · ${fmtWeekday(TODAY)} ${fmtDate(TODAY)}`), h('h2', null, 'Working nearest'),
+          h('p', null, 'From the Work Programme. Live van positions are for Admins.')),
+        h('ul', { class: 'mp-list' }, todays.slice(0, 12).map(b => h('li', null, h('div', { class: 'mp-row' },
+          person(b.fitter, codeBadge(b), h('span', { class: 'then' }, b.job), 'sm'),
+          h('span', { class: 'mi' }, `${fmtMiles(b.miles)} mi`, h('span', null, `~${fmtDrive(b.miles)}`)))))));
     }
 
-    // Booked today: the Work Programme
-    const todays = nearestOn(TODAY, site), top = todays[0];
+    // Booked nearest today: the Work Programme
+    const top = todays[0];
     $('#today').replaceChildren(
       h('span', { class: 'eyebrow' }, `Booked nearest today · ${fmtWeekday(TODAY)} ${fmtDate(TODAY)}`),
       ...(top ? [
-        h('span', { class: 'who' }, top.fitter, codeBadge(top), tbc(top)),
+        person(top.fitter, [codeBadge(top, true), tbc(top)], h('span', { class: 'detail' }, 'Working at ', jobLink(top), top.postcode ? [' (', h('span', { class: 'pc' }, top.postcode), ')'] : null), 'lg'),
         h('span', { class: 'far' }, h('span', { class: 'miles' }, `${fmtMiles(top.miles)} miles`), ` away · about ${fmtDrive(top.miles)} drive`),
-        h('span', { class: 'detail' }, 'Working at ', jobLink(top), top.postcode ? [' (', h('span', { class: 'pc' }, top.postcode), ')'] : null),
         todays.length > 1 ? h('div', { class: 'also' }, h('span', { class: 'eyebrow' }, 'Also out today'),
-          todays.slice(1, 5).map(b => h('div', { class: 'mate' },
-            h('span', { class: 'nm' }, codeBadge(b, true), h('b', null, b.fitter), tbc(b)),
+          todays.slice(1, 6).map(b => h('div', { class: 'mate' }, person(b.fitter, [codeBadge(b), tbc(b)], null, 'sm'),
             h('span', { class: 'miles' }, `${fmtMiles(b.miles)} mi`)))) : null,
       ] : [h('span', { class: 'none' }, 'Nobody is booked on the Work Programme today.')]));
 
@@ -249,13 +374,13 @@
       rows.push(h('li', { class: 'row' },
         h('div', { class: 'dayname' }, i === 1 ? 'Tomorrow' : fmtWeekday(day), h('span', null, fmtDate(day))),
         h('div', { class: 'fit' },
-          h('span', { class: 'name' }, n.fitter, codeBadge(n, true), tbc(n)),
-          h('span', { class: 'job' }, jobLink(n), n.postcode ? [' · ', h('span', { class: 'pc' }, n.postcode)] : null, ` · ${fmtRange(n)}`),
+          person(n.fitter, [codeBadge(n), tbc(n)], h('span', { class: 'job' }, jobLink(n), n.postcode ? [' · ', h('span', { class: 'pc' }, n.postcode)] : null, ` · ${fmtRange(n)}`), 'sm'),
           rest.length ? h('span', { class: 'then' }, 'then ' + rest.slice(0, 2).map(b => `${b.fitter} ${fmtMiles(b.miles)} mi`).join(', ')) : null),
         h('div', { class: 'dist' }, h('span', { class: 'miles' }, `${fmtMiles(n.miles)} mi`), h('span', null, `~${fmtDrive(n.miles)}`))));
     }
     $('#days').replaceChildren(...(rows.length ? rows : [h('li', { class: 'empty' }, `No bookings on the Work Programme in the next ${DAYS_AHEAD} days.`)]));
     $('#results').hidden = false;
+    drawMap(site, vans, todays, quiet);
   }
 
   $('#search').addEventListener('submit', e => { e.preventDefault(); search($('#postcode').value); });
@@ -305,7 +430,19 @@
       const board = boardFrom(data);
       if (!board) { if (!quiet) failGate(new Error('The answer had no bookings in it')); return; }
       show(board);
+      if (!quiet && !photosAsked) loadPhotos();
     } catch (e) { if (!quiet) failGate(e); }
+  }
+  // Staff photos (Fleet Management's), once: they are large, and only change when a new photo is added.
+  let photosAsked = false;
+  async function loadPhotos() {
+    photosAsked = true;
+    try {
+      const { data, error } = await client().rpc('proximity_photos');
+      if (error || !data || typeof data !== 'object') return;
+      PHOTOS = data;
+      if (lastSearch) search(lastSearch, true);
+    } catch (e) { /* no photos: outlines stay */ }
   }
   $('#gate-retry').addEventListener('click', () => { document.body.dataset.view = 'loading'; $('#gate-message').hidden = true; check(); });
 

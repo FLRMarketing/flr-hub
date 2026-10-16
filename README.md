@@ -287,8 +287,10 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
 
 ## Proximity Finder, Hub tile `proximity` (BUILT 16 Oct 2026 on branch feature/proximity, NOT live)
 
-- Page `proximity/` (index.html, proximity.js, proximity.css, outcodes.js): the Team Proximity Finder Claude page in the
-  Hub look. Type a site postcode: **nearest van right now** (live FleetView positions; Admins and Super Admins only),
+- Page `proximity/` (index.html, proximity.js, proximity.css, outcodes.js, vehicles.js, leaflet.min.css): the Team
+  Proximity Finder Claude page in the Hub look, with Fleet Management's map look: Esri satellite/streets map (Leaflet 1.9.4
+  from cdnjs with SRI, `window.FLR_MAP_KEY`), the same top-down vehicle pictures (vehicles.js = Fleet's VEH_IMG), yellow
+  UK plates and staff photos (`proximity_photos()`, Fleet's photos/), with the nearest list in a panel on the map. Type a site postcode: **nearest van right now** (live FleetView positions; Admins and Super Admins only),
   **booked nearest today** and **then, day by day** for 14 days (Monday Work Programme).
 - Data: `public.proximity_board()` (Estimator repo `20261016400000_flr_proximity.sql`, app check
   `private.require_app('proximity')`). Bookings saved every 15 minutes by the Edge Function `flr-proximity`; van

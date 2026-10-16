@@ -180,3 +180,77 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .btn-brand{background:var(--tint-fill);color:var(--on-tint)}
 @media (hover:hover){.btn-brand:hover{background:var(--tint-fill);filter:brightness(1.12)}}
 .noscript{max-width:520px;margin:20vh auto;padding:0 16px;text-align:center;color:var(--ink-2)}
+
+/* ======================================================================== Fleet Management's look */
+/* UK number plate, staff photos and vehicle pictures exactly as on the Fleet page (flr-speeding-report template.html) */
+:root{--plate:#f8d33a;--plate-ink:#111111;--plate-edge:rgba(0,0,0,.55);--r-plate:5px;--plate-font:"Roboto Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --ph-bg:#e5e5ea;--ph-line:#8e8e93;--panel:rgba(255,255,255,.9);--panel-edge:rgba(0,0,0,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--plate-edge:rgba(0,0,0,.7);--ph-bg:#2c2c2e;--ph-line:#8e8e93;--panel:rgba(28,28,30,.88);--panel-edge:rgba(255,255,255,.1)}}
+:root[data-theme="dark"]{--plate-edge:rgba(0,0,0,.7);--ph-bg:#2c2c2e;--ph-line:#8e8e93;--panel:rgba(28,28,30,.88);--panel-edge:rgba(255,255,255,.1)}
+.plate{display:inline-block;padding:2px 6px 1px;border:1px solid var(--plate-edge);border-radius:var(--r-plate);background:var(--plate);color:var(--plate-ink);
+  font:700 12.5px/1.1 var(--plate-font);letter-spacing:.07em;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);vertical-align:middle}
+.plate.big{font-size:17px;padding:4px 10px 3px}
+.plate.code{background:transparent;color:var(--ink-2);border-color:var(--sep);box-shadow:none;font-family:var(--font-num);letter-spacing:.02em}
+.face{display:block;width:42px;height:42px;flex:none;border-radius:50%;background:var(--ph-bg);object-fit:cover}
+.face.lg{width:64px;height:64px}
+.face.sm{width:34px;height:34px}
+.person{display:flex;align-items:center;gap:12px;min-width:0}
+.person .pt{display:grid;gap:3px;min-width:0}
+.person .pn{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-weight:600}
+
+/* ---------- where they are: the map, with the nearest list on its left (as the Fleet map's side panel) */
+.mapcard{position:relative;overflow:hidden;margin-bottom:16px;padding:0}
+.map{height:min(620px,72vh);min-height:420px;background:#1c2a1c}
+.mappanel{position:absolute;z-index:500;top:12px;left:12px;bottom:12px;width:320px;display:flex;flex-direction:column;border-radius:14px;
+  background:var(--panel);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);box-shadow:0 0 0 .5px var(--panel-edge),0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+.mappanel:empty{display:none}
+.mp-head{padding:14px 16px 10px;border-bottom:var(--hair) solid var(--sep)}
+.mp-head h2{margin:2px 0 0;font:700 20px/1.2 var(--font-display);letter-spacing:-.014em}
+.mp-head p{margin:4px 0 0;color:var(--ink-2);font-size:13.5px}
+.mp-list{list-style:none;margin:0;padding:4px 0;overflow:auto;flex:1}
+.mp-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;padding:9px 16px;border:0;background:none;text-align:left;cursor:pointer}
+@media (hover:hover){.mp-row:hover{background:var(--fill)}}
+.mp-row[aria-current="true"]{background:var(--tint-soft)}
+.mp-row .mi{font:700 15px/1 var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.mp-row .mi span{display:block;margin-top:3px;color:var(--ink-3);font:500 12px/1 var(--font-text)}
+.mp-first{padding:6px 16px 12px;border-bottom:var(--hair) solid var(--sep)}
+.mp-first .eyebrow{display:block;margin-bottom:8px}
+.mp-first .person .pn{font:700 21px/1.15 var(--font-display);letter-spacing:-.016em}
+.mp-first .far{display:block;margin-top:8px}
+.mp-note{padding:10px 16px;color:var(--ink-3);font-size:13px;border-top:var(--hair) solid var(--sep)}
+
+/* markers: the Fleet page's top-down vehicle pictures; the site as an FLR pin */
+.vmark{background:none;border:0}
+.vmark .vimg{display:block;transform:translate(-50%,-50%);position:absolute;left:0;top:0;transition:transform .2s}
+.vmark.sel .vimg{transform:translate(-50%,-50%) scale(1.25)}
+.vmark .halo{position:absolute;left:0;top:0;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:radial-gradient(circle,rgba(48,209,88,.55),rgba(48,209,88,0) 70%)}
+.vmark.parked .halo{background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,0) 70%)}
+.vmark.old .halo{display:none}
+.vmark.old .vimg{opacity:.55}
+.vmark .tag{position:absolute;left:0;top:26px;transform:translateX(-50%);white-space:nowrap}
+.sitemark{background:none;border:0}
+.sitemark svg{position:absolute;width:32px;height:42px;left:-16px;top:-42px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.jobmark{background:none;border:0}
+.jobmark .face{position:absolute;left:-17px;top:-17px;box-shadow:0 0 0 2.5px #fff,0 2px 6px rgba(0,0,0,.4)}
+.leaflet-tooltip.vt{padding:5px 8px;border:0;border-radius:8px;background:rgba(28,28,30,.9);color:#fff;font:600 13px/1.3 var(--font-text);box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.leaflet-tooltip.vt::before{display:none}
+.leaflet-container{font:13px/1.4 var(--font-text)}
+.leaflet-control-attribution{font-size:10.5px}
+/* Satellite / Streets, as the Fleet map's switch */
+.mbase{display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--panel);box-shadow:0 0 0 .5px var(--panel-edge),0 4px 14px rgba(0,0,0,.2)}
+.mbase button{min-height:30px;padding:0 10px;border:0;border-radius:7px;background:none;color:var(--ink);font:600 13px/1 var(--font-text);cursor:pointer}
+.mbase button[aria-pressed="true"]{background:var(--tint-fill);color:var(--on-tint)}
+@media (max-width:760px){
+  .map{height:58vh;min-height:360px}
+  .mappanel{position:static;width:auto;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface);max-height:none}
+  .mp-list{overflow:visible}
+}
+.vk-van{height:42px}
+.vk-dispatch{height:33px}
+.vk-bmw-ix3{height:30px}
+.vk-bmw-330e{height:30px}
+.vk-bmw-530e{height:32px}
+.vk-bmw-x5{height:31px}
+.vk-bmw-i4{height:31px}
+.vk-bmw-x1{height:29px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
