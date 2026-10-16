@@ -70,7 +70,13 @@
   }
   const driveMins = m => Math.max(5, Math.round(((m * 1.25) / 40) * 60 / 5) * 5);
   const fmtMiles = m => m < 10 ? m.toFixed(1) : String(Math.round(m));
-  const fmtDrive = m => { const t = driveMins(m); return t < 60 ? `${t} min` : `${Math.floor(t / 60)} h${t % 60 ? ` ${t % 60} min` : ''}`; };
+  const fmtMins = t => { t = Math.max(1, Math.round(t)); return t < 60 ? `${t} min` : `${Math.floor(t / 60)} h${t % 60 ? ` ${t % 60} min` : ''}`; };
+  // A distance: the best road route (Esri) once it has come back, else the straight line with an estimated drive.
+  const milesTxt = d => `${d.road ? '' : '≈'}${fmtMiles(d.miles)} mi`;
+  const timeTxt = d => d.road ? fmtMins(d.mins) : `~${fmtMins(driveMins(d.miles))}`;
+  const farLine = d => d.road
+    ? [h('span', { class: 'miles' }, `${fmtMiles(d.miles)} miles`), ` by road · ${fmtMins(d.mins)} drive${d.traffic ? ' now' : ''}`]
+    : [h('span', { class: 'miles' }, `${fmtMiles(d.miles)} miles`), ` in a straight line · about ${fmtMins(driveMins(d.miles))} drive`];
 
   /* ---------------------------------------------------------------- postcodes */
   const O = window.FLR_OUTCODES || { n: [], r: '' };
@@ -116,7 +122,7 @@
   function codeBadge(b, big) {
     const v = vanForBooking(b);
     if (v) return plateEl(plateOf(v), big);
-    return b.code ? h('span', { class: 'plate code', title: 'Van code on the Fitter label (not seen in FleetView)' }, b.code) : null;
+    return b.code ? h('span', { class: 'plate code', title: 'Vehicle code on the Work Programme label (not seen in FleetView)' }, b.code) : null;
   }
   const slug = n => String(n || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   let PHOTOS = {};
@@ -151,7 +157,7 @@
   }
 
   /* ---------------------------------------------------------------- state */
-  let DATA = null, BOOKINGS = [], VANS = [], TODAY = iso(new Date()), lastSearch = null;
+  let DATA = null, BOOKINGS = [], VANS = [], TODAY = iso(new Date()), lastSearch = null, LAST = null;
 
   // proximity_board()'s answer, checked; anything else counts as not loaded.
   const str = v => typeof v === 'string' ? v : '';
@@ -184,12 +190,12 @@
     if (DATA.vansAllowed) {
       const ok = DATA.fleetview && DATA.fleetview.okAt ? new Date(DATA.fleetview.okAt) : null;
       fv.textContent = ok ? `FleetView · live ${when(ok)}` : 'FleetView · no positions yet';
-      fv.title = 'Van positions from FleetView, checked every 2 minutes from 06:00 to 21:00';
+      fv.title = 'Vehicle positions from FleetView, checked every 2 minutes from 06:00 to 21:00';
       fv.classList.toggle('stale', !ok || DATA.fleetview.failing || (Date.now() - ok) > 15 * 60000);
     }
     const notes = [];
     if (DATA.failingSince) notes.push(`Couldn’t read Monday since ${when(new Date(DATA.failingSince))}.${DATA.readAt ? ` Showing the bookings from ${when(new Date(DATA.readAt))}.` : ''}`);
-    if (DATA.vansAllowed && DATA.fleetview && DATA.fleetview.failing) notes.push('FleetView isn’t answering at the moment: van positions may be out of date.');
+    if (DATA.vansAllowed && DATA.fleetview && DATA.fleetview.failing) notes.push('FleetView isn’t answering at the moment: vehicle positions may be out of date.');
     $('#notice').textContent = notes.join(' ');
     $('#notice').hidden = !notes.length;
   }
@@ -199,10 +205,10 @@
     const best = new Map();
     for (const b of BOOKINGS) {
       if (!b.pos || b.start > day || b.end < day) continue;
-      const m = miles(site, b.pos), k = b.fitter.toLowerCase();
-      if (!best.has(k) || m < best.get(k).miles) best.set(k, { ...b, miles: m });
+      const d = distTo(b.pos, site, false), k = b.fitter.toLowerCase();
+      if (!best.has(k) || d.mins < best.get(k).d.mins) best.set(k, { ...b, d });
     }
-    return [...best.values()].sort((a, z) => a.miles - z.miles);
+    return [...best.values()].sort((a, z) => a.d.mins - z.d.mins);
   }
   const tbc = b => b.status === 'TBC' ? h('span', { class: 'tbc' }, 'TBC') : null;
   const jobLink = b => b.url ? h('a', { href: b.url, target: '_blank', rel: 'noopener' }, b.job) : b.job;
@@ -213,8 +219,19 @@
     if (!pc) { hint('Enter a UK postcode, for example CV22 5DJ.', true); $('#results').hidden = true; return; }
     const district = DISTRICTS.get(pc.outcode);
     if (!district) { hint(`${pc.full || pc.outcode} isn’t a postcode district we recognise. Check the postcode and try again.`, true); $('#results').hidden = true; return; }
-    const known = pc.full && BOOKINGS.find(b => b.postcode === pc.full && b.pos && !b.rough);
-    let site = known ? { ...known.pos, how: 'job' } : null;
+    const line = ($('#line').value || '').trim();
+    let site = null, known = null, lineMissed = false;
+    // The first line of the address, when given: the exact address (Esri), kept to this postcode.
+    if (line && pc.full) {
+      if (!quiet) hint('Finding the address…');
+      const a = await addressFor(line, pc.full);
+      if (a) site = { lat: a.lat, lon: a.lon, how: 'address', address: a.address };
+      else lineMissed = true;
+    }
+    if (!site) {
+      known = pc.full && BOOKINGS.find(b => b.postcode === pc.full && b.pos && !b.rough);
+      if (known) site = { ...known.pos, how: 'job' };
+    }
     if (!site && pc.full) {
       if (!quiet) hint('Finding the postcode…');
       const c = await postcodeCentre(pc.full);
@@ -222,9 +239,97 @@
     }
     if (!site) site = { lat: district.lat, lon: district.lon, how: 'district' };
     lastSearch = text;
-    hint(site.how === 'district' && pc.full ? 'postcodes.io didn’t answer, so this uses the centre of the postcode district.' : '');
+    hint(lineMissed ? `Couldn’t find “${line}” in ${pc.full}, so this uses the postcode.`
+      : site.how === 'district' && pc.full ? 'postcodes.io didn’t answer, so this uses the centre of the postcode district.' : '', lineMissed);
+    LAST = { pc, district, site, known };
     render(pc, district, site, known, quiet);
   }
+
+  /* ---------------------------------------------------------------- addresses and road routes (Esri, FLR's map key) */
+  const GEO = 'https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer';
+  const ROUTE = 'https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World/solve';
+  const KEY = String(window.FLR_MAP_KEY || '').trim();
+  const pcKey = s => String(s || '').toUpperCase().replace(/\s+/g, '');
+  async function esriGet(url, params) {
+    const q = new URLSearchParams({ f: 'json', ...params, token: KEY });
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
+    try { const r = await fetch(`${url}?${q}`, { signal: ctl.signal }); return await r.json(); } finally { clearTimeout(tm); }
+  }
+  // Suggestions for the first line of the address, kept to the postcode typed (Esri can't list a postcode's addresses).
+  const SUGGEST = new Map();   // suggestion text -> magicKey
+  let suggestTimer = 0, suggestSeq = 0;
+  function suggestLines() {
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(async () => {
+      const pc = parsePostcode($('#postcode').value), line = $('#line').value.trim(), seq = ++suggestSeq;
+      if (!KEY || !pc || !pc.full || line.length < 2 || SUGGEST.has(line)) return;
+      const c = DISTRICTS.get(pc.outcode);
+      try {
+        const r = await esriGet(`${GEO}/suggest`, { text: `${line}, ${pc.full}`, countryCode: 'GBR', maxSuggestions: 8, ...(c ? { location: `${c.lon},${c.lat}` } : {}) });
+        if (seq !== suggestSeq) return;
+        const list = (r.suggestions || []).filter(x => pcKey(x.text).includes(pcKey(pc.full)));
+        SUGGEST.clear();
+        $('#lineList').replaceChildren(...list.map(x => { const t = x.text.replace(/, GBR$/, ''); SUGGEST.set(t, x.magicKey); return h('option', { value: t }); }));
+      } catch (e) { /* no suggestions: typing still works */ }
+    }, 250);
+  }
+  // The exact address: a picked suggestion, or the line + postcode; only kept when it is in that postcode.
+  async function addressFor(line, full) {
+    if (!KEY) return null;
+    try {
+      const mk = SUGGEST.get(line);
+      const r = await esriGet(`${GEO}/findAddressCandidates`, mk ? { singleLine: line, magicKey: mk, maxLocations: 1, outFields: 'Addr_type' }
+        : { singleLine: `${line}, ${full}`, countryCode: 'GBR', maxLocations: 1, outFields: 'Addr_type' });
+      const c = (r.candidates || [])[0];
+      if (!c || c.score < 80 || !pcKey(c.address).includes(pcKey(full))) return null;
+      if (!['PointAddress', 'Subaddress', 'StreetAddress', 'POI', 'StreetInt'].includes(c.attributes && c.attributes.Addr_type)) return null;
+      return { lat: c.location.y, lon: c.location.x, address: c.address.replace(/, (England|Wales|Scotland|Northern Ireland)(?=, [A-Z0-9 ]+$)/, '') };
+    } catch (e) { return null; }
+  }
+  // Road routes: one Esri route each (from the van or job to the site), kept for the page's life. Vans "right now" use
+  // live traffic; booked days use typical times. Up to 4 at a time; as they come back, the page re-ranks by drive time.
+  const ROAD = new Map();   // "lat,lon>lat,lon[L]" -> {miles, mins} | 'fail' | null (asked)
+  const rk = (a, b) => `${a.lat.toFixed(5)},${a.lon.toFixed(5)}>${b.lat.toFixed(5)},${b.lon.toFixed(5)}`;
+  let roadsOff = false;
+  function distTo(pos, site, live) {
+    const r = ROAD.get(rk(pos, site) + (live ? 'L' : ''));
+    if (r && r !== 'fail') return { road: true, miles: r.miles, mins: r.mins, traffic: !!live };
+    const m = miles(site, pos);
+    return { road: false, miles: m, mins: (m * 1.25 / 40) * 60 };   // exact for ranking; shown rounded (driveMins)
+  }
+  let roadQueue = [], roadBusy = 0, rerender = 0;
+  function roads(list) {
+    if (!KEY || roadsOff) return;
+    for (const [from, to, live] of list) {
+      const k = rk(from, to) + (live ? 'L' : '');
+      if (ROAD.has(k)) continue;
+      ROAD.set(k, null); roadQueue.push({ k, from, to, live });
+    }
+    pump();
+  }
+  function pump() {
+    while (roadBusy < 4 && roadQueue.length) {
+      const q = roadQueue.shift(); roadBusy++;
+      esriGet(ROUTE, { stops: `${q.from.lon},${q.from.lat};${q.to.lon},${q.to.lat}`, returnDirections: false, returnRoutes: true,
+        outputLines: 'esriNAOutputLineNone', returnStops: false, ...(q.live ? { startTime: 'now', startTimeIsUTC: true } : {}) })
+        .then(r => {
+          if (r.error) {
+            if ([403, 498, 499].includes(r.error.code)) { roadsOff = true; roadQueue = []; roadNote(); }
+            ROAD.set(q.k, 'fail'); return;
+          }
+          const a = r.routes && r.routes.features && r.routes.features[0] && r.routes.features[0].attributes;
+          const mi = a ? (a.Total_Miles ?? (a.Total_Kilometers != null ? a.Total_Kilometers * 0.621371 : null)) : null;
+          const mins = a ? (a.Total_TravelTime ?? a.Total_Time) : null;
+          ROAD.set(q.k, Number.isFinite(mi) && Number.isFinite(mins) ? { miles: mi, mins } : 'fail');
+          clearTimeout(rerender);
+          rerender = setTimeout(() => { if (LAST) render(LAST.pc, LAST.district, LAST.site, LAST.known, true); }, 150);
+        })
+        .catch(() => ROAD.set(q.k, 'fail'))
+        .finally(() => { roadBusy--; pump(); });
+    }
+  }
+  const FOOT0 = () => $('#foot').dataset.base || ($('#foot').dataset.base = $('#foot').textContent);
+  function roadNote() { $('#foot').textContent = 'Road routes aren’t available at the moment, so distances are straight lines with an estimated drive time. ' + FOOT0(); }
 
   /* ---------------------------------------------------------------- the map (Fleet Management's satellite and street maps) */
   const ESRI_KEY = String(window.FLR_MAP_KEY || '').trim();
@@ -282,7 +387,7 @@
     if (DATA.vansAllowed) {
       list.forEach((v, i) => {
         const m = L.marker([v.pos.lat, v.pos.lon], { icon: vanIcon(v, false), title: `${v.who || 'Unassigned'} · ${plateOf(v)}` }).addTo(M.layer);
-        m.bindTooltip(`${v.who || 'Unassigned'} · ${plateOf(v)} · ${fmtMiles(v.miles)} mi`, { className: 'vt', direction: 'top', offset: [0, -22] });
+        m.bindTooltip(`${v.who || 'Unassigned'} · ${plateOf(v)} · ${milesTxt(v.d)} · ${timeTxt(v.d)}`, { className: 'vt', direction: 'top', offset: [0, -22] });
         m.on('click', () => pick(v.reg, false));
         M.marks.set(v.reg, { m, v });
         if (i < 4) pts.push([v.pos.lat, v.pos.lon]);
@@ -323,37 +428,37 @@
   function render(pc, district, site, known, quiet) {
     const label = pc.full || pc.outcode;
     $('#site').replaceChildren(
-      h('span', { class: 'eyebrow' }, known ? 'Site · on the Work Programme' : site.how === 'district' ? 'Site · postcode district' : 'Site'),
-      h('span', { class: 'site-name' }, known ? (known.address || known.job) : (site.area || district.area)),
+      h('span', { class: 'eyebrow' }, site.how === 'address' ? 'Site · exact address' : known ? 'Site · on the Work Programme' : site.how === 'district' ? 'Site · postcode district' : 'Site · postcode centre'),
+      h('span', { class: 'site-name' }, site.how === 'address' ? site.address.split(',')[0] : known ? (known.address || known.job) : (site.area || district.area)),
       h('span', { class: 'site-meta' }, h('span', { class: 'pc' }, label), ` · ${district.area}`));
 
     const todays = nearestOn(TODAY, site);
-    const vans = VANS.map(v => ({ ...v, miles: miles(site, v.pos), who: whoInVan(v) })).sort((a, z) => a.miles - z.miles);
+    const vans = VANS.map(v => ({ ...v, d: distTo(v.pos, site, true), who: whoInVan(v) })).sort((a, z) => a.d.mins - z.d.mins);
 
     // The map's panel: the nearest vans right now (FleetView) or, without live positions, who is working nearest today
     const panel = $('#mappanel');
     if (DATA.vansAllowed && vans.length) {
       const [top, ...rest] = vans;
       panel.replaceChildren(
-        h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'Nearest van'),
+        h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'Nearest vehicle'),
           h('p', null, `${vans.length} vehicles with a position`)),
         h('div', { class: 'mp-first' },
           person(top.who || 'Unassigned vehicle', plateEl(plateOf(top), true), vanState(top), 'lg'),
-          h('span', { class: 'far' }, h('span', { class: 'miles' }, `${fmtMiles(top.miles)} miles`), ` away · about ${fmtDrive(top.miles)} drive`)),
+          h('span', { class: 'far' }, farLine(top.d))),
         h('ul', { class: 'mp-list', 'aria-label': 'Next nearest vehicles' }, rest.slice(0, 12).map(v => h('li', null,
           h('button', { type: 'button', class: 'mp-row', 'data-reg': v.reg },
             person(v.who || 'Unassigned', plateEl(plateOf(v)), vanState(v), 'sm'),
-            h('span', { class: 'mi' }, `${fmtMiles(v.miles)} mi`, h('span', null, `~${fmtDrive(v.miles)}`)))))));
+            h('span', { class: 'mi' }, milesTxt(v.d), h('span', null, timeTxt(v.d))))))));
       panel.querySelectorAll('.mp-row').forEach(b => b.addEventListener('click', () => pick(b.dataset.reg)));
     } else if (DATA.vansAllowed) {
-      panel.replaceChildren(h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'No van positions yet')));
+      panel.replaceChildren(h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'No vehicle positions yet')));
     } else {
       panel.replaceChildren(
         h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, `Today · ${fmtWeekday(TODAY)} ${fmtDate(TODAY)}`), h('h2', null, 'Working nearest'),
-          h('p', null, 'From the Work Programme. Live van positions are for Admins.')),
+          h('p', null, 'From the Work Programme. Live vehicle positions are for Admins.')),
         h('ul', { class: 'mp-list' }, todays.slice(0, 12).map(b => h('li', null, h('div', { class: 'mp-row' },
           person(b.fitter, codeBadge(b), h('span', { class: 'then' }, b.job), 'sm'),
-          h('span', { class: 'mi' }, `${fmtMiles(b.miles)} mi`, h('span', null, `~${fmtDrive(b.miles)}`)))))));
+          h('span', { class: 'mi' }, milesTxt(b.d), h('span', null, timeTxt(b.d))))))));
     }
 
     // Booked nearest today: the Work Programme
@@ -362,10 +467,10 @@
       h('span', { class: 'eyebrow' }, `Booked nearest today · ${fmtWeekday(TODAY)} ${fmtDate(TODAY)}`),
       ...(top ? [
         person(top.fitter, [codeBadge(top, true), tbc(top)], h('span', { class: 'detail' }, 'Working at ', jobLink(top), top.postcode ? [' (', h('span', { class: 'pc' }, top.postcode), ')'] : null), 'lg'),
-        h('span', { class: 'far' }, h('span', { class: 'miles' }, `${fmtMiles(top.miles)} miles`), ` away · about ${fmtDrive(top.miles)} drive`),
+        h('span', { class: 'far' }, farLine(top.d)),
         todays.length > 1 ? h('div', { class: 'also' }, h('span', { class: 'eyebrow' }, 'Also out today'),
           todays.slice(1, 6).map(b => h('div', { class: 'mate' }, person(b.fitter, [codeBadge(b), tbc(b)], null, 'sm'),
-            h('span', { class: 'miles' }, `${fmtMiles(b.miles)} mi`)))) : null,
+            h('span', { class: 'miles' }, `${milesTxt(b.d)} · ${timeTxt(b.d)}`)))) : null,
       ] : [h('span', { class: 'none' }, 'Nobody is booked on the Work Programme today.')]));
 
     // Then, day by day
@@ -378,15 +483,23 @@
         h('div', { class: 'dayname' }, i === 1 ? 'Tomorrow' : fmtWeekday(day), h('span', null, fmtDate(day))),
         h('div', { class: 'fit' },
           person(n.fitter, [codeBadge(n), tbc(n)], h('span', { class: 'job' }, jobLink(n), n.postcode ? [' · ', h('span', { class: 'pc' }, n.postcode)] : null, ` · ${fmtRange(n)}`), 'sm'),
-          rest.length ? h('span', { class: 'then' }, 'then ' + rest.slice(0, 2).map(b => `${b.fitter} ${fmtMiles(b.miles)} mi`).join(', ')) : null),
-        h('div', { class: 'dist' }, h('span', { class: 'miles' }, `${fmtMiles(n.miles)} mi`), h('span', null, `~${fmtDrive(n.miles)}`))));
+          rest.length ? h('span', { class: 'then' }, 'then ' + rest.slice(0, 2).map(b => `${b.fitter} ${milesTxt(b.d)}`).join(', ')) : null),
+        h('div', { class: 'dist' }, h('span', { class: 'miles' }, milesTxt(n.d)), h('span', null, timeTxt(n.d)))));
     }
     $('#days').replaceChildren(...(rows.length ? rows : [h('li', { class: 'empty' }, `No bookings on the Work Programme in the next ${DAYS_AHEAD} days.`)]));
     $('#results').hidden = false;
     drawMap(site, vans, todays, quiet);
+    // Road routes for what's on screen: the nearest vans, today's nearest and each day's nearest few.
+    const want = [];
+    if (DATA.vansAllowed) for (const v of vans.slice(0, 8)) want.push([v.pos, site, true]);
+    for (const b of todays.slice(0, 6)) want.push([b.pos, site, false]);
+    for (let i = 1; i <= DAYS_AHEAD; i++) for (const b of nearestOn(addDays(TODAY, i), site).slice(0, 3)) want.push([b.pos, site, false]);
+    roads(want);
   }
 
   $('#search').addEventListener('submit', e => { e.preventDefault(); search($('#postcode').value); });
+  $('#line').addEventListener('input', suggestLines);
+  $('#postcode').addEventListener('input', () => { SUGGEST.clear(); $('#lineList').replaceChildren(); });
 
   /* ================================================================ the Hub: signed in, and the app is theirs */
   function gate(title, text, o = {}) {
