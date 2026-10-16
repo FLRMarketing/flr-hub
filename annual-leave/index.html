@@ -836,6 +836,16 @@ details.mine-grp[open]>summary .ico{transform:rotate(90deg)}
 .cd-res.zero{background:var(--gold-soft);box-shadow:none}
 .cd-n{font:700 17px/1.3 var(--font-display);letter-spacing:-.012em}
 .cd-res p{font-size:14.5px;line-height:1.5}
+/* Check dates: your leave group on those days */
+.cd-group{display:grid;gap:12px;margin-top:12px}
+.cd-group:empty{display:none}
+.cg{display:grid;gap:8px;padding:14px 16px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 var(--hair) var(--sep)}
+.cg-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14.5px}
+.cg-list{display:grid;gap:5px;margin:0;padding:0;list-style:none;font-size:14px;line-height:1.4}
+.cg-list li{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:10px}
+.cg-list li.full{color:var(--red-ink)}
+.cg-day{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cg-list .cg-more{display:block;color:var(--ink-3)}
 .cd-res b{font-weight:600}
 .cd-form{width:100%}
 
@@ -1698,7 +1708,7 @@ function checkDates(from, to, bankHolidays) {
     if (bankHolidays.has(x)) skipped.push({ date: x, name: bareName(bankHolidays.get(x)) || 'Bank holiday' });
     else if (isWeekend(x)) skipped.push({ date: x, name: null });
   }
-  return { from, to, total: d.total, skipped, before: from < TRACKING_START };
+  return { from, to, total: d.total, skipped, before: from < TRACKING_START };   // (the dates in order)
 }
 // "Fri 1 Jan (New Year's Day), Sat 2, Sun 3, and Mon 4 Jan (Company close day)"; more than four weekend days are summed up.
 function skippedText(skipped) {
@@ -3090,8 +3100,60 @@ function checkResultHtml() {
   const c = checkDates(from, to, state.ctx.bankHolidays);
   if (c.before) return `<div class="cd-res"><p>Leave before ${esc(TRACKING_START_TEXT)} is handled the old way, so it isn’t counted here. Choose dates from ${esc(TRACKING_START_TEXT)}.</p></div>`;
   if (!c.total) return `<div class="cd-res zero"><p class="cd-n">0 working days</p><p>${esc(checkZeroText(c))}</p></div>`;
-  return `<div class="cd-res"><p><b>${esc(fmtRange(c.from, c.to))}</b> would use <b>${esc(plural(c.total, 'working day'))}</b>.${c.skipped.length ? ` Not counted: ${esc(skippedText(c.skipped))}.` : ''}</p></div>`;
+  return `<div class="cd-res"><p><b>${esc(fmtRange(c.from, c.to))}</b> would use <b>${esc(plural(c.total, 'working day'))}</b>.${c.skipped.length ? ` Not counted: ${esc(skippedText(c.skipped))}.` : ''}</p>${leftAfterHtml(c)}</div>
+    <div id="cd-group" class="cd-group" aria-live="polite"></div>`;
 }
+// What would be left of the reader's own allowance in each leave year the dates touch, as My Leave counts it.
+function leftAfterHtml(c) {
+  const me = state.data && mineFor().me;
+  if (!me) return '';
+  const d = leaveDays({ from: c.from, to: c.to, halfDay: 'none', daysOverride: null }, state.ctx.bankHolidays);
+  const lines = Object.keys(d.byYear).map(Number).filter((y) => y >= FIRST_LEAVE_YEAR).sort().map((y) => {
+    const left = balanceFor(state.ctx, me, y).remaining - d.byYear[y];
+    return left < 0 ? `<span class="neg">That’s ${esc(plural(-left, 'day'))} more than you have left in ${y}.</span>`
+      : `That would leave you <b>${esc(plural(left, 'day'))}</b> in ${y}.`;
+  });
+  return lines.length ? `<p>${lines.join(' ')}</p>` : '';
+}
+// Your leave group on those days, from the FLR server (on the Hub): how many others are off (never who), how many are waiting, and
+// whether the group's "max off at once" is already reached by accepted annual leave. A newer question wins.
+let groupAsk = 0, groupTimer = 0;
+const offText = (n) => (n === 1 ? 'Someone in your group is off' : `${n} people in your group are off`);
+const waitText = (n) => (n === 1 ? '1 request waiting for a decision' : `${n} requests waiting for a decision`);
+function groupHtml(r) {
+  if (!r || !r.linked) return '';
+  if (!r.groups.length) return '<p class="subtle">You’re not in a leave group, so there’s no limit to check.</p>';
+  return r.groups.map((g) => {
+    const days = r.days.map((d) => ({ date: d.date, ...(d.groups.find((x) => x.name === g.name) || { off: 0, waiting: 0, full: false }) }));
+    const full = days.filter((d) => d.full), busy = days.filter((d) => d.off || d.waiting);
+    const head = `<p class="cg-head">${full.length ? `<span class="pill deny">Full on ${esc(plural(full.length, 'day'))}</span>` : '<span class="pill ok">Available</span>'}
+      <span><b>${esc(g.name)}</b> · max ${g.max} off at once</span></p>`;
+    if (!busy.length) return `<section class="cg">${head}<p class="subtle">No one else in ${esc(g.name)} is off on those days.</p></section>`;
+    const rows = busy.slice(0, 12).map((d) => `<li${d.full ? ' class="full"' : ''}><span class="cg-day">${esc(fmtDate(d.date, false))}</span><span>${
+      esc([d.off ? offText(d.off) : '', d.waiting ? waitText(d.waiting) : ''].filter(Boolean).join(' · '))}${d.full ? ' · <b>full</b>' : ''}</span></li>`).join('');
+    const more = busy.length > 12 ? `<li class="cg-more">and ${busy.length - 12} more days with someone off</li>` : '';
+    const notes = [full.length ? `On a full day, ${g.max === 1 ? 'someone is' : `${g.max} people are`} already off: the group’s limit.` : '',
+      busy.some((d) => d.waiting) ? 'Waiting requests don’t count until they’re accepted.' : ''].filter(Boolean).join(' ');
+    return `<section class="cg">${head}<ul class="cg-list">${rows}${more}</ul>${notes ? `<p class="subtle">${esc(notes)}</p>` : ''}</section>`;
+  }).join('');
+}
+async function checkGroup() {
+  const box = document.getElementById('cd-group'), hub = window.__FLR_LEAVE, { from, to } = state.check;
+  if (!box) return;
+  if (!hub || typeof hub.checkDates !== 'function' || !from || !to) { box.innerHTML = ''; return; }
+  const c = checkDates(from, to, state.ctx.bankHolidays);
+  if (Math.round((Date.parse(c.to) - Date.parse(c.from)) / 864e5) > 92) { box.innerHTML = '<p class="subtle">Choose up to three months to check your leave group.</p>'; return; }
+  const ask = ++groupAsk;
+  box.innerHTML = '<p class="subtle">Checking your leave group…</p>';
+  let r;
+  try { r = await hub.checkDates(c.from, c.to); } catch (e) {
+    if (ask === groupAsk && document.getElementById('cd-group')) document.getElementById('cd-group').innerHTML = '<p class="subtle">Your leave group couldn’t be checked just now. Try again in a moment.</p>';
+    return;
+  }
+  const now = document.getElementById('cd-group');
+  if (ask === groupAsk && now) now.innerHTML = groupHtml(r);
+}
+const checkGroupSoon = () => { clearTimeout(groupTimer); groupTimer = setTimeout(checkGroup, 250); };
 function checkDatesHtml() {
   if (!state.check.from) state.check.from = state.check.to = [TRACKING_START, addDays(todayInLondon(), 1)].sort()[1];   // the first day that can be booked
   const row = (id, k, v, label) => `<label class="cd-row" for="${id}"><span class="cd-k">${k}</span><span class="cd-v" id="${id}-v">${esc(v ? fmtDate(v) : 'Choose a day')}</span>
@@ -3114,11 +3176,12 @@ function checkDatesInput(t) {   // a day changed: the rows and the result follow
   } else state.check.to = v;
   for (const k of ['from', 'to']) document.getElementById(`cd-${k}-v`).textContent = state.check[k] ? fmtDate(state.check[k]) : 'Choose a day';
   document.getElementById('cd-result').innerHTML = checkResultHtml();
+  checkGroupSoon();
 }
 
 function renderOverlay() {
   const r = state.panel && state.data ? state.data.requests.find((x) => x.id === state.panel) : null;
-  if (state.panel === CHECK && state.data) sheetUI.show(checkDatesHtml(), CHECK);
+  if (state.panel === CHECK && state.data) { sheetUI.show(checkDatesHtml(), CHECK); checkGroupSoon(); }
   else if (r) {
     const pending = isPending(r), ev = pending ? evaluate(r) : null, d = state.ctx.daysOf(r);
     const anyBusy = Boolean(state.busy), name = displayName(r), sid = staffIdOf(r);

@@ -113,7 +113,9 @@
     window.__FLR_LEAVE = { access: h.access, linked: !!h.linked, me: h.me || {}, syncError: h.syncError || null, lastFullSync: h.lastFullSync || null, today: h.today || null,
       wpIssues: Array.isArray(h.wpIssues) ? h.wpIssues : [], faces,
       // who made each request's latest decision on the Hub (the audit trail), for "Accepted … by David Viner"
-      decisions: h.decisions && typeof h.decisions === 'object' && !Array.isArray(h.decisions) ? h.decisions : {} };
+      decisions: h.decisions && typeof h.decisions === 'object' && !Array.isArray(h.decisions) ? h.decisions : {},
+      // Check dates: who else in the reader's own leave group is off on those days, and whether it's full (the database decides)
+      checkDates: (from, to) => client().rpc('leave_check_dates', { p_from: from, p_to: to }).then(r => (r.error ? Promise.reject(r.error) : r.data)) };
     try { FORM_URL = h.formUrl || ''; } catch (e) { /* the page keeps its own */ }   // eslint-disable-line no-undef
     version = h.version;
   }
