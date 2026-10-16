@@ -148,7 +148,7 @@
     return { label: 'Expected arrival', big: dayLong(o.day), small: timed(o) ? `at ${clock(o.at)}` : 'Time not confirmed', date: true };
   }
   /* ---------------------------------------------------------------- state and routes: #/today, #/upcoming, #/received, each with /<order id> */
-  const S = { data: null, gotAt: 0, err: null, busy: false, again: false, timer: 0, surveyors: null, tab: 'today', id: null, attnAll: false, scroll: {}, saving: new Map() };
+  const S = { data: null, gotAt: 0, err: null, busy: false, again: false, timer: 0, surveyors: null, photos: {}, tab: 'today', id: null, attnAll: false, scroll: {}, saving: new Map() };
   const TABS = [['today', 'Today', 'i-today'], ['upcoming', 'Coming up', 'i-calendar'], ['received', 'Received', 'i-inbox']];
   function parseRoute() {
     const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -220,6 +220,24 @@
   // A photo (Annual Leave's, when it has one) or their initials.
   const face = (p, cls) => p.photo ? h('img', { class: `sv-face ${cls}`, src: p.photo, alt: '', width: '40', height: '40', decoding: 'async' })
     : h('span', { class: `sv-face sv-initials ${cls}`, 'aria-hidden': 'true' }, initials(p.name));
+  // The fitters on the job (1.8): flr-orders gives each order its Work Programme job's visits (dates and fitters).
+  // Shown: the visits from today on (each fitter once, with their first dates); with none to come, the last visit.
+  function fittersOf(job, today) {
+    const seen = new Map();
+    for (const o of job.orders) for (const v of o.visits || []) { const k = `${v.from}|${v.to}|${v.fitters.join(',')}`; if (!seen.has(k)) seen.set(k, v); }
+    const all = [...seen.values()].sort((x, y) => x.from.localeCompare(y.from) || x.to.localeCompare(y.to));
+    if (!all.length) return { people: [], last: false };
+    const coming = all.filter(v => v.to >= today), use = coming.length ? coming : [all[all.length - 1]];
+    const people = new Map();
+    for (const v of use) for (const n of v.fitters) if (!people.has(n)) people.set(n, { name: n, from: v.from, to: v.to, photo: S.photos[n] || null });
+    return { people: [...people.values()], last: !coming.length };
+  }
+  const visitWhen = (p, today, last) => {
+    const span = p.from === p.to ? dayShort(p.from) : `${dayShort(p.from)} – ${dayShort(p.to)}`;
+    if (last) return `Last visit ${span}`;
+    if (p.from <= today) return p.to === today ? 'Today' : `On site until ${dayShort(p.to)}`;
+    return span;
+  };
   const findJob = key => key ? (jobs().get(key) || (findOrder(key) ? jobs().get(jobKey(findOrder(key))) : null)) : null;   // also old links to an order
   // The materials of an order as the checklist shows them; an order with no products listed is one line, the delivery.
   const linesOf = o => (o.items || []).length ? o.items : [{ id: 'order', name: 'The whole delivery', whole: true, received: !!o.received, receivedAt: o.receivedAt, issues: o.issues || [] }];
@@ -319,16 +337,20 @@
     const what = `${names.slice(0, 2).join(', ')}${names.length > 2 ? ` +${names.length - 2}` : ''}`;
     const count = got && got < mats.length ? `${got} of ${mats.length} in` : plural(mats.length, 'material');
     const label = [job.name, what, count, xs.length > 1 ? plural(xs.length, 'order') : '', late, b && b[1], when && `${lead.s.kind === 'received' ? 'received' : 'expected'} ${when}`].filter(Boolean).join('. ');
-    const svLabel = () => sv.length ? `. Surveyor ${sv.map(p => p.name).join(' and ')}` : '';
+    const svLabel = () => (sv.length ? `. Surveyor ${sv.map(p => p.name).join(' and ')}` : '') +
+      (ft.people.length ? `. ${ft.last ? 'Last fitters' : 'Fitters'} ${ft.people.map(p => p.name).join(', ')}` : '');
     const kind = (mats.find(i => !i.received) || mats[0]);
-    const sv = surveyorsOf(job);
+    const sv = surveyorsOf(job), ft = fittersOf(job, today);
     return h('li', null, h('a', { class: 'row', href: href(S.tab, job.key), 'aria-current': S.id === job.key ? 'true' : null, 'aria-label': label + svLabel() },
       thumb(kind && !kind.whole ? product(kind.name).kind : 'box', 'thumb-sm'),
       h('span', { class: 'row-main' },
         h('span', { class: 'row-title' }, job.name),
         h('span', { class: 'row-job' }, what, h('span', { class: 'row-count' }, ` · ${count}${xs.length > 1 ? ` · ${plural(xs.length, 'order')}` : ''}`)),
         late ? h('span', { class: 'row-late' }, late) : null,
-        sv.length ? h('span', { class: 'row-sv', 'aria-hidden': 'true' }, sv.map(p => face(p, 'sv-sm')), sv.map(p => p.name).join(', ')) : null,
+        sv.length || ft.people.length ? h('span', { class: 'row-sv', 'aria-hidden': 'true' },
+          sv.length ? h('span', { class: 'row-person' }, sv.map(p => face(p, 'sv-sm')), h('span', { class: 'row-person-name' }, sv.map(p => p.name).join(', '))) : null,
+          ft.people.length ? h('span', { class: `row-person row-fitters${ft.last ? ' row-fitters-last' : ''}` }, h('span', { class: 'sv-stack' }, ft.people.slice(0, 3).map(p => face(p, 'sv-sm'))),
+            h('span', { class: 'row-person-name' }, ft.people.length === 1 ? ft.people[0].name : `${ft.people[0].name} +${ft.people.length - 1}`)) : null) : null,
         b ? h('span', { class: `pill pill-${b[0]} pill-in`, 'aria-hidden': 'true' }, b[1]) : null),
       h('span', { class: 'row-end' },
         b ? h('span', { class: `pill pill-${b[0]} pill-out`, 'aria-hidden': 'true' }, b[1]) : null,
@@ -483,7 +505,7 @@
     const mats = job.orders.flatMap(linesOf), got = mats.filter(i => i.received).length;
     const tone = open.some(x => x.s.kind === 'overdue') ? 'bad' : open.length ? (open.some(x => x.s.partial || x.s.delay === 'active') ? 'warn' : 'calm') : 'good';
     const first = mats.find(i => !i.received) || mats[0];
-    const id = 'od-' + job.key, sv = surveyorsOf(job);
+    const id = 'od-' + job.key, sv = surveyorsOf(job), ft = fittersOf(job, today);
     return h('article', { class: `od od-${tone}`, 'aria-labelledby': id },
       h('div', { class: 'od-hero' },
         opt.back ? h('div', { class: 'od-bar' }, h('a', { class: 'od-back', href: href(S.tab) }, icon('i-back'), TABS.find(x => x[0] === S.tab)[1]),
@@ -498,7 +520,10 @@
         h('p', { class: 'od-job' }, [job.wfm ? `WFM ${job.wfm}${job.stock ? ' (FLR stock)' : ''}` : 'No WFM job number', plural(job.orders.length, 'order'), `${got} of ${plural(mats.length, 'material')} in`].join(' · '),
           job.names.length > 1 ? h('span', { class: 'od-aka' }, `Also on monday.com as ${job.names.slice(1).join(', ')}`) : null),
         sv.length ? h('div', { class: 'od-sv' }, sv.map(p => h('span', { class: 'sv-chip' }, face(p, 'sv-md'),
-          h('span', { class: 'sv-text' }, h('span', { class: 'sv-role' }, 'Surveyor'), h('span', { class: 'sv-name' }, p.name))))) : null),
+          h('span', { class: 'sv-text' }, h('span', { class: 'sv-role' }, 'Surveyor'), h('span', { class: 'sv-name' }, p.name))))) : null,
+        ft.people.length ? h('div', { class: 'od-ft' }, h('p', { class: 'ft-head' }, ft.last ? 'Fitters on the last visit' : 'Fitters booked'),
+          h('div', { class: 'od-sv' }, ft.people.map(p => h('span', { class: 'sv-chip' }, face(p, 'sv-md'),
+            h('span', { class: 'sv-text' }, h('span', { class: 'sv-role' }, visitWhen(p, today, ft.last)), h('span', { class: 'sv-name' }, p.name)))))) : null),
       h('div', { class: 'od-body' },
         h('p', { class: 'tick-help' }, 'Tick each material as it arrives; tap again to untick. A tick records that it arrived, not its condition; anything wrong, use the help line.'),
         ...[...open, ...done].map(x => orderBlock(x.o, today, job.orders.length === 1))));
@@ -746,6 +771,24 @@
       return data && typeof data === 'object' ? data : {};
     } catch (e) { return null; }
   }
+  // The fitters' photos (1.8), for the names shown and not asked for yet; until 1.8 is live, initials.
+  async function fetchPhotos() {
+    const today = londonDay(), want = new Set();
+    for (const j of jobs().values()) for (const p of fittersOf(j, today).people) if (!(p.name in S.photos)) want.add(p.name);
+    const names = [...want];
+    if (!names.length) return false;
+    let got = false;
+    for (let i = 0; i < names.length; i += 60) {
+      const part = names.slice(i, i + 60);
+      try {
+        const { data, error } = await client().rpc('orders_photos', { p_names: part });
+        if (error) { if (missingFunction(error)) part.forEach(n => { S.photos[n] = null; }); continue; }
+        for (const n of part) S.photos[n] = (data && data[n]) || null;
+        got = true;
+      } catch (e) { /* asked again on the next refresh */ }
+    }
+    return got;
+  }
   function failGate(e) {
     const code = flrCode(e);
     if (expired(e) || code === 'FLR_SIGN_IN_REQUIRED') return location.replace(SIGN_IN);
@@ -766,7 +809,7 @@
       if (!S.surveyors) S.surveyors = await fetchSurveyors();
       S.data = d; S.gotAt = Date.now(); S.err = null;
       if (!d.readAt && !d.orders.length) gate('No deliveries yet', d.failing ? `The tracker couldn’t read monday.com yet. ${d.failing}` : 'The tracker hasn’t read the Goods In board yet. It does every 5 minutes.', { retry: true });
-      else render();
+      else { render(); fetchPhotos().then(got => { if (got) render(); }); }
       if (chatOpen) chatOpen();
       if (byHand) toast(d.failing ? 'monday.com still isn’t answering' : 'Up to date');
     } catch (e) {
