@@ -668,5 +668,17 @@
  {
   "q": "what does the capacity page show",
   "expect": "about-capacity"
+ },
+ {
+  "q": "which fitter is nearest to CV22 5DJ",
+  "expect": "about-proximity"
+ },
+ {
+  "q": "where is the nearest van right now",
+  "expect": "about-proximity"
+ },
+ {
+  "q": "why are there no vans on my proximity finder",
+  "expect": "proximity-access"
  }
 ]

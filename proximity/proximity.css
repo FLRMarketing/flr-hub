@@ -1,0 +1,182 @@
+/* ============================================================================
+   FLR Hub: the Proximity Finder (Hub tile 'proximity'). The Team Proximity Finder Claude page,
+   in the Hub's look (the Planner's tokens and parts). This page's CSP allows no inline styles,
+   so this file holds every style.
+   ========================================================================== */
+/* Tokens copied from the Annual Leave Diary (flr-annual-leave/index.html) so the two read as one family. */
+:root{
+  --bg:#f2f2f7; --surface:#ffffff; --surface-2:#f7f7fa; --weekend:#f0f0f4; --blank:#e6e6eb;
+  --fill:rgba(118,118,128,.12); --fill-2:rgba(118,118,128,.22);
+  --ink:#101116; --ink-2:#55575f; --ink-3:#6b6d75;
+  --sep:rgba(60,60,67,.2);
+  --tint:#00098b; --tint-fill:#00098b; --on-tint:#ffffff; --tint-soft:rgba(0,9,139,.07);
+  --gold:#dda44d; --gold-ink:#7a4a00; --gold-soft:rgba(221,164,77,.22);
+  --red:#d70015; --red-ink:#b3000f;
+  --batt-line:#8e8e93; --batt-empty:#c7c7cc; --batt-l:42%; --live:#2a9d48;
+  --focus:#1a24a8;
+  --sh-card:0 0 0 .5px rgba(0,0,0,.03),0 1px 2px rgba(16,18,40,.04),0 4px 14px rgba(16,18,40,.04);
+  --font-text:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-num:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --r-card:14px; --gutter:16px; --hair:1px;
+}
+@media (min-resolution:2dppx){:root{--hair:.5px}}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000; --surface:#1c1c1e; --surface-2:#232326; --weekend:#232325; --blank:#0e0e10;
+    --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.36);
+    --ink:#f5f5f7; --ink-2:#aeaeb2; --ink-3:#98989f;
+    --sep:rgba(84,84,88,.55);
+    --tint:#9aa2ff; --tint-fill:#4550f0; --tint-soft:rgba(154,162,255,.14);
+    --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
+    --red:#ff453a; --red-ink:#ff6b61;
+    --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%; --live:#30d158;
+    --focus:#b3b9ff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1c1c1e; --surface-2:#232326; --weekend:#232325; --blank:#0e0e10;
+  --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.36);
+  --ink:#f5f5f7; --ink-2:#aeaeb2; --ink-3:#98989f;
+  --sep:rgba(84,84,88,.55);
+  --tint:#9aa2ff; --tint-fill:#4550f0; --tint-soft:rgba(154,162,255,.14);
+  --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
+  --red:#ff453a; --red-ink:#ff6b61;
+  --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%; --live:#30d158;
+  --focus:#b3b9ff;
+}
+
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--font-text);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+[hidden]{display:none !important}
+a{color:var(--tint)}
+
+main{max-width:920px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area-inset-left,0px)) 40px}
+
+/* ---------- heading, with where the figures come from beside it (as on the Planner) */
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 16px}
+.head h1{margin:0;font:700 32px/1.15 var(--font-display);letter-spacing:-.022em}
+.source{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--fill);color:var(--ink-2);font:600 13px/1.3 var(--font-text);white-space:nowrap}
+.source::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--live)}
+.source.stale::before{background:var(--gold)}
+.head p{flex-basis:100%;margin:0;color:var(--ink-2);font-size:15px;max-width:66ch}
+.head p.notice{display:flex;align-items:flex-start;gap:8px;margin:4px 0 0;padding:8px 12px;border-radius:10px;background:var(--gold-soft);color:var(--gold-ink);font:600 14px/1.4 var(--font-text);max-width:640px}
+.head p.notice::before{content:"";flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--gold)}
+
+/* ---------- cards */
+.card{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--sh-card)}
+.eyebrow{font:600 12.5px/1.3 var(--font-text);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ---------- search */
+.search{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:16px;margin-bottom:22px}
+.search label{display:grid;gap:6px}
+#postcode{width:12ch;height:44px;padding:0 14px;border:0;border-radius:12px;background:var(--fill);font:600 20px/1 var(--font-num);letter-spacing:.02em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+#postcode::placeholder{color:var(--ink-3);font-weight:500}
+.go{height:44px;padding:0 22px;border:0;border-radius:999px;background:var(--tint-fill);color:var(--on-tint);font-weight:600;font-size:16px;cursor:pointer}
+@media (hover:hover){.go:hover{filter:brightness(1.12)}}
+.go:disabled{opacity:.6;cursor:default}
+.hint{flex-basis:100%;margin:0;color:var(--ink-3);font-size:13.5px}
+.hint:empty{display:none}
+.hint.bad{color:var(--red-ink)}
+
+/* ---------- site */
+.site{display:grid;gap:2px;padding:0 4px;margin-bottom:14px}
+.site-name{font:700 23px/1.2 var(--font-display);letter-spacing:-.016em;text-wrap:balance}
+.site-meta{color:var(--ink-2);font-size:14.5px}
+.pc{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:600}
+
+/* ---------- the two answers: right now (FleetView) and booked today (Work Programme) */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.answer{padding:16px 18px;display:grid;align-content:start;gap:6px;box-shadow:var(--sh-card),inset 4px 0 0 var(--tint-fill)}
+.answer.live{box-shadow:var(--sh-card),inset 4px 0 0 var(--live)}
+.answer:empty{display:none}
+.who{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font:700 26px/1.15 var(--font-display);letter-spacing:-.02em}
+.far{font-size:16px;font-weight:600}
+.miles{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.detail{color:var(--ink-2);font-size:14.5px}
+.detail a{color:inherit;text-decoration-color:var(--sep)}
+.none{color:var(--ink-3)}
+.state{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--ink-2)}
+.state::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.state.moving::before{background:var(--live)}
+.state.on::before{background:var(--gold)}
+.state.old{color:var(--ink-3);font-weight:500}
+.also{display:grid;gap:2px;margin:6px -18px -16px;padding:4px 0 6px;border-top:var(--hair) solid var(--sep)}
+.also .eyebrow{padding:8px 18px 2px}
+.mate{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 18px;font-size:14.5px}
+.mate .nm{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0}
+.mate b{font-weight:600}
+.mate .sm{color:var(--ink-3);font-size:13px}
+
+/* the van badge: the Hub's navy fitter pill, with the van's registration */
+.van{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px 0 7px;border-radius:999px;background:var(--tint-fill);color:var(--on-tint);
+  font:700 13px/1 var(--font-num);letter-spacing:.01em;white-space:nowrap;vertical-align:middle}
+.van svg{width:15px;height:15px;flex:none}
+.van.small{height:21px;padding:0 7px 0 6px;font-size:11.5px}
+.van.small svg{width:12px;height:12px}
+.van.code{background:transparent;color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--sep)}
+.tbc{display:inline-block;padding:1px 7px;border-radius:6px;background:var(--gold-soft);color:var(--gold-ink);font:700 11.5px/1.5 var(--font-text);letter-spacing:.04em;vertical-align:middle}
+
+/* ---------- day by day: an inset grouped list */
+.days{margin-top:24px}
+.days h2{margin:0;font:700 20px/1.2 var(--font-display);letter-spacing:-.012em}
+.days .sub{margin:2px 0 10px;color:var(--ink-2);font-size:14px}
+.list{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:100px minmax(0,1fr) auto;gap:4px 14px;align-items:start;padding:12px 16px;border-top:var(--hair) solid var(--sep)}
+.row:first-child{border-top:0}
+.dayname{font-weight:600}
+.dayname span{display:block;color:var(--ink-3);font-weight:400;font-size:13.5px}
+.fit{display:grid;gap:3px;min-width:0}
+.fit .name{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-weight:600;font-size:16px}
+.job{color:var(--ink-2);font-size:14px;overflow-wrap:anywhere}
+.job a{color:inherit;text-decoration-color:var(--sep)}
+.then{color:var(--ink-3);font-size:13.5px}
+.dist{text-align:right;font-weight:600;white-space:nowrap}
+.dist span{display:block;color:var(--ink-3);font-weight:400;font-size:13px}
+.empty{padding:16px;color:var(--ink-3)}
+.foot{color:var(--ink-3);font-size:13px;max-width:72ch;margin:20px 4px 0}
+@media (max-width:560px){
+  .row{grid-template-columns:minmax(0,1fr) auto}
+  .dayname{grid-column:1 / -1;display:flex;gap:6px;align-items:baseline}
+  .dayname span{display:inline}
+  .who{font-size:23px}
+  .cards{grid-template-columns:1fr}
+}
+
+/* ======================================================================== the Hub's parts */
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+main{padding-bottom:104px}   /* room for Likkle Jeff's button in the corner, clear of the list */
+
+/* the way back: the FLR logo, as on the Hub's other tools */
+.brand{display:inline-flex;align-items:center;gap:7px;min-height:40px;margin:-6px 0 10px -8px;padding:0 12px 0 6px;border-radius:999px;
+  color:var(--ink-2);font:600 15px/1 var(--font-text);text-decoration:none}
+.brand-back{width:18px;height:18px;margin-right:-2px}
+.brand-mark{display:block;height:28px;aspect-ratio:143/164}
+@media (hover:hover){.brand:hover{background:var(--fill)}}
+.brand:active{background:var(--fill-2)}
+
+/* loading, and the messages instead of the calendar */
+body:not([data-view="loading"]) .gate-loading{display:none}
+body[data-view="ready"] .gate{display:none}
+.gate{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area-inset-left,0px)) 40px}
+.gate-loading{display:flex;flex-direction:column;gap:14px}
+.sk{border-radius:var(--r-card);background:var(--fill);animation:sk 1.4s ease-in-out infinite alternate}
+.sk-title{width:min(320px,70%);height:38px}
+.sk-nav{width:min(380px,90%);height:40px;border-radius:999px}
+.sk-cal{height:min(640px,70vh)}
+@keyframes sk{from{opacity:.55}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.gate-message{max-width:520px;margin:12vh auto 0;padding:32px 24px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-card);text-align:center}
+.brand-gate{display:inline-block;margin:0 auto 18px}
+.brand-gate .brand-mark{height:56px}
+.gate-title{margin:0 0 8px;font:700 24px/1.2 var(--font-display);letter-spacing:-.02em}
+.gate-text{margin:0 auto 22px;max-width:40ch;color:var(--ink-2);font-size:16px;line-height:1.45}
+.gate-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.btn-brand{background:var(--tint-fill);color:var(--on-tint)}
+@media (hover:hover){.btn-brand:hover{background:var(--tint-fill);filter:brightness(1.12)}}
+.noscript{max-width:520px;margin:20vh auto;padding:0 16px;text-align:center;color:var(--ink-2)}

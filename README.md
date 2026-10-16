@@ -284,3 +284,17 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
    `https://flrmarketing.github.io/flr-hub/estimator/` and `https://flrmarketing.github.io/flr-hub/speeding/` to the
    redirect URLs, so password-reset emails come back here.
 3. **GitHub Pages:** deploy from the `main` branch, root folder.
+
+## Proximity Finder, Hub tile `proximity` (BUILT 16 Oct 2026 on branch feature/proximity, NOT live)
+
+- Page `proximity/` (index.html, proximity.js, proximity.css, outcodes.js): the Team Proximity Finder Claude page in the
+  Hub look. Type a site postcode: **nearest van right now** (live FleetView positions; Admins and Super Admins only),
+  **booked nearest today** and **then, day by day** for 14 days (Monday Work Programme).
+- Data: `public.proximity_board()` (Estimator repo `20261016400000_flr_proximity.sql`, app check
+  `private.require_app('proximity')`). Bookings saved every 15 minutes by the Edge Function `flr-proximity`; van
+  positions are the Fitter Schedule arrivals' `private.arrival_vans` (FleetView every 2 minutes, 06:00–21:00).
+- The page asks postcodes.io for a full postcode's centre (CSP `connect-src` allows `https://api.postcodes.io`), else
+  uses the postcode district's centre from `outcodes.js` (postcodes.io data, Open Government Licence).
+- Tile `proximity` (listed, sort 80; Super Admins when the migration runs), Hub settings label "Proximity", icon
+  `i-proximity` (map pin, blue). Likkle Jeff: `about-proximity`, `proximity-access`.
+- Go-live steps: `~/Documents/claude/proximity-go-live/README.md` (migration, deploy, first read, cron; then push this branch).
