@@ -612,6 +612,25 @@
       if (!quiet && !photosAsked) loadPhotos();
     } catch (e) { if (!quiet) failGate(e); }
   }
+  // Refresh now: the latest vehicle positions and bookings, and fresh live-traffic drive times for the vehicles. The map stays
+  // where it is; a failure says so beside the button and leaves what's shown.
+  async function refreshNow() {
+    const btn = $('#refresh'), txt = $('#refreshText');
+    if (btn.disabled) return;
+    btn.disabled = true; btn.classList.add('busy'); txt.textContent = 'Refreshing…';
+    for (const k of [...ROAD.keys()]) if (k.endsWith('L')) ROAD.delete(k);   // traffic changes: ask again
+    let ok = false;
+    try {
+      const { data, error } = await client().rpc('proximity_board');
+      if (error) { if (expired(error) || ['FLR_SIGN_IN_REQUIRED', 'FLR_FORBIDDEN'].includes(flrCode(error))) return failGate(error); }
+      else { const board = boardFrom(data); if (board) { show(board); ok = true; } }
+    } catch (e) { /* offline: say so below */ }
+    btn.classList.remove('busy'); btn.disabled = false;
+    txt.textContent = ok ? `Updated ${fmtTime.format(new Date())}` : 'Couldn’t refresh';
+    clearTimeout(refreshNow.t); refreshNow.t = setTimeout(() => { txt.textContent = 'Refresh'; }, 4000);
+  }
+  $('#refresh').addEventListener('click', refreshNow);
+
   // Staff photos (Fleet Management's), once: they are large, and only change when a new photo is added.
   let photosAsked = false;
   async function loadPhotos() {
