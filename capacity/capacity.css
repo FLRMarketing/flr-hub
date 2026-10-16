@@ -2,6 +2,7 @@
    FLR Hub: the Planner (Hub tile 'capacity'). The calendar's look is the approved page's
    (flr-job-planner/index.html), unchanged; the Hub's parts (the way back, the
    sign-in and access messages, the loading state) follow at the end.
+   The figures are real daily totals from the Monday Work Programme (capacity.js).
    This page's CSP allows no inline styles, so this file holds every style and
    capacity.js sets each battery's fill on the element itself.
    ========================================================================== */
@@ -14,7 +15,7 @@
   --tint:#00098b; --tint-fill:#00098b; --on-tint:#ffffff; --tint-soft:rgba(0,9,139,.07);
   --gold:#dda44d; --gold-ink:#7a4a00; --gold-soft:rgba(221,164,77,.22);
   --red:#d70015; --red-ink:#b3000f;
-  --batt-line:#8e8e93; --batt-empty:#c7c7cc; --batt-l:42%;
+  --batt-line:#8e8e93; --batt-empty:#c7c7cc; --batt-l:42%; --live:#2a9d48;
   --focus:#1a24a8;
   --sh-card:0 0 0 .5px rgba(0,0,0,.03),0 1px 2px rgba(16,18,40,.04),0 4px 14px rgba(16,18,40,.04);
   --font-text:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -32,7 +33,7 @@
     --tint:#9aa2ff; --tint-fill:#4550f0; --tint-soft:rgba(154,162,255,.14);
     --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
     --red:#ff453a; --red-ink:#ff6b61;
-    --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%;
+    --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%; --live:#30d158;
     --focus:#b3b9ff;
   }
 }
@@ -44,7 +45,7 @@
   --tint:#9aa2ff; --tint-fill:#4550f0; --tint-soft:rgba(154,162,255,.14);
   --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
   --red:#ff453a; --red-ink:#ff6b61;
-  --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%;
+  --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%; --live:#30d158;
   --focus:#b3b9ff;
 }
 
@@ -57,11 +58,11 @@ button{font:inherit;color:inherit}
 
 main{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area-inset-left,0px)) 40px}
 
-/* ---------- heading, with the sample-data label beside it */
+/* ---------- heading, with where the figures come from beside it */
 .head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 16px}
 .head h1{margin:0;font:700 32px/1.15 var(--font-display);letter-spacing:-.022em}
-.sample{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:var(--gold-soft);color:var(--gold-ink);font:600 13px/1.3 var(--font-text);white-space:nowrap}
-.sample::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.source{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--fill);color:var(--ink-2);font:600 13px/1.3 var(--font-text);white-space:nowrap}
+.source::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--live)}
 .head p{flex-basis:100%;margin:0;color:var(--ink-2);font-size:15px}
 
 /* ---------- month navigation, as on the Diary */

@@ -31,7 +31,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `onboarding/` | Onboarding: each new starter's checklist (forms, FLR documents, uploads, acknowledgements), and the reviews, checks and internal setup behind it. `content.js` holds the wording taken from FLR's source forms. Draft on branch `feature/onboarding`; see "Onboarding" below. |
 | `orders/` | Order Tracker: jobs from the Monday “FLR - Goods In” board (due today, needs attention, coming up, received), each with a checklist to tick materials off as they arrive, and "Have a problem?" to Georgia and Luke. Data from `orders_board()` (flr-orders function, every 5 minutes); see "Order Tracker" below. |
-| `capacity/` | Planner (Hub tile `capacity`; renamed from Fitter Capacity on 15 Oct 2026): a month calendar of how many fitters are booked each weekday, out of 23, with a battery per day (red over capacity, a gold “?” when a job has no fitter count). Sample data for now, labelled “Sample data”; see "Fitter Capacity" below. |
+| `capacity/` | Planner (Hub tile `capacity`; renamed from Fitter Capacity on 15 Oct 2026): a month calendar of how many fitters are booked each day, out of 23, with a battery per day (red over capacity, a gold number for bookings with no fitter yet). Real daily totals from the Monday Work Programme, read with `planner_board()`; see "Planner" below. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
@@ -191,17 +191,30 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
 ## Planner, Hub tile `capacity` (live for Super Admins since 15 Oct 2026; first called Fitter Capacity)
 
 - Page `capacity/` (index.html, capacity.js, capacity.css): the approved calendar from `flr-job-planner/index.html`, same
-  look and behaviour, light and dark with the device. Each weekday: a battery and a badge, booked fitters out of 23
-  (`CAPACITY` in capacity.js); weekends aren't counted. Red with a warning sign over 23; a gold “?” and a dashed battery
-  when a job that day has no fitter count. Job names are never shown.
-- **Sample data only.** `sampleJobs()` in capacity.js makes up jobs around this week, and the page says “Sample data”.
-  Nothing is read from monday.com. When real data comes it needs its own database function with the app check
-  (`private.require_app('capacity')`, as `orders_board()` has), and the label goes (`USING_SAMPLE_DATA`).
-- Tile `capacity` (listed, sort 70), Hub settings label "Capacity": Super Admins (active, role `admin`) when the
-  migration runs, others switched on in Hub settings. The page asks `public.hub_home()` and shows the calendar only when
-  `capacity` is one of the person's tiles; otherwise "You don't have access to the Planner". Migration:
-  `20261015400000_flr_fitter_capacity.sql` in the Estimator repo (adds the tile and 'capacity' to the five Hub settings
-  functions' app list, with an md5 guard and an undo in `supabase/restore/`).
+  look, behaviour and labels, light and dark with the device. Each day with fitting work: a battery and a badge, distinct
+  fitters booked out of the capacity in the data (23). Red with a warning sign over capacity; an empty grey battery (0/23)
+  when work is booked but no fitter is on it yet; a gold number in the corner (and a dashed battery) = bookings that day
+  still needing a fitter (bookings, not fitters short). A day with no fitting work shows the date only. Names and jobs
+  are never shown, and never reach the page.
+- **Data (Planner 1.1).** The page calls `public.planner_board()` (Estimator repo,
+  `20261016100000_flr_planner_data.sql`), which makes the Order Tracker's app check (`private.require_app('capacity')`)
+  and returns `{capacity, readAt, source, days: {"YYYY-MM-DD": {b, u, t?, f?}}}` from the one row in
+  `private.planner_days` (closed to the page's roles). b = distinct fitters booked, u = bookings with no fitter,
+  t = fitters only on TBC bookings, f = roster fitters free (weekdays). The label beside the heading says when Monday was
+  read ("Monday · read 16 Oct, 09:35"). Errors as on the Order Tracker: signed out → sign-in (`../?next=capacity`),
+  FLR_FORBIDDEN → "You don't have access to the Planner", switched off, no profile, function missing → "The Planner
+  isn't ready yet", offline → try again. Before the first load (readAt null) it says "No Monday totals yet" and shows
+  no days, so nothing looks free when it may not be.
+- **Refreshing the figures** (by hand, by FLR; nothing reads Monday on a timer yet): in `flr-job-planner/`, read the
+  Work Programme again (read-only, through the monday.com connector, into `data/raw/` and `data/subitems.json`), run
+  `python3 data/build.py` (makes `data/capacity-data.js`, totals only), then `python3 data/make_load_sql.py` (checks the
+  file holds no names and makes `data/planner-load.sql`). A Super Admin pastes `data/planner-load.sql` into the Supabase
+  SQL editor and runs it: one statement replaces the row, and a read-only check under it shows the capacity, read time,
+  number of days and today's figures. The page shows the new read the next time it is opened. No Hub change is needed.
+- Tile `capacity` (listed, sort 70), Hub settings label "Planner": Super Admins (active, role `admin`) when the
+  migration ran, others switched on in Hub settings. Migrations (Estimator repo): `20261015400000_flr_fitter_capacity.sql`
+  (the tile and 'capacity' in the five Hub settings functions' app list, md5 guard) and `20261016100000_flr_planner_data.sql`
+  (the totals; undo files for both in `supabase/restore/`).
 
 ## Likkle Jeff (the help button, first called Ask the Hub)
 

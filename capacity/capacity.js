@@ -1,21 +1,25 @@
 /* ============================================================================
    FLR Hub: the Planner (Hub tile 'capacity'). A month calendar of how many fitters are booked
-   each weekday, out of 23. The calendar is the approved page
-   (flr-job-planner/index.html) with the same look and behaviour; this file
-   adds the Hub's sign-in and access check.
+   each day, out of the capacity in the data (23). The calendar is the approved page
+   (flr-job-planner/index.html) with the same look, behaviour and labels; this file
+   adds the Hub's sign-in and access check, and reads the figures from the database.
 
-   For now it shows SAMPLE data, labelled "Sample data" on the page: the jobs
-   below are made up, placed around this week, and only their totals show
-   (job names are never shown). Nothing is read from monday.com yet.
+   The figures: real daily totals from the Monday Work Programme, never names or jobs.
+   public.planner_board() (Estimator repo, 20261016100000_flr_planner_data.sql) answers
+     { capacity, readAt, source, days: { "YYYY-MM-DD": { b, u, t?, f? } } }
+       b  distinct fitters booked on fitting work that day
+       u  fitting bookings that day still with no fitter (the gold number)
+       t  fitters booked only on TBC bookings
+       f  roster fitters free that day (weekdays)
+   A day that isn't listed had no fitting work: it shows the date only. The totals are made
+   by flr-job-planner/data/build.py from a read-only read of the board, and loaded by a
+   Super Admin running data/planner-load.sql (made by data/make_load_sql.py) in the SQL
+   editor. Before the first load (readAt null) the page says so and shows no days, so
+   nothing looks free when it may not be.
 
-   Who can open it: the 'capacity' Hub tile (Estimator repo,
-   20261015400000_flr_fitter_capacity.sql), Super Admins to start, switched on
-   for others in Hub settings. The page asks public.hub_home(), which lists only
-   the tiles the signed-in, active account may use, and shows the calendar only
-   when 'capacity' is one of them. The sample data is in this public file
-   anyway, so the check is about keeping the Hub tidy, not hiding data; when
-   real data comes, it will need its own database function with the app check
-   (private.require_app('capacity')), as the Order Tracker's orders_board() has.
+   Who can open it: planner_board() makes the Order Tracker's app check
+   (private.require_app('capacity')): signed in, with a profile, not switched off, and on
+   the 'capacity' list (Super Admins to start, switched on for others in Hub settings).
 
    This page's CSP allows no inline styles: everything is built as elements, and
    each battery's fill is set with element.style.
@@ -25,7 +29,6 @@
   const cfg = window.FLR_CONFIG || {};
   const AUTH_KEY = 'flr-estimator-auth';            // the one FLR sign-in for the whole site
   const SIGN_IN = '../?next=capacity';
-  const TILE = 'capacity';
   const $ = s => document.querySelector(s);
 
   /* ---------------------------------------------------------------- building the page (text only: nothing is parsed as HTML) */
@@ -49,67 +52,25 @@
   }
 
   /* ================================================================ the calendar (as on the approved page) */
-  /*
-   * DATA: one record per job, used ONLY to work out each day's total. Nothing about a job is shown on the page.
-   *   id       string             Monday item ID (unique key)
-   *   name     string             job name (not displayed)
-   *   start    "YYYY-MM-DD"       first day of the job
-   *   end      "YYYY-MM-DD"       last day (same as start for a one-day job)
-   *   fitters  number | null      supplied value; NEVER calculated here (the sub-item method is undecided)
-   * Fitter names are not part of this shape on purpose.
-   */
-  const CAPACITY = 23;   // fitters available per day
-
-  // Sample jobs, placed relative to this week's Monday so the totals always fall in the near future.
-  // Their counts are chosen to produce every battery state: empty, part full, exactly full, over capacity, and missing counts.
-  const USING_SAMPLE_DATA = true;
-  function sampleJobs() {
-    const d = (offset) => iso(addDays(mondayOf(startOfDay(new Date())), offset));
-    return [
-      { id: 's1',  name: 'Office refurbishment – Unit 4',                             start: d(-7), end: d(-3), fitters: 8 },
-      { id: 's2',  name: 'School corridor vinyl',                                     start: d(0),  end: d(4),  fitters: 6 },
-      { id: 's3',  name: 'Care home lounge carpet',                                   start: d(3),  end: d(3),  fitters: 4 },
-      { id: 's4',  name: 'Retail unit LVT – ground floor',                            start: d(7),  end: d(11), fitters: 8 },
-      { id: 's5',  name: 'Surgery waiting room safety flooring and entrance matting', start: d(8),  end: d(9),  fitters: 3 },
-      { id: 's6',  name: 'Head office carpet tiles – floors 2–3',                     start: d(9),  end: d(22), fitters: 12 },
-      { id: 's7',  name: 'Leisure centre changing rooms',                             start: d(14), end: d(16), fitters: null },
-      { id: 's8',  name: 'Hospital ward safety flooring',                             start: d(15), end: d(17), fitters: 10 },
-      { id: 's9',  name: 'Bank branch carpet',                                        start: d(16), end: d(16), fitters: 5 },
-      { id: 's10', name: 'Student accommodation – block B',                           start: d(21), end: d(39), fitters: 9 },
-      { id: 's11', name: 'Library mats',                                              start: d(24), end: d(24), fitters: 2 },
-      { id: 's12', name: 'Hotel bedrooms phase 1',                                    start: d(28), end: d(39), fitters: 10 },
-      { id: 's13', name: 'Nursery playroom',                                          start: d(36), end: d(37), fitters: null },
-      { id: 's14', name: 'Warehouse office resin',                                    start: d(44), end: d(46), fitters: 3 },
-      { id: 's15', name: 'Dental practice – surgery 3 and decontamination room',      start: d(51), end: d(51), fitters: 2 },
-    ];
-  }
-
-  // Placeholder for the real source. Replace the body with the Monday.com read once the board fields are confirmed
-  // (through a database function with the app check, not from this public page).
-  async function loadJobs() {
-    return sampleJobs();
-  }
+  let DATA = null;            // planner_board()'s answer, once it has loaded
+  let CAPACITY = 23;          // fitters available per day (from the data)
 
   /* ---------- date helpers ---------- */
   function startOfDay(dt) { return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
   function addDays(dt, n) { const x = new Date(dt); x.setDate(x.getDate() + n); return x; }
   function iso(dt) { return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); }
-  function parse(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
   function mondayOf(dt) { return addDays(dt, -((dt.getDay() + 6) % 7)); }
   function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
   const fmtMonth = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
   const fmtDay = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const fmtRead = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   /* ---------- capacity ---------- */
-  // Adds up the supplied counts only. Jobs without a count are reported as missing, never guessed.
-  function capacityOn(d) {
-    let jobs = 0, total = 0, missing = 0;
-    for (const j of JOBS) {
-      if (parse(j.start) > d || parse(j.end) < d) continue;
-      jobs++;
-      if (typeof j.fitters === 'number' && isFinite(j.fitters)) total += j.fitters; else missing++;
-    }
-    return { jobs, total, missing };
+  // One day's figures from Monday, or null when the day had no dated fitting work.
+  function dayOf(d) {
+    const r = DATA && DATA.days[iso(d)];
+    return r ? { booked: r.b, unassigned: r.u || 0, tbc: r.t || 0, free: r.f } : null;
   }
   // Yellow (hue 48) at the bottom, blending to green (hue 130) when full; stays yellow longer, turns green as it fills.
   function battColour(total) {
@@ -117,53 +78,51 @@
     return `hsl(${Math.round(48 + k * 82)} ${Math.round(85 - r * 25)}% var(--batt-l))`;
   }
   function capLabel(c) {
-    let s = c.jobs === 0 ? `No work booked: 0 of ${CAPACITY} fitters`
-      : c.total > CAPACITY ? `Over capacity: ${c.total} of ${CAPACITY} fitters booked`
-      : `${c.total} of ${CAPACITY} fitters booked`;
-    if (c.missing) s += '. Incomplete: some work that day has no fitter count, so the real total may be higher';
+    let s = c.booked > CAPACITY ? `Over capacity: ${c.booked} of ${CAPACITY} fitters booked`
+      : c.booked === 0 ? `Fitting work, but no fitter assigned yet: 0 of ${CAPACITY}`
+      : `${c.booked} of ${CAPACITY} fitters booked`;
+    if (c.tbc) s += `, ${c.tbc} of them on TBC bookings`;
+    if (c.unassigned) s += `. ${plural(c.unassigned, 'booking still needs a fitter', 'bookings still need a fitter')}, so this total isn’t final`;
+    if (typeof c.free === 'number') s += `. ${plural(c.free, 'fitter', 'fitters')} free after leave and other time off`;
     return s;
   }
   // The battery and the fitter badge. hidden: left out of what a screen reader reads (the day's label says it).
   function battery(c, hidden = true) {
-    const over = c.total > CAPACITY, zero = c.jobs === 0;
-    const cls = ['cap', zero ? 'zero' : over ? 'over' : '', c.missing ? 'partial' : ''].filter(Boolean).join(' ');
-    const pct = zero ? 0 : Math.min(100, (c.total / CAPACITY) * 100);
+    const over = c.booked > CAPACITY, zero = c.booked === 0;
+    const cls = ['cap', zero ? 'zero' : over ? 'over' : '', c.unassigned ? 'partial' : ''].filter(Boolean).join(' ');
+    const pct = zero ? 0 : Math.min(100, (c.booked / CAPACITY) * 100);
     const fill = h('i');
     fill.style.width = pct + '%';
-    if (!over) fill.style.background = battColour(c.total);
+    if (!over) fill.style.background = battColour(c.booked);
     return h('span', { class: cls, 'aria-hidden': hidden ? 'true' : null },
       h('span', { class: 'row' },
         over ? icon('i-warn', 'warn') : null,
         h('span', { class: 'batt' }, fill, over ? icon('i-warn', 'warn-in') : null)),
-      h('span', { class: 'num' }, icon('i-person', 'pi'), String(c.total), h('span', { class: 'of' }, '/' + CAPACITY)));
+      h('span', { class: 'num' }, icon('i-person', 'pi'), String(c.booked), h('span', { class: 'of' }, '/' + CAPACITY)));
   }
+  const unassignedMark = n => h('span', { class: 'unk', 'aria-hidden': 'true' }, n > 9 ? '9+' : String(n));
 
   /* ---------- state ---------- */
-  let JOBS = [];
   const today = startOfDay(new Date());
   const todayIso = iso(today);
   let shown = new Date(today.getFullYear(), today.getMonth(), 1);
 
   /* ---------- the month ---------- */
   function render() {
-    $('#sampleLabel').hidden = !USING_SAMPLE_DATA;
     const first = new Date(shown.getFullYear(), shown.getMonth(), 1);
     const last = new Date(shown.getFullYear(), shown.getMonth() + 1, 0);
     $('#monthLabel').textContent = fmtMonth.format(first);
+    if (!DATA) return;
     const cells = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => h('div', { class: 'dow', role: 'columnheader' }, d));
     const end = addDays(mondayOf(last), 6);
     for (let d = mondayOf(first); d <= end; d = addDays(d, 1)) {
       // Days from the previous or next month: a blank, shaded cell that only holds the weekday columns in place.
       if (d.getMonth() !== first.getMonth()) { cells.push(h('div', { class: 'day out', role: 'gridcell', 'aria-hidden': 'true' })); continue; }
-      const we = isWeekend(d), isToday = iso(d) === todayIso;
-      const cls = ['day', we ? 'we' : '', isToday ? 'today' : ''].filter(Boolean).join(' ');
+      const isToday = iso(d) === todayIso, c = dayOf(d);
+      const cls = ['day', isWeekend(d) ? 'we' : '', isToday ? 'today' : ''].filter(Boolean).join(' ');
       let body = [], label = fmtDay.format(d) + (isToday ? ', today' : '');
-      if (we) { body = [h('span', { class: 'we-note' }, 'Weekend')]; label += ', weekend, not counted'; }
-      else {
-        const c = capacityOn(d);
-        body = [battery(c), c.missing ? h('span', { class: 'unk', 'aria-hidden': 'true', title: 'Incomplete total: some work that day has no fitter count' }, '?') : null];
-        label += '. ' + capLabel(c);
-      }
+      if (!c) label += '. No fitting work booked';   // a day with no dated fitting work: the date only
+      else { body = [battery(c), c.unassigned ? unassignedMark(c.unassigned) : null]; label += '. ' + capLabel(c); }
       cells.push(h('div', { class: cls, role: 'gridcell', 'aria-label': label, title: label }, h('span', { class: 'dn', 'aria-hidden': 'true' }, String(d.getDate())), body));
     }
     $('#cal').replaceChildren(...cells);
@@ -171,11 +130,34 @@
 
   function renderKey() {
     const item = (c, text) => [battery(c, false), h('span', null, text)];
-    $('#key-zero').replaceChildren(...item({ jobs: 0, total: 0, missing: 0 }, 'Nothing booked'));
-    $('#key-part').replaceChildren(...item({ jobs: 1, total: 12, missing: 0 }, 'Partly booked'));
-    $('#key-full').replaceChildren(...item({ jobs: 1, total: CAPACITY, missing: 0 }, 'Full'));
-    $('#key-over').replaceChildren(...item({ jobs: 1, total: 27, missing: 0 }, 'Over capacity'));
-    $('#key-unk').replaceChildren(h('span', { class: 'unk' }, '?'), h('span', null, 'Incomplete: a fitter count is missing'));
+    $('#key-zero').replaceChildren(...item({ booked: 0 }, 'Work booked, no fitter yet'));
+    $('#key-part').replaceChildren(...item({ booked: 12 }, 'Partly booked'));
+    $('#key-full').replaceChildren(...item({ booked: CAPACITY }, 'Full'));
+    $('#key-over').replaceChildren(...item({ booked: 27 }, 'Over capacity'));
+    $('#key-unk').replaceChildren(h('span', { class: 'unk' }, '2'), h('span', null, 'Bookings still needing a fitter'));
+  }
+
+  function showSource() {
+    $('#subtitle').textContent = `Fitters booked each day, out of ${CAPACITY}.`;
+    const at = new Date(DATA.readAt), src = $('#source');
+    src.textContent = `Monday · read ${fmtRead.format(at)}`;
+    src.title = `Daily totals from the Monday Work Programme, read ${fmtDay.format(at)} at ${at.toTimeString().slice(0, 5)}`;
+  }
+
+  // planner_board()'s answer, checked: a whole number capacity, a read time, and days of {b, u, t?, f?}. Anything else is
+  // treated as not loaded (the page shows no days rather than wrong ones).
+  const whole = n => Number.isInteger(n) && n >= 0;
+  function planFrom(d) {
+    if (!d || typeof d !== 'object' || !d.days || typeof d.days !== 'object' || Array.isArray(d.days)) return null;
+    if (d.readAt == null) return { empty: true };
+    if (isNaN(new Date(d.readAt))) return null;
+    const days = {};
+    for (const [k, r] of Object.entries(d.days)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !r || !whole(r.b)) return null;
+      if ([r.u, r.t, r.f].some(v => v != null && !whole(v))) return null;
+      days[k] = { b: r.b, u: r.u || 0, t: r.t || 0, f: r.f };
+    }
+    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days };
   }
 
   $('#prev').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() - 1, 1); render(); });
@@ -189,9 +171,10 @@
     $('#gate-title').textContent = title; $('#gate-text').textContent = text;
     $('#gate-retry').hidden = !o.retry;
   }
-  async function show() {
+  function show(plan) {
+    DATA = plan; CAPACITY = plan.capacity;
+    showSource();
     renderKey();
-    JOBS = await loadJobs();
     render();
     document.body.dataset.view = 'ready';
     $('#view').hidden = false;
@@ -214,21 +197,22 @@
   function failGate(e) {
     const code = flrCode(e);
     if (expired(e) || code === 'FLR_SIGN_IN_REQUIRED') return location.replace(SIGN_IN);
+    if (code === 'FLR_FORBIDDEN') return gate('You don’t have access to the Planner', 'It’s switched on for the FLR staff who need it. If you think you should have it, ask an FLR Super Admin.');
     if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR Super Admin to switch it back on.');
     if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR Super Admin.');
-    if (missingFunction(e)) return gate('The Planner isn’t ready yet', 'The FLR database doesn’t have the Hub’s apps yet.');
+    if (missingFunction(e)) return gate('The Planner isn’t ready yet', 'The FLR database doesn’t have the Planner’s figures yet.');
     if (offline(e)) return gate('Can’t reach the FLR database', 'Check your connection and try again.', { retry: true });
-    return gate('The Planner didn’t load', 'Something went wrong checking your access. Try again in a moment.', { retry: true });
+    return gate('The Planner didn’t load', 'Something went wrong getting the figures. Try again in a moment.', { retry: true });
   }
-  // hub_home() lists only the tiles this account may use (and refuses a switched-off account).
+  // planner_board() checks this account may use the Planner (as orders_board() does), then gives the daily totals.
   async function check() {
     try {
-      const { data, error } = await client().rpc('hub_home');
+      const { data, error } = await client().rpc('planner_board');
       if (error) return failGate(error);
-      if (data && data.waiting) return gate('Your account is waiting for a Super Admin', 'An FLR Super Admin needs to check who you are before you can use the Hub’s apps.');
-      const tiles = (data && Array.isArray(data.tiles)) ? data.tiles : [];
-      if (!tiles.some(t => t && t.id === TILE)) return gate('You don’t have access to the Planner', 'It’s switched on for the FLR staff who need it. If you think you should have it, ask an FLR Super Admin.');
-      await show();
+      const plan = planFrom(data);
+      if (!plan) return failGate(new Error('The answer had no daily totals in it'));
+      if (plan.empty) return gate('No Monday totals yet', 'The Planner hasn’t been given a read of the Monday Work Programme yet.');
+      show(plan);
     } catch (e) { failGate(e); }
   }
   $('#gate-retry').addEventListener('click', () => { document.body.dataset.view = 'loading'; $('#gate-message').hidden = true; check(); });
