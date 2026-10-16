@@ -2179,7 +2179,10 @@
         "where is the warehouse weekly task list",
         "forklift check",
         "my warehouse tasks",
-        "how does warehouse tasks work"
+        "how does warehouse tasks work",
+        "where are the instructions for a warehouse task",
+        "how do I do the forklift check",
+        "forklift inspection form"
       ],
       "keys": [
         "warehouse",
@@ -2190,9 +2193,12 @@
         "goods in",
         "weekly task list",
         "my tasks",
-        "all tasks"
+        "all tasks",
+        "instructions",
+        "form",
+        "forklift form"
       ],
-      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were.",
+      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were. Each task has an Instructions button with how to do it (as written on Monday). The Forklift Checks need the Forklift Inspection Form first: open it from the task, send it, then tick the task off.",
       "link": {
         "tile": "warehouse",
         "label": "Open Warehouse Tasks"
@@ -2212,7 +2218,9 @@
         "warehouse task didn't save",
         "why is my tick still saving",
         "does ticking update monday",
-        "I ticked it on monday"
+        "I ticked it on monday",
+        "why can't I tick the forklift check",
+        "it says form needed"
       ],
       "keys": [
         "saving",
@@ -2223,7 +2231,7 @@
         "sync",
         "warehouse"
       ],
-      "answer": "A tick shows “Saving…” until Monday has confirmed it, then “Saved”. If Monday refuses or can’t be reached it says “Not saved” and nothing changes on Monday: tap Try again. Ticks made on Monday itself, or by someone else, show here within about 2 minutes.",
+      "answer": "A tick shows “Saving…” until Monday has confirmed it, then “Saved”. If Monday refuses or can’t be reached it says “Not saved” and nothing changes on Monday: tap Try again. Ticks made on Monday itself, or by someone else, show here within about 2 minutes. A Forklift Check with a lock says “Form needed”: send that day's Forklift Inspection Form first (Instructions & form on the task), then tap “I’ve sent it: check again”.",
       "related": [
         "about-warehouse"
       ]

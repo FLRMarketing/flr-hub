@@ -142,6 +142,11 @@
     if (skipped) meta.push(h('span', { class: 'chip' }, `${t.status} on Monday`));
     else if (!s.done && t.status && t.status !== 'Pending' && t.status !== DONE && !s.sync)
       meta.push(h('span', { class: 'chip ' + (t.status === 'Working on it' ? 'st-working' : t.status === 'Stuck' ? 'st-stuck' : 'st-other') }, t.status));
+    // 1.1: the task's form (Forklift Checks): needed, or sent (with what the form said)
+    const sent = t.form ? t.form.sent || [] : [];
+    const needsForm = !!t.form && !sent.length && !s.done;
+    if (t.form && sent.length) { const a = sent[sent.length - 1]; meta.push(h('span', { class: 'chip ' + formClass(a.status), title: `${a.by || 'Someone'}, ${when(a.at)}` }, `Form ${a.status ? '· ' + a.status : 'sent'}`)); }
+    else if (needsForm) meta.push(h('span', { class: 'chip form-need' }, 'Form needed'));
     // saving / saved / not saved
     if (s.sync === 'saving') meta.push(h('span', { class: 'sync saving' }, s.slow ? 'Still saving… waiting for Monday' : 'Saving…'));
     else if (s.sync === 'saved') meta.push(h('span', { class: 'sync saved' }, icon('i-check'), 'Saved to Monday'));
@@ -149,10 +154,12 @@
       o.readOnly ? null : h('button', { class: 'retry', type: 'button', onclick: () => tick(t, s.want) }, 'Try again'));
     else if (s.done) { const d = doneInfo(t); meta.push(h('span', { class: 'when' }, [d.by || 'Done on Monday', d.at ? when(d.at) : ''].filter(Boolean).join(' · '))); }
 
-    const label = (s.done ? 'Untick ' : 'Tick off ') + t.title;
-    const btn = h('button', { class: 'tick' + (s.sync === 'saving' ? ' busy' : ''), type: 'button', 'aria-pressed': String(!!s.done), 'aria-label': label, title: label,
-      disabled: s.sync === 'saving' || skipped || o.readOnly || null, onclick: () => tick(t, !s.done) }, icon('i-check'));
-    return h('li', { class: cls, 'data-id': t.id }, h('div', null, h('p', { class: 'name' }, t.title), h('div', { class: 'meta' }, meta)), btn);
+    const label = needsForm ? `Send the form first, then tick off ${t.title}` : (s.done ? 'Untick ' : 'Tick off ') + t.title;
+    const btn = h('button', { class: 'tick' + (s.sync === 'saving' ? ' busy' : '') + (needsForm ? ' locked' : ''), type: 'button', 'aria-pressed': String(!!s.done), 'aria-label': label, title: label,
+      disabled: s.sync === 'saving' || skipped || o.readOnly || null, onclick: () => needsForm ? openGuide(t.id, { needForm: true }) : tick(t, !s.done) }, icon(needsForm ? 'i-lock' : 'i-check'));
+    // 1.1: Will's instructions (and the form), opened from the card
+    const guide = (t.instructions || t.form) ? h('button', { class: 'guide-btn', type: 'button', onclick: () => openGuide(t.id) }, icon('i-book'), t.form ? 'Instructions & form' : 'Instructions') : null;
+    return h('li', { class: cls, 'data-id': t.id }, h('div', null, h('p', { class: 'name' }, t.title), h('div', { class: 'meta' }, meta), guide), btn);
   }
   const previewCard = name => h('li', { class: 'task preview' }, h('div', null, h('p', { class: 'name' }, name), h('div', { class: 'meta' }, h('span', { class: 'who none' }, 'On next week’s list'))),
     h('button', { class: 'tick', type: 'button', disabled: true, 'aria-label': 'Not on Monday yet' }, icon('i-check')));
@@ -320,6 +327,7 @@
     if (res.error) {
       if (expired(res.error) || flrCode(res.error) === 'FLR_SIGN_IN_REQUIRED') return location.replace(SIGN_IN);
       if (flrCode(res.error) === 'FLR_FORBIDDEN') return failGate(res.error);
+      if (flrCode(res.error) === 'FLR_FORM_NEEDED') { local.delete(t.id); render(); return openGuide(t.id, { needForm: true }); }
       const why = offline(res.error) ? 'Couldn’t reach the FLR database. Check your connection.' : flrCode(res.error) === 'FLR_NOT_FOUND' ? 'That task is no longer on Monday.' : 'The FLR database didn’t take the tick.';
       local.set(t.id, { done, state: 'error', error: why });
       say(`${t.title}: not saved. ${why}`);
@@ -341,6 +349,71 @@
       if (t.tick.state === 'sent') { watching.delete(t.id); savedUntil.set(t.id, Date.now() + SAVED_FOR_MS); say(`${t.title}: saved to Monday.`); setTimeout(render, SAVED_FOR_MS + 50); }
       else if (t.tick.state === 'failed') { watching.delete(t.id); say(`${t.title}: not saved to Monday.`); }
     }
+  }
+
+  /* ---------------------------------------------------------------- 1.1: instructions and the form, in a panel */
+  const formClass = st => /issue/i.test(st || '') ? 'form-issue' : /concern/i.test(st || '') ? 'form-concern' : 'form-ok';
+  const findTask = id => { for (const b of boards.values()) { const t = b.tasks.find(x => x.id === id); if (t) return t; } return null; };
+  const dialog = h('dialog', { class: 'guide', 'aria-labelledby': 'guide-title' });
+  document.body.append(dialog);
+  dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });   // a tap outside the panel closes it
+  dialog.addEventListener('close', () => { guideId = null; guideNote = null; });
+  let guideId = null, guideNote = null, checkingUntil = 0;
+  // The instructions as Will wrote them: headings, paragraphs and lists, as text (links as buttons that open a new tab).
+  function instructionsView(blocks) {
+    const out = []; let ul = null;
+    for (const b of blocks || []) {
+      if (b.k === 'li') { if (!ul) out.push(ul = h('ul')); ul.append(h('li', null, b.t, b.href ? [' ', link(b.href)] : null)); continue; }
+      ul = null;
+      // a link to the task's form: the form's own section above has the button, so the address isn't repeated here
+      const isForm = b.href && /forms\.monday\.com/.test(b.href);
+      const text = isForm ? b.t.replace(/\S*forms\.monday\.com\S*/g, '').replace(/\s*-?>\s*$/, '').replace(/[\s:]+$/, '') + ': use the form button above.' : b.t;
+      out.push(b.k === 'h' ? h('h3', null, b.t) : h('p', null, text, b.href && !isForm ? [' ', link(b.href)] : null));
+    }
+    return out;
+  }
+  const link = href => h('a', { class: 'inline-link', href, target: '_blank', rel: 'noopener noreferrer' }, 'Open link');
+  function formView(t, s) {
+    const sent = t.form.sent || [];
+    const day = t.day ? fmtWeekday.format(asDate(t.day)) : 'this week';
+    const parts = [h('h3', null, t.form.title || 'Form')];
+    if (sent.length) {
+      for (const a of sent) parts.push(h('p', { class: 'form-line' }, h('span', { class: 'chip ' + formClass(a.status) }, a.status || 'Sent'), ` ${a.by || 'Someone'} · ${when(a.at)}`, a.note ? h('span', { class: 'form-note' }, a.note) : null));
+      if (!s.done) parts.push(h('p', { class: 'guide-actions' }, h('button', { class: 'btn btn-brand', type: 'button', onclick: () => { dialog.close(); tick(t, true); } }, 'Tick it off now')));
+    } else {
+      parts.push(h('p', { class: 'form-wait' + (guideNote === 'need' ? ' urgent' : '') }, guideNote === 'need'
+        ? `Send the form for ${day} first. Once it has arrived on Monday you can tick this off.`
+        : `No form for ${day} has arrived on Monday yet.`));
+      const checking = checkingUntil > Date.now();
+      parts.push(h('p', { class: 'guide-actions' },
+        h('a', { class: 'btn btn-brand', href: t.form.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open the form'),
+        h('button', { class: 'btn', type: 'button', disabled: checking || null, onclick: checkNow }, checking ? 'Checking Monday…' : 'I’ve sent it: check again')));
+      if (guideNote === 'checked') parts.push(h('p', { class: 'form-wait' }, 'Monday hasn’t got it yet. Forms can take a minute to arrive; try again shortly.'));
+    }
+    return h('section', { class: 'guide-form' }, parts);
+  }
+  function renderGuide() {
+    const t = guideId && findTask(guideId);
+    if (!t) { if (dialog.open) dialog.close(); return; }
+    const s = stateOf(t);
+    dialog.replaceChildren(h('div', { class: 'guide-head' },
+        h('div', null, h('p', { class: 'guide-day' }, t.day ? fmtLong.format(asDate(t.day)) : 'Any day this week'), h('h2', { id: 'guide-title' }, t.title)),
+        h('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Close', onclick: () => dialog.close() }, icon('i-close'))),
+      h('div', { class: 'guide-body' },
+        t.form ? formView(t, s) : null,
+        t.instructions ? h('section', { class: 'guide-text' }, instructionsView(t.instructions)) : h('p', { class: 'form-wait' }, 'No instructions on Monday for this task.')));
+  }
+  function openGuide(id, o = {}) {
+    guideId = id; guideNote = o.needForm ? 'need' : null;
+    renderGuide();
+    if (!dialog.open) dialog.showModal();
+  }
+  // "I've sent it": ask flr-warehouse to read Monday now, then look for 40 seconds.
+  async function checkNow() {
+    checkingUntil = Date.now() + 40e3; fastUntil = checkingUntil; renderGuide();
+    try { await client().rpc('warehouse_read_now'); } catch (e) { /* the 2-minute read still comes */ }
+    schedule(2500);
+    setTimeout(() => { checkingUntil = 0; const t = guideId && findTask(guideId); if (t && t.form && !(t.form.sent || []).length) guideNote = 'checked'; renderGuide(); }, 40e3);
   }
 
   /* ---------------------------------------------------------------- the database */
@@ -403,12 +476,17 @@
     const weeks = new Set([THIS_WEEK]); if (view === 'week' && shownWeek) weeks.add(shownWeek);
     for (const w of weeks) await load(w, true);
     render();
+    if (dialog.open) {
+      const t = findTask(guideId);
+      if (t && t.form && (t.form.sent || []).length && checkingUntil) { checkingUntil = 0; guideNote = null; say('The form has arrived on Monday.'); }
+      renderGuide();
+    }
     schedule();
   }
   let timer = 0;
   function schedule(ms) {
     clearTimeout(timer);
-    const fast = watching.size && Date.now() < fastUntil;
+    const fast = (watching.size || checkingUntil > Date.now()) && Date.now() < fastUntil;
     timer = setTimeout(refresh, ms || (fast ? FAST_MS : REFRESH_MS));
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') schedule(50); });

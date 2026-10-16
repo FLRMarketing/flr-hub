@@ -223,3 +223,45 @@ body[data-view="ready"] .gate{display:none}
 @media (hover:hover){.btn-brand:hover{background:var(--tint-fill);filter:brightness(1.12)}}
 .noscript{max-width:520px;margin:20vh auto;padding:0 16px;text-align:center;color:var(--ink-2)}
 .task.preview .tick{display:none}   /* nothing to tick until the week is made on Monday */
+
+/* ======================================================================== 1.1: instructions and forms */
+.guide-btn{display:inline-flex;align-items:center;gap:7px;min-height:40px;margin-top:10px;padding:0 14px 0 12px;border:0;border-radius:999px;background:var(--tint-soft);
+  color:var(--tint);font:650 14.5px/1 var(--font-text);cursor:pointer}
+.guide-btn svg{width:17px;height:17px}
+@media (hover:hover){.guide-btn:hover{background:color-mix(in srgb,var(--tint) 16%,transparent)}}
+.chip.form-need{background:var(--gold-soft);color:var(--gold-ink)}
+.chip.form-ok{background:var(--done-soft);color:var(--done)}
+.chip.form-concern{background:var(--orange-soft);color:var(--orange-ink)}
+.chip.form-issue{background:var(--red-soft);color:var(--red-ink)}
+/* form first: the tick button shows a lock and opens the form panel */
+.tick.locked{border-style:dashed;color:var(--ink-3)}
+.tick.locked svg{width:24px;height:24px}
+@media (hover:hover){.tick.locked:hover{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-ink)}}
+
+dialog.guide{width:min(640px,calc(100% - 32px));max-height:min(86vh,900px);margin:auto;padding:0;border:0;border-radius:20px;background:var(--surface);color:var(--ink);
+  box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:auto}
+dialog.guide::backdrop{background:rgba(0,0,0,.45)}
+.guide-head{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 14px 22px;
+  background:var(--surface);border-bottom:1px solid var(--sep)}
+.guide-head h2{margin:2px 0 0;font:700 22px/1.2 var(--font-display);letter-spacing:-.016em}
+.guide-day{margin:0;color:var(--ink-2);font:600 14px/1.3 var(--font-text)}
+.guide-body{padding:6px 22px 26px}
+.guide-body h3{margin:20px 0 8px;font:700 17px/1.3 var(--font-display)}
+.guide-text{overflow-wrap:anywhere}
+.guide-text p{margin:8px 0;color:var(--ink);font-size:16px;line-height:1.5}
+.guide-text ul{margin:6px 0 10px;padding-left:22px}
+.guide-text li{margin:5px 0;font-size:16px;line-height:1.45}
+.inline-link{color:var(--tint);font-weight:650;white-space:nowrap}
+.guide-form{margin:14px 0 4px;padding:4px 16px 14px;border-radius:14px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--sep)}
+.guide-form h3{margin-top:12px}
+.form-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:8px 0;font-size:15.5px}
+.form-note{flex-basis:100%;color:var(--ink-2);font-size:14.5px}
+.form-wait{margin:8px 0;color:var(--ink-2);font-size:15.5px}
+.form-wait.urgent{color:var(--gold-ink);font-weight:650}
+.guide-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 2px}
+.guide-actions .btn:disabled{opacity:.6;cursor:default}
+@media (max-width:520px){
+  dialog.guide{width:100%;max-width:100%;max-height:92vh;margin:auto 0 0;border-radius:20px 20px 0 0}
+  .guide-body{padding:4px 18px calc(24px + env(safe-area-inset-bottom,0px))}
+  .guide-actions .btn{flex:1 1 auto}
+}
