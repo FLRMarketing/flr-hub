@@ -219,10 +219,17 @@
     if (!pc) { hint('Enter a UK postcode, for example CV22 5DJ.', true); $('#results').hidden = true; return; }
     const district = DISTRICTS.get(pc.outcode);
     if (!district) { hint(`${pc.full || pc.outcode} isn’t a postcode district we recognise. Check the postcode and try again.`, true); $('#results').hidden = true; return; }
-    const line = ($('#line').value || '').trim();
+    let line = $('#lineWrap').hidden ? '' : ($('#line').value || '').trim();
     let site = null, known = null, lineMissed = false;
-    // The first line of the address, when given: the exact address (Esri), kept to this postcode.
-    if (line && pc.full) {
+    // The address picked from the postcode's list (Ideal Postcodes), when there is one
+    if (pc.full && !$('#addrWrap').hidden && $('#addr').value !== '') {
+      if (!quiet) hint('Finding the address…');
+      const a = await pickedAddress(pc.full);
+      if (a) site = { lat: a.lat, lon: a.lon, how: 'address', address: a.address };
+      else { lineMissed = true; line = $('#addr').selectedOptions[0] ? $('#addr').selectedOptions[0].text : 'that address'; }
+    }
+    // Else the typed first line of the address: the exact address (Esri), kept to this postcode.
+    if (!site && line && pc.full) {
       if (!quiet) hint('Finding the address…');
       const a = await addressFor(line, pc.full);
       if (a) site = { lat: a.lat, lon: a.lon, how: 'address', address: a.address };
@@ -239,7 +246,7 @@
     }
     if (!site) site = { lat: district.lat, lon: district.lon, how: 'district' };
     lastSearch = text;
-    hint(lineMissed ? `Couldn’t find “${line}” in ${pc.full}, so this uses the postcode.`
+    hint(lineMissed ? `Couldn’t place “${line}” on the map exactly, so this uses the postcode.`
       : site.how === 'district' && pc.full ? 'postcodes.io didn’t answer, so this uses the centre of the postcode district.' : '', lineMissed);
     LAST = { pc, district, site, known };
     render(pc, district, site, known, quiet);
@@ -331,6 +338,58 @@
   const FOOT0 = () => $('#foot').dataset.base || ($('#foot').dataset.base = $('#foot').textContent);
   function roadNote() { $('#foot').textContent = 'Road routes aren’t available at the moment, so distances are straight lines with an estimated drive time. ' + FOOT0(); }
 
+  /* ---------------------------------------------------------------- the postcode's addresses (Royal Mail, via Ideal Postcodes) */
+  // Once a full postcode is typed, its addresses fill the Address list (one lookup per postcode, kept for the page's life).
+  // Picking one puts the site at that address (Esri finds the exact spot; else the address's own position). Without the
+  // service's key, or if it fails, the page falls back to typing the first line with Esri's suggestions.
+  const ADDR_KEY = String(window.FLR_ADDRESS_KEY || '').trim();
+  const ADDR_URL = window.FLR_ADDRESS_URL || 'https://api.ideal-postcodes.co.uk';   // the local preview points this at its stand-in
+  const ADDRS = new Map();   // "CV225DJ" -> [{label, line, town, postcode, lat, lon}] | 'none'
+  let addrFor = '', addrSeq = 0;
+  const addrLabel = a => [a.line_1, a.line_2, a.line_3].filter(x => x && String(x).trim()).join(', ');
+  function showAddrPicker(on) { $('#addrWrap').hidden = !on; $('#lineWrap').hidden = on; }
+  async function loadAddresses(full) {
+    const k = pcKey(full);
+    if (ADDRS.has(k)) return ADDRS.get(k);
+    try {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch(`${ADDR_URL}/v1/postcodes/${encodeURIComponent(k)}?api_key=${encodeURIComponent(ADDR_KEY)}`, { signal: ctl.signal });
+      clearTimeout(tm);
+      const body = await r.json().catch(() => null);
+      const list = body && body.code === 2000 && Array.isArray(body.result) ? body.result.map(a => ({
+        label: addrLabel(a), town: String(a.post_town || ''), postcode: String(a.postcode || full),
+        lat: Number.isFinite(a.latitude) ? a.latitude : null, lon: Number.isFinite(a.longitude) ? a.longitude : null })).filter(a => a.label) : null;
+      if (list && list.length) { ADDRS.set(k, list); return list; }
+      if (body && body.code === 4040) ADDRS.set(k, 'none');   // not a postcode Royal Mail knows: don't ask again
+      return null;
+    } catch (e) { return null; }
+  }
+  async function fillAddresses() {
+    const pc = parsePostcode($('#postcode').value), seq = ++addrSeq;
+    if (!ADDR_KEY || !pc || !pc.full) { addrFor = ''; showAddrPicker(false); return; }
+    if (addrFor === pc.full) return;
+    const sel = $('#addr');
+    sel.disabled = true; $('#addrCount').textContent = '(finding addresses…)'; showAddrPicker(true);
+    const list = await loadAddresses(pc.full);
+    if (seq !== addrSeq) return;
+    sel.disabled = false;
+    if (!list || list === 'none') { addrFor = ''; showAddrPicker(false); return; }
+    addrFor = pc.full;
+    $('#addrCount').textContent = `(${list.length} in ${pc.full})`;
+    sel.replaceChildren(h('option', { value: '' }, 'Whole postcode (its centre)'), ...list.map((a, i) => h('option', { value: String(i) }, a.label)));
+  }
+  let addrTimer = 0;
+  // The picked address: Esri's exact spot for it when Esri finds it in this postcode, else the address's own position.
+  async function pickedAddress(full) {
+    const list = ADDRS.get(pcKey(full)), i = $('#addr').value;
+    if (!Array.isArray(list) || i === '' || $('#addrWrap').hidden || addrFor !== full) return null;
+    const a = list[Number(i)];
+    if (!a) return null;
+    const exact = await addressFor(`${a.label}, ${a.town}`, full);
+    if (exact) return { lat: exact.lat, lon: exact.lon, address: `${a.label}, ${a.town}, ${a.postcode}` };
+    return a.lat != null ? { lat: a.lat, lon: a.lon, address: `${a.label}, ${a.town}, ${a.postcode}` } : null;
+  }
+
   /* ---------------------------------------------------------------- the map (Fleet Management's satellite and street maps) */
   const ESRI_KEY = String(window.FLR_MAP_KEY || '').trim();
   const tok = ESRI_KEY ? `?token=${encodeURIComponent(ESRI_KEY)}` : '';
@@ -415,7 +474,7 @@
   function pick(reg, fly = true) {
     if (!MAP) return;
     for (const [r, o] of MAP.marks) o.m.setIcon(vanIcon(o.v, r === reg));
-    document.querySelectorAll('.mp-row').forEach(b => b.setAttribute('aria-current', String(b.dataset.reg === reg)));
+    document.querySelectorAll('.mappanel [data-reg]').forEach(b => b.setAttribute('aria-current', String(b.dataset.reg === reg)));
     const o = MAP.marks.get(reg);
     if (o && fly) MAP.map.flyTo([o.v.pos.lat, o.v.pos.lon], Math.max(MAP.map.getZoom(), 13), { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.6 });
     if (o) o.m.openTooltip();
@@ -442,14 +501,14 @@
       panel.replaceChildren(
         h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'Nearest vehicle'),
           h('p', null, `${vans.length} vehicles with a position`)),
-        h('div', { class: 'mp-first' },
+        h('button', { type: 'button', class: 'mp-first', 'data-reg': top.reg, title: 'Show on the map' },
           person(top.who || 'Unassigned vehicle', plateEl(plateOf(top), true), vanState(top), 'lg'),
           h('span', { class: 'far' }, farLine(top.d))),
         h('ul', { class: 'mp-list', 'aria-label': 'Next nearest vehicles' }, rest.slice(0, 12).map(v => h('li', null,
           h('button', { type: 'button', class: 'mp-row', 'data-reg': v.reg },
             person(v.who || 'Unassigned', plateEl(plateOf(v)), vanState(v), 'sm'),
             h('span', { class: 'mi' }, milesTxt(v.d), h('span', null, timeTxt(v.d))))))));
-      panel.querySelectorAll('.mp-row').forEach(b => b.addEventListener('click', () => pick(b.dataset.reg)));
+      panel.querySelectorAll('[data-reg]').forEach(b => b.addEventListener('click', () => pick(b.dataset.reg)));   // the nearest too
     } else if (DATA.vansAllowed) {
       panel.replaceChildren(h('div', { class: 'mp-head' }, h('span', { class: 'eyebrow' }, 'Right now · FleetView'), h('h2', null, 'No vehicle positions yet')));
     } else {
@@ -499,7 +558,11 @@
 
   $('#search').addEventListener('submit', e => { e.preventDefault(); search($('#postcode').value); });
   $('#line').addEventListener('input', suggestLines);
-  $('#postcode').addEventListener('input', () => { SUGGEST.clear(); $('#lineList').replaceChildren(); });
+  $('#postcode').addEventListener('input', () => {
+    SUGGEST.clear(); $('#lineList').replaceChildren();
+    clearTimeout(addrTimer); addrTimer = setTimeout(fillAddresses, 350);   // the postcode's addresses, once it's a full postcode
+  });
+  $('#addr').addEventListener('change', () => { if ($('#postcode').value.trim()) search($('#postcode').value); });
 
   /* ================================================================ the Hub: signed in, and the app is theirs */
   function gate(title, text, o = {}) {
