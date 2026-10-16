@@ -65,7 +65,8 @@
   const S = { you: '', apps: [], accounts: [], settings: null, pre: [], query: '',
     // People & access: which view, who or which app is open, and the drafts (account id -> { role, status, apps: { app: on } }),
     // kept until Save changes. Nothing in a draft has reached the database.
-    mode: 'people', person: '', app: '', open: false, draft: new Map(), saving: false, error: '', saved: '' };
+    mode: 'people', person: '', app: '', open: false, draft: new Map(), saving: false, error: '', saved: '',
+    photos: {} };   // account id -> staff photo (Hub migration 2.5); none, initials
   const byId = id => S.accounts.find(a => a.id === id);
   // Waiting: registered, switched off, nobody has decided yet. Not approved: waiting, or a Super Admin said no.
   const notApproved = a => !!(a && a.request && a.request.decision !== 'approved');
@@ -171,6 +172,16 @@
   const dirty = () => changes().length;
 
   /* ---------------------------------------------------------------- People & access: drawing */
+  // A person's staff photo (the Annual Leave one, matched by email in the database), or their initials. Accounts that
+  // aren't approved never show one: the photo would be whoever the address belongs to, not who registered.
+  function avatarOf(a) {
+    const src = !notApproved(a) && S.photos[a.id];
+    const av = el('span', 'pa-avatar' + (src ? ' has-photo' : ''));
+    av.setAttribute('aria-hidden', 'true');
+    if (src && /^data:image\/jpeg;base64,/.test(src)) { const img = el('img'); img.alt = ''; img.decoding = 'async'; img.src = src; av.append(img); }
+    else av.textContent = initials(nameOf(a));
+    return av;
+  }
   const statusOf = (a, sh) => notApproved(a) ? ['Not approved', 'is-unapproved'] : sh.status === 'disabled' ? [STATUS.disabled, 'is-off'] : [STATUS.active, 'is-active'];
   function metaLine(a, sh) {
     const m = el('span', 'pa-meta');
@@ -192,7 +203,7 @@
     const b = el('button', 'pa-row');
     b.type = 'button'; b.dataset.person = a.id; b.dataset.focus = 'person:' + a.id;
     if (a.id === S.person && (S.open || !isPhone())) b.setAttribute('aria-current', 'true');   // phones: nobody is open until tapped
-    const av = el('span', 'pa-avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
+    const av = avatarOf(a);
     const text = el('span');
     text.append(nameLine(a), el('span', 'pa-email', a.email), metaLine(a, sh));
     const count = el('span', 'pa-count'); count.append(el('strong', null, String(n)), ` ${n === 1 ? 'app' : 'apps'}`);
@@ -266,7 +277,7 @@
     const box = document.createDocumentFragment();
     box.append(backButton('All people'));
     const top = el('div', 'pa-top');
-    const av = el('span', 'pa-avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
+    const av = avatarOf(a);
     const who = el('div'); who.style.minWidth = '0';
     const h = el('h3', 'pa-title', nameOf(a)); h.id = 'pa-detail-title'; h.tabIndex = -1;
     who.append(h, el('span', 'pa-email', a.email), el('p', 'pa-seen', `Joined ${day(a.createdAt)} · ${seen(a.lastSeen)}`));
@@ -489,12 +500,19 @@
     }
     $('#gate').hidden = true;
     $('#accounts-section').hidden = false; $('#registration-section').hidden = false; $('#jeff-section').hidden = false;
-    renderSettings(); renderAccounts(); renderPre(); loadJeff();
+    renderSettings(); renderAccounts(); renderPre(); loadJeff(); loadPhotos();
     view('ready');
+  }
+  // Staff photos (Hub migration 2.5). Before that update, or if it fails, everyone keeps their initials.
+  async function loadPhotos() {
+    try { const p = await call('admin_account_photos'); S.photos = p && typeof p === 'object' && !Array.isArray(p) ? p : {}; }
+    catch (e) { return; }
+    render();
   }
   async function reloadAccounts() {
     const acc = await call('admin_accounts');
     S.you = acc.you; S.apps = acc.apps || []; S.accounts = acc.accounts || [];
+    loadPhotos();
     const gone = prune();
     if (gone) S.error = `${plural(gone, 'unsaved change was', 'unsaved changes were')} dropped: the account has gone, or isn’t approved any more.`;
     renderAccounts();

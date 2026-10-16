@@ -108,6 +108,8 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .pa-row[aria-current="true"]{background:var(--pa-blue-soft);box-shadow:inset 3px 0 var(--pa-blue)}
 .pa-row[hidden]{display:none}
 .pa-avatar{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:50%;background:var(--pa-soft);color:var(--pa-blue-text);font-size:12px;font-weight:650}
+.pa-avatar.has-photo{overflow:hidden}
+.pa-avatar img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
 .pa-name{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:2px;font-weight:650;overflow-wrap:anywhere}
 .pa-email{display:block;color:var(--pa-muted);font-size:12px;overflow-wrap:anywhere}
 .pa-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:6px;color:var(--pa-muted);font-size:12px}
