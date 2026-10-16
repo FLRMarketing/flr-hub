@@ -2,7 +2,7 @@
    FLR Hub: Nearby (Hub tile 'proximity'). Enter a site postcode and see:
      - Right now: the vans nearest the site, from FleetView's live positions (Admins and Super Admins only);
      - Booked today: the fitter booked nearest the site today, from the Monday Work Programme;
-     - Then, day by day: who is booked nearest on each of the next 14 days.
+     - Next 14 days: who is booked nearest on each of the next 14 days.
    It is the Team Proximity Finder Claude page moved onto the Hub, where the live van positions already are.
 
    The data: public.proximity_board() (Estimator repo, 20261016400000_flr_proximity.sql) answers
@@ -546,7 +546,7 @@
             h('span', { class: 'miles' }, `${milesTxt(b.d)} · ${timeTxt(b.d)}`)))) : null,
       ] : [h('span', { class: 'none' }, 'Nobody is booked on the Work Programme today.')]));
 
-    // Then, day by day
+    // Next 14 days
     const rows = [];
     for (let i = 1; i <= DAYS_AHEAD; i++) {
       const day = addDays(TODAY, i), list = nearestOn(day, site);
