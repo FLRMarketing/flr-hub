@@ -1996,6 +1996,8 @@
         "where do the planner figures come from",
         "is the planner up to date",
         "when was the planner last updated",
+        "how often is the planner updated",
+        "how often does the planner refresh",
         "what does days with no battery mean"
       ],
       "keys": [
@@ -2013,7 +2015,7 @@
         "real data",
         "up to date"
       ],
-      "answer": "The Planner is a month calendar of how many fitters are booked each day, out of 23 (the fitters available a day). The figures are real daily totals from the Monday Work Programme: each day counts the different fitters booked on fitting work, and TBC bookings count once a fitter is on them. Each day has a battery that fills as fitters are booked and a badge such as 18/23; a gold number shows the bookings that day with no fitter yet. Days with no fitting work show the date only. The figures are as of the time shown at the top (“Monday · read …”), and FLR refreshes them.",
+      "answer": "The Planner is a month calendar of how many fitters are booked each day, out of 23. The figures are read from the Monday Work Programme every 15 minutes: each day counts the different fitters on fitting work. A battery fills as fitters are booked, with a badge such as 18/23; a gold number shows bookings with no fitter yet. “Monday · updated …” at the top says when it was last read.",
       "link": {
         "tile": "capacity",
         "label": "Open the Planner"
@@ -2057,7 +2059,7 @@
         "no fitter",
         "grey"
       ],
-      "answer": "An empty grey battery (0/23): work is booked that day but no fitter is on it yet. It fills from yellow to green as fitters are booked, and is full at 23. Red with a warning sign: over capacity, more than 23 fitters booked. A gold number in the corner (and a dashed battery): bookings that day still needing a fitter. It counts bookings, not how many fitters are short, so that day’s total isn’t final. A day with only the date has no fitting work. The key under the calendar shows each one.",
+      "answer": "An empty grey battery (0/23): work is booked but no fitter is on it yet. It fills from yellow to green as fitters are booked, and is full at 23. Red with a warning sign: over capacity, more than 23 booked. A gold number in the corner (and a dashed battery): bookings that day still needing a fitter, so the total isn’t final. A day with only the date has no fitting work.",
       "link": {
         "tile": "capacity",
         "label": "Open the Planner"

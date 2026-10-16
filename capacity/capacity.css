@@ -64,6 +64,10 @@ main{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
 .source{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--fill);color:var(--ink-2);font:600 13px/1.3 var(--font-text);white-space:nowrap}
 .source::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--live)}
 .head p{flex-basis:100%;margin:0;color:var(--ink-2);font-size:15px}
+/* Planner 1.2: Monday reads failing. The last good read stays; this says since when (gold, as the "needs a fitter" mark). */
+.head p.notice{display:flex;align-items:flex-start;gap:8px;margin:4px 0 0;padding:8px 12px;border-radius:10px;background:var(--gold-soft);color:var(--gold-ink);font:600 14px/1.4 var(--font-text);max-width:640px}
+.head p.notice::before{content:"";flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--gold)}
+.source.stale::before{background:var(--gold)}
 
 /* ---------- month navigation, as on the Diary */
 .monthnav{display:flex;align-items:center;gap:8px;margin-bottom:14px}

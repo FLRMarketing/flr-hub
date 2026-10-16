@@ -6,16 +6,18 @@
 
    The figures: real daily totals from the Monday Work Programme, never names or jobs.
    public.planner_board() (Estimator repo, 20261016100000_flr_planner_data.sql) answers
-     { capacity, readAt, source, days: { "YYYY-MM-DD": { b, u, t?, f? } } }
+     { capacity, readAt, source, days: { "YYYY-MM-DD": { b, u, t?, f? } },
+       triedAt, failingSince, pageError }     (the last three since Planner 1.2)
        b  distinct fitters booked on fitting work that day
        u  fitting bookings that day still with no fitter (the gold number)
        t  fitters booked only on TBC bookings
        f  roster fitters free that day (weekdays)
-   A day that isn't listed had no fitting work: it shows the date only. The totals are made
-   by flr-job-planner/data/build.py from a read-only read of the board, and loaded by a
-   Super Admin running data/planner-load.sql (made by data/make_load_sql.py) in the SQL
-   editor. Before the first load (readAt null) the page says so and shows no days, so
-   nothing looks free when it may not be.
+   A day that isn't listed had no fitting work: it shows the date only. Since Planner 1.2 the
+   flr-planner Edge Function reads the Work Programme (read-only) every 15 minutes and saves
+   the totals; the label beside the heading says when ("Monday · updated 09:45"). If reads
+   start failing, the last good read stays and a gold notice under the subtitle says since
+   when. Before the first read (readAt null) the page says so and shows no days, so nothing
+   looks free when it may not be. An open page asks again every 5 minutes.
 
    Who can open it: planner_board() makes the Order Tracker's app check
    (private.require_app('capacity')): signed in, with a profile, not switched off, and on
@@ -64,6 +66,9 @@
   const fmtMonth = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
   const fmtDay = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   const fmtRead = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const fmtTime = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
+  // A read time: "09:45" today, "15 Oct, 09:45" on any other day.
+  const when = at => (iso(at) === iso(new Date()) ? fmtTime : fmtRead).format(at);
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   /* ---------- capacity ---------- */
@@ -140,8 +145,15 @@
   function showSource() {
     $('#subtitle').textContent = `Fitters booked each day, out of ${CAPACITY}.`;
     const at = new Date(DATA.readAt), src = $('#source');
-    src.textContent = `Monday · read ${fmtRead.format(at)}`;
-    src.title = `Daily totals from the Monday Work Programme, read ${fmtDay.format(at)} at ${at.toTimeString().slice(0, 5)}`;
+    src.textContent = `Monday · updated ${when(at)}`;
+    src.title = `Daily totals from the Monday Work Programme, read every 15 minutes. Last read ${fmtDay.format(at)} at ${fmtTime.format(at)}`;
+    src.classList.toggle('stale', !!DATA.failingSince);
+    // Reads failing: the last good read is still shown, and this says so.
+    const note = $('#notice');
+    if (DATA.failingSince) {
+      note.textContent = `Couldn’t read Monday since ${when(new Date(DATA.failingSince))}. Showing the last good read from ${when(at)}.`;
+      note.hidden = false;
+    } else { note.textContent = ''; note.hidden = true; }
   }
 
   // planner_board()'s answer, checked: a whole number capacity, a read time, and days of {b, u, t?, f?}. Anything else is
@@ -157,7 +169,8 @@
       if ([r.u, r.t, r.f].some(v => v != null && !whole(v))) return null;
       days[k] = { b: r.b, u: r.u || 0, t: r.t || 0, f: r.f };
     }
-    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days };
+    const failingSince = d.failingSince != null && !isNaN(new Date(d.failingSince)) ? d.failingSince : null;
+    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days, failingSince };
   }
 
   $('#prev').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() - 1, 1); render(); });
@@ -173,6 +186,7 @@
   }
   function show(plan) {
     DATA = plan; CAPACITY = plan.capacity;
+    if (!refresher) refresher = setInterval(() => { if (document.visibilityState === 'visible' && document.body.dataset.view === 'ready') check(true); }, REFRESH_MS);
     showSource();
     renderKey();
     render();
@@ -180,6 +194,8 @@
     $('#view').hidden = false;
   }
 
+  const REFRESH_MS = 5 * 60 * 1000;   // an open page asks again every 5 minutes (Monday is read every 15)
+  let refresher = null;
   let sb = null;
   const client = () => {
     if (sb) return sb;
@@ -205,7 +221,18 @@
     return gate('The Planner didn’t load', 'Something went wrong getting the figures. Try again in a moment.', { retry: true });
   }
   // planner_board() checks this account may use the Planner (as orders_board() does), then gives the daily totals.
-  async function check() {
+  // quiet: a refresh of an open page. It only ever replaces good figures with newer good figures; if anything goes
+  // wrong it leaves the page as it is (a sign-in that has run out still goes to the sign-in).
+  async function check(quiet = false) {
+    if (quiet) {
+      try {
+        const { data, error } = await client().rpc('planner_board');
+        if (error) { if (expired(error) || flrCode(error) === 'FLR_SIGN_IN_REQUIRED' || flrCode(error) === 'FLR_FORBIDDEN') failGate(error); return; }
+        const plan = planFrom(data);
+        if (plan && !plan.empty) show(plan);
+      } catch (e) { /* offline for a moment: keep what's shown */ }
+      return;
+    }
     try {
       const { data, error } = await client().rpc('planner_board');
       if (error) return failGate(error);

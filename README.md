@@ -31,7 +31,7 @@ private tools, no writer key and never the Supabase `service_role` key.
 | `annual-leave/` | The Annual Leave page, built by `scripts/sync-leave.py` from `../flr-annual-leave` without the staff form link, and `bridge.js`, which answers the page's monday.com calls from the FLR database, fetches approvers' staff photos and sends decisions to the `flr-leave` function. |
 | `onboarding/` | Onboarding: each new starter's checklist (forms, FLR documents, uploads, acknowledgements), and the reviews, checks and internal setup behind it. `content.js` holds the wording taken from FLR's source forms. Draft on branch `feature/onboarding`; see "Onboarding" below. |
 | `orders/` | Order Tracker: jobs from the Monday “FLR - Goods In” board (due today, needs attention, coming up, received), each with a checklist to tick materials off as they arrive, and "Have a problem?" to Georgia and Luke. Data from `orders_board()` (flr-orders function, every 5 minutes); see "Order Tracker" below. |
-| `capacity/` | Planner (Hub tile `capacity`; renamed from Fitter Capacity on 15 Oct 2026): a month calendar of how many fitters are booked each day, out of 23, with a battery per day (red over capacity, a gold number for bookings with no fitter yet). Real daily totals from the Monday Work Programme, read with `planner_board()`; see "Planner" below. |
+| `capacity/` | Planner (Hub tile `capacity`; renamed from Fitter Capacity on 15 Oct 2026): a month calendar of how many fitters are booked each day, out of 23, with a battery per day (red over capacity, a gold number for bookings with no fitter yet). Real daily totals from the Monday Work Programme (read every 15 minutes by `flr-planner`), read with `planner_board()`; see "Planner" below. |
 | `assistant/` | Ask the Hub, the help button on every Hub page (see below). |
 | `assets/` | The FLR icon. |
 
@@ -201,16 +201,20 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   and returns `{capacity, readAt, source, days: {"YYYY-MM-DD": {b, u, t?, f?}}}` from the one row in
   `private.planner_days` (closed to the page's roles). b = distinct fitters booked, u = bookings with no fitter,
   t = fitters only on TBC bookings, f = roster fitters free (weekdays). The label beside the heading says when Monday was
-  read ("Monday · read 16 Oct, 09:35"). Errors as on the Order Tracker: signed out → sign-in (`../?next=capacity`),
-  FLR_FORBIDDEN → "You don't have access to the Planner", switched off, no profile, function missing → "The Planner
-  isn't ready yet", offline → try again. Before the first load (readAt null) it says "No Monday totals yet" and shows
-  no days, so nothing looks free when it may not be.
-- **Refreshing the figures** (by hand, by FLR; nothing reads Monday on a timer yet): in `flr-job-planner/`, read the
-  Work Programme again (read-only, through the monday.com connector, into `data/raw/` and `data/subitems.json`), run
-  `python3 data/build.py` (makes `data/capacity-data.js`, totals only), then `python3 data/make_load_sql.py` (checks the
-  file holds no names and makes `data/planner-load.sql`). A Super Admin pastes `data/planner-load.sql` into the Supabase
-  SQL editor and runs it: one statement replaces the row, and a read-only check under it shows the capacity, read time,
-  number of days and today's figures. The page shows the new read the next time it is opened. No Hub change is needed.
+  last read ("Monday · updated 09:45" today, "15 Oct, 09:45" otherwise). Errors as on the Order Tracker: signed out →
+  sign-in (`../?next=capacity`), FLR_FORBIDDEN → "You don't have access to the Planner", switched off, no profile,
+  function missing → "The Planner isn't ready yet", offline → try again. Before the first read (readAt null) it says
+  "No Monday totals yet" and shows no days, so nothing looks free when it may not be. An open page asks again every
+  5 minutes (only while it's on screen) and only ever swaps good figures for newer good ones.
+- **The sync (Planner 1.2, Estimator `20261016200000_flr_planner_sync.sql` + Edge Function `flr-planner`).** Every
+  15 minutes (pg_cron job `flr-planner`, `*/15 * * * *`) the function reads every subitem of the Work Programme
+  (board 5094670077, read-only, 500 a page), works out the totals with build.py's rules (a TypeScript port, checked
+  against build.py's output) and saves them with `planner_save()`, which only accepts whole-number totals, so no name
+  can be stored. If any page can't be read, nothing is saved: `planner_fail()` records why, `planner_board()` then
+  also gives `failingSince` and the page shows a gold notice under the subtitle: "Couldn't read Monday since <time>.
+  Showing the last good read from <time>." with the last good days still drawn; the next good read clears it.
+  Health for Super Admins: `select public.admin_planner_status();`. Go-live steps: `~/Documents/claude/planner-sync-go-live/`.
+  The hand load (`flr-job-planner/data/planner-load.sql`) still works if the sync is ever off.
 - Tile `capacity` (listed, sort 70), Hub settings label "Planner": Super Admins (active, role `admin`) when the
   migration ran, others switched on in Hub settings. Migrations (Estimator repo): `20261015400000_flr_fitter_capacity.sql`
   (the tile and 'capacity' in the five Hub settings functions' app list, md5 guard) and `20261016100000_flr_planner_data.sql`
