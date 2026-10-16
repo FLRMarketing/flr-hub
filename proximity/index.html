@@ -11,14 +11,14 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self'; img-src 'self' data: https://ibasemaps-api.arcgis.com https://static-map-tiles-api.arcgis.com https://server.arcgisonline.com; connect-src 'self' https://*.supabase.co https://api.postcodes.io https://geocode-api.arcgis.com https://route-api.arcgis.com https://api.ideal-postcodes.co.uk; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
 <link rel="stylesheet" href="leaflet.min.css?v=1.9.4">
-<link rel="stylesheet" href="proximity.css?v=1.5">
+<link rel="stylesheet" href="proximity.css?v=1.6">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous" defer></script>
 <script src="outcodes.js?v=1.0" defer></script>
 <script src="vehicles.js?v=1.0" defer></script>
-<script src="proximity.js?v=1.7" defer></script>
+<script src="proximity.js?v=1.8" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -52,6 +52,7 @@
     <h1>Nearby</h1>
     <span class="source" id="source"></span>
     <span class="source" id="fleetSource" hidden></span>
+    <span class="source" id="hubspotSource" hidden></span>
     <button class="refresh" id="refresh" type="button" title="Get the latest vehicle positions and bookings now"><svg aria-hidden="true"><use href="#i-refresh"/></svg><span id="refreshText">Refresh</span></button>
     <p>Enter the site postcode from an enquiry, then choose the address for the exact spot, to see which vehicle is nearest right now, who is booked nearest today, and who is booked nearest on each of the next 14 days.</p>
     <p class="notice" id="notice" hidden></p>
@@ -81,10 +82,16 @@
       <div class="map" id="map" role="region" aria-label="Map of the site and the vehicles"></div>
       <aside class="mappanel" id="mappanel"></aside>
     </div>
+    <div class="show" id="show" role="group" aria-label="Show bookings">
+      <span class="eyebrow">Booked</span>
+      <button type="button" data-show="all" aria-pressed="true">All</button>
+      <button type="button" data-show="survey" aria-pressed="false">Surveys</button>
+      <button type="button" data-show="fit" aria-pressed="false">Fitting</button>
+    </div>
     <article class="card answer" id="today"></article>
     <div class="days">
       <h2>Then, day by day</h2>
-      <p class="sub">The surveyor booked nearest the site on each day, from the Work Programme.</p>
+      <p class="sub">The surveyor booked nearest the site on each day: HubSpot survey appointments and the Work Programme.</p>
       <ul class="card list" id="days"></ul>
     </div>
   </section>

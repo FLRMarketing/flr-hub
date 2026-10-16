@@ -166,14 +166,16 @@
   function boardFrom(d) {
     if (!d || typeof d !== 'object' || !Array.isArray(d.bookings)) return null;
     const bookings = d.bookings.filter(b => b && str(b.fitter) && str(b.job) && okDate(b.start) && okDate(b.end)).map(b => ({
-      fitter: b.fitter, code: str(b.code), job: b.job, url: /^https:\/\/[a-z0-9-]+\.monday\.com\//.test(str(b.url)) ? b.url : null,
+      fitter: b.fitter, code: str(b.code), job: b.job, url: /^https:\/\/([a-z0-9-]+\.monday\.com|app(-eu1)?\.hubspot\.com)\//.test(str(b.url)) ? b.url : null,
       address: str(b.address) || null, postcode: str(b.postcode) || null, status: str(b.status),
-      start: b.start, end: b.end, pos: num(b.lat) != null && num(b.lon) != null ? { lat: b.lat, lon: b.lon } : null }));
+      start: b.start, end: b.end, kind: b.kind === 'survey' ? 'survey' : 'fit', time: /^\d\d:\d\d$/.test(str(b.time)) ? b.time : '',
+      pos: num(b.lat) != null && num(b.lon) != null ? { lat: b.lat, lon: b.lon } : null }));
     for (const b of bookings) if (!b.pos && b.postcode) { const dd = DISTRICTS.get(b.postcode.split(' ')[0]); if (dd) { b.pos = { lat: dd.lat, lon: dd.lon }; b.rough = true; } }
     const vans = Array.isArray(d.vans) ? d.vans.filter(v => v && str(v.reg) && num(v.lat) != null && num(v.lon) != null && !isNaN(new Date(v.seenAt))).map(v => ({
       reg: v.reg, driver: str(v.driver) || null, pos: { lat: v.lat, lon: v.lon }, ignition: v.ignition === true, speed: num(v.speed),
       seenAt: v.seenAt, stopAt: v.stopAt || null, stopSeen: v.stopSeen === true, make: str(v.make), model: str(v.model), plate: str(v.plate) })) : [];
     return { readAt: d.readAt || null, failingSince: d.failingSince || null, bookings, vansAllowed: d.vansAllowed === true,
+      surveysAt: d.surveysAt || null, surveysFailing: d.surveysFailing === true,
       fleetview: d.fleetview && typeof d.fleetview === 'object' ? d.fleetview : null, vans };
   }
 
@@ -186,6 +188,13 @@
     } else { src.textContent = 'Monday · not read yet'; }
     src.classList.toggle('stale', !!DATA.failingSince || !DATA.readAt);
     const fv = $('#fleetSource');
+    const hs = $('#hubspotSource');
+    hs.hidden = !DATA.surveysAt;
+    if (DATA.surveysAt) {
+      hs.textContent = `HubSpot · updated ${when(new Date(DATA.surveysAt))}`;
+      hs.title = 'Survey appointments from HubSpot deals (Appointment Date & Time), read every 15 minutes';
+      hs.classList.toggle('stale', DATA.surveysFailing);
+    }
     fv.hidden = !DATA.vansAllowed;
     if (DATA.vansAllowed) {
       const ok = DATA.fleetview && DATA.fleetview.okAt ? new Date(DATA.fleetview.okAt) : null;
@@ -196,6 +205,7 @@
     const notes = [];
     if (DATA.failingSince) notes.push(`Couldn’t read Monday since ${when(new Date(DATA.failingSince))}.${DATA.readAt ? ` Showing the bookings from ${when(new Date(DATA.readAt))}.` : ''}`);
     if (DATA.vansAllowed && DATA.fleetview && DATA.fleetview.failing) notes.push('FleetView isn’t answering at the moment: vehicle positions may be out of date.');
+    if (DATA.surveysFailing) notes.push('HubSpot couldn’t be read just now: survey appointments are from its last good read.');
     $('#notice').textContent = notes.join(' ');
     $('#notice').hidden = !notes.length;
   }
@@ -205,12 +215,16 @@
     const best = new Map();
     for (const b of BOOKINGS) {
       if (!b.pos || b.start > day || b.end < day) continue;
+      if (SHOW !== 'all' && b.kind !== SHOW) continue;   // All, Surveys or Fitting
       const d = distTo(b.pos, site, false), k = b.fitter.toLowerCase();
       if (!best.has(k) || d.mins < best.get(k).d.mins) best.set(k, { ...b, d });
     }
     return [...best.values()].sort((a, z) => a.d.mins - z.d.mins);
   }
-  const tbc = b => b.status === 'TBC' ? h('span', { class: 'tbc' }, 'TBC') : null;
+  const tbc = b => b.kind === 'survey' ? h('span', { class: 'tag-survey', title: 'Survey appointment from HubSpot' }, b.time ? `Survey ${b.time}` : 'Survey')
+    : b.status === 'TBC' ? h('span', { class: 'tbc' }, 'TBC') : null;
+  // What the booked lists show: everything, only HubSpot surveys, or only Work Programme fitting (remembered on this device)
+  let SHOW = (() => { try { const v = localStorage.getItem('flr-nearby-show'); return ['all', 'survey', 'fit'].includes(v) ? v : 'all'; } catch (e) { return 'all'; } })();
   const jobLink = b => b.url ? h('a', { href: b.url, target: '_blank', rel: 'noopener' }, b.job) : b.job;
   const hint = (text, bad) => { $('#hint').textContent = text || ''; $('#hint').classList.toggle('bad', !!bad); };
 
@@ -630,6 +644,13 @@
     clearTimeout(refreshNow.t); refreshNow.t = setTimeout(() => { txt.textContent = 'Refresh'; }, 4000);
   }
   $('#refresh').addEventListener('click', refreshNow);
+  function setShow(v) {
+    SHOW = v; try { localStorage.setItem('flr-nearby-show', v); } catch (e) { /* not kept */ }
+    document.querySelectorAll('#show button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.show === v)));
+    if (LAST) render(LAST.pc, LAST.district, LAST.site, LAST.known, true);
+  }
+  document.querySelectorAll('#show button').forEach(b => b.addEventListener('click', () => setShow(b.dataset.show)));
+  setShow(SHOW);
 
   // Staff photos (Fleet Management's), once: they are large, and only change when a new photo is added.
   let photosAsked = false;

@@ -288,3 +288,10 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .refresh.busy svg{animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.refresh.busy svg{animation:none}}
+/* Nearby 1.1: survey appointments (HubSpot) beside the Work Programme's bookings */
+.tag-survey{display:inline-block;padding:1px 7px;border-radius:6px;background:rgba(0,122,255,.14);color:#0062cc;font:700 11.5px/1.5 var(--font-text);letter-spacing:.02em;vertical-align:middle;white-space:nowrap}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag-survey{background:rgba(10,132,255,.22);color:#64aaff}}
+.show{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px}
+.show .eyebrow{margin-right:4px}
+.show button{height:30px;padding:0 13px;border:0;border-radius:999px;background:var(--fill);color:var(--ink);font:600 13.5px/1 var(--font-text);cursor:pointer}
+.show button[aria-pressed="true"]{background:var(--tint-fill);color:var(--on-tint)}
