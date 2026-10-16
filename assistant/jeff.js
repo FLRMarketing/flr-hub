@@ -29,7 +29,7 @@ const HERE = new URL('.', import.meta.url);
 const HUB = new URL('../', HERE);
 const AUTH_KEY = 'flr-estimator-auth';                 // the FLR sign-in every Hub page shares
 const LOG_KEY = 'flr-assist:log', GUIDE_KEY = 'flr-assist:guide';
-const NAMES = { hub: 'the Hub', settings: 'Hub settings', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule', orders: 'the Order Tracker', capacity: 'the Planner', proximity: 'the Proximity Finder' };
+const NAMES = { hub: 'the Hub', settings: 'Hub settings', estimator: 'the Cost Estimator', speeding: 'Fleet Management', 'annual-leave': 'Annual Leave', fitters: 'the Fitter Schedule', orders: 'the Order Tracker', capacity: 'the Planner', proximity: 'Nearby' };
 const PAGE = location.pathname.includes('/fitter-schedule/') ? 'fitters'
   : (location.pathname.startsWith(HUB.pathname) ? location.pathname.slice(HUB.pathname.length).split('/')[0] : '') || 'hub';
 // The Fitter Schedule has its own way in (a team passcode) and lives outside the Hub's folder: people use it without

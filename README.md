@@ -285,7 +285,7 @@ instead of guessing. It never reads leave, quotes or driver data and changes not
    redirect URLs, so password-reset emails come back here.
 3. **GitHub Pages:** deploy from the `main` branch, root folder.
 
-## Proximity Finder, Hub tile `proximity` (BUILT 16 Oct 2026 on branch feature/proximity, NOT live)
+## Nearby (first called Proximity Finder), Hub tile `proximity` (LIVE 16 Oct 2026 for Super Admins; renamed Nearby the same day)
 
 - Page `proximity/` (index.html, proximity.js, proximity.css, outcodes.js, vehicles.js, leaflet.min.css): the Team
   Proximity Finder Claude page in the Hub look, with Fleet Management's map look: Esri satellite/streets map (Leaflet 1.9.4

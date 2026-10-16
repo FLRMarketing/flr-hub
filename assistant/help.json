@@ -2099,20 +2099,23 @@
     {
       "id": "about-proximity",
       "tool": "proximity",
-      "title": "About the Proximity Finder",
+      "title": "About Nearby",
       "ask": [
-        "what is the proximity finder",
+        "what is nearby",
+        "what is the nearby app",
         "who is nearest to a site",
         "which fitter is closest to this postcode",
         "nearest fitter to a postcode",
         "who is the closest fitter today",
         "who is working near this postcode",
-        "open the proximity finder",
-        "how does the proximity finder work",
-        "is the proximity finder live",
-        "where is the nearest van right now"
+        "open nearby",
+        "how does nearby work",
+        "where is the nearest van right now",
+        "what is the proximity finder",
+        "open the proximity finder"
       ],
       "keys": [
+        "nearby",
         "proximity",
         "proximity finder",
         "nearest",
@@ -2122,10 +2125,10 @@
         "fleetview",
         "live van positions"
       ],
-      "answer": "The Proximity Finder shows who is nearest a site. Type the postcode from an enquiry: Admins and Super Admins get the nearest vans right now from FleetView (checked every 2 minutes, 06:00 to 21:00); everyone with the app gets the fitter working nearest today and on each of the next 14 days, from the Monday Work Programme (read every 15 minutes). Distances are straight-line miles.",
+      "answer": "Nearby shows who is nearest a site. Type the postcode from an enquiry: Admins and Super Admins get the nearest vans right now from FleetView (checked every 2 minutes, 06:00 to 21:00); everyone with the app gets the fitter working nearest today and on each of the next 14 days, from the Monday Work Programme (read every 15 minutes). Distances are straight-line miles.",
       "link": {
         "tile": "proximity",
-        "label": "Open the Proximity Finder"
+        "label": "Open Nearby"
       },
       "related": [
         "proximity-access"
@@ -2134,21 +2137,22 @@
     {
       "id": "proximity-access",
       "tool": "proximity",
-      "title": "Who has the Proximity Finder",
+      "title": "Who has Nearby",
       "ask": [
-        "who has the proximity finder",
-        "why are there no vans on the proximity finder",
-        "give someone the proximity finder",
-        "switch on the proximity finder for someone",
-        "how do I get the proximity finder"
+        "who has nearby",
+        "why are there no vans on nearby",
+        "give someone nearby",
+        "switch on nearby for someone",
+        "how do I get nearby",
+        "who has the proximity finder"
       ],
       "keys": [
+        "nearby",
         "proximity",
-        "proximity finder",
         "access",
         "switch on"
       ],
-      "answer": "The Proximity Finder starts with FLR Super Admins only. A Super Admin can switch it on for others in Hub settings with the “Proximity” switch, like the other apps. Live van positions are only for Admins and Super Admins, as with arrival times on the Fitter Schedule; others get the Work Programme part only.",
+      "answer": "Nearby starts with FLR Super Admins only. A Super Admin can switch it on for others in Hub settings with the “Nearby” switch, like the other apps. Live van positions are only for Admins and Super Admins, as with arrival times on the Fitter Schedule; others get the Work Programme part only.",
       "link": {
         "href": "settings/",
         "label": "Open Hub settings"

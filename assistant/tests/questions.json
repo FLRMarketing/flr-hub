@@ -678,7 +678,7 @@
   "expect": "about-proximity"
  },
  {
-  "q": "why are there no vans on my proximity finder",
+  "q": "why are there no vans on nearby",
   "expect": "proximity-access"
  }
 ]

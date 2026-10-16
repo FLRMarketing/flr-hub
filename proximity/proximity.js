@@ -1,5 +1,5 @@
 /* ============================================================================
-   FLR Hub: the Proximity Finder (Hub tile 'proximity'). Enter a site postcode and see:
+   FLR Hub: Nearby (Hub tile 'proximity'). Enter a site postcode and see:
      - Right now: the vans nearest the site, from FleetView's live positions (Admins and Super Admins only);
      - Booked today: the fitter booked nearest the site today, from the Monday Work Programme;
      - Then, day by day: who is booked nearest on each of the next 14 days.
@@ -419,12 +419,12 @@
   function failGate(e) {
     const code = flrCode(e);
     if (expired(e) || code === 'FLR_SIGN_IN_REQUIRED') return location.replace(SIGN_IN);
-    if (code === 'FLR_FORBIDDEN') return gate('You don’t have access to the Proximity Finder', 'It’s switched on for the FLR staff who need it. If you think you should have it, ask an FLR Super Admin.');
+    if (code === 'FLR_FORBIDDEN') return gate('You don’t have access to Nearby', 'It’s switched on for the FLR staff who need it. If you think you should have it, ask an FLR Super Admin.');
     if (code === 'FLR_ACCOUNT_DISABLED') return gate('Your account is switched off', 'Ask an FLR Super Admin to switch it back on.');
     if (code === 'FLR_NO_PROFILE') return gate('No FLR profile yet', 'You’re signed in, but this account has no FLR profile. Ask an FLR Super Admin.');
-    if (missingFunction(e)) return gate('The Proximity Finder isn’t ready yet', 'The FLR database doesn’t have it yet.');
+    if (missingFunction(e)) return gate('Nearby isn’t ready yet', 'The FLR database doesn’t have it yet.');
     if (offline(e)) return gate('Can’t reach the FLR database', 'Check your connection and try again.', { retry: true });
-    return gate('The Proximity Finder didn’t load', 'Something went wrong. Try again in a moment.', { retry: true });
+    return gate('Nearby didn’t load', 'Something went wrong. Try again in a moment.', { retry: true });
   }
   async function check(quiet = false) {
     try {
@@ -451,7 +451,7 @@
 
   async function boot() {
     const c = client();
-    if (!c) return gate('The Proximity Finder isn’t set up here', 'This copy of the Hub has no FLR sign-in settings.');
+    if (!c) return gate('Nearby isn’t set up here', 'This copy of the Hub has no FLR sign-in settings.');
     let session = null;
     try { session = (await c.auth.getSession()).data.session; } catch (e) { /* signed out */ }
     if (!session) return location.replace(SIGN_IN);
