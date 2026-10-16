@@ -295,3 +295,10 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .show .eyebrow{margin-right:4px}
 .show button{height:30px;padding:0 13px;border:0;border-radius:999px;background:var(--fill);color:var(--ink);font:600 13.5px/1 var(--font-text);cursor:pointer}
 .show button[aria-pressed="true"]{background:var(--tint-fill);color:var(--on-tint)}
+/* the start screen's live map: the panel is just its heading */
+.mappanel.compact{bottom:auto}
+.mappanel.compact .mp-head{border-bottom:0}
+.basemark svg{position:absolute;width:32px;height:42px;left:-16px;top:-42px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+.clear{height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--fill);color:var(--ink);font-weight:600;font-size:16px;cursor:pointer}
+@media (hover:hover){.clear:hover{background:var(--fill-2)}}
+.site{margin-top:4px}

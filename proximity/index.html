@@ -11,14 +11,14 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self'; img-src 'self' data: https://ibasemaps-api.arcgis.com https://static-map-tiles-api.arcgis.com https://server.arcgisonline.com; connect-src 'self' https://*.supabase.co https://api.postcodes.io https://geocode-api.arcgis.com https://route-api.arcgis.com https://api.ideal-postcodes.co.uk; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
 <link rel="stylesheet" href="leaflet.min.css?v=1.9.4">
-<link rel="stylesheet" href="proximity.css?v=1.6">
+<link rel="stylesheet" href="proximity.css?v=1.8">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous" defer></script>
 <script src="outcodes.js?v=1.0" defer></script>
 <script src="vehicles.js?v=1.0" defer></script>
-<script src="proximity.js?v=1.8" defer></script>
+<script src="proximity.js?v=1.9" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -72,16 +72,18 @@
       <datalist id="lineList"></datalist>
     </label>
     <button class="go" type="submit">Find nearest</button>
+    <button class="clear" type="button" id="clear" hidden title="Back to the live map">Clear</button>
     <p class="hint" id="hint" aria-live="polite"></p>
   </form>
 
+  <div class="site" id="site" hidden></div>
+  <!-- Where they are: the map (as Fleet Management's). Before a search: everyone live across the UK, with B90 4NZ marked.
+       After a search: the site, the vehicles and the nearest list on its left. -->
+  <div class="mapcard card">
+    <div class="map" id="map" role="region" aria-label="Map of the vehicles"></div>
+    <aside class="mappanel" id="mappanel"></aside>
+  </div>
   <section id="results" hidden aria-live="polite">
-    <div class="site" id="site"></div>
-    <!-- Where they are: the map (as Fleet Management's), with the nearest list on its left -->
-    <div class="mapcard card">
-      <div class="map" id="map" role="region" aria-label="Map of the site and the vehicles"></div>
-      <aside class="mappanel" id="mappanel"></aside>
-    </div>
     <div class="show" id="show" role="group" aria-label="Show bookings">
       <span class="eyebrow">Booked</span>
       <button type="button" data-show="all" aria-pressed="true">All</button>
@@ -96,7 +98,7 @@
     </div>
   </section>
 
-  <p class="foot" id="foot">Distances and drive times are the best road route (Esri), with live traffic for the vehicles right now; ≈ marks a straight-line distance shown until the road route comes back. The site is the exact address when its first line is given, else the job’s Monday location when the postcode is on the Work Programme, else the postcode’s centre.</p>
+  <p class="foot" id="foot" hidden></p>
 </main>
 
 <noscript><p class="noscript">Nearby needs JavaScript switched on.</p></noscript>

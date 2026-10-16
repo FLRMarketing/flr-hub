@@ -349,8 +349,7 @@
         .finally(() => { roadBusy--; pump(); });
     }
   }
-  const FOOT0 = () => $('#foot').dataset.base || ($('#foot').dataset.base = $('#foot').textContent);
-  function roadNote() { $('#foot').textContent = 'Road routes aren’t available at the moment, so distances are straight lines with an estimated drive time. ' + FOOT0(); }
+  function roadNote() { $('#foot').textContent = 'Road routes aren’t available at the moment, so distances are straight lines with an estimated drive time.'; $('#foot').hidden = false; }
 
   /* ---------------------------------------------------------------- the postcode's addresses (Royal Mail, via Ideal Postcodes) */
   // Once a full postcode is typed, its addresses fill the Address list (one lookup per postcode, kept for the page's life).
@@ -481,8 +480,53 @@
     if (!MAP || !MAP.fit) return;
     const narrow = matchMedia('(max-width:760px)').matches;
     MAP.map.invalidateSize();
-    MAP.map.fitBounds(MAP.fit, { paddingTopLeft: narrow ? [20, 30] : [350, 30], paddingBottomRight: [40, 40], maxZoom: 13, animate: false });
+    MAP.map.fitBounds(MAP.fit, MAP.live ? { padding: [20, 20], animate: false }
+      : { paddingTopLeft: narrow ? [20, 30] : [350, 30], paddingBottomRight: [40, 40], maxZoom: 13, animate: false });
   }
+
+  /* ---------------------------------------------------------------- the start screen: everyone live, across the UK */
+  // Before a search the map shows the whole UK with FLR (B90 4NZ) marked and every vehicle where FleetView last saw it
+  // (Admins and Super Admins), or, for others, where today's bookings are. It moves on its own with each 2-minute refresh.
+  const BASE = { lat: 52.395708, lon: -1.7956, label: 'FLR · B90 4NZ' };
+  const UK = [[49.85, -6.6], [58.75, 1.9]];
+  function drawLive() {
+    const M = mapInit();
+    if (!M) return;
+    const first = !M.live;
+    M.live = true; M.layer.clearLayers(); M.marks.clear();
+    const pin = L.marker([BASE.lat, BASE.lon], { icon: L.divIcon({ className: 'sitemark basemark', html: h('div', null, icon('i-site')), iconSize: [0, 0] }), zIndexOffset: 1000, keyboard: false, title: BASE.label }).addTo(M.layer);
+    pin.bindTooltip(BASE.label, { className: 'vt', direction: 'top', offset: [0, -44], permanent: true });
+    let n = 0;
+    if (DATA && DATA.vansAllowed) {
+      for (const v of VANS) {
+        const w = whoInVan(v);
+        const m = L.marker([v.pos.lat, v.pos.lon], { icon: vanIcon(v, false), title: `${w || 'Unassigned'} · ${plateOf(v)}` }).addTo(M.layer);
+        m.bindTooltip(`${w || 'Unassigned'} · ${plateOf(v)}`, { className: 'vt', direction: 'top', offset: [0, -22] });
+        n++;
+      }
+    } else if (DATA) {
+      for (const b of BOOKINGS.filter(x => x.pos && x.start <= TODAY && x.end >= TODAY)) {
+        const m = L.marker([b.pos.lat, b.pos.lon], { icon: L.divIcon({ className: 'jobmark', html: h('div', null, face(b.fitter, 'sm')), iconSize: [0, 0] }), title: b.fitter }).addTo(M.layer);
+        m.bindTooltip(`${b.fitter} · ${b.job}`, { className: 'vt', direction: 'top', offset: [0, -20] });
+        n++;
+      }
+    }
+    const ok = DATA && DATA.fleetview && DATA.fleetview.okAt ? new Date(DATA.fleetview.okAt) : null;
+    $('#mappanel').className = 'mappanel compact';
+    $('#mappanel').replaceChildren(h('div', { class: 'mp-head' },
+      h('span', { class: 'eyebrow' }, DATA && DATA.vansAllowed ? `Live · FleetView${ok ? ` ${fmtTime.format(ok)}` : ''}` : `Today · ${fmtWeekday(TODAY)} ${fmtDate(TODAY)}`),
+      h('h2', null, 'Where everyone is'),
+      h('p', null, DATA && DATA.vansAllowed ? `${n} vehicles with a position` : `${n} bookings today, from the Work Programme`)));
+    M.fit = L.latLngBounds(UK);
+    if (first) frame();   // the 2-minute refresh moves the vehicles, not the view
+  }
+  function clearSearch() {
+    lastSearch = null; LAST = null;
+    $('#postcode').value = ''; $('#line').value = ''; $('#addr').value = '';
+    $('#results').hidden = true; $('#site').hidden = true; $('#clear').hidden = true; hint('');
+    drawLive();
+  }
+  $('#clear').addEventListener('click', clearSearch);
   let framed = 0;
   new ResizeObserver(() => { clearTimeout(framed); framed = setTimeout(frame, 150); }).observe(document.getElementById('map'));
   function pick(reg, fly = true) {
@@ -500,6 +544,9 @@
   }
   function render(pc, district, site, known, quiet) {
     const label = pc.full || pc.outcode;
+    $('#site').hidden = false; $('#clear').hidden = false;
+    if (MAP) MAP.live = false;
+    $('#mappanel').className = 'mappanel';
     $('#site').replaceChildren(
       h('span', { class: 'eyebrow' }, site.how === 'address' ? 'Site · exact address' : known ? 'Site · on the Work Programme' : site.how === 'district' ? 'Site · postcode district' : 'Site · postcode centre'),
       h('span', { class: 'site-name' }, site.how === 'address' ? site.address.split(',')[0] : known ? (known.address || known.job) : (site.area || district.area)),
@@ -591,7 +638,7 @@
     showSource();
     document.body.dataset.view = 'ready';
     $('#view').hidden = false;
-    if (lastSearch) search(lastSearch, true);
+    if (lastSearch) search(lastSearch, true); else drawLive();
   }
 
   const REFRESH_MS = 2 * 60 * 1000;   // FleetView positions change every 2 minutes
