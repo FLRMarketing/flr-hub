@@ -2,99 +2,7 @@
   "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'care' marks a topic that's a worry or about privacy, which the assistant answers with a reassuring face rather than a celebration. 'alsoPeople' lists words the help uses in its own names that are also people's first names (\"the Jeff Day\", \"Likkle Jeff\"): in a question they're taken for a person unless they're part of one of those names. 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Every answer shows where it comes from: help answers say \"Hub help\", and an entry may add 'updated' (the day its answer was last checked against its tool, as YYYY-MM-DD) to show \"Hub help · updated 1 Oct\"; look-ups say \"Live\" with the tool and when its data was last synced. Check changes with: node assistant/tests/run.mjs",
   "version": 1,
   "alsoPeople": [
-    "Jeff",
-    {
-      "id": "about-warehouse",
-      "tool": "warehouse",
-      "title": "About Warehouse Tasks",
-      "ask": [
-        "what is warehouse tasks",
-        "what do I need to do today in the warehouse",
-        "warehouse checklist",
-        "open warehouse tasks",
-        "how do I tick off a warehouse task",
-        "where is the warehouse weekly task list",
-        "forklift check",
-        "my warehouse tasks",
-        "how does warehouse tasks work"
-      ],
-      "keys": [
-        "warehouse",
-        "warehouse tasks",
-        "checklist",
-        "tick off",
-        "forklift",
-        "goods in",
-        "weekly task list",
-        "my tasks",
-        "all tasks"
-      ],
-      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were.",
-      "link": {
-        "tile": "warehouse",
-        "label": "Open Warehouse Tasks"
-      },
-      "related": [
-        "warehouse-saving",
-        "warehouse-access"
-      ]
-    },
-    {
-      "id": "warehouse-saving",
-      "tool": "warehouse",
-      "title": "Saving, Saved and Not saved",
-      "ask": [
-        "what does saving mean on warehouse tasks",
-        "my tick says not saved",
-        "warehouse task didn't save",
-        "why is my tick still saving",
-        "does ticking update monday",
-        "I ticked it on monday"
-      ],
-      "keys": [
-        "saving",
-        "saved",
-        "not saved",
-        "try again",
-        "monday",
-        "sync",
-        "warehouse"
-      ],
-      "answer": "A tick shows “Saving…” until Monday has confirmed it, then “Saved”. If Monday refuses or can’t be reached it says “Not saved” and nothing changes on Monday: tap Try again. Ticks made on Monday itself, or by someone else, show here within about 2 minutes.",
-      "related": [
-        "about-warehouse"
-      ]
-    },
-    {
-      "id": "warehouse-access",
-      "tool": "warehouse",
-      "title": "Who has Warehouse Tasks",
-      "ask": [
-        "who has warehouse tasks",
-        "give someone warehouse tasks",
-        "switch on warehouse tasks",
-        "how do I get warehouse tasks",
-        "why is my tasks empty",
-        "how do I assign a warehouse task"
-      ],
-      "keys": [
-        "warehouse",
-        "access",
-        "switch on",
-        "owner",
-        "assign",
-        "my tasks"
-      ],
-      "answer": "Warehouse Tasks starts with FLR Super Admins and the warehouse team. A Super Admin can switch it on for others in Hub settings with the “Warehouse” switch. Tasks are given to people in Monday’s Owner column, on the template (every week) or on this week’s copy (this week only); “My tasks” matches them to your Hub account by your FLR email address.",
-      "link": {
-        "href": "settings/",
-        "label": "Open Hub settings"
-      },
-      "related": [
-        "about-warehouse",
-        "hub-settings"
-      ]
-    }
+    "Jeff"
   ],
   "entries": [
     {
@@ -2255,6 +2163,98 @@
       },
       "related": [
         "about-proximity",
+        "hub-settings"
+      ]
+    },
+    {
+      "id": "about-warehouse",
+      "tool": "warehouse",
+      "title": "About Warehouse Tasks",
+      "ask": [
+        "what is warehouse tasks",
+        "what do I need to do today in the warehouse",
+        "warehouse checklist",
+        "open warehouse tasks",
+        "how do I tick off a warehouse task",
+        "where is the warehouse weekly task list",
+        "forklift check",
+        "my warehouse tasks",
+        "how does warehouse tasks work"
+      ],
+      "keys": [
+        "warehouse",
+        "warehouse tasks",
+        "checklist",
+        "tick off",
+        "forklift",
+        "goods in",
+        "weekly task list",
+        "my tasks",
+        "all tasks"
+      ],
+      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were.",
+      "link": {
+        "tile": "warehouse",
+        "label": "Open Warehouse Tasks"
+      },
+      "related": [
+        "warehouse-saving",
+        "warehouse-access"
+      ]
+    },
+    {
+      "id": "warehouse-saving",
+      "tool": "warehouse",
+      "title": "Saving, Saved and Not saved",
+      "ask": [
+        "what does saving mean on warehouse tasks",
+        "my tick says not saved",
+        "warehouse task didn't save",
+        "why is my tick still saving",
+        "does ticking update monday",
+        "I ticked it on monday"
+      ],
+      "keys": [
+        "saving",
+        "saved",
+        "not saved",
+        "try again",
+        "monday",
+        "sync",
+        "warehouse"
+      ],
+      "answer": "A tick shows “Saving…” until Monday has confirmed it, then “Saved”. If Monday refuses or can’t be reached it says “Not saved” and nothing changes on Monday: tap Try again. Ticks made on Monday itself, or by someone else, show here within about 2 minutes.",
+      "related": [
+        "about-warehouse"
+      ]
+    },
+    {
+      "id": "warehouse-access",
+      "tool": "warehouse",
+      "title": "Who has Warehouse Tasks",
+      "ask": [
+        "who has warehouse tasks",
+        "give someone warehouse tasks",
+        "switch on warehouse tasks",
+        "how do I get warehouse tasks",
+        "why is my tasks empty",
+        "how do I assign a warehouse task"
+      ],
+      "keys": [
+        "warehouse",
+        "access",
+        "switch on",
+        "owner",
+        "assign",
+        "my tasks"
+      ],
+      "answer": "Warehouse Tasks starts with FLR Super Admins and the warehouse team. A Super Admin can switch it on for others in Hub settings with the “Warehouse” switch. Tasks are given to people in Monday’s Owner column, on the template (every week) or on this week’s copy (this week only); “My tasks” matches them to your Hub account by your FLR email address.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-warehouse",
         "hub-settings"
       ]
     }
