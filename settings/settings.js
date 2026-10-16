@@ -24,7 +24,7 @@
     estimator: 'Uses the apps switched on for them: builds and approves quotes, sees their own leave and driving',
     developer: 'Reads and exports quotes, for testing',
   };
-  const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters', orders: 'Orders', capacity: 'Planner', proximity: 'Nearby' };
+  const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters', orders: 'Orders', capacity: 'Planner', proximity: 'Nearby', warehouse: 'Warehouse' };
   const CHECKED = { phone: 'checked by phone', teams: 'checked on Teams', it: 'checked by IT' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -324,6 +324,7 @@
     if (id === 'orders') return 'Deliveries from the Monday Goods In board, read-only';
     if (id === 'capacity') return 'Fitters booked each day from the Monday Work Programme';
     if (id === 'proximity') return 'The nearest surveyor to a site postcode; live vehicle positions for Admins';
+    if (id === 'warehouse') return 'Ticks off the warehouse checklist; ticks go to Monday';
     if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'manager' ? 'Builds, approves and reassigns quotes' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
     return '';
   }
