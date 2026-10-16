@@ -7,12 +7,16 @@
    The figures: real daily totals from the Monday Work Programme, never names or jobs.
    public.planner_board() (Estimator repo, 20261016100000_flr_planner_data.sql) answers
      { capacity, readAt, source, days: { "YYYY-MM-DD": { b, u, t?, f? } },
-       triedAt, failingSince, pageError }     (the last three since Planner 1.2)
+       triedAt, failingSince, pageError,      (since Planner 1.2)
+       closures: [{ date, name, kind }] }     (since Planner 1.3)
        b  distinct fitters booked on fitting work that day
        u  fitting bookings that day still with no fitter (the gold number)
        t  fitters booked only on TBC bookings
        f  roster fitters free that day (weekdays)
-   A day that isn't listed had no fitting work: it shows the date only. Since Planner 1.2 the
+   closures are the days FLR is closed, from the Annual Leave Diary's own board and named and
+   classified as the Diary does: kind 'bh' bank holiday, 'shut' company close day, 'jeff' the
+   Jeff Day. They're hatched in the Diary's colours, with the name under the date (in the day's
+   label on phones). A day that isn't listed had no fitting work: it shows the date only. Since Planner 1.2 the
    flr-planner Edge Function reads the Work Programme (read-only) every 15 minutes and saves
    the totals; the label beside the heading says when ("Monday · updated 09:45"). If reads
    start failing, the last good read stays and a gold notice under the subtitle says since
@@ -105,6 +109,12 @@
         h('span', { class: 'batt' }, fill, over ? icon('i-warn', 'warn-in') : null)),
       h('span', { class: 'num' }, icon('i-person', 'pi'), String(c.booked), h('span', { class: 'of' }, '/' + CAPACITY)));
   }
+  // A closed day, as the label and tooltip say it: "New Year's Day 2027 (bank holiday)", "Company close day", "Jeff Day …".
+  function closureText(cl) {
+    if (cl.kind === 'bh') return /bank holiday/i.test(cl.name) ? cl.name : `${cl.name} (bank holiday)`;
+    if (cl.kind === 'jeff') return /jeff/i.test(cl.name) ? cl.name : `${cl.name} (Jeff Day)`;
+    return cl.name;
+  }
   const unassignedMark = n => h('span', { class: 'unk', 'aria-hidden': 'true' }, n > 9 ? '9+' : String(n));
 
   /* ---------- state ---------- */
@@ -123,12 +133,15 @@
     for (let d = mondayOf(first); d <= end; d = addDays(d, 1)) {
       // Days from the previous or next month: a blank, shaded cell that only holds the weekday columns in place.
       if (d.getMonth() !== first.getMonth()) { cells.push(h('div', { class: 'day out', role: 'gridcell', 'aria-hidden': 'true' })); continue; }
-      const isToday = iso(d) === todayIso, c = dayOf(d);
-      const cls = ['day', isWeekend(d) ? 'we' : '', isToday ? 'today' : ''].filter(Boolean).join(' ');
+      const isToday = iso(d) === todayIso, c = dayOf(d), cl = DATA.closures.get(iso(d));
+      const cls = ['day', isWeekend(d) ? 'we' : '', isToday ? 'today' : '', cl ? 'closed-' + cl.kind : '', cl && c ? 'has-cap' : ''].filter(Boolean).join(' ');
       let body = [], label = fmtDay.format(d) + (isToday ? ', today' : '');
+      if (cl) label += '. FLR closed: ' + closureText(cl);
       if (!c) label += '. No fitting work booked';   // a day with no dated fitting work: the date only
       else { body = [battery(c), c.unassigned ? unassignedMark(c.unassigned) : null]; label += '. ' + capLabel(c); }
-      cells.push(h('div', { class: cls, role: 'gridcell', 'aria-label': label, title: label }, h('span', { class: 'dn', 'aria-hidden': 'true' }, String(d.getDate())), body));
+      cells.push(h('div', { class: cls, role: 'gridcell', 'aria-label': label, title: label },
+        h('span', { class: 'dn', 'aria-hidden': 'true' }, String(d.getDate())),
+        cl ? h('span', { class: 'closure', 'aria-hidden': 'true' }, h('span', { class: 'ct' }, cl.name)) : null, body));
     }
     $('#cal').replaceChildren(...cells);
   }
@@ -159,6 +172,7 @@
   // planner_board()'s answer, checked: a whole number capacity, a read time, and days of {b, u, t?, f?}. Anything else is
   // treated as not loaded (the page shows no days rather than wrong ones).
   const whole = n => Number.isInteger(n) && n >= 0;
+  const CLOSURE_KINDS = new Set(['bh', 'shut', 'jeff']);
   function planFrom(d) {
     if (!d || typeof d !== 'object' || !d.days || typeof d.days !== 'object' || Array.isArray(d.days)) return null;
     if (d.readAt == null) return { empty: true };
@@ -170,7 +184,13 @@
       days[k] = { b: r.b, u: r.u || 0, t: r.t || 0, f: r.f };
     }
     const failingSince = d.failingSince != null && !isNaN(new Date(d.failingSince)) ? d.failingSince : null;
-    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days, failingSince };
+    // Closed days (Planner 1.3; none from an older database): any entry that isn't a dated, named bh/shut/jeff is left out.
+    const closures = new Map();
+    for (const x of Array.isArray(d.closures) ? d.closures : []) {
+      if (x && typeof x.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && typeof x.name === 'string' && x.name.trim() && CLOSURE_KINDS.has(x.kind))
+        closures.set(x.date, { name: x.name.trim(), kind: x.kind });
+    }
+    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days, failingSince, closures };
   }
 
   $('#prev').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() - 1, 1); render(); });

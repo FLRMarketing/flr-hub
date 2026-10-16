@@ -2043,7 +2043,11 @@
         "what does the gold number mean on the planner",
         "what does the number in the corner mean",
         "why is a day grey on the planner",
-        "why does a day only show the date"
+        "why does a day only show the date",
+        "what do the hatched days mean on the planner",
+        "why is a day striped on the planner",
+        "are bank holidays on the planner",
+        "does the planner show company close days"
       ],
       "keys": [
         "red",
@@ -2057,9 +2061,11 @@
         "gold number",
         "needing a fitter",
         "no fitter",
-        "grey"
+        "grey",
+        "hatched",
+        "striped"
       ],
-      "answer": "An empty grey battery (0/23): work is booked but no fitter is on it yet. It fills from yellow to green as fitters are booked, and is full at 23. Red with a warning sign: over capacity, more than 23 booked. A gold number in the corner (and a dashed battery): bookings that day still needing a fitter, so the total isn’t final. A day with only the date has no fitting work.",
+      "answer": "An empty grey battery (0/23): work booked, no fitter yet. It fills yellow to green as fitters are booked, full at 23; red with a warning sign is over capacity. A gold number in the corner (dashed battery): bookings still needing a fitter. A day with only the date has no fitting work. Hatched days are closures, as on the Annual Leave Diary: bank holidays (grey), company close days (blue) and the Jeff Day (purple).",
       "link": {
         "tile": "capacity",
         "label": "Open the Planner"

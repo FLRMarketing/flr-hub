@@ -225,6 +225,13 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   Showing the last good read from <time>." with the last good days still drawn; the next good read clears it.
   Health for Super Admins: `select public.admin_planner_status();`. Go-live steps: `~/Documents/claude/planner-sync-go-live/`.
   The hand load (`flr-job-planner/data/planner-load.sql`) still works if the sync is ever off.
+- **Closed days (Planner 1.3, Estimator `20261016300000_flr_planner_closures.sql`).** `planner_board()` also returns
+  `closures: [{date, name, kind}]` (1 Jan last year to 31 Dec next year) from the Annual Leave copy of the Monday board
+  "FLR - Bank Holidays & Closures" (`private.leave_items`, board `clo`), named and classified exactly as the Leave
+  Diary's page does (`isCloseDay` → `shut` "Company close day", `/jeff/` → `jeff`, else `bh`; the later item wins a
+  day). No Annual Leave access is needed, and nothing about people is in it. The page hatches those days with the
+  Diary's `.closed-bh` / `.closed-shut` / `.closed-jeff` and tokens `--bh` / `--shut` / `--jeff`, shows the name under
+  the date (phones: hatch only, the name in the day's label), and adds the Diary's three swatches to the key.
 - Tile `capacity` (listed, sort 70), Hub settings label "Planner": Super Admins (active, role `admin`) when the
   migration ran, others switched on in Hub settings. Migrations (Estimator repo): `20261015400000_flr_fitter_capacity.sql`
   (the tile and 'capacity' in the five Hub settings functions' app list, md5 guard) and `20261016100000_flr_planner_data.sql`

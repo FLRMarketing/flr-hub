@@ -16,6 +16,7 @@
   --gold:#dda44d; --gold-ink:#7a4a00; --gold-soft:rgba(221,164,77,.22);
   --red:#d70015; --red-ink:#b3000f;
   --batt-line:#8e8e93; --batt-empty:#c7c7cc; --batt-l:42%; --live:#2a9d48;
+  --bh:#8e8e93; --shut:#2f7bc0; --jeff:#8944ab; --line-2:rgba(60,60,67,.3);   /* closures: the Diary's own colours */
   --focus:#1a24a8;
   --sh-card:0 0 0 .5px rgba(0,0,0,.03),0 1px 2px rgba(16,18,40,.04),0 4px 14px rgba(16,18,40,.04);
   --font-text:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -34,6 +35,7 @@
     --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
     --red:#ff453a; --red-ink:#ff6b61;
     --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%; --live:#30d158;
+    --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2; --line-2:rgba(235,235,245,.28);
     --focus:#b3b9ff;
   }
 }
@@ -46,6 +48,7 @@
   --gold:#e5b566; --gold-ink:#f2c879; --gold-soft:rgba(229,181,102,.2);
   --red:#ff453a; --red-ink:#ff6b61;
   --batt-line:#98989f; --batt-empty:#636366; --batt-l:52%; --live:#30d158;
+  --bh:#8e8e93; --shut:#64a8e8; --jeff:#bf5af2; --line-2:rgba(235,235,245,.28);
   --focus:#b3b9ff;
 }
 
@@ -88,6 +91,33 @@ main{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
 .day.today .dn{background:var(--tint-fill);color:var(--on-tint)}
 .we-note{align-self:center;justify-self:center;font:500 13px/1.2 var(--font-text);color:var(--ink-3)}
 
+/* ---------- days FLR is closed (Planner 1.3): bank holidays, company close days and the Jeff Day, from the Annual
+   Leave Diary's own board, in the Diary's colours and hatching (flr-annual-leave/index.html .closed-*, .cal .closure).
+   The hatch sits over the day's own colour (weekend, today), so those still show through. */
+.closed-bh,.day.closed-bh{--cl:var(--bh);background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bh) 42%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-shut,.day.closed-shut{--cl:var(--shut);background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--shut) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.closed-jeff,.day.closed-jeff{--cl:var(--jeff);background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jeff) 48%,transparent) 0 1.5px,transparent 1.5px 6px)}
+.day:is(.closed-bh,.closed-shut,.closed-jeff){grid-template-rows:auto auto 1fr;container-type:inline-size}
+/* the day number and the name sit on solid plates tinted with the closure's colour, so they read clearly over the stripes */
+.day:is(.closed-bh,.closed-shut,.closed-jeff):not(.today) .dn{background:var(--surface);color:var(--ink);box-shadow:0 0 0 var(--hair) color-mix(in srgb,var(--cl) 55%,transparent)}
+.day .closure{display:block;justify-self:stretch;align-self:start;min-width:0;margin-top:4px;padding:4px 7px 4px 9px;border-radius:7px;
+  background:color-mix(in srgb,var(--cl,var(--bh)) 14%,var(--surface));box-shadow:inset 3px 0 0 var(--cl,var(--bh)),0 0 0 var(--hair) color-mix(in srgb,var(--cl,var(--bh)) 32%,transparent);
+  font:600 12px/1.32 var(--font-text);letter-spacing:-.004em;color:var(--ink);overflow-wrap:anywhere}
+/* a closed day that also has fitting work: the name keeps two lines, and the battery and badge sit side by side under it */
+.day .closure .ct{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}   /* the name's own box, so a cut line never shows in the padding */
+.day.has-cap .closure{padding:3px 6px 3px 8px;font-size:11.5px;line-height:1.25}
+.day.has-cap .closure .ct{-webkit-line-clamp:2}
+@media (min-width:641px){   /* phones keep their own stacked battery, below */
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .cap{flex-direction:row;gap:6px;align-self:end}
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .batt{width:40px;height:20px;padding:2px;border-width:1.5px;border-radius:5px;margin-right:4px}
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .batt::after{right:-5px;top:4.5px;width:3px;height:8px}
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .num{height:24px;padding:0 8px 0 7px;font-size:14px}
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .num .pi{width:12px;height:12px;margin-right:4px}
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .cap .warn{display:none}   /* over capacity: the sign goes inside the battery, as on phones */
+  .day.has-cap:is(.closed-bh,.closed-shut,.closed-jeff) .warn-in{display:block;width:11px;height:11px}
+  @container (max-width:124px){.day.has-cap .cap .num .of{display:none}}   /* narrow windows: just the count; the battery shows the share */
+}
+
 /* ---------- capacity battery: fill = booked fitters / capacity (23) */
 .cap{align-self:center;justify-self:center;display:flex;flex-direction:column;align-items:center;gap:7px}
 .cap .row{display:flex;align-items:center;gap:6px}
@@ -122,6 +152,8 @@ main{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
 .key .num .pi{width:13px;height:13px;margin-right:4px}
 .key .warn{width:16px;height:16px}
 .key .unk{position:static;width:20px;height:20px;font-size:12px}
+.sw{position:relative;display:inline-block;flex:none;width:20px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 var(--hair) var(--line-2)}   /* as the Diary's colour key */
+.key-break{flex-basis:100%;height:0}   /* closures on their own line */
 
 /* ---------- phones: the same calendar, smaller pieces stacked in each day */
 @media (max-width:640px){
@@ -143,6 +175,9 @@ main{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
   .cap .warn{display:none}   /* no room beside the battery: the symbol goes inside it */
   .warn-in{display:block}
   .unk{top:6px;right:3px;width:18px;height:18px;font-size:11px}
+  /* closed days: the hatch and colour only; the name is in the day's label (read out, and shown on a long press) */
+  .day:is(.closed-bh,.closed-shut,.closed-jeff){grid-template-rows:auto 1fr}
+  .day .closure{display:none}
   .key{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin:14px 2px 0;font-size:13.5px}
   .key > span{gap:6px;min-width:0}
   .key .num{display:none}   /* the battery explains each state; the badges in the calendar speak for themselves */
@@ -153,6 +188,7 @@ main{max-width:1080px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
   .key .warn-in{display:none}
   .key .unk{width:20px;height:20px;font-size:12px}
   #key-unk{grid-column:1 / -1}
+  .key .key-break{display:none}
 }
 @media (max-width:369px){.day .num .of{display:none}}   /* the narrowest phones: just the count; the battery still shows the share of 24 */
 
