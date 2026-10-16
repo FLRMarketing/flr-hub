@@ -228,8 +228,22 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .vmark.old .halo{display:none}
 .vmark.old .vimg{opacity:.55}
 .vmark .tag{position:absolute;left:0;top:26px;transform:translateX(-50%);white-space:nowrap}
-.sitemark{background:none;border:0}
-.sitemark svg{position:absolute;width:32px;height:42px;left:-16px;top:-42px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.sitemark{background:none;border:0;pointer-events:none}
+/* the site: a radar centred on it (rings, a sweeping beam, a pulse going out, a dot) */
+.radar{position:absolute;left:-90px;top:-90px;width:180px;height:180px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(0,24,150,.28) 0%,rgba(0,24,150,.12) 55%,rgba(0,24,150,0) 71%)}
+.radar .r-ring{position:absolute;border-radius:50%;border:1.5px solid rgba(154,180,255,.75)}
+.radar .r1{inset:0;border-color:rgba(154,180,255,.55)}
+.radar .r2{inset:30px}
+.radar .r3{inset:60px;border-color:rgba(190,205,255,.9)}
+.radar .r-sweep{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(120,160,255,0) 0deg,rgba(120,160,255,0) 290deg,rgba(120,160,255,.25) 330deg,rgba(170,200,255,.75) 359deg,rgba(170,200,255,0) 360deg);
+  animation:r-sweep 3.2s linear infinite;will-change:transform}
+.radar .r-pulse{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(190,210,255,.9);transform:scale(.1);opacity:0;animation:r-pulse 3.2s ease-out infinite;will-change:transform,opacity}
+.radar .r-dot{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#00098b;box-shadow:0 0 0 3px #fff,0 0 12px 4px rgba(120,160,255,.8)}
+@keyframes r-sweep{to{transform:rotate(360deg)}}
+@keyframes r-pulse{0%{transform:scale(.1);opacity:.9}80%{opacity:.15}100%{transform:scale(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.radar .r-sweep{animation:none;transform:rotate(300deg)}.radar .r-pulse{display:none}}
 .jobmark{background:none;border:0}
 .jobmark .face{position:absolute;left:-17px;top:-17px;box-shadow:0 0 0 2.5px #fff,0 2px 6px rgba(0,0,0,.4)}
 .leaflet-tooltip.vt{padding:5px 8px;border:0;border-radius:8px;background:rgba(28,28,30,.9);color:#fff;font:600 13px/1.3 var(--font-text);box-shadow:0 4px 14px rgba(0,0,0,.3)}

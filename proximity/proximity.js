@@ -273,8 +273,11 @@
     const M = mapInit();
     if (!M) return;
     M.layer.clearLayers(); M.marks.clear();
-    const siteSvg = h('div', null, icon('i-site'));
-    L.marker([site.lat, site.lon], { icon: L.divIcon({ className: 'sitemark', html: siteSvg, iconSize: [0, 0] }), zIndexOffset: 1000, keyboard: false, title: 'The site' }).addTo(M.layer);
+    // The site as a radar: rings, a sweeping beam and a pulse, centred on the site (transform and opacity only, so the
+    // map stays smooth; still with reduced motion)
+    const radar = h('div', { class: 'radar' }, h('span', { class: 'r-ring r1' }), h('span', { class: 'r-ring r2' }), h('span', { class: 'r-ring r3' }),
+      h('span', { class: 'r-sweep' }), h('span', { class: 'r-pulse' }), h('span', { class: 'r-dot' }));
+    L.marker([site.lat, site.lon], { icon: L.divIcon({ className: 'sitemark', html: radar, iconSize: [0, 0] }), zIndexOffset: -1000, keyboard: false, interactive: false }).addTo(M.layer);
     const pts = [[site.lat, site.lon]];
     if (DATA.vansAllowed) {
       list.forEach((v, i) => {
