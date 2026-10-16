@@ -494,8 +494,11 @@
     if (!M) return;
     const first = !M.live;
     M.live = true; M.layer.clearLayers(); M.marks.clear();
-    const pin = L.marker([BASE.lat, BASE.lon], { icon: L.divIcon({ className: 'sitemark basemark', html: h('div', null, icon('i-site')), iconSize: [0, 0] }), zIndexOffset: 1000, keyboard: false, title: BASE.label }).addTo(M.layer);
-    pin.bindTooltip(BASE.label, { className: 'vt', direction: 'top', offset: [0, -44], permanent: true });
+    // B90 4NZ as the same radar as a searched site, with its label
+    const radar = h('div', { class: 'radar' }, h('span', { class: 'r-ring r1' }), h('span', { class: 'r-ring r2' }), h('span', { class: 'r-ring r3' }),
+      h('span', { class: 'r-sweep' }), h('span', { class: 'r-pulse' }), h('span', { class: 'r-dot' }));
+    const pin = L.marker([BASE.lat, BASE.lon], { icon: L.divIcon({ className: 'sitemark', html: radar, iconSize: [0, 0] }), zIndexOffset: -1000, keyboard: false, interactive: false }).addTo(M.layer);
+    pin.bindTooltip(BASE.label, { className: 'vt', direction: 'top', offset: [0, -12], permanent: true });
     let n = 0;
     if (DATA && DATA.vansAllowed) {
       for (const v of VANS) {
