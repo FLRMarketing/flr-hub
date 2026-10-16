@@ -12,21 +12,71 @@
 <link rel="icon" href="../assets/flr-icon-192.png">
 <!-- the Hub's look, then this page's; the tools' slide, so Settings arrives from the right and Back slides the Hub in again -->
 <link rel="stylesheet" href="../hub.css?v=1.5">
-<link rel="stylesheet" href="settings.css?v=1.2">
+<link rel="stylesheet" href="settings.css?v=2.0">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="settings.js?v=1.11" defer></script>
-<script type="module" src="../assistant/assistant.js?v=2.2"></script>
+<script src="settings.js?v=2.0" defer></script>
+<script type="module" src="../assistant/assistant.js?v=2.3"></script>
 </head>
 <body data-view="loading">
 <svg class="defs" aria-hidden="true" focusable="false">
   <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5.5 8.5 12l6.5 6.5"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5.5M11 6l-6 6 6 6"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l4.5 4.5"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01" stroke-width="2.6"/></symbol>
   <symbol id="i-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></symbol>
+  <!-- each app's icon, as on the Hub home (a future app without one gets the tile icon) -->
+  <symbol id="i-estimator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="2.75" width="14" height="18.5" rx="3.2"/>
+    <rect x="8" y="5.8" width="8" height="3.6" rx="1.1"/>
+    <path stroke-width="2.5" d="M8.6 13.2h.01M12 13.2h.01M15.4 13.2h.01M8.6 17h.01M12 17h.01M15.4 17h.01"/>
+  </symbol>
+  <symbol id="i-speeding" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 16.9A8.5 8.5 0 1 1 20 16.9"/>
+    <path d="M5.9 10.5l1.25.7M12 7v1.4M18.1 10.5l-1.25.7"/>
+    <path d="M12 14l3.8-3.2"/>
+    <circle cx="12" cy="14" r="1.7" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="i-leave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.5" y="5" width="17" height="15.5" rx="3.2"/>
+    <path d="M3.5 9.6h17M8 3.2v3.6M16 3.2v3.6"/>
+    <circle cx="12" cy="15.1" r="1.85" fill="currentColor" stroke="none"/>
+    <path stroke-width="1.5" d="M12 12.1v-1.3M12 18.1v1.3M9 15.1H7.7M15 15.1h1.3M9.88 12.98l-.92-.92M14.12 12.98l.92-.92M9.88 17.22l-.92.92M14.12 17.22l.92.92"/>
+  </symbol>
+  <symbol id="i-fitters" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.371 6.033 18.533 7.871 16.129 5.467 17.967 3.629A4.4 4.4 0 0 0 12.208 9.318L4.163 17.363A1.75 1.75 0 0 0 6.637 19.837L14.682 11.792A4.4 4.4 0 0 0 20.371 6.033Z"/>
+    <rect x="1.606" y="2.8" width="6.79" height="4.4" rx="2.2" transform="rotate(45 5 5)"/>
+    <path d="M7.4 7.4 9.1 9.1M14.9 14.9 20.2 20.2"/>
+  </symbol>
+  <symbol id="i-onboarding" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.8" width="14" height="17" rx="2.6"/><path d="M9.2 3.8h5.6v2.6H9.2z"/><path d="m8.6 11.2 1.5 1.5 2.7-2.9M8.6 16.2l1.5 1.5 2.7-2.9M14.6 11.6h1.6M14.6 16.6h1.6"/></symbol>
+  <symbol id="i-orders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.8 6.2h10.6v10.1H2.8z"/><path d="M13.4 9.4h4l3 3.4v3.5h-7"/>
+    <circle cx="6.6" cy="17.4" r="1.9"/><circle cx="16.9" cy="17.4" r="1.9"/>
+  </symbol>
+  <symbol id="i-capacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2.6" y="6.4" width="16.4" height="11.2" rx="2.6"/><path d="M21.4 10.2v3.6"/>
+    <circle cx="10.8" cy="10.2" r="1.7"/><path d="M7.6 15.4c.5-1.5 1.7-2.3 3.2-2.3s2.7.8 3.2 2.3"/>
+  </symbol>
+  <symbol id="i-proximity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Nearby: a radar (rings, a sweep and a contact) -->
+    <circle cx="12" cy="12" r="9.2"/><circle cx="12" cy="12" r="5.6" opacity=".7"/>
+    <path d="M12 12 18.5 5.5A9.2 9.2 0 0 1 21.2 12z" fill="currentColor" stroke="none" opacity=".38"/>
+    <path d="M12 12 18.5 5.5"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="16.6" cy="15.4" r="1.3" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="i-warehouse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Warehouse Tasks: a warehouse with a tick on its door -->
+    <path d="M2.8 9.6 12 4l9.2 5.6"/><path d="M4.6 8.5V20h14.8V8.5"/>
+    <path d="m8.4 14.3 2.4 2.4 4.8-5"/>
+  </symbol>
+  <symbol id="i-tile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+    <rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/>
+    <rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>
+  </symbol>
 </svg>
 
 <header class="bar" id="bar">
@@ -63,12 +113,13 @@
     <ul class="group wait-list" id="wait-list"></ul>
   </section>
 
-  <section class="section" id="accounts-section" aria-labelledby="accounts-title" hidden>
+  <!-- People & access: one person and their apps, or one app and its people. Changes wait as drafts until Save changes. -->
+  <section class="section pa" id="accounts-section" aria-labelledby="accounts-title" hidden>
     <div class="section-head">
-      <h2 class="section-title" id="accounts-title">Accounts</h2>
+      <h2 class="section-title" id="accounts-title">People &amp; access</h2>
       <p class="section-count" id="accounts-count"></p>
     </div>
-    <p class="section-note">Switch an app on to let someone use it, off to take it away, and change a role from its menu. Changes apply at once, and the apps check them too, so someone can’t get in by going to an app’s address.</p>
+    <p class="section-note">Manage an account, or review access to an app. Nothing changes until you press Save changes. The apps check access themselves too, so someone can’t get in by going to an app’s address.</p>
     <details class="roles-guide" id="roles-guide">
       <summary>What each role can do</summary>
       <div class="roles-grid">
@@ -79,17 +130,34 @@
       </div>
       <p class="hint">Each tool also has to be switched on for the person.</p>
     </details>
-    <label class="search">
-      <svg aria-hidden="true"><use href="#i-search"/></svg>
-      <span class="sr">Find an account</span>
-      <input type="search" id="search" placeholder="Search by name or email" autocomplete="off" spellcheck="false" enterkeyhint="search">
-    </label>
-    <div class="accounts" id="accounts">
-      <div class="acct-head" id="acct-head" aria-hidden="true">
-        <span>Person</span><span>Role</span><span>Status</span><span class="apps-head" id="apps-head"></span>
+
+    <div class="pa-toolbar">
+      <div class="pa-tabs" role="tablist" aria-label="Show">
+        <button class="pa-tab" type="button" role="tab" id="tab-people" aria-selected="true" aria-controls="pa-grid" data-mode="people">People</button>
+        <button class="pa-tab" type="button" role="tab" id="tab-apps" aria-selected="false" aria-controls="pa-grid" data-mode="apps">By app</button>
       </div>
-      <ul class="acct-list" id="acct-list"></ul>
-      <p class="empty" id="accounts-empty" hidden>No account matches that search.</p>
+      <label class="pa-search">
+        <svg aria-hidden="true"><use href="#i-search"/></svg>
+        <span class="sr">Search by name or email</span>
+        <input type="search" id="search" placeholder="Search by name or email" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      </label>
+    </div>
+
+    <div class="pa-grid" id="pa-grid" role="tabpanel" aria-labelledby="tab-people">
+      <div class="pa-list" id="pa-list">
+        <div class="pa-list-head"><h3 class="pa-list-title" id="pa-list-title">People</h3><span class="pa-list-count" id="pa-list-count"></span></div>
+        <div class="pa-items" id="pa-items"></div>
+        <p class="pa-empty" id="pa-empty" hidden>No account matches that search.</p>
+      </div>
+      <div class="pa-detail" id="pa-detail" aria-live="off"></div>
+    </div>
+
+    <div class="pa-foot" id="pa-foot">
+      <p class="pa-feedback" id="pa-feedback" role="status" aria-live="polite">No unsaved changes</p>
+      <div class="pa-actions">
+        <button class="pa-btn" type="button" id="pa-discard" disabled>Discard</button>
+        <button class="pa-btn pa-primary" type="button" id="pa-save" disabled><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Save changes</span></button>
+      </div>
     </div>
   </section>
 
@@ -137,39 +205,6 @@
 </main>
 
 <footer class="foot"><p>FLR Group · Tools for staff</p></footer>
-
-<!-- one account: role, on or off, apps, password reset -->
-<dialog class="sheet" id="sheet-account" aria-labelledby="sa-name">
-  <div class="scrim" data-close></div>
-  <div class="panel">
-    <div class="sheet-head"><span class="grabber" aria-hidden="true"></span><h2 class="sheet-title">Account</h2><button class="close" type="button" data-close aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
-    <div class="sheet-body">
-      <div class="who">
-        <span class="avatar avatar-lg" id="sa-initials" aria-hidden="true"></span>
-        <p class="who-name" id="sa-name"></p>
-        <p class="who-email" id="sa-email"></p>
-        <p class="who-meta" id="sa-meta"></p>
-      </div>
-      <h3 class="sub-title">Role</h3>
-      <div class="group">
-        <div class="row row-static">
-          <label class="row-main" for="sa-role"><span class="row-title">Role</span><span class="row-sub" id="sa-role-sub"></span></label>
-          <label class="select-wrap"><select id="sa-role"><option value="estimator">User</option><option value="manager">Admin</option><option value="admin">Super Admin</option><option value="developer">Developer</option></select></label>
-        </div>
-        <div class="row row-static">
-          <span class="row-main"><span class="row-title" id="sa-active-label">Account on</span><span class="row-sub" id="sa-active-sub"></span></span>
-          <button class="switch" type="button" role="switch" id="sa-active" aria-labelledby="sa-active-label" aria-checked="true"><span class="knob"></span></button>
-        </div>
-      </div>
-      <h3 class="sub-title" id="sa-apps-title">Apps</h3>
-      <div class="group" id="sa-apps" role="group" aria-labelledby="sa-apps-title"></div>
-      <div class="group sa-reset">
-        <button class="row row-button" type="button" id="sa-reset">Send a password reset email</button>
-      </div>
-      <p class="hint" id="sa-hint">Passwords are never visible to anyone, Super Admins included.</p>
-    </div>
-  </div>
-</dialog>
 
 <!-- a new access code -->
 <dialog class="sheet" id="sheet-code" aria-labelledby="sc-title">

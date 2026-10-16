@@ -352,7 +352,7 @@
         "registration",
         "leaver"
       ],
-      "answer": "FLR Super Admins look after every account in Hub settings: the gear beside your initials on the Hub. New accounts wait under “New accounts waiting” until you’ve checked who they are. Each person has a switch for each app; their name opens their role, a switch for the whole account and a password reset. Registration, the access code and what new accounts get are under “Registration”.",
+      "answer": "FLR Super Admins look after every account in Hub settings: the gear beside your initials on the Hub. New accounts wait under “New accounts waiting” until you’ve checked who they are. Under “People & access”, pick a person to change their role, status, apps or password, or choose “By app”. Nothing changes until you press Save changes. Registration, the access code and what new accounts get are under “Registration”.",
       "link": {
         "href": "settings/",
         "label": "Open Hub settings"

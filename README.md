@@ -45,6 +45,16 @@ person only their apps, and the apps check the same list in the database, so goi
 doesn't get round it: the Estimator, Fleet Management and Annual Leave say "You don't have access to …". On the Fitter
 Schedule it covers the photos, plates and arrivals; the schedule itself is behind its team passcode.
 
+**People & access** (the accounts part of Hub settings, since 16 Oct 2026) lists people (name, email, role, status,
+number of apps) beside an editor for one person (role, on or off, a checklist of apps, password reset), or "By app": each
+app with how many people have it, and everyone with a box for it. Both edit the same drafts, which stay in the page until
+**Save changes**; Save sends them one by one through the same functions as before (`admin_set_role`,
+`admin_set_status`, `admin_set_app_access`), then reads every account back, so anything the database refused stays as
+an unsaved change with the reason. Giving or taking away Super Admin or Admin, and switching an account off, are
+confirmed before saving; leaving the page with unsaved changes asks first. The app list comes from `admin_accounts()`
+(its `apps`), so a new app appears once its migration adds it there; it only needs an icon in `ICONS` in `settings.js`
+(otherwise it gets the tile icon) and an `appNote` line if it should say what it gives.
+
 **New accounts wait for a Super Admin** (`20261002200000_flr_account_approval.sql`, Hub migration 2.2). A new account
 starts switched off, as a User, whatever was set up for its address: a role assigned in advance is only noted, and apps
 switched on in advance and the leave approver list do nothing yet. The Hub shows the person "Your account is waiting for

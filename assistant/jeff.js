@@ -167,8 +167,8 @@ if (PAGE === 'speeding') {   // the map view opening and closing (its class), an
 
 // Keep clear of what a page keeps in the bottom-right corner. Tab bars at the bottom come for free: those pages set
 // --tabbar-h, which the button's position adds (assistant.css). These are the rest: the Estimator's sticky bar with
-// "Save room" and the Fleet map's zoom buttons and key.
-const AVOID = { estimator: '.editor-sticky', speeding: '#view-map:not(.off) .leaflet-bottom.leaflet-right' }[PAGE];
+// "Save room", the Fleet map's zoom buttons and key, and Hub settings' Save changes bar.
+const AVOID = { estimator: '.editor-sticky', speeding: '#view-map:not(.off) .leaflet-bottom.leaflet-right', settings: '.pa-foot.is-sticky' }[PAGE];
 if (AVOID) {
   let queued = false;
   const clearance = () => {

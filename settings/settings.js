@@ -24,6 +24,8 @@
     estimator: 'Uses the apps switched on for them: builds and approves quotes, sees their own leave and driving',
     developer: 'Reads and exports quotes, for testing',
   };
+  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters', orders: 'i-orders', capacity: 'i-capacity', proximity: 'i-proximity', warehouse: 'i-warehouse' };   // as on the Hub home
+  const STATUS = { active: 'Active', disabled: 'Switched off' };
   const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters', orders: 'Orders', capacity: 'Planner', proximity: 'Nearby', warehouse: 'Warehouse' };
   const CHECKED = { phone: 'checked by phone', teams: 'checked on Teams', it: 'checked by IT' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -51,7 +53,7 @@
   function said(e) {
     const code = flrCode(e);
     if (offline(e)) return 'Can’t reach the FLR database. Check your connection and try again.';
-    if (code === 'FLR_VALIDATION' && e.details) return e.details;
+    if (code === 'FLR_VALIDATION' && e.details) return /[.!?]$/.test(e.details) ? e.details : e.details + '.';
     if (code === 'FLR_FORBIDDEN') return 'Only FLR Super Admins can do that.';
     if (code === 'FLR_NOT_FOUND') return 'That account no longer exists. The list has been refreshed.';
     if (code === 'FLR_ACCOUNT_DISABLED') return 'Your FLR account is switched off.';
@@ -60,7 +62,10 @@
   }
 
   /* ---------------------------------------------------------------- state */
-  const S = { you: '', apps: [], accounts: [], settings: null, pre: [], query: '' };
+  const S = { you: '', apps: [], accounts: [], settings: null, pre: [], query: '',
+    // People & access: which view, who or which app is open, and the drafts (account id -> { role, status, apps: { app: on } }),
+    // kept until Save changes. Nothing in a draft has reached the database.
+    mode: 'people', person: '', app: '', open: false, draft: new Map(), saving: false, error: '', saved: '' };
   const byId = id => S.accounts.find(a => a.id === id);
   // Waiting: registered, switched off, nobody has decided yet. Not approved: waiting, or a Super Admin said no.
   const notApproved = a => !!(a && a.request && a.request.decision !== 'approved');
@@ -111,52 +116,277 @@
     return b;
   }
 
-  function accountRow(a) {
-    const off = notApproved(a);
-    const li = el('li', 'acct' + (a.status === 'disabled' ? ' is-off' : ''));
-    li.dataset.id = a.id;
-    const person = el('button', 'acct-person');
-    person.type = 'button';
-    if (off) { person.dataset.approve = a.id; person.setAttribute('aria-label', `${nameOf(a)}, ${a.email}: not approved. Check and approve`); }
-    else { person.dataset.open = a.id; person.setAttribute('aria-label', `${nameOf(a)}, ${a.email}: role, status and password`); }
-    const av = el('span', 'avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
-    const text = el('span', 'acct-text');
-    const nm = el('span', 'acct-name'); nm.append(el('span', null, nameOf(a)));
-    if (a.id === S.you) nm.append(el('span', 'pill pill-you', 'You'));
-    text.append(nm, el('span', 'acct-email', a.email));
-    person.append(av, text);
-    // The role, changed right here (as in the person's sheet). Nobody changes their own.
-    const role = el('label', 'acct-role select-wrap');
-    const pick = el('select');
-    pick.dataset.roleFor = a.id;
-    pick.setAttribute('aria-label', `Role for ${nameOf(a)}`);
-    for (const r of ['estimator', 'manager', 'admin', 'developer']) { const o = el('option', null, ROLES[r]); o.value = r; pick.append(o); }
-    if (!ROLES[a.role]) { const o = el('option', null, a.role); o.value = a.role; pick.append(o); }   // a role this page doesn't know yet
-    pick.value = a.role;
-    if (a.id === S.you) { pick.disabled = true; role.title = 'You can’t change your own role'; }
-    else if (off) { pick.disabled = true; role.title = 'Approve this account first'; }
-    role.append(pick);
-    const status = el('span', 'acct-status');
-    status.append(el('span', a.status === 'disabled' ? 'pill pill-off' : 'pill pill-on', off ? 'Not approved' : a.status === 'disabled' ? 'Switched off' : 'Active'));
-    const apps = el('span', 'acct-apps');
-    for (const app of S.apps) {
-      const cell = el('span', 'app-cell');
-      const sw = switchEl(a.apps.includes(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { app: app.id, user: a.id });
-      if (off) sw.disabled = true;   // tools come with approval
-      cell.append(el('span', 'app-label', SHORT[app.id] || appTitle(app.id)), sw);   // phones: the short name; the switch says it in full
-      apps.append(cell);
+  const svgUse = (id, cls) => { const n = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); n.setAttribute('aria-hidden', 'true'); if (cls) n.setAttribute('class', cls);
+    const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', '#' + id); n.append(u); return n; };
+  const appIcon = id => svgUse(ICONS[id] || 'i-tile', 'pa-icon');
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const roleName = r => ROLES[r] || r;
+  const isPhone = () => matchMedia('(max-width: 760px)').matches;
+
+  /* ---------------------------------------------------------------- People & access: drafts */
+  // What the page shows for an account: the database's values with this page's unsaved changes on top.
+  function shown(a) {
+    const d = S.draft.get(a.id), apps = new Set(a.apps);
+    if (d) for (const [id, on] of Object.entries(d.apps)) { if (on) apps.add(id); else apps.delete(id); }
+    return { role: d && d.role !== undefined ? d.role : a.role, status: d && d.status !== undefined ? d.status : a.status, apps };
+  }
+  // One change to the draft. A change back to what the database has isn't a change any more.
+  function edit(a, what) {
+    if (!a || notApproved(a) || S.saving) return;
+    const d = S.draft.get(a.id) || { apps: {} };
+    if ('role' in what) { if (what.role === a.role) delete d.role; else d.role = what.role; }
+    if ('status' in what) { if (what.status === a.status) delete d.status; else d.status = what.status; }
+    if ('app' in what) { if (what.on === a.apps.includes(what.app)) delete d.apps[what.app]; else d.apps[what.app] = what.on; }
+    if (d.role === undefined && d.status === undefined && !Object.keys(d.apps).length) S.draft.delete(a.id); else S.draft.set(a.id, d);
+    S.error = ''; S.saved = '';
+    render();
+  }
+  // Every unsaved change, in the order Save sends them: per person, the role, then on or off, then their apps.
+  function changes() {
+    const out = [];
+    for (const a of listed()) {
+      const d = S.draft.get(a.id);
+      if (!d) continue;
+      if (d.role !== undefined) out.push({ a, kind: 'role', value: d.role, from: a.role });
+      if (d.status !== undefined) out.push({ a, kind: 'status', value: d.status, from: a.status });
+      for (const app of S.apps) if (app.id in d.apps) out.push({ a, kind: 'app', app: app.id, value: d.apps[app.id] });
     }
-    li.append(person, role, status, apps);
-    return li;
+    return out;
+  }
+  // After the accounts are read again: drop drafts that now match the database, and any for accounts that have gone
+  // (or aren't approved any more). Returns how many changes were dropped because their account had gone.
+  function prune() {
+    let gone = 0;
+    for (const [id, d] of [...S.draft]) {
+      const a = byId(id);
+      const n = (d.role !== undefined) + (d.status !== undefined) + Object.keys(d.apps).length;
+      if (!a || a.waiting || notApproved(a)) { S.draft.delete(id); gone += n; continue; }
+      if (d.role === a.role) delete d.role;
+      if (d.status === a.status) delete d.status;
+      for (const [app, on] of Object.entries(d.apps)) if (on === a.apps.includes(app) || !S.apps.some(x => x.id === app)) delete d.apps[app];
+      if (d.role === undefined && d.status === undefined && !Object.keys(d.apps).length) S.draft.delete(id);
+    }
+    return gone;
+  }
+  const dirty = () => changes().length;
+
+  /* ---------------------------------------------------------------- People & access: drawing */
+  const statusOf = (a, sh) => notApproved(a) ? ['Not approved', 'is-unapproved'] : sh.status === 'disabled' ? [STATUS.disabled, 'is-off'] : [STATUS.active, 'is-active'];
+  function metaLine(a, sh) {
+    const m = el('span', 'pa-meta');
+    const [label, cls] = statusOf(a, sh);
+    m.append(el('span', null, roleName(sh.role)), el('span', 'pa-dot', '·'), el('span', 'pa-status ' + cls, label));
+    return m;
+  }
+  function nameLine(a, tag) {
+    const n = el(tag || 'span', 'pa-name');
+    n.append(el('span', null, nameOf(a)));
+    if (a.id === S.you) n.append(el('span', 'pa-you', 'You'));
+    if (S.draft.has(a.id)) n.append(el('span', 'pa-edited', 'Unsaved'));
+    return n;
+  }
+  const matches = a => { const q = S.query.trim().toLowerCase(); return !q || `${nameOf(a)} ${a.email}`.toLowerCase().includes(q); };
+
+  function personRow(a) {
+    const sh = shown(a), n = sh.apps.size;
+    const b = el('button', 'pa-row');
+    b.type = 'button'; b.dataset.person = a.id; b.dataset.focus = 'person:' + a.id;
+    if (a.id === S.person && (S.open || !isPhone())) b.setAttribute('aria-current', 'true');   // phones: nobody is open until tapped
+    const av = el('span', 'pa-avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
+    const text = el('span');
+    text.append(nameLine(a), el('span', 'pa-email', a.email), metaLine(a, sh));
+    const count = el('span', 'pa-count'); count.append(el('strong', null, String(n)), ` ${n === 1 ? 'app' : 'apps'}`);
+    b.append(av, text, count, svgUse('i-chevron', 'pa-chev'));
+    b.hidden = !matches(a);
+    return b;
+  }
+  function appRow(app) {
+    const people = listed().filter(a => shown(a).apps.has(app.id)).length;
+    const b = el('button', 'pa-row pa-app-row');
+    b.type = 'button'; b.dataset.appPick = app.id; b.dataset.focus = 'app:' + app.id;
+    if (app.id === S.app && (S.open || !isPhone())) b.setAttribute('aria-current', 'true');
+    const nm = el('span', 'pa-name', appTitle(app.id));
+    const text = el('span'); text.append(nm);
+    if (app.active === false) text.append(el('span', 'pa-email', 'Not shown on the Hub at the moment'));
+    b.append(appIcon(app.id), text, el('span', 'pa-count', plural(people, 'person', 'people')));
+    b.setAttribute('aria-label', `${appTitle(app.id)}: ${plural(people, 'person has', 'people have')} access`);
+    return b;
   }
 
-  function renderAccounts() {
-    $('#apps-head').replaceChildren(...S.apps.map(a => el('span', null, SHORT[a.id] || a.title)));
-    $('#accounts').style.setProperty('--apps', String(S.apps.length || 1));
-    $('#acct-list').replaceChildren(...listed().map(accountRow));
-    filter();
-    renderWaiting();
+  function backButton(label) {
+    const b = el('button', 'pa-back'); b.type = 'button'; b.dataset.back = '1';
+    b.append(svgUse('i-arrow-left'), el('span', null, label));
+    return b;
   }
+  function selectField(label, id, options, value, o) {
+    const wrap = el('label', 'pa-field');
+    wrap.append(el('span', 'pa-label', label));
+    const box = el('span', 'pa-select' + (o.changed ? ' is-changed' : ''));
+    const sel = el('select'); sel.id = id; sel.dataset.focus = id;
+    for (const [v, t] of options) { const op = el('option', null, t); op.value = v; sel.append(op); }
+    if (!options.some(([v]) => v === value)) { const op = el('option', null, value); op.value = value; sel.append(op); }   // a value this page doesn't know yet
+    sel.value = value; sel.disabled = !!o.disabled;
+    if (o.title) box.title = o.title;
+    box.append(sel); wrap.append(box);
+    return wrap;
+  }
+  function checkRow(o) {
+    const row = el('label', 'pa-check' + (o.disabled ? ' is-disabled' : ''));
+    const main = el('span', 'pa-check-main');
+    if (o.icon) main.append(o.icon);
+    const text = el('span', 'pa-check-text');
+    const title = el('span', null, o.title);
+    if (o.changed) title.append(el('span', 'pa-unsaved', 'Unsaved'));
+    text.append(title);
+    if (o.extra) text.append(...o.extra);
+    main.append(text);
+    const box = el('input'); box.type = 'checkbox'; box.checked = o.checked; box.disabled = !!o.disabled;
+    for (const [k, v] of Object.entries(o.data)) box.dataset[k] = v;
+    box.setAttribute('aria-label', o.label);
+    row.append(main, box);
+    return row;
+  }
+
+  // What an app gives this person, by their role (the draft role in the editor).
+  function appNote(a, id) {
+    if (id === 'speeding') return a.role === 'admin' ? 'Sees every driver, and links drivers to accounts' : a.role === 'manager' ? 'Sees every driver' : a.driver ? `Sees their own driving (${a.driver})` : 'Not linked to a FleetView driver, so it shows them nothing yet';
+    if (id === 'annual-leave') return a.approver || a.role === 'admin' || a.role === 'manager' ? 'Leave approver: sees everyone’s leave' : 'Their own leave';
+    if (id === 'fitters') return a.role === 'admin' || a.role === 'manager' ? 'Photos, plates and arrivals here; the schedule also needs the team passcode' : 'Photos and plates here; the schedule also needs the team passcode';
+    if (id === 'orders') return 'Deliveries from the Monday Goods In board, read-only';
+    if (id === 'capacity') return 'Fitters booked each day from the Monday Work Programme';
+    if (id === 'proximity') return 'The nearest surveyor to a site postcode; live vehicle positions for Admins';
+    if (id === 'warehouse') return 'Ticks off the warehouse checklist; ticks go to Monday';
+    if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'manager' ? 'Builds, approves and reassigns quotes' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
+    return '';
+  }
+
+  // One person: role, on or off, and a checklist of the apps.
+  function personDetail(a) {
+    const sh = shown(a), self = a.id === S.you, off = notApproved(a), d = S.draft.get(a.id) || { apps: {} };
+    const box = document.createDocumentFragment();
+    box.append(backButton('All people'));
+    const top = el('div', 'pa-top');
+    const av = el('span', 'pa-avatar', initials(nameOf(a))); av.setAttribute('aria-hidden', 'true');
+    const who = el('div'); who.style.minWidth = '0';
+    const h = el('h3', 'pa-title', nameOf(a)); h.id = 'pa-detail-title'; h.tabIndex = -1;
+    who.append(h, el('span', 'pa-email', a.email), el('p', 'pa-seen', `Joined ${day(a.createdAt)} · ${seen(a.lastSeen)}`));
+    top.append(av, who);
+    box.append(top);
+    if (off) {
+      const lock = el('div', 'pa-lock');
+      lock.append(el('p', 'pa-note', (a.request || {}).decision === 'refused' ? 'This account wasn’t approved, so it stays switched off with no apps. Approving it checks who it is first, then gives a role and apps.' : 'This account is waiting for approval. Approving it checks who it is first, then gives a role and apps.'));
+      const go = el('button', 'pa-btn', 'Check and approve'); go.type = 'button'; go.dataset.approve = a.id;
+      lock.append(go);
+      box.append(lock);
+    }
+    const fields = el('div', 'pa-fields');
+    fields.append(
+      selectField('Role', 'pa-role', ['estimator', 'manager', 'admin', 'developer'].map(r => [r, ROLES[r]]), sh.role,
+        { disabled: self || off, changed: d.role !== undefined, title: self ? 'You can’t change your own role' : off ? 'Approve this account first' : '' }),
+      selectField('Account status', 'pa-status', off ? [[a.status, 'Not approved']] : Object.entries(STATUS), sh.status,
+        { disabled: self || off, changed: d.status !== undefined, title: self ? 'You can’t switch off your own account' : off ? 'Approve this account first' : '' }));
+    box.append(fields);
+    box.append(el('p', 'pa-note', self ? 'You can’t change your own role or switch off your own account. Another Super Admin can.'
+      : off ? '' : `${ROLE_NOTE[sh.role] || ''}${sh.status === 'disabled' ? '. Switched off: can’t sign in to the Hub or any app.' : ''}`));
+    const head = el('div', 'pa-access-title');
+    head.append(el('strong', null, 'App access'), el('span', null, `${sh.apps.size} of ${S.apps.length} enabled`));
+    box.append(head);
+    const list = el('div'); list.setAttribute('role', 'group'); list.setAttribute('aria-label', `Apps for ${nameOf(a)}`);
+    for (const app of S.apps) {
+      list.append(checkRow({ icon: appIcon(app.id), title: appTitle(app.id), extra: [el('span', 'pa-check-sub', appNote({ ...a, role: sh.role }, app.id))],
+        checked: sh.apps.has(app.id), disabled: off, changed: app.id in d.apps, label: `${appTitle(app.id)} for ${nameOf(a)}`,
+        data: { user: a.id, app: app.id, focus: `check:${a.id}:${app.id}` } }));
+    }
+    box.append(list);
+    const foot = el('div', 'pa-foot-note');
+    foot.append(el('p', 'pa-note', 'Role controls administration. App access controls which apps this person can open.'));
+    const reset = el('button', 'pa-link pa-reset', 'Send a password reset email'); reset.type = 'button'; reset.dataset.reset = a.id;
+    if (!off) foot.append(reset);
+    box.append(foot);
+    return box;
+  }
+  // One app: everyone (or everyone the search finds) with a box each.
+  function appDetail(app) {
+    const box = document.createDocumentFragment();
+    box.append(backButton('All apps'));
+    const people = listed(), withIt = people.filter(a => shown(a).apps.has(app.id)).length;
+    const top = el('div', 'pa-top');
+    const badge = el('span', 'pa-app-badge'); badge.append(svgUse(ICONS[app.id] || 'i-tile'));
+    const who = el('div');
+    const h = el('h3', 'pa-title', appTitle(app.id)); h.id = 'pa-detail-title'; h.tabIndex = -1;
+    who.append(h, el('span', 'pa-email', `${plural(withIt, 'person has', 'people have')} access`));
+    top.append(badge, who);
+    box.append(top);
+    const head = el('div', 'pa-access-title');
+    head.append(el('strong', null, 'People with access'), el('span', null, 'Enable individually'));
+    box.append(head);
+    const hits = people.filter(matches);
+    if (!hits.length) { box.append(el('p', 'pa-empty', 'No account matches that search.')); return box; }
+    const list = el('div'); list.setAttribute('role', 'group'); list.setAttribute('aria-label', `People with ${appTitle(app.id)}`);
+    for (const a of hits) {
+      const sh = shown(a), d = S.draft.get(a.id) || { apps: {} }, off = notApproved(a);
+      const row = checkRow({ title: '', extra: [], checked: sh.apps.has(app.id), disabled: off, changed: false,
+        label: `${appTitle(app.id)} for ${nameOf(a)}`, data: { user: a.id, app: app.id, focus: `check:${a.id}:${app.id}` } });
+      row.classList.add('pa-member');
+      const text = row.querySelector('.pa-check-text');
+      text.replaceChildren(nameLineFor(a, app.id in d.apps), el('span', 'pa-email', a.email), metaLine(a, sh));
+      if (off) row.title = 'Approve this account first';
+      list.append(row);
+    }
+    box.append(list);
+    return box;
+  }
+  function nameLineFor(a, changed) {
+    const n = el('span', 'pa-name'); n.append(el('span', null, nameOf(a)));
+    if (a.id === S.you) n.append(el('span', 'pa-you', 'You'));
+    if (changed) n.append(el('span', 'pa-unsaved', 'Unsaved'));
+    return n;
+  }
+
+  // The whole section from the state. Focus stays on the same control when it's redrawn.
+  function render() {
+    if (!S.accounts.length && !S.apps.length) return;
+    const active = document.activeElement, key = active && active.dataset ? active.dataset.focus : '';
+    const people = listed();
+    if (!S.person || !byId(S.person) || byId(S.person).waiting) S.person = (people[0] || {}).id || '';
+    if (!S.app || !S.apps.some(x => x.id === S.app)) S.app = (S.apps[0] || {}).id || '';
+    const byPeople = S.mode === 'people';
+    for (const t of document.querySelectorAll('.pa-tab')) t.setAttribute('aria-selected', String(t.dataset.mode === S.mode));
+    $('#pa-grid').setAttribute('aria-labelledby', byPeople ? 'tab-people' : 'tab-apps');
+    $('#pa-grid').classList.toggle('is-open', S.open);
+    const n = people.length, hits = people.filter(matches).length;
+    $('#accounts-count').textContent = plural(n, 'account', 'accounts');
+    if (byPeople) {
+      $('#pa-list-title').textContent = 'People';
+      $('#pa-list-count').textContent = S.query.trim() ? `${hits} of ${n}` : plural(n, 'account', 'accounts');
+      $('#pa-items').replaceChildren(...people.map(personRow));
+      $('#pa-empty').hidden = hits > 0;
+    } else {
+      $('#pa-list-title').textContent = 'Apps';
+      $('#pa-list-count').textContent = S.query.trim() ? `${plural(hits, 'person matches', 'people match')} the search` : plural(S.apps.length, 'app', 'apps');
+      $('#pa-items').replaceChildren(...S.apps.map(appRow));
+      $('#pa-empty').hidden = true;
+    }
+    const a = byId(S.person), app = S.apps.find(x => x.id === S.app);
+    $('#pa-detail').replaceChildren(byPeople ? (a ? personDetail(a) : '') : (app ? appDetail(app) : ''));
+    renderFoot();
+    if (key) { const again = document.querySelector(`[data-focus="${CSS.escape(key)}"]`); if (again && again !== active && !again.hidden) again.focus({ preventScroll: true }); }
+  }
+  function renderFoot() {
+    const n = dirty(), foot = $('#pa-foot'), save = $('#pa-save');
+    $('#pa-discard').disabled = !n || S.saving;
+    save.disabled = !n || S.saving;
+    if (S.saving) save.setAttribute('aria-busy', 'true'); else save.removeAttribute('aria-busy');
+    save.querySelector('.btn-label').textContent = S.saving ? 'Saving…' : 'Save changes';
+    foot.classList.toggle('is-sticky', !!n || !!S.error || S.saving);   // in view while there's something to save
+    foot.classList.toggle('is-dirty', !!n && !S.error);
+    foot.classList.toggle('is-error', !!S.error);
+    foot.classList.toggle('is-saved', !n && !!S.saved);
+    $('#pa-feedback').textContent = S.saving ? `Saving ${plural(n, 'change', 'changes')}…` : S.error ? S.error
+      : n ? plural(n, 'unsaved change', 'unsaved changes') : S.saved || 'No unsaved changes';
+  }
+  function renderAccounts() { render(); renderWaiting(); }
+
   // New accounts waiting: who registered, when, and any role set up in advance for the address.
   function noted(a) {
     const r = a.request || {};
@@ -184,27 +414,12 @@
     $('#waiting-count').textContent = w.length ? `${w.length} waiting` : '';
     $('#wait-list').replaceChildren(...w.map(waitRow));
   }
-  function filter() {
-    const q = S.query.trim().toLowerCase();
-    let shown = 0;
-    for (const li of $('#acct-list').children) {
-      const a = byId(li.dataset.id);
-      const hit = !q || `${nameOf(a)} ${a.email}`.toLowerCase().includes(q);
-      li.hidden = !hit; if (hit) shown++;
-    }
-    const n = listed().length;
-    $('#accounts-count').textContent = q ? `${shown} of ${n}` : `${n} ${n === 1 ? 'account' : 'accounts'}`;
-    $('#accounts-empty').hidden = shown > 0;
-  }
-  function replaceAccount(a) {
-    const i = S.accounts.findIndex(x => x.id === a.id);
-    if (i < 0) return;
-    S.accounts[i] = a;
-    const old = $(`#acct-list > li[data-id="${a.id}"]`);
-    if (old && !a.waiting) { const row = accountRow(a); row.hidden = old.hidden; old.replaceWith(row); }
-    if (openFor === a.id) fillSheet(a);
-  }
-
+  $('#wait-list').addEventListener('click', e => {
+    const ap = e.target.closest('[data-approve]');
+    if (ap) { openApprove(ap.dataset.approve); return; }
+    const no = e.target.closest('[data-refuse]');
+    if (no) refuse(no.dataset.refuse);
+  });
   // Likkle Jeff's switch (Hub migration 2.4). S.jeff: true / false, or null when the database hasn't got the switch yet.
   function renderJeff() {
     const btn = $('#jeff-on'), sub = $('#jeff-on-sub');
@@ -280,109 +495,133 @@
   async function reloadAccounts() {
     const acc = await call('admin_accounts');
     S.you = acc.you; S.apps = acc.apps || []; S.accounts = acc.accounts || [];
+    const gone = prune();
+    if (gone) S.error = `${plural(gone, 'unsaved change was', 'unsaved changes were')} dropped: the account has gone, or isn’t approved any more.`;
     renderAccounts();
-    if (openFor) { const a = byId(openFor); if (a) fillSheet(a); else sheets.close($('#sheet-account')); }
     if (approveFor) { const a = byId(approveFor); if (!a || !notApproved(a)) sheets.close($('#sheet-approve')); }
   }
 
-  /* ---------------------------------------------------------------- giving and taking apps (the list and the account sheet) */
-  async function toggleApp(btn) {
-    const a = byId(btn.dataset.user), app = btn.dataset.app;
-    if (!a || btn.getAttribute('aria-busy') === 'true') return;
-    const on = btn.getAttribute('aria-checked') !== 'true';
-    for (const b of document.querySelectorAll(`.switch[data-user="${a.id}"][data-app="${app}"]`)) { b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-busy', 'true'); }
-    try {
-      const row = await call('admin_set_app_access', { p_user: a.id, p_app: app, p_allowed: on });
-      replaceAccount(row);
-      toast(`${appTitle(app)} ${on ? 'on' : 'off'} for ${nameOf(row)}`);
-    } catch (e) {
-      for (const b of document.querySelectorAll(`.switch[data-user="${a.id}"][data-app="${app}"]`)) b.setAttribute('aria-checked', on ? 'false' : 'true');
-      toast(said(e));
-      if (flrCode(e) === 'FLR_NOT_FOUND') reloadAccounts().catch(() => {});
-    } finally {
-      for (const b of document.querySelectorAll(`.switch[data-user="${a.id}"][data-app="${app}"]`)) b.removeAttribute('aria-busy');
-    }
+  /* ---------------------------------------------------------------- People & access: choosing, editing, saving */
+  function openDetail() {
+    if (!isPhone()) return;
+    if (!S.open) { S.open = true; history.pushState({ pa: 1 }, ''); }
+    render();
+    scrollTo({ top: $('#accounts-section').offsetTop - 60, behavior: reduced() ? 'auto' : 'smooth' });
+    const h = $('#pa-detail-title'); if (h) h.focus({ preventScroll: true });
   }
-  document.addEventListener('click', e => {
-    const sw = e.target.closest('.switch[data-app][data-user]');
-    if (sw) { if (!sw.disabled) toggleApp(sw); return; }
-    const ap = e.target.closest('[data-approve]');
-    if (ap) { openApprove(ap.dataset.approve); return; }
-    const no = e.target.closest('[data-refuse]');
-    if (no) { refuse(no.dataset.refuse); return; }
-    const open = e.target.closest('[data-open]');
-    if (open) openAccount(open.dataset.open);
+  function closeDetail() {
+    if (history.state && history.state.pa) { history.back(); return; }   // popstate draws it
+    S.open = false; render();
+  }
+  addEventListener('popstate', () => {
+    if (!S.open) return;
+    const was = S.mode === 'people' ? `person:${S.person}` : `app:${S.app}`;
+    S.open = false; render();
+    const row = document.querySelector(`[data-focus="${CSS.escape(was)}"]`); if (row) row.focus({ preventScroll: true });
   });
-  $('#search').addEventListener('input', e => { S.query = e.target.value; filter(); });
+  $('#pa-grid').addEventListener('click', e => {
+    const p = e.target.closest('[data-person]');
+    if (p) { S.person = p.dataset.person; render(); openDetail(); if (!isPhone()) { const h = $('#pa-detail-title'); if (h && matchMedia('(pointer: coarse)').matches) h.focus({ preventScroll: true }); } return; }
+    const ap = e.target.closest('[data-app-pick]');
+    if (ap) { S.app = ap.dataset.appPick; render(); openDetail(); return; }
+    if (e.target.closest('[data-back]')) { closeDetail(); return; }
+    const ok = e.target.closest('[data-approve]');
+    if (ok) { openApprove(ok.dataset.approve); return; }
+    const rs = e.target.closest('[data-reset]');
+    if (rs) resetPassword(byId(rs.dataset.reset), rs);
+  });
+  $('#pa-grid').addEventListener('change', e => {
+    const t = e.target;
+    if (t.matches('input[type="checkbox"][data-app][data-user]')) { edit(byId(t.dataset.user), { app: t.dataset.app, on: t.checked }); return; }
+    if (t.id === 'pa-role') { edit(byId(S.person), { role: t.value }); return; }
+    if (t.id === 'pa-status') edit(byId(S.person), { status: t.value });
+  });
+  for (const t of document.querySelectorAll('.pa-tab')) t.addEventListener('click', () => {
+    if (S.mode === t.dataset.mode) return;
+    S.mode = t.dataset.mode;
+    if (S.open && history.state && history.state.pa) { S.open = false; history.replaceState(null, ''); } else S.open = false;
+    render();
+  });
+  $('.pa-tabs').addEventListener('keydown', e => {   // tabs: left and right move between them
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const other = document.querySelector(`.pa-tab:not([data-mode="${S.mode}"])`);
+    other.click(); other.focus();
+  });
+  $('#search').addEventListener('input', e => { S.query = e.target.value; render(); });
 
-  /* ---------------------------------------------------------------- one account */
-  let openFor = '';
-  function appNote(a, id) {
-    if (id === 'speeding') return a.role === 'admin' ? 'Sees every driver, and links drivers to accounts' : a.role === 'manager' ? 'Sees every driver' : a.driver ? `Sees their own driving (${a.driver})` : 'Not linked to a FleetView driver, so it shows them nothing yet';
-    if (id === 'annual-leave') return a.approver ? 'Leave approver: sees everyone’s leave' : 'Their own leave';
-    if (id === 'fitters') return a.role === 'admin' || a.role === 'manager' ? 'Photos, plates and arrivals here; the schedule also needs the team passcode' : 'Photos and plates here; the schedule also needs the team passcode';
-    if (id === 'orders') return 'Deliveries from the Monday Goods In board, read-only';
-    if (id === 'capacity') return 'Fitters booked each day from the Monday Work Programme';
-    if (id === 'proximity') return 'The nearest surveyor to a site postcode; live vehicle positions for Admins';
-    if (id === 'warehouse') return 'Ticks off the warehouse checklist; ticks go to Monday';
-    if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'manager' ? 'Builds, approves and reassigns quotes' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
-    return '';
+  // Changes that give or take away rights over other people's data, or stop someone signing in: said once more before saving.
+  function warnings(list) {
+    const out = [];
+    let danger = false;
+    for (const c of list) {
+      const who = nameOf(c.a);
+      if (c.kind === 'role') {
+        if (c.value === 'admin') out.push(`${who} becomes a Super Admin, who can change every account, role and app setting, and every app’s settings.`);
+        else if (c.value === 'manager') out.push(`${who} becomes an Admin: approves leave, sees everyone’s leave, every driver and fitter arrivals.`);
+        if (c.from === 'admin' && c.value !== 'admin') { out.push(`${who} loses Super Admin rights.`); danger = true; }
+        else if (c.from === 'manager' && c.value !== 'manager' && c.value !== 'admin') { out.push(`${who} loses Admin rights.`); danger = true; }
+      } else if (c.kind === 'status' && c.value === 'disabled') { out.push(`${who}’s account is switched off: they can’t sign in to the Hub or any app. Nothing of theirs is deleted.`); danger = true; }
+    }
+    return { text: out.join(' '), danger };
   }
-  function fillSheet(a) {
-    const self = a.id === S.you;
-    $('#sa-initials').textContent = initials(nameOf(a));
-    $('#sa-name').textContent = nameOf(a);
-    $('#sa-email').textContent = a.email;
-    $('#sa-meta').textContent = `Joined ${day(a.createdAt)} · ${seen(a.lastSeen)}`;
-    const role = $('#sa-role');
-    role.value = a.role; role.disabled = self;
-    $('#sa-role-sub').textContent = self ? 'You can’t change your own role' : ROLE_NOTE[a.role] || '';
-    const active = $('#sa-active');
-    active.setAttribute('aria-checked', a.status === 'disabled' ? 'false' : 'true');
-    active.disabled = self;
-    $('#sa-active-sub').textContent = self ? 'You can’t switch off your own account' : a.status === 'disabled' ? 'Can’t sign in to the Hub or any app' : 'Can sign in';
-    $('#sa-apps').replaceChildren(...S.apps.map(app => {
-      const row = el('div', 'row row-static');
-      const main = el('span', 'row-main');
-      main.append(el('span', 'row-title', appTitle(app.id)), el('span', 'row-sub', appNote(a, app.id)));
-      row.append(main, switchEl(a.apps.includes(app.id), `${appTitle(app.id)} for ${nameOf(a)}`, { app: app.id, user: a.id }));
-      return row;
-    }));
+  async function send(c) {
+    if (c.kind === 'role') { await call('admin_set_role', { p_user: c.a.id, p_role: c.value }); const a = byId(c.a.id); if (a) a.role = c.value; return; }
+    if (c.kind === 'status') { await call('admin_set_status', { p_user: c.a.id, p_status: c.value }); const a = byId(c.a.id); if (a) a.status = c.value; return; }
+    const row = await call('admin_set_app_access', { p_user: c.a.id, p_app: c.app, p_allowed: c.value });
+    const i = S.accounts.findIndex(x => x.id === c.a.id);
+    if (row && i >= 0) S.accounts[i] = row;
   }
-  function openAccount(id) {
-    const a = byId(id);
-    if (!a) return;
-    openFor = id; fillSheet(a);
-    sheets.open($('#sheet-account'));
+  async function save() {
+    const list = changes();
+    if (!list.length || S.saving) return;
+    const w = warnings(list);
+    if (w.text && !(await confirmIt(`Save ${plural(list.length, 'change', 'changes')}?`, w.text, 'Save changes', w.danger))) return;
+    S.saving = true; S.error = ''; S.saved = ''; renderFoot(); render();
+    const failed = [];
+    let stop = null;
+    for (const c of list) {
+      try { await send(c); }
+      catch (e) {
+        failed.push(e);
+        if (offline(e) || expired(e) || ['FLR_SIGN_IN_REQUIRED', 'FLR_FORBIDDEN', 'FLR_ACCOUNT_DISABLED'].includes(flrCode(e))) { stop = e; break; }   // the rest would fail the same way
+      }
+    }
+    // Read everything back, so the page shows what the database has now; what didn't save is still a draft.
+    try { await reloadAccounts(); } catch (e) { prune(); }
+    S.saving = false;
+    const left = dirty();
+    if (!failed.length && !left) {
+      S.saved = `${plural(list.length, 'change', 'changes')} saved`;
+      toast(S.saved);
+    } else {
+      const e = stop || failed[0];
+      const why = e ? said(e) : 'Some changes didn’t reach the FLR database.';
+      S.error = `${left === list.length ? 'Nothing was saved.' : `${plural(left, 'change', 'changes')} didn’t save.`} ${why} ${left === 1 ? 'It’s' : 'They’re'} still here: press Save changes to try again.`;
+      if (expired(e) || flrCode(e) === 'FLR_SIGN_IN_REQUIRED') S.error = `Your sign-in has expired, so ${left === list.length ? 'nothing was saved' : `${plural(left, 'change', 'changes')} didn’t save`}. Sign in again in another tab, then press Save changes.`;
+    }
+    render();
   }
-  // A new role, from the person's sheet or the menu in their row. Both levels see other people's data (everyone's leave,
-  // every driver), so making someone either is confirmed, as is taking one away.
-  async function changeRole(a, role, select) {
-    if (!a || role === a.role) return;
-    const ask = role === 'admin' ? [`Make ${firstName(a)} a Super Admin?`, 'Super Admins look after every account, role and app, and every app’s settings, including the Cost Estimator’s prices and rules.', 'Make Super Admin', false]
-      : role === 'manager' ? [`Make ${firstName(a)} an Admin?`, 'Admins approve leave and see everyone’s, see every driver’s driving and fitter arrivals, and reassign quotes. They can’t change any settings.', 'Make Admin', false]
-      : a.role === 'admin' ? [`Take ${firstName(a)}’s Super Admin rights away?`, `${firstName(a)} will no longer be able to open Hub settings or change accounts and settings.`, 'Take away', true]
-      : a.role === 'manager' ? [`Take ${firstName(a)}’s Admin rights away?`, `${firstName(a)} will no longer approve leave or see everyone’s leave, every driver or fitter arrivals.`, 'Take away', true] : null;
-    if (ask && !(await confirmIt(...ask))) { select.value = a.role; return; }
-    select.disabled = true;
-    try { await call('admin_set_role', { p_user: a.id, p_role: role }); await reloadAccounts(); toast(`${nameOf(a)} is now ${AS[role] || role}`); }
-    catch (err) { select.value = a.role; toast(said(err)); }
-    finally { if (select.isConnected) select.disabled = a.id === S.you; }   // the row's menu is redrawn on reload
-  }
-  $('#sa-role').addEventListener('change', e => changeRole(byId(openFor), e.target.value, e.target));
-  $('#acct-list').addEventListener('change', e => { const s = e.target.closest('select[data-role-for]'); if (s) changeRole(byId(s.dataset.roleFor), s.value, s); });
-  $('#sa-active').addEventListener('click', async e => {
-    const btn = e.currentTarget, a = byId(openFor);
-    if (!a || btn.disabled || btn.getAttribute('aria-busy') === 'true') return;
-    const on = a.status === 'disabled';
-    if (!on && !(await confirmIt(`Switch off ${firstName(a)}’s account?`, 'They won’t be able to sign in to the Hub or any app until it’s switched back on. Nothing of theirs is deleted.', 'Switch off', true))) return;
-    btn.setAttribute('aria-busy', 'true'); btn.setAttribute('aria-checked', on ? 'true' : 'false');
-    try { await call('admin_set_status', { p_user: a.id, p_status: on ? 'active' : 'disabled' }); await reloadAccounts(); toast(on ? `${nameOf(a)} switched back on` : `${nameOf(a)} switched off`); }
-    catch (err) { btn.setAttribute('aria-checked', on ? 'false' : 'true'); toast(said(err)); }
-    finally { btn.removeAttribute('aria-busy'); }
+  $('#pa-save').addEventListener('click', save);
+  $('#pa-discard').addEventListener('click', async () => {
+    const n = dirty();
+    if (!n || S.saving) return;
+    if (!(await confirmIt(`Discard ${plural(n, 'unsaved change', 'unsaved changes')}?`, 'Everything goes back to how it is in the FLR database. Nothing has been saved.', 'Discard', true))) return;
+    S.draft.clear(); S.error = ''; S.saved = '';
+    render(); toast('Changes discarded');
   });
-  $('#sa-reset').addEventListener('click', async e => {
-    const a = byId(openFor), btn = e.currentTarget;
+
+  // Leaving with unsaved changes: the Hub link and other links ask first; closing or reloading the tab gets the browser's question.
+  let leaving = false;
+  addEventListener('beforeunload', e => { if (!leaving && (dirty() || S.saving)) { e.preventDefault(); e.returnValue = ''; } });
+  document.addEventListener('click', async e => {
+    const link = e.target.closest('a[href]');
+    if (!link || !dirty() || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || link.target === '_blank') return;
+    e.preventDefault();
+    const n = dirty();
+    if (await confirmIt('Leave without saving?', `You have ${plural(n, 'unsaved change', 'unsaved changes')} in People & access. ${n === 1 ? 'It’s' : 'They’re'} lost if you leave now.`, 'Leave', true)) { leaving = true; location.href = link.href; }
+  }, true);
+
+  async function resetPassword(a, btn) {
     if (!a || btn.disabled) return;
     btn.disabled = true;
     try {
@@ -391,7 +630,7 @@
       toast(`Reset email sent to ${a.email}`);
     } catch (err) { toast(offline(err) ? 'Can’t reach the FLR sign-in service. Check your connection.' : 'The reset email couldn’t be sent. Try again in a few minutes.'); }
     finally { btn.disabled = false; }
-  });
+  }
 
   /* ---------------------------------------------------------------- a new account: check who it is, then approve */
   let approveFor = '';
@@ -564,7 +803,6 @@
     d.addEventListener('cancel', e => { e.preventDefault(); sheets.close(d); });
     d.addEventListener('close', () => {
       if (!document.querySelector('dialog.sheet[open]')) document.documentElement.classList.remove('sheet-open');
-      if (d.id === 'sheet-account') openFor = '';
       if (d.id === 'sheet-approve') approveFor = '';
       if (d.id === 'sheet-confirm' && confirming) { confirming(false); confirming = null; }
     });
