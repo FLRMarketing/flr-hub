@@ -5,7 +5,9 @@
    deal's owner, the day and time its "Appointment Date & Time", the place its
    Site Postcode and Site Address Line 1. Read-only: bookings are still made in
    HubSpot, and each one links back to its deal. Everyone with the app sees the
-   whole team (the user's choice, 19 Oct 2026).
+   whole team (the user's choice, 19 Oct 2026). A month of day tiles, each surveyor
+   in their own colour (chips above filter to one), and the chosen day's surveys
+   listed beside it.
 
    Underneath, what is still to book:
      - Needs a surveyor: deals in Enquiry Received;
@@ -98,6 +100,17 @@
         b('b9', 'St Anne’s Library - Entrance matting - DO', 's3', at(4, 11, 0), 'NN1 2EF', 'Library Lane'),
         b('b10', 'Greenway Nursery - Playroom - LH', 's4', at(7, 9, 0), 'B90 1AA', 'Greenway Nursery'),
         b('b11', 'Fairfield School - Corridors - ST', 's1', at(8, 12, 0), 'B60 2HJ', 'Fairfield School'),
+        b('b12', 'Parkside Surgery - Waiting room - PS', 's2', at(-14, 9, 0), 'B12 8QR', 'Parkside Surgery', 'Quoted'),
+        b('b13', 'Canal Wharf Offices - Reception - ME', 's5', at(-13, 13, 30), 'B1 2JP', 'Canal Wharf', 'Quoted'),
+        b('b14', 'Hillcrest Academy - Sports hall - DO', 's3', at(-11, 10, 0), 'CV34 5AA', 'Hillcrest Academy', 'Quoted'),
+        b('b15', 'Residential - Hallway carpet - LH', 's4', at(-7, 15, 0), 'B93 9AA', '2 Mill Lane', 'Quoted'),
+        b('b16', 'Moor Street Bank - Branch carpet - ST', 's1', at(9, 9, 0), 'B4 7UL', 'Moor Street'),
+        b('b17', 'Abbey Care - Corridors - PS', 's2', at(9, 11, 30), 'WR1 2AA', 'Abbey Care Home'),
+        b('b18', 'Lakeside Hotel - Function room - ME', 's5', at(9, 14, 0), 'TF1 1AA', 'Lakeside Hotel'),
+        b('b19', 'Elmwood Nursery - Toilets - DO', 's3', at(10, 10, 0), 'B44 9AA', 'Elmwood Nursery'),
+        b('b20', 'Kings Park - Unit 4 resin - LH', 's4', at(14, 9, 30), 'DY4 7AA', 'Kings Park Ind. Est.'),
+        b('b21', 'Orchard School - Classrooms - ST', 's1', at(15, 12, 0), 'B47 6AA', 'Orchard School'),
+        b('b22', 'Victoria Flats - Communal areas - PS', 's2', at(16, 10, 0), 'ST1 1AA', 'Victoria Flats'),
       ],
       needSurveyor: [
         { id: 'n1', name: 'Residential - Wetroom', postcode: 'WS9 8AA', createdAt: at(0, 9), url: '#sample' },
@@ -115,23 +128,16 @@
   /* ---------------------------------------------------------------- state */
   let DATA = null;
   const todayIso = isoDay(new Date());
-  let monday = mondayOf(parse(todayIso));
+  let shown = (d => new Date(d.getFullYear(), d.getMonth(), 1))(parse(todayIso));
+  let selected = todayIso;
   let who = '';
   try { who = localStorage.getItem(WHO_KEY) || ''; } catch (e) { /* per-viewer only */ }
-  const byId = () => new Map((DATA.surveyors || []).map(s => [String(s.id), s]));
+  const fmtMonth = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
+  const byId = () => new Map((DATA.surveyors || []).map((s, i) => [String(s.id), Object.assign({ c: 'c' + (i % 8) }, s)]));
+  const colour = id => (byId().get(String(id)) || { c: 'c7' }).c;
+  const visible = () => (DATA.bookings || []).filter(b => !who || String(b.surveyor) === who)
+    .map(b => ({ b, day: isoDay(new Date(b.at)) })).sort((x, y) => new Date(x.b.at) - new Date(y.b.at));
 
-  /* ---------------------------------------------------------------- one booking */
-  function chip(b, o = {}) {
-    const t = new Date(b.at), tm = timeOf(t), past = t < new Date() && isoDay(t) !== todayIso;
-    const s = byId().get(String(b.surveyor));
-    return h('button', { class: 'bk' + (past ? ' past' : '') + (b.postcode ? '' : ' nopc'), type: 'button',
-      'aria-label': `${tm || 'Time not set'}, ${b.postcode || 'no postcode'}, ${short(b.name)}${s ? ', ' + s.name : ''}`,
-      onclick: () => openSheet(b) },
-      h('span', { class: 't' + (tm ? '' : ' nt') }, tm || 'Time not set'),
-      h('span', { class: 'pc' }, icon('i-pin'), b.postcode || 'No postcode'),
-      h('span', { class: 'nm' }, short(b.name)),
-      o.who && s ? h('span', { class: 'who' }, s.name) : null);
-  }
   function openSheet(b) {
     const t = new Date(b.at), tm = timeOf(t), s = byId().get(String(b.surveyor));
     $('#sheetWhen').textContent = fmtLong.format(parse(isoDay(t))) + (tm ? ' · ' + tm : ' · time not set');
@@ -147,52 +153,64 @@
   $('#sheetClose').addEventListener('click', () => $('#sheet').close());
   $('#sheet').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
-  /* ---------------------------------------------------------------- the week */
+  /* ---------------------------------------------------------------- who to show */
+  function renderLegend() {
+    const chip = (id, name, c) => h('button', { class: 'lg ' + c, type: 'button', 'aria-pressed': String(who === id),
+      onclick: () => { who = id; try { localStorage.setItem(WHO_KEY, who); } catch (x) { /* fine */ } render(); } }, h('i'), name);
+    $('#legend').replaceChildren(chip('', 'Everyone', ''), ...[...byId().values()].map(s => chip(String(s.id), s.name, s.c)));
+  }
+
+  /* ---------------------------------------------------------------- the month */
   function render() {
     $('#sampleLabel').hidden = !DATA.sample;
-    const days = [0, 1, 2, 3, 4].map(n => addDays(monday, n));
-    const fri = days[4];
-    $('#weekLabel').textContent = `${fmtShort.format(monday)} – ${fmtShort.format(fri)} ${fri.getFullYear()}`;
-
-    // when HubSpot was last read
     const ra = DATA.readAt ? new Date(DATA.readAt) : null, late = !ra || DATA.failing || (Date.now() - ra) > 45 * 60e3;
     $('#readAt').className = late ? 'late' : '';
     $('#readAt').textContent = DATA.sample ? '' : ra ? `Last read ${fmtAgo.format(ra)}${late ? ' (late: HubSpot hasn’t been read for a while)' : ''}.` : 'Not read from HubSpot yet.';
+    renderLegend();
 
-    const people = (DATA.surveyors || []).filter(s => !who || String(s.id) === who);
-    const inWeek = (DATA.bookings || []).filter(b => !who || String(b.surveyor) === who)
-      .map(b => ({ b, day: isoDay(new Date(b.at)) }))
-      .filter(x => x.day >= iso(monday) && x.day <= iso(fri))
-      .sort((x, y) => new Date(x.b.at) - new Date(y.b.at));
-
-    // desktop grid
-    const cells = [h('div', { class: 'colhead', role: 'columnheader' }, 'Surveyor')];
-    for (const d of days) {
-      const isT = iso(d) === todayIso;
-      cells.push(h('div', { class: 'colhead' + (isT ? ' today' : ''), role: 'columnheader', 'aria-label': fmtLong.format(d) + (isT ? ', today' : '') },
-        fmtDow.format(d), h('b', null, String(d.getDate()))));
+    const first = shown, last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+    $('#monthLabel').textContent = fmtMonth.format(first);
+    const all = visible(), S = byId();
+    const cells = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      .map(d => h('div', { class: 'dow', role: 'columnheader', 'aria-label': d }, h('span', { class: 'long' }, d.slice(0, 3))));
+    const end = addDays(mondayOf(last), 6);
+    for (let d = mondayOf(first); d <= end; d = addDays(d, 1)) {
+      const di = iso(d);
+      if (d.getMonth() !== first.getMonth()) { cells.push(h('div', { class: 'tile out', 'aria-hidden': 'true' }, h('span', { class: 'dn' }, String(d.getDate())))); continue; }
+      const here = all.filter(x => x.day === di), we = d.getDay() === 0 || d.getDay() === 6;
+      const cls = ['tile', we ? 'we' : '', di === todayIso ? 'today' : '', di === selected ? 'sel' : ''].filter(Boolean).join(' ');
+      const shownEv = here.slice(0, 2).map(x => {
+        const s = S.get(String(x.b.surveyor)), tm = timeOf(new Date(x.b.at));
+        return h('span', { class: 'ev ' + colour(x.b.surveyor) }, h('span', { class: 'n' }, s ? s.name.split(' ')[0] : 'No surveyor'),
+          h('span', { class: 'p' }, [tm, x.b.postcode || 'No postcode'].filter(Boolean).join(' · ')));
+      });
+      cells.push(h('button', { class: cls, type: 'button', role: 'gridcell', 'aria-pressed': String(di === selected),
+        'aria-label': `${fmtLong.format(d)}${di === todayIso ? ', today' : ''}: ${here.length ? here.length + (here.length === 1 ? ' survey' : ' surveys') : 'no surveys'}`,
+        onclick: () => { selected = di; render(); } },
+        h('span', { class: 'dn' }, String(d.getDate())), shownEv,
+        here.length > 2 ? h('span', { class: 'more' }, `+${here.length - 2} more`) : null,
+        here.length ? h('span', { class: 'dots', 'aria-hidden': 'true' }, here.slice(0, 6).map(x => h('i', { class: colour(x.b.surveyor) }))) : null));
     }
-    for (const s of people) {
-      const mine = inWeek.filter(x => String(x.b.surveyor) === String(s.id));
-      cells.push(h('div', { class: 'person', role: 'rowheader' }, h('span', { class: 'avatar', 'aria-hidden': 'true' }, initials(s.name)),
-        h('span', { class: 'nm' }, s.name, h('span', { class: 'ct' }, mine.length === 1 ? '1 survey' : `${mine.length} surveys`))));
-      for (const d of days) {
-        const here = mine.filter(x => x.day === iso(d));
-        cells.push(h('div', { class: 'cell' + (here.length ? '' : ' empty') + (iso(d) === todayIso ? ' today' : ''), role: 'gridcell',
-          'aria-label': here.length ? null : `${s.name}, ${fmtLong.format(d)}: free` }, here.map(x => chip(x.b))));
-      }
-    }
-    $('#board').replaceChildren(...cells);
-
-    // phones: a card per day
-    $('#days').replaceChildren(...days.map(d => {
-      const here = inWeek.filter(x => x.day === iso(d)), isT = iso(d) === todayIso;
-      return h('section', { class: 'daycard' + (isT ? ' today' : '') },
-        h('h3', null, fmtLong.format(d) + (isT ? ' · Today' : '')),
-        h('ul', null, here.length ? here.map(x => h('li', null, chip(x.b, { who: true }))) : h('li', { class: 'none' }, 'No surveys booked')));
-    }));
-
+    $('#cal').replaceChildren(...cells);
+    renderDay(all);
     renderTrays();
+  }
+
+  /* the chosen day's surveys, as event cards */
+  function renderDay(all) {
+    const d = parse(selected), here = all.filter(x => x.day === selected), S = byId();
+    $('#dayTitle').textContent = selected === todayIso ? 'Today’s surveys' : 'Surveys';
+    $('#dayNote').textContent = fmtLong.format(d) + (who && S.get(who) ? ' · ' + S.get(who).name : '');
+    $('#dayList').replaceChildren(...(here.length ? here.map(x => {
+      const b = x.b, s = S.get(String(b.surveyor)), tm = timeOf(new Date(b.at)), c = colour(b.surveyor);
+      return h('li', null, h('button', { class: 'evc ' + c, type: 'button', onclick: () => openSheet(b),
+        'aria-label': `${tm || 'Time not set'}, ${short(b.name)}, ${b.postcode || 'no postcode'}${s ? ', ' + s.name : ''}` },
+        h('span', { class: 'd' }, fmtShort.format(d) + (s ? ' · ' + s.name : '')),
+        h('span', { class: 't' }, short(b.name)),
+        h('span', { class: 'pc' + (b.postcode ? '' : ' miss') }, b.postcode || 'No postcode'),
+        h('span', { class: 'meta' }, icon('i-clock'), tm || 'Time not set', b.address ? ' · ' + b.address : ''),
+        h('span', { class: 'who' }, h('span', { class: 'mini' }, initials(s ? s.name : '?')), h('span', { class: 'bar' }, h('i')), b.stage || '')));
+    }) : [h('li', { class: 'none' }, 'No surveys booked.')]));
   }
 
   function renderTrays() {
@@ -210,16 +228,11 @@
     fill('#listNoDate', nd.map(d => row(d, (S.get(String(d.surveyor)) || { name: 'No surveyor' }).name + ' · ' + (d.stage || ''))), '#countNoDate', 'Nothing waiting for a date.');
   }
 
-  function fillWho() {
-    const sel = $('#who');
-    sel.replaceChildren(h('option', { value: '' }, 'Everyone'), ...(DATA.surveyors || []).map(s => h('option', { value: String(s.id) }, s.name)));
-    if (who && !(DATA.surveyors || []).some(s => String(s.id) === who)) who = '';
-    sel.value = who;
-  }
-  $('#who').addEventListener('change', e => { who = e.target.value; try { localStorage.setItem(WHO_KEY, who); } catch (x) { /* fine */ } render(); });
-  $('#prev').addEventListener('click', () => { monday = addDays(monday, -7); render(); });
-  $('#next').addEventListener('click', () => { monday = addDays(monday, 7); render(); });
-  $('#thisWeek').addEventListener('click', () => { monday = mondayOf(parse(todayIso)); render(); });
+  const fillWho = () => { if (who && !(DATA.surveyors || []).some(s => String(s.id) === who)) who = ''; };
+  const moveMonth = n => { shown = new Date(shown.getFullYear(), shown.getMonth() + n, 1); render(); };
+  $('#prev').addEventListener('click', () => moveMonth(-1));
+  $('#next').addEventListener('click', () => moveMonth(1));
+  $('#thisMonth').addEventListener('click', () => { const t = parse(todayIso); shown = new Date(t.getFullYear(), t.getMonth(), 1); selected = todayIso; render(); });
 
   /* ================================================================ the Hub: signed in, and the app is theirs */
   function gate(title, text, o = {}) {

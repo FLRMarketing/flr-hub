@@ -26,6 +26,7 @@
   <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z" fill="currentColor"/><circle cx="12" cy="10" r="2.6" fill="var(--pin-hole,#fff)"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 6.5V12l3.5 2.2" fill="none" stroke="var(--clock-hand,#fff)" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
 </svg>
 
@@ -46,38 +47,45 @@
   <a class="brand" href="../" aria-label="Back to the FLR Hub" title="Back to the FLR Hub"><svg class="brand-back" aria-hidden="true"><use href="#i-back"/></svg><svg class="brand-mark" aria-hidden="true"><use href="#flr-mark"/></svg><span class="brand-word">Hub</span></a>
 
   <header class="head">
-    <h1>Surveyor Calendar</h1>
-    <span class="sample" id="sampleLabel" title="These bookings are made up, not read from HubSpot" hidden>Sample data</span>
-    <p>Who’s surveying where, from HubSpot. <span id="readAt"></span></p>
+    <div class="titles">
+      <h1>Surveyor Calendar</h1>
+      <span class="sample" id="sampleLabel" title="These bookings are made up, not read from HubSpot" hidden>Sample data</span>
+      <p>Who’s surveying where, from HubSpot. <span id="readAt"></span></p>
+    </div>
   </header>
 
-  <div class="weeknav">
-    <button class="iconbtn" type="button" id="prev" aria-label="Previous week"><svg aria-hidden="true"><use href="#i-chev-l"/></svg></button>
-    <h2 class="week" id="weekLabel" aria-live="polite"></h2>
-    <button class="iconbtn" type="button" id="next" aria-label="Next week"><svg aria-hidden="true"><use href="#i-chev-r"/></svg></button>
-    <button class="btn" type="button" id="thisWeek">This week</button>
-    <label class="who">
-      <span class="vh">Show</span>
-      <select id="who"><option value="">Everyone</option></select>
-    </label>
+  <div class="layout">
+    <section class="main-col" aria-label="Calendar">
+      <div class="monthnav">
+        <h2 class="month" id="monthLabel" aria-live="polite"></h2>
+        <button class="btn" type="button" id="thisMonth">Today</button>
+        <span class="navpair">
+          <button class="sqbtn" type="button" id="prev" aria-label="Previous month"><svg aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+          <button class="sqbtn" type="button" id="next" aria-label="Next month"><svg aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+        </span>
+      </div>
+      <div class="legend" id="legend" role="group" aria-label="Show surveyor"></div>
+      <div class="cal" id="cal" role="grid" aria-labelledby="monthLabel"></div>
+    </section>
+
+    <aside class="side" aria-label="Surveys and still to book">
+      <div class="panel">
+        <h3 id="dayTitle">Surveys</h3>
+        <p class="panel-note" id="dayNote"></p>
+        <ul class="events" id="dayList"></ul>
+      </div>
+      <div class="panel" id="trayNoSurveyor">
+        <h3>Needs a surveyor <span class="count" id="countNoSurveyor"></span></h3>
+        <p class="panel-note">New enquiries in HubSpot (Enquiry Received).</p>
+        <ul class="list" id="listNoSurveyor"></ul>
+      </div>
+      <div class="panel" id="trayNoDate">
+        <h3>Needs a date <span class="count" id="countNoDate"></span></h3>
+        <p class="panel-note">Allocated or scheduled, but no Appointment Date &amp; Time yet.</p>
+        <ul class="list" id="listNoDate"></ul>
+      </div>
+    </aside>
   </div>
-
-  <!-- Desktop: a row per surveyor, a column per weekday. Phones: one card per day. -->
-  <div class="board" id="board" role="grid" aria-labelledby="weekLabel"></div>
-  <div class="days" id="days"></div>
-
-  <section class="trays" aria-label="Still to book">
-    <div class="tray" id="trayNoSurveyor">
-      <h3>Needs a surveyor <span class="count" id="countNoSurveyor"></span></h3>
-      <p class="tray-note">New enquiries in HubSpot (Enquiry Received).</p>
-      <ul class="list" id="listNoSurveyor"></ul>
-    </div>
-    <div class="tray" id="trayNoDate">
-      <h3>Needs a date <span class="count" id="countNoDate"></span></h3>
-      <p class="tray-note">Allocated or scheduled in HubSpot, but no Appointment Date &amp; Time yet.</p>
-      <ul class="list" id="listNoDate"></ul>
-    </div>
-  </section>
 </main>
 
 <!-- One booking's details -->
