@@ -242,6 +242,12 @@
     if (SAME_SITE.test(t.url)) return true;
     try { return new URL(t.url).protocol === 'https:'; } catch (e) { return false; }
   };
+  // Websites staff use every day (web-apps.js), after FLR's own apps: the same for everyone, each opening in a new tab.
+  // Only https addresses and logos saved on the Hub are used; the sites do their own sign-in.
+  const webApps = () => (Array.isArray(window.FLR_WEB_APPS) ? window.FLR_WEB_APPS : [])
+    .filter(w => w && /^[a-z0-9-]+$/.test(w.id || '') && !ICONS[w.id] && w.name && /^https:\/\/[^\s"'<>]+$/.test(w.url || ''))
+    .map(w => ({ id: w.id, title: w.name, subtitle: w.note || '', url: w.url,
+      logo: /^assets\/web-apps\/[a-z0-9-]+\.(svg|png)$/.test(w.logo || '') ? w.logo : '' }));
   function tileEl(t, o = {}) {
     const li = $('#tile-tpl').content.firstElementChild.cloneNode(true);
     const a = li.querySelector('.tile-link'), tip = li.querySelector('.tile-tip');
@@ -251,8 +257,12 @@
     a.href = t.url;
     if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
     const icon = li.querySelector('.app-icon');
-    icon.classList.add('app-icon--' + (ICONS[t.id] ? t.id : 'link'));
+    icon.classList.add('app-icon--' + (ICONS[t.id] || t.logo ? t.id : 'link'));
     icon.querySelector('use').setAttribute('href', '#' + (ICONS[t.id] || 'i-tile'));
+    if (t.logo) {   // a website from web-apps.js: its own mark, in white like the drawn icons
+      const img = document.createElement('img'); img.className = 'app-logo'; img.src = t.logo; img.alt = ''; img.decoding = 'async';
+      icon.replaceChildren(img);
+    }
     li.querySelector('.tile-name').textContent = t.title;
     // The card is the link's description, so screen readers hear it without hovering.
     tip.id = 'tip-' + t.id;
@@ -338,6 +348,7 @@
     else {
       if (home && home.tiles && !home.apps) tiles.push(tileEl(ESTIMATOR));
       for (const t of (home && home.tiles) || []) if (safeTile(t)) tiles.push(tileEl(t));
+      if (home && !waiting) for (const w of webApps()) tiles.push(tileEl(w));
     }
     $('#tiles').replaceChildren(...tiles);
     const n = $('#home-notice'); n.querySelector('span').textContent = o.notice || ''; n.hidden = !o.notice;
