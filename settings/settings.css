@@ -127,6 +127,9 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 .pa-app-row{grid-template-columns:20px minmax(0,1fr) auto}
 .pa-app-row .pa-name{margin:0;font-weight:600}
 .pa-icon{width:17px;height:17px;flex:none;color:var(--pa-muted)}
+.pa-web{display:grid;place-items:center;border-radius:5px;overflow:hidden}
+.pa-web img{display:block;width:62%;height:62%;object-fit:contain}
+.pa-badge-web{width:26px;height:26px;border-radius:7px}
 
 .pa-detail{padding:20px}
 .pa-detail:empty{display:none}

@@ -242,17 +242,17 @@
     if (SAME_SITE.test(t.url)) return true;
     try { return new URL(t.url).protocol === 'https:'; } catch (e) { return false; }
   };
-  // Websites staff use every day (web-apps.js), after FLR's own apps: the same for everyone, each opening in a new tab.
-  // Only https addresses and logos saved on the Hub are used; the sites do their own sign-in.
-  const webApps = () => (Array.isArray(window.FLR_WEB_APPS) ? window.FLR_WEB_APPS : [])
-    .filter(w => w && /^[a-z0-9-]+$/.test(w.id || '') && !ICONS[w.id] && w.name && /^https:\/\/[^\s"'<>]+$/.test(w.url || ''))
-    .map(w => ({ id: w.id, title: w.name, subtitle: w.note || '', url: w.url,
-      logo: /^assets\/web-apps\/[a-z0-9-]+\.(svg|png)$/.test(w.logo || '') ? w.logo : '' }));
+  // Websites staff use every day (Outlook, Monday.com, HubSpot, SharePoint) are Hub apps since Hub migration 2.6: the
+  // database lists them for each person, like every app, and Hub settings switches them on or off. This page only adds
+  // each one's mark (web-apps.js), saved on the Hub.
+  const webLogo = id => { const w = (Array.isArray(window.FLR_WEB_APPS) ? window.FLR_WEB_APPS : []).find(x => x && x.id === id);
+    return w && /^assets\/web-apps\/[a-z0-9-]+\.(svg|png)$/.test(w.logo || '') ? w.logo : ''; };
   function tileEl(t, o = {}) {
     const li = $('#tile-tpl').content.firstElementChild.cloneNode(true);
     const a = li.querySelector('.tile-link'), tip = li.querySelector('.tile-tip');
     if (o.loading) { li.classList.add('tile--loading'); li.setAttribute('aria-hidden', 'true'); a.tabIndex = -1; tip.remove(); return li; }
     const external = /^https:/i.test(t.url) && !sameOrigin(t.url);
+    if (!t.logo && !ICONS[t.id]) t = { ...t, logo: webLogo(t.id) };
     li.dataset.id = t.id;
     a.href = t.url;
     if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
@@ -348,7 +348,6 @@
     else {
       if (home && home.tiles && !home.apps) tiles.push(tileEl(ESTIMATOR));
       for (const t of (home && home.tiles) || []) if (safeTile(t)) tiles.push(tileEl(t));
-      if (home && !waiting) for (const w of webApps()) tiles.push(tileEl(w));
     }
     $('#tiles').replaceChildren(...tiles);
     const n = $('#home-notice'); n.querySelector('span').textContent = o.notice || ''; n.hidden = !o.notice;

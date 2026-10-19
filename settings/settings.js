@@ -119,7 +119,15 @@
 
   const svgUse = (id, cls) => { const n = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); n.setAttribute('aria-hidden', 'true'); if (cls) n.setAttribute('class', cls);
     const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', '#' + id); n.append(u); return n; };
-  const appIcon = id => svgUse(ICONS[id] || 'i-tile', 'pa-icon');
+  // The everyday websites (Hub migration 2.6): their own mark on their colour, a small app icon, from ../web-apps.js.
+  const webLogo = id => { const w = (Array.isArray(window.FLR_WEB_APPS) ? window.FLR_WEB_APPS : []).find(x => x && x.id === id);
+    return w && /^assets\/web-apps\/[a-z0-9-]+\.(svg|png)$/.test(w.logo || '') ? '../' + w.logo : ''; };
+  function webIcon(id, cls) {
+    const box = el('span', `${cls} pa-web app-icon--${id}`); box.setAttribute('aria-hidden', 'true');
+    const img = el('img'); img.src = webLogo(id); img.alt = ''; box.append(img);
+    return box;
+  }
+  const appIcon = id => !ICONS[id] && webLogo(id) ? webIcon(id, 'pa-icon') : svgUse(ICONS[id] || 'i-tile', 'pa-icon');
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const roleName = r => ROLES[r] || r;
   const isPhone = () => matchMedia('(max-width: 760px)').matches;
@@ -268,6 +276,7 @@
     if (id === 'proximity') return 'The nearest surveyor to a site postcode; live vehicle positions for Admins';
     if (id === 'warehouse') return 'Ticks off the warehouse checklist; ticks go to Monday';
     if (id === 'surveyors') return 'Who’s surveying where, from HubSpot, read-only';
+    if (['outlook', 'monday', 'hubspot', 'sharepoint'].includes(id)) return 'Shows it on their Hub. The website has its own sign-in';
     if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'manager' ? 'Builds, approves and reassigns quotes' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
     return '';
   }
@@ -323,7 +332,7 @@
     box.append(backButton('All apps'));
     const people = listed(), withIt = people.filter(a => shown(a).apps.has(app.id)).length;
     const top = el('div', 'pa-top');
-    const badge = el('span', 'pa-app-badge'); badge.append(svgUse(ICONS[app.id] || 'i-tile'));
+    const badge = el('span', 'pa-app-badge'); badge.append(!ICONS[app.id] && webLogo(app.id) ? webIcon(app.id, 'pa-badge-web') : svgUse(ICONS[app.id] || 'i-tile'));
     const who = el('div');
     const h = el('h3', 'pa-title', appTitle(app.id)); h.id = 'pa-detail-title'; h.tabIndex = -1;
     who.append(h, el('span', 'pa-email', `${plural(withIt, 'person has', 'people have')} access`));
