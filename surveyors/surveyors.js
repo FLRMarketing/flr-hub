@@ -21,10 +21,10 @@
    Shape of surveyor_board():
      { readAt, failing,
        surveyors:    [{ id, name }],
-       bookings:     [{ id, name, surveyor, at, postcode, address, stage, url }],
+       bookings:     [{ id, name, surveyor, at, day, time, postcode, address, stage, url }],
        needSurveyor: [{ id, name, postcode, createdAt, url }],
        needDate:     [{ id, name, surveyor, postcode, stage, url }] }
-   at is an ISO time; HubSpot's 12:00 UTC default counts as "no time set".
+   day and time are UK time, worked out by flr-surveyors; time null = no time set.
 
    The page's CSP allows no inline styles: everything is built as elements.
    ========================================================================== */
@@ -72,9 +72,10 @@
   function addDays(dt, n) { const x = new Date(dt); x.setDate(x.getDate() + n); return x; }
   function iso(dt) { return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); }
   function mondayOf(dt) { return addDays(dt, -((dt.getDay() + 6) % 7)); }
-  // HubSpot fills 12:00 UTC when only a day is picked: that is "no time set", not noon.
-  const noTime = t => t.getUTCHours() === 12 && t.getUTCMinutes() === 0;
-  const timeOf = t => noTime(t) ? '' : ukTime.format(t);
+  // A booking's UK day and time: as flr-surveyors worked them out (time null: none set; HubSpot's midday default counts
+  // as none, as on Nearby), else from 'at' (the sample data).
+  const dayOf = b => b.day || isoDay(new Date(b.at));
+  const tOf = b => b.time !== undefined ? (b.time || '') : ((t => t === '12:00' ? '' : t)(ukTime.format(new Date(b.at))));
   function initials(name) { return String(name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
   function short(name) {   // deal names end " - AK" (the surveyor's initials): drop that, it's on the row already
     return String(name || '').replace(/\s+-\s+[A-Z]{1,4}\s*$/, '').replace(/\s{2,}/g, ' ').trim();
@@ -92,7 +93,7 @@
         b('b1', 'Oakfield Primary - Hall LVT - ST', 's1', at(0, 8, 30), 'B30 2QY', '12 Oakfield Road'),
         b('b2', 'Riverside Dental - Surgery 2 - ST', 's1', at(0, 13, 0), 'CV1 4FS', 'Unit 3 Riverside Park'),
         b('b3', 'Halden Care Home - Lounge carpet - PS', 's2', at(1, 9, 0), 'WS1 1AA', 'Halden House'),
-        b('b4', 'Northgate Offices - Floors 2-3 - DO', 's3', at(1, 12, 0), 'M1 2AB', '40 Northgate'),
+        b('b4', 'Northgate Offices - Floors 2-3 - DO', 's3', at(1, 11, 0), 'M1 2AB', '40 Northgate'),
         b('b5', 'Bramley Gym - Changing rooms - LH', 's4', at(2, 10, 0), 'DY1 3QR', 'Bramley Leisure Centre'),
         b('b6', 'Residential - Kitchen LVT - ST', 's1', at(2, 15, 30), 'B91 3DA', '7 Elm Close'),
         b('b7', 'Kingsway Hotel - Bedrooms phase 1 - ME', 's5', at(3, 9, 30), 'LE1 6XL', 'Kingsway Hotel'),
@@ -136,11 +137,11 @@
   const byId = () => new Map((DATA.surveyors || []).map((s, i) => [String(s.id), Object.assign({ c: 'c' + (i % 8) }, s)]));
   const colour = id => (byId().get(String(id)) || { c: 'c7' }).c;
   const visible = () => (DATA.bookings || []).filter(b => !who || String(b.surveyor) === who)
-    .map(b => ({ b, day: isoDay(new Date(b.at)) })).sort((x, y) => new Date(x.b.at) - new Date(y.b.at));
+    .map(b => ({ b, day: dayOf(b) })).sort((x, y) => new Date(x.b.at) - new Date(y.b.at));
 
   function openSheet(b) {
-    const t = new Date(b.at), tm = timeOf(t), s = byId().get(String(b.surveyor));
-    $('#sheetWhen').textContent = fmtLong.format(parse(isoDay(t))) + (tm ? ' · ' + tm : ' · time not set');
+    const tm = tOf(b), s = byId().get(String(b.surveyor));
+    $('#sheetWhen').textContent = fmtLong.format(parse(dayOf(b))) + (tm ? ' · ' + tm : ' · time not set');
     $('#sheetTitle').textContent = short(b.name);
     $('#sheetWhere').replaceChildren(h('b', null, b.postcode || 'No postcode in HubSpot'), b.address ? ' · ' + b.address : '');
     $('#sheetWho').textContent = s ? 'Surveyor: ' + s.name : 'Surveyor: not set';
@@ -180,7 +181,7 @@
       const here = all.filter(x => x.day === di), we = d.getDay() === 0 || d.getDay() === 6;
       const cls = ['tile', we ? 'we' : '', di === todayIso ? 'today' : '', di === selected ? 'sel' : ''].filter(Boolean).join(' ');
       const shownEv = here.slice(0, 2).map(x => {
-        const s = S.get(String(x.b.surveyor)), tm = timeOf(new Date(x.b.at));
+        const s = S.get(String(x.b.surveyor)), tm = tOf(x.b);
         return h('span', { class: 'ev ' + colour(x.b.surveyor) }, h('span', { class: 'n' }, s ? s.name.split(' ')[0] : 'No surveyor'),
           h('span', { class: 'p' }, [tm, x.b.postcode || 'No postcode'].filter(Boolean).join(' · ')));
       });
@@ -202,7 +203,7 @@
     $('#dayTitle').textContent = selected === todayIso ? 'Today’s surveys' : 'Surveys';
     $('#dayNote').textContent = fmtLong.format(d) + (who && S.get(who) ? ' · ' + S.get(who).name : '');
     $('#dayList').replaceChildren(...(here.length ? here.map(x => {
-      const b = x.b, s = S.get(String(b.surveyor)), tm = timeOf(new Date(b.at)), c = colour(b.surveyor);
+      const b = x.b, s = S.get(String(b.surveyor)), tm = tOf(b), c = colour(b.surveyor);
       return h('li', null, h('button', { class: 'evc ' + c, type: 'button', onclick: () => openSheet(b),
         'aria-label': `${tm || 'Time not set'}, ${short(b.name)}, ${b.postcode || 'no postcode'}${s ? ', ' + s.name : ''}` },
         h('span', { class: 'd' }, fmtShort.format(d) + (s ? ' · ' + s.name : '')),

@@ -24,9 +24,9 @@
     estimator: 'Uses the apps switched on for them: builds and approves quotes, sees their own leave and driving',
     developer: 'Reads and exports quotes, for testing',
   };
-  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters', orders: 'i-orders', capacity: 'i-capacity', proximity: 'i-proximity', warehouse: 'i-warehouse' };   // as on the Hub home
+  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters', orders: 'i-orders', capacity: 'i-capacity', proximity: 'i-proximity', warehouse: 'i-warehouse', surveyors: 'i-surveyors' };   // as on the Hub home
   const STATUS = { active: 'Active', disabled: 'Switched off' };
-  const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters', orders: 'Orders', capacity: 'Planner', proximity: 'Nearby', warehouse: 'Warehouse' };
+  const SHORT = { estimator: 'Estimator', speeding: 'Fleet', 'annual-leave': 'Leave', fitters: 'Fitters', orders: 'Orders', capacity: 'Planner', proximity: 'Nearby', warehouse: 'Warehouse', surveyors: 'Surveys' };
   const CHECKED = { phone: 'checked by phone', teams: 'checked on Teams', it: 'checked by IT' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -267,6 +267,7 @@
     if (id === 'capacity') return 'Fitters booked each day from the Monday Work Programme';
     if (id === 'proximity') return 'The nearest surveyor to a site postcode; live vehicle positions for Admins';
     if (id === 'warehouse') return 'Ticks off the warehouse checklist; ticks go to Monday';
+    if (id === 'surveyors') return 'Who’s surveying where, from HubSpot, read-only';
     if (id === 'estimator') return a.role === 'admin' ? 'Everything, including prices and rules' : a.role === 'manager' ? 'Builds, approves and reassigns quotes' : a.role === 'developer' ? 'Reads and exports quotes' : 'Builds and approves quotes';
     return '';
   }

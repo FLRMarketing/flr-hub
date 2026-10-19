@@ -2265,6 +2265,91 @@
         "about-warehouse",
         "hub-settings"
       ]
+    },
+    {
+      "id": "about-surveyors",
+      "tool": "surveyors",
+      "title": "About the Surveyor Calendar",
+      "ask": [
+        "what is the surveyor calendar",
+        "when is my next survey",
+        "which surveys are booked this week",
+        "who is surveying today",
+        "open the surveyor calendar",
+        "where am I surveying tomorrow",
+        "survey appointments calendar"
+      ],
+      "keys": [
+        "surveyor calendar",
+        "survey",
+        "surveys",
+        "surveyor",
+        "appointment",
+        "booked",
+        "calendar",
+        "hubspot"
+      ],
+      "answer": "The Surveyor Calendar shows survey appointments from HubSpot: a month of days, each surveyor in their own colour. Tap a day to list its surveys with time and postcode, and tap a survey to open its HubSpot deal. The chips at the top show one surveyor. It reads HubSpot every 15 minutes and changes nothing there.",
+      "link": {
+        "tile": "surveyors",
+        "label": "Open the Surveyor Calendar"
+      },
+      "related": [
+        "surveyors-missing",
+        "surveyors-access"
+      ]
+    },
+    {
+      "id": "surveyors-missing",
+      "tool": "surveyors",
+      "title": "A survey isn’t on the Surveyor Calendar",
+      "ask": [
+        "my survey isn't on the calendar",
+        "survey missing from the surveyor calendar",
+        "why does it say time not set",
+        "what is needs a surveyor",
+        "what is needs a date",
+        "how do I book a survey"
+      ],
+      "keys": [
+        "missing",
+        "time not set",
+        "needs a surveyor",
+        "needs a date",
+        "no postcode",
+        "book",
+        "appointment date"
+      ],
+      "answer": "Surveys are booked in HubSpot, not here. A deal shows on a day once it has an Appointment Date & Time and an owner (the surveyor). Deals in Enquiry Received are under Needs a surveyor; allocated or scheduled deals with no date are under Needs a date. A midday time means no time was set. Changes show within 15 minutes.",
+      "related": [
+        "about-surveyors"
+      ]
+    },
+    {
+      "id": "surveyors-access",
+      "tool": "surveyors",
+      "title": "Who has the Surveyor Calendar",
+      "ask": [
+        "who has the surveyor calendar",
+        "give someone the surveyor calendar",
+        "switch on the surveyor calendar",
+        "how do I get the surveyor calendar"
+      ],
+      "keys": [
+        "surveyor calendar",
+        "access",
+        "switch on",
+        "surveys"
+      ],
+      "answer": "The Surveyor Calendar starts with FLR Super Admins, the surveyors and the office. Everyone who has it sees the whole team. A Super Admin can switch it on for others in Hub settings with the “Surveyor Calendar” switch.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-surveyors",
+        "hub-settings"
+      ]
     }
   ]
 }

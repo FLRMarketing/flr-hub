@@ -48,4 +48,4 @@ async function switchedOn() {
 // Hub settings calls this after a Super Admin flips the switch, so that browser follows at once.
 window.FLR_LIKKLE_JEFF_SEEN = remember;
 
-if (JEFF) switchedOn().then((on) => { if (on) import('./jeff.js?v=2.3'); });
+if (JEFF) switchedOn().then((on) => { if (on) import('./jeff.js?v=2.4'); });
