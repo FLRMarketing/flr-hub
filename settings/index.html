@@ -12,12 +12,12 @@
 <link rel="icon" href="../assets/flr-icon-192.png">
 <!-- the Hub's look, then this page's; the tools' slide, so Settings arrives from the right and Back slides the Hub in again -->
 <link rel="stylesheet" href="../hub.css?v=2.6">
-<link rel="stylesheet" href="settings.css?v=2.2">
+<link rel="stylesheet" href="settings.css?v=2.3">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../web-apps.js?v=2.0"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="settings.js?v=2.3" defer></script>
+<script src="settings.js?v=2.5" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.3"></script>
 </head>
 <body data-view="loading">
@@ -141,6 +141,7 @@
       <div class="pa-tabs" role="tablist" aria-label="Show">
         <button class="pa-tab" type="button" role="tab" id="tab-people" aria-selected="true" aria-controls="pa-grid" data-mode="people">People</button>
         <button class="pa-tab" type="button" role="tab" id="tab-apps" aria-selected="false" aria-controls="pa-grid" data-mode="apps">By app</button>
+        <button class="pa-tab" type="button" role="tab" id="tab-teams" aria-selected="false" aria-controls="pa-grid" data-mode="teams" hidden>Teams</button>
       </div>
       <label class="pa-search">
         <svg aria-hidden="true"><use href="#i-search"/></svg>
@@ -152,6 +153,7 @@
     <div class="pa-grid" id="pa-grid" role="tabpanel" aria-labelledby="tab-people">
       <div class="pa-list" id="pa-list">
         <div class="pa-list-head"><h3 class="pa-list-title" id="pa-list-title">People</h3><span class="pa-list-count" id="pa-list-count"></span></div>
+        <div class="pa-filter" id="pa-filter" role="group" aria-label="Show a team" hidden></div>
         <div class="pa-items" id="pa-items"></div>
         <p class="pa-empty" id="pa-empty" hidden>No account matches that search.</p>
       </div>

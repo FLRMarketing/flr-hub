@@ -66,7 +66,9 @@
     // People & access: which view, who or which app is open, and the drafts (account id -> { role, status, apps: { app: on } }),
     // kept until Save changes. Nothing in a draft has reached the database.
     mode: 'people', person: '', app: '', open: false, draft: new Map(), saving: false, error: '', saved: '',
-    photos: {} };   // account id -> staff photo (Hub migration 2.5); none, initials
+    photos: {},
+    // Teams (Hub migration 2.8): null until the database has them (the Teams tab stays hidden); drafts as for accounts.
+    teams: null, team: '', teamFilter: '', tdraft: new Map(), newSeq: 0 };   // account id -> staff photo (Hub migration 2.5); none, initials
   const byId = id => S.accounts.find(a => a.id === id);
   // Waiting: registered, switched off, nobody has decided yet. Not approved: waiting, or a Super Admin said no.
   const notApproved = a => !!(a && a.request && a.request.decision !== 'approved');
@@ -177,7 +179,79 @@
     }
     return gone;
   }
-  const dirty = () => changes().length;
+  /* ---------------------------------------------------------------- Teams (Hub migration 2.8): what people do at FLR */
+  // A team is a name, a colour, a few words and its members; someone can be in several. Teams only organise this page
+  // (filter people, give a team an app as ordinary per-person ticks); they never grant anything themselves.
+  const TEAM_COLOURS = [['blue', 'Blue'], ['green', 'Green'], ['yellow', 'Yellow'], ['orange', 'Orange'], ['red', 'Red'], ['pink', 'Pink'], ['purple', 'Purple'], ['cyan', 'Cyan'], ['coral', 'Coral']];
+  const colourName = c => (TEAM_COLOURS.find(x => x[0] === c) || [c, c])[1];
+  const serverTeam = id => (S.teams || []).find(t => t.id === id);
+  const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  // A team as the page shows it: the database's, with this page's unsaved changes on top (or a new one, not saved yet).
+  function teamShown(id) {
+    const s = serverTeam(id), d = S.tdraft.get(id) || {};
+    if (!s && !d.isNew) return null;
+    return { id, isNew: !!d.isNew, deleted: !!d.deleted,
+      name: d.name !== undefined ? d.name : s.name, colour: d.colour !== undefined ? d.colour : s.colour,
+      description: d.description !== undefined ? d.description : (s ? s.description : ''),
+      members: new Set(d.members !== undefined ? d.members : (s ? s.members : [])) };
+  }
+  const teamIds = () => [...(S.teams || []).map(t => t.id), ...[...S.tdraft].filter(([, d]) => d.isNew).map(([id]) => id)];
+  const allTeams = () => teamIds().map(teamShown).filter(t => t && !t.deleted);
+  const teamsOf = uid => allTeams().filter(t => t.members.has(uid));
+  function editTeam(id, what, o = {}) {
+    if (S.saving) return;
+    const s = serverTeam(id), d = S.tdraft.get(id) || {};
+    if (!s && !d.isNew) return;
+    for (const k of ['name', 'colour', 'description']) if (k in what) { if (s && what[k] === s[k]) delete d[k]; else d[k] = what[k]; }
+    if ('members' in what) { const m = [...what.members]; if (s && sameSet(m, s.members)) delete d.members; else d.members = m; }
+    if ('deleted' in what) { if (what.deleted) d.deleted = true; else delete d.deleted; }
+    if (!d.isNew && !Object.keys(d).length) S.tdraft.delete(id); else S.tdraft.set(id, d);
+    S.error = ''; S.saved = '';
+    render(o);
+  }
+  function setMember(teamId, uid, on) {
+    const t = teamShown(teamId); if (!t) return;
+    if (on) t.members.add(uid); else t.members.delete(uid);
+    editTeam(teamId, { members: t.members });
+  }
+  function newTeam() {
+    if (S.saving) return;
+    const used = new Set(allTeams().map(t => t.colour));
+    const colour = (TEAM_COLOURS.find(([c]) => !used.has(c)) || TEAM_COLOURS[0])[0];
+    const id = `new-${++S.newSeq}`;
+    S.tdraft.set(id, { isNew: true, name: '', colour, description: '', members: [] });
+    S.team = id; S.error = ''; S.saved = '';
+    render(); openDetail();
+    const n = $('#pa-team-name'); if (n) n.focus({ preventScroll: isPhone() });
+  }
+  // Every unsaved team change, in the order Save sends them; n is how many it counts as.
+  function teamOps() {
+    const out = [];
+    for (const id of teamIds()) {
+      const t = teamShown(id), s = serverTeam(id), d = S.tdraft.get(id);
+      if (!d) continue;
+      if (d.isNew) { out.push({ kind: 'team-new', id, t, n: 1 + t.members.size }); continue; }
+      if (d.deleted) { out.push({ kind: 'team-delete', id, t: { ...t, name: s.name }, n: 1 }); continue; }
+      if (['name', 'colour', 'description'].some(k => d[k] !== undefined)) out.push({ kind: 'team-details', id, t, n: ['name', 'colour', 'description'].filter(k => d[k] !== undefined).length });
+      if (d.members !== undefined) {
+        const add = d.members.filter(x => !s.members.includes(x)), remove = s.members.filter(x => !d.members.includes(x));
+        if (add.length + remove.length) out.push({ kind: 'team-members', id, t, n: add.length + remove.length });
+      }
+    }
+    return out;
+  }
+  // After the teams are read again: drop drafts that now match, and any for teams that have gone.
+  function pruneTeams() {
+    for (const [id, d] of [...S.tdraft]) {
+      if (d.isNew) continue;
+      const s = serverTeam(id);
+      if (!s) { S.tdraft.delete(id); continue; }
+      for (const k of ['name', 'colour', 'description']) if (d[k] === s[k]) delete d[k];
+      if (d.members !== undefined) { d.members = d.members.filter(x => byId(x)); if (sameSet(d.members, s.members)) delete d.members; }
+      if (!Object.keys(d).length) S.tdraft.delete(id);
+    }
+  }
+  const dirty = () => changes().length + teamOps().reduce((n, o) => n + o.n, 0);
 
   /* ---------------------------------------------------------------- People & access: drawing */
   // A person's staff photo (the Annual Leave one, matched by email in the database), or their initials. Accounts that
@@ -214,9 +288,34 @@
     const av = avatarOf(a);
     const text = el('span');
     text.append(nameLine(a), el('span', 'pa-email', a.email), metaLine(a, sh));
+    const chips = teamChips(a.id); if (chips) text.append(chips);
     const count = el('span', 'pa-count'); count.append(el('strong', null, String(n)), ` ${n === 1 ? 'app' : 'apps'}`);
     b.append(av, text, count, svgUse('i-chevron', 'pa-chev'));
-    b.hidden = !matches(a);
+    b.hidden = !matches(a) || (S.teamFilter && !(teamShown(S.teamFilter) || { members: new Set() }).members.has(a.id));
+    return b;
+  }
+  function teamChip(t) { const c = el('span', `pa-chip tc-${t.colour}`, t.name || 'New team'); return c; }
+  function teamChips(uid) {
+    const ts = teamsOf(uid);
+    if (!ts.length) return null;
+    const box = el('span', 'pa-chips');
+    box.append(...ts.slice(0, 3).map(teamChip));
+    if (ts.length > 3) box.append(el('span', 'pa-chip pa-chip-more', `+${ts.length - 3}`));
+    return box;
+  }
+  function teamRow(t) {
+    const b = el('button', `pa-row pa-team-row tc-${t.colour}`);
+    b.type = 'button'; b.dataset.teamPick = t.id; b.dataset.focus = 'team:' + t.id;
+    if (t.id === S.team && (S.open || !isPhone())) b.setAttribute('aria-current', 'true');
+    const dot = el('span', 'pa-team-dot'); dot.setAttribute('aria-hidden', 'true');
+    const text = el('span');
+    const nm = el('span', 'pa-name'); nm.append(el('span', null, t.name || 'New team'));
+    if (S.tdraft.has(t.id)) nm.append(el('span', 'pa-edited', t.isNew ? 'New' : 'Unsaved'));
+    text.append(nm);
+    if (t.description) text.append(el('span', 'pa-email', t.description));
+    const n = t.members.size;
+    b.append(dot, text, el('span', 'pa-count', plural(n, 'person', 'people')), svgUse('i-chevron', 'pa-chev'));
+    b.setAttribute('aria-label', `${t.name || 'New team'}: ${plural(n, 'person', 'people')}`);
     return b;
   }
   function appRow(app) {
@@ -309,6 +408,25 @@
     box.append(fields);
     box.append(el('p', 'pa-note', self ? 'You can’t change your own role or switch off your own account. Another Super Admin can.'
       : off ? '' : `${ROLE_NOTE[sh.role] || ''}${sh.status === 'disabled' ? '. Switched off: can’t sign in to the Hub or any app.' : ''}`));
+    if (S.teams) {
+      const ts = allTeams(), mine = teamsOf(a.id).length;
+      const th = el('div', 'pa-access-title');
+      th.append(el('strong', null, 'Teams'), el('span', null, ts.length ? `${mine} of ${ts.length}` : ''));
+      box.append(th);
+      if (!ts.length) box.append(el('p', 'pa-note', 'No teams yet. Make one under Teams to group people by what they do.'));
+      else {
+        const wrap = el('div', 'pa-team-toggles'); wrap.setAttribute('role', 'group'); wrap.setAttribute('aria-label', `Teams for ${nameOf(a)}`);
+        for (const t of ts) {
+          const on = t.members.has(a.id);
+          const b = el('button', `pa-toggle tc-${t.colour}`); b.type = 'button';
+          b.setAttribute('aria-pressed', String(on)); b.dataset.teamToggle = t.id; b.dataset.user = a.id; b.dataset.focus = `tt:${a.id}:${t.id}`;
+          b.append(el('span', 'pa-team-dot'), el('span', null, t.name || 'New team'));
+          b.setAttribute('aria-label', `${t.name || 'New team'}${on ? ', in this team' : ''}`);
+          wrap.append(b);
+        }
+        box.append(wrap);
+      }
+    }
     const head = el('div', 'pa-access-title');
     head.append(el('strong', null, 'App access'), el('span', null, `${sh.apps.size} of ${S.apps.length} enabled`));
     box.append(head);
@@ -357,6 +475,69 @@
     box.append(list);
     return box;
   }
+  // One team: its name, few words and colour, its members, "give this team an app", and Delete.
+  function teamDetail(t) {
+    const box = document.createDocumentFragment();
+    box.append(backButton('All teams'));
+    const top = el('div', `pa-top tc-${t.colour}`);
+    const orb = el('span', 'pa-team-orb'); orb.setAttribute('aria-hidden', 'true');
+    const who = el('div'); who.style.minWidth = '0';
+    const h = el('h3', 'pa-title', t.name || 'New team'); h.id = 'pa-detail-title'; h.tabIndex = -1;
+    who.append(h, el('span', 'pa-email', `${plural(t.members.size, 'person', 'people')}${t.isNew ? ' · not saved yet' : ''}`));
+    top.append(orb, who);
+    box.append(top);
+    if (t.deleted) return box;
+    const nameF = el('label', 'pa-field pa-wide'); nameF.append(el('span', 'pa-label', 'Name'));
+    const ni = el('input', 'pa-input'); ni.id = 'pa-team-name'; ni.dataset.focus = 'pa-team-name'; ni.maxLength = 40; ni.value = t.name; ni.placeholder = 'Surveyors, Fitters, Office…'; ni.autocomplete = 'off';
+    nameF.append(ni);
+    const descF = el('label', 'pa-field pa-wide'); descF.append(el('span', 'pa-label', 'What they do (optional)'));
+    const di = el('input', 'pa-input'); di.id = 'pa-team-desc'; di.dataset.focus = 'pa-team-desc'; di.maxLength = 160; di.value = t.description; di.autocomplete = 'off';
+    descF.append(di);
+    box.append(nameF, descF);
+    const ch = el('div', 'pa-field pa-wide'); ch.append(el('span', 'pa-label', 'Colour'));
+    const sw = el('div', 'pa-swatches'); sw.setAttribute('role', 'radiogroup'); sw.setAttribute('aria-label', 'Team colour');
+    for (const [c, label] of TEAM_COLOURS) {
+      const b = el('button', `pa-swatch tc-${c}`); b.type = 'button'; b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(c === t.colour)); b.tabIndex = c === t.colour ? 0 : -1;
+      b.setAttribute('aria-label', label); b.title = label; b.dataset.colour = c; b.dataset.focus = 'swatch:' + c;
+      sw.append(b);
+    }
+    ch.append(sw, el('span', 'pa-swatch-name', colourName(t.colour)));
+    box.append(ch);
+    // Give everyone in the team an app: ordinary per-person ticks, saved with everything else.
+    const give = el('div', 'pa-give');
+    const gl = el('label', 'pa-field'); gl.append(el('span', 'pa-label', 'Give everyone in this team an app'));
+    const gs = el('span', 'pa-select'); const sel = el('select'); sel.id = 'pa-team-app'; sel.dataset.focus = 'pa-team-app';
+    for (const app of S.apps) { const op = el('option', null, appTitle(app.id)); op.value = app.id; sel.append(op); }
+    if (S.giveApp && S.apps.some(x => x.id === S.giveApp)) sel.value = S.giveApp;
+    gs.append(sel); gl.append(gs);
+    const gb = el('button', 'pa-btn', 'Tick for the team'); gb.type = 'button'; gb.dataset.teamGive = t.id; gb.disabled = !t.members.size;
+    give.append(gl, gb);
+    box.append(give);
+    if (S.teamMsg) box.append(el('p', 'pa-note pa-give-note', S.teamMsg));
+    const people = listed(), hits = people.filter(matches);
+    const head = el('div', 'pa-access-title');
+    head.append(el('strong', null, 'Members'), el('span', null, `${t.members.size} of ${people.length}`));
+    box.append(head);
+    if (!hits.length) box.append(el('p', 'pa-empty', 'No account matches that search.'));
+    const list = el('div'); list.setAttribute('role', 'group'); list.setAttribute('aria-label', `Members of ${t.name || 'the new team'}`);
+    const s = serverTeam(t.id);
+    for (const a of hits) {
+      const changed = s ? t.members.has(a.id) !== s.members.includes(a.id) : t.members.has(a.id);
+      const row = checkRow({ title: '', extra: [], checked: t.members.has(a.id), changed: false, label: `${nameOf(a)} in ${t.name || 'the new team'}`,
+        data: { teamMember: t.id, user: a.id, focus: `tm:${t.id}:${a.id}` } });
+      row.classList.add('pa-member');
+      row.querySelector('.pa-check-text').replaceChildren(nameLineFor(a, changed), el('span', 'pa-email', a.email), metaLine(a, shown(a)));
+      list.append(row);
+    }
+    box.append(list);
+    const foot = el('div', 'pa-foot-note');
+    foot.append(el('p', 'pa-note', 'Teams organise people here. They don’t give anyone apps on their own: “Tick for the team” ticks the app for each member, and you save as usual.'));
+    const del = el('button', 'pa-link pa-danger', t.isNew ? 'Remove this new team' : 'Delete team'); del.type = 'button'; del.dataset.teamDelete = t.id;
+    foot.append(del);
+    box.append(foot);
+    return box;
+  }
   function nameLineFor(a, changed) {
     const n = el('span', 'pa-name'); n.append(el('span', null, nameOf(a)));
     if (a.id === S.you) n.append(el('span', 'pa-you', 'You'));
@@ -365,23 +546,36 @@
   }
 
   // The whole section from the state. Focus stays on the same control when it's redrawn.
-  function render() {
+  function render(o = {}) {
     if (!S.accounts.length && !S.apps.length) return;
+    if (S.mode === 'teams' && !S.teams) S.mode = 'people';
     const active = document.activeElement, key = active && active.dataset ? active.dataset.focus : '';
     const people = listed();
     if (!S.person || !byId(S.person) || byId(S.person).waiting) S.person = (people[0] || {}).id || '';
     if (!S.app || !S.apps.some(x => x.id === S.app)) S.app = (S.apps[0] || {}).id || '';
+    const teams = S.teams ? allTeams() : [];
+    if (!S.team || !teamShown(S.team)) S.team = (teams[0] || {}).id || '';
+    if (S.teamFilter && !teams.some(t => t.id === S.teamFilter)) S.teamFilter = '';
+    $('#tab-teams').hidden = !S.teams;
     const byPeople = S.mode === 'people';
     for (const t of document.querySelectorAll('.pa-tab')) t.setAttribute('aria-selected', String(t.dataset.mode === S.mode));
-    $('#pa-grid').setAttribute('aria-labelledby', byPeople ? 'tab-people' : 'tab-apps');
+    $('#pa-grid').setAttribute('aria-labelledby', `tab-${S.mode}`);
     $('#pa-grid').classList.toggle('is-open', S.open);
     const n = people.length, hits = people.filter(matches).length;
+    renderFilter(byPeople ? teams : []);
     $('#accounts-count').textContent = plural(n, 'account', 'accounts');
     if (byPeople) {
       $('#pa-list-title').textContent = 'People';
       $('#pa-list-count').textContent = S.query.trim() ? `${hits} of ${n}` : plural(n, 'account', 'accounts');
       $('#pa-items').replaceChildren(...people.map(personRow));
       $('#pa-empty').hidden = hits > 0;
+    } else if (S.mode === 'teams') {
+      $('#pa-list-title').textContent = 'Teams';
+      $('#pa-list-count').textContent = plural(teams.length, 'team', 'teams');
+      const add = el('button', 'pa-row pa-new-team'); add.type = 'button'; add.dataset.teamNew = '1'; add.dataset.focus = 'team-new';
+      add.append(el('span', 'pa-plus', '+'), el('span', 'pa-name', 'New team'));
+      $('#pa-items').replaceChildren(add, ...teams.map(teamRow));
+      $('#pa-empty').hidden = true;
     } else {
       $('#pa-list-title').textContent = 'Apps';
       $('#pa-list-count').textContent = S.query.trim() ? `${plural(hits, 'person matches', 'people match')} the search` : plural(S.apps.length, 'app', 'apps');
@@ -389,9 +583,30 @@
       $('#pa-empty').hidden = true;
     }
     const a = byId(S.person), app = S.apps.find(x => x.id === S.app);
-    $('#pa-detail').replaceChildren(byPeople ? (a ? personDetail(a) : '') : (app ? appDetail(app) : ''));
+    const tm = teamShown(S.team);
+    if (!o.keepDetail) $('#pa-detail').replaceChildren(byPeople ? (a ? personDetail(a) : '') : S.mode === 'teams' ? (tm ? teamDetail(tm) : emptyTeams()) : (app ? appDetail(app) : ''));
     renderFoot();
     if (key) { const again = document.querySelector(`[data-focus="${CSS.escape(key)}"]`); if (again && again !== active && !again.hidden) again.focus({ preventScroll: true }); }
+  }
+  function emptyTeams() {
+    const box = document.createDocumentFragment();
+    box.append(el('h3', 'pa-title', 'No teams yet'), el('p', 'pa-note', 'Group people by what they do at FLR: Surveyors, Fitters, Office, Warehouse… Press New team to start.'));
+    return box;
+  }
+  // People: a row of team chips to show one team only.
+  function renderFilter(teams) {
+    const bar = $('#pa-filter');
+    bar.hidden = !teams.length;
+    if (!teams.length) return;
+    const chip = (id, label, colour, n) => {
+      const b = el('button', 'pa-fchip' + (colour ? ` tc-${colour}` : '')); b.type = 'button'; b.dataset.teamFilter = id; b.dataset.focus = 'tf:' + (id || 'all');
+      b.setAttribute('aria-pressed', String(S.teamFilter === id));
+      if (colour) b.append(el('span', 'pa-team-dot'));
+      b.append(el('span', null, label));
+      if (n != null) b.append(el('span', 'pa-fcount', String(n)));
+      return b;
+    };
+    bar.replaceChildren(chip('', 'Everyone', '', null), ...teams.map(t => chip(t.id, t.name || 'New team', t.colour, t.members.size)));
   }
   function renderFoot() {
     const n = dirty(), foot = $('#pa-foot'), save = $('#pa-save');
@@ -510,7 +725,7 @@
     }
     $('#gate').hidden = true;
     $('#accounts-section').hidden = false; $('#registration-section').hidden = false; $('#jeff-section').hidden = false;
-    renderSettings(); renderAccounts(); renderPre(); loadJeff(); loadPhotos();
+    renderSettings(); renderAccounts(); renderPre(); loadJeff(); loadPhotos(); loadTeams();
     view('ready');
   }
   // Staff photos (Hub migration 2.5). Before that update, or if it fails, everyone keeps their initials.
@@ -518,6 +733,12 @@
     try { const p = await call('admin_account_photos'); S.photos = p && typeof p === 'object' && !Array.isArray(p) ? p : {}; }
     catch (e) { return; }
     render();
+  }
+  // Teams (Hub migration 2.8). Before that update the Teams tab and chips stay hidden.
+  async function loadTeams() {
+    try { const t = await call('admin_teams'); S.teams = Array.isArray(t) ? t : []; }
+    catch (e) { S.teams = null; }
+    pruneTeams(); render();
   }
   async function reloadAccounts() {
     const acc = await call('admin_accounts');
@@ -543,7 +764,7 @@
   }
   addEventListener('popstate', () => {
     if (!S.open) return;
-    const was = S.mode === 'people' ? `person:${S.person}` : `app:${S.app}`;
+    const was = S.mode === 'people' ? `person:${S.person}` : S.mode === 'teams' ? `team:${S.team}` : `app:${S.app}`;
     S.open = false; render();
     const row = document.querySelector(`[data-focus="${CSS.escape(was)}"]`); if (row) row.focus({ preventScroll: true });
   });
@@ -552,6 +773,19 @@
     if (p) { S.person = p.dataset.person; render(); openDetail(); if (!isPhone()) { const h = $('#pa-detail-title'); if (h && matchMedia('(pointer: coarse)').matches) h.focus({ preventScroll: true }); } return; }
     const ap = e.target.closest('[data-app-pick]');
     if (ap) { S.app = ap.dataset.appPick; render(); openDetail(); return; }
+    const tp = e.target.closest('[data-team-pick]');
+    if (tp) { S.team = tp.dataset.teamPick; S.teamMsg = ''; render(); openDetail(); return; }
+    if (e.target.closest('[data-team-new]')) { S.teamMsg = ''; newTeam(); return; }
+    const tf = e.target.closest('[data-team-filter]');
+    if (tf) { S.teamFilter = tf.dataset.teamFilter; render(); return; }
+    const tt = e.target.closest('[data-team-toggle]');
+    if (tt) { setMember(tt.dataset.teamToggle, tt.dataset.user, tt.getAttribute('aria-pressed') !== 'true'); return; }
+    const sw = e.target.closest('[data-colour]');
+    if (sw) { editTeam(S.team, { colour: sw.dataset.colour }); return; }
+    const give = e.target.closest('[data-team-give]');
+    if (give) { giveTeamApp(give.dataset.teamGive); return; }
+    const del = e.target.closest('[data-team-delete]');
+    if (del) { deleteTeam(del.dataset.teamDelete); return; }
     if (e.target.closest('[data-back]')) { closeDetail(); return; }
     const ok = e.target.closest('[data-approve]');
     if (ok) { openApprove(ok.dataset.approve); return; }
@@ -561,9 +795,51 @@
   $('#pa-grid').addEventListener('change', e => {
     const t = e.target;
     if (t.matches('input[type="checkbox"][data-app][data-user]')) { edit(byId(t.dataset.user), { app: t.dataset.app, on: t.checked }); return; }
+    if (t.matches('input[type="checkbox"][data-team-member]')) { setMember(t.dataset.teamMember, t.dataset.user, t.checked); return; }
+    if (t.id === 'pa-team-app') { S.giveApp = t.value; return; }
     if (t.id === 'pa-role') { edit(byId(S.person), { role: t.value }); return; }
     if (t.id === 'pa-status') edit(byId(S.person), { status: t.value });
   });
+  // Typing a team's name or words: the list and the Save bar follow; the editor stays as it is, so the caret doesn't jump.
+  $('#pa-grid').addEventListener('input', e => {
+    if (e.target.id === 'pa-team-name') { editTeam(S.team, { name: e.target.value.replace(/\s+/g, ' ').trimStart() }, { keepDetail: true }); const h = $('#pa-detail-title'); if (h) h.textContent = e.target.value.trim() || 'New team'; }
+    if (e.target.id === 'pa-team-desc') editTeam(S.team, { description: e.target.value }, { keepDetail: true });
+  });
+  $('#pa-grid').addEventListener('keydown', e => {   // the colours: arrows move between them, as in any radio group
+    const sw = e.target.closest('[data-colour]');
+    if (!sw || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault();
+    const i = TEAM_COLOURS.findIndex(([c]) => c === sw.dataset.colour), step = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1;
+    const next = TEAM_COLOURS[(i + step + TEAM_COLOURS.length) % TEAM_COLOURS.length][0];
+    editTeam(S.team, { colour: next });
+    const b = document.querySelector(`[data-colour="${next}"]`); if (b) b.focus();
+  });
+  function giveTeamApp(teamId) {
+    const t = teamShown(teamId), app = ($('#pa-team-app') || {}).value;
+    if (!t || !app || S.saving) return;
+    let ticked = 0, had = 0, skipped = 0;
+    for (const uid of t.members) {
+      const a = byId(uid);
+      if (!a || a.waiting) continue;
+      if (notApproved(a)) { skipped++; continue; }
+      if (shown(a).apps.has(app)) { had++; continue; }
+      const d = S.draft.get(a.id) || { apps: {} };
+      if (a.apps.includes(app)) delete d.apps[app]; else d.apps[app] = true;
+      if (d.role === undefined && d.status === undefined && !Object.keys(d.apps).length) S.draft.delete(a.id); else S.draft.set(a.id, d);
+      ticked++;
+    }
+    S.giveApp = app; S.error = ''; S.saved = '';
+    S.teamMsg = ticked ? `${appTitle(app)} ticked for ${plural(ticked, 'person', 'people')}${had ? `; ${had} already had it` : ''}${skipped ? `; ${skipped} not approved yet` : ''}. Press Save changes to keep it.`
+      : `Everyone in ${t.name || 'this team'} already has ${appTitle(app)}${skipped ? ` (${skipped} not approved yet)` : ''}.`;
+    render();
+  }
+  async function deleteTeam(id) {
+    const t = teamShown(id); if (!t || S.saving) return;
+    if (t.isNew) { S.tdraft.delete(id); S.team = ''; render(); closeDetail(); return; }
+    if (!(await confirmIt(`Delete ${t.name}?`, `The team goes when you press Save changes. Its ${plural(t.members.size, 'member keeps', 'members keep')} their accounts and apps.`, 'Delete team', true))) return;
+    editTeam(id, { deleted: true });
+    S.team = ''; render(); closeDetail();
+  }
   for (const t of document.querySelectorAll('.pa-tab')) t.addEventListener('click', () => {
     if (S.mode === t.dataset.mode) return;
     S.mode = t.dataset.mode;
@@ -572,8 +848,9 @@
   });
   $('.pa-tabs').addEventListener('keydown', e => {   // tabs: left and right move between them
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const other = document.querySelector(`.pa-tab:not([data-mode="${S.mode}"])`);
-    other.click(); other.focus();
+    const tabs = [...document.querySelectorAll('.pa-tab')].filter(x => !x.hidden);
+    const i = tabs.findIndex(x => x.dataset.mode === S.mode), next = tabs[(i + (e.key === 'ArrowLeft' ? -1 : 1) + tabs.length) % tabs.length];
+    next.click(); next.focus();
   });
   $('#search').addEventListener('input', e => { S.query = e.target.value; render(); });
 
@@ -592,6 +869,25 @@
     }
     return { text: out.join(' '), danger };
   }
+  function teamWarnings(ops) {
+    const gone = ops.filter(o => o.kind === 'team-delete').map(o => o.t.name);
+    return gone.length ? `${gone.join(', ')} ${gone.length === 1 ? 'is' : 'are'} deleted (${gone.length === 1 ? 'its' : 'their'} members keep their apps).` : '';
+  }
+  async function sendTeam(o) {
+    if (o.kind === 'team-new') {
+      const id = await call('admin_save_team', { p_id: null, p_name: o.t.name.trim(), p_colour: o.t.colour, p_description: o.t.description.trim() });
+      S.tdraft.delete(o.id);
+      if (S.team === o.id) S.team = id;
+      if (S.teamFilter === o.id) S.teamFilter = id;
+      if (o.t.members.size) { S.tdraft.set(id, { members: [...o.t.members] }); S.teams = [...(S.teams || []), { id, name: o.t.name.trim(), colour: o.t.colour, description: o.t.description.trim(), members: [] }];
+        S.teams = await call('admin_set_team_members', { p_id: id, p_members: [...o.t.members] }); }
+      return;
+    }
+    if (o.kind === 'team-delete') { S.teams = await call('admin_delete_team', { p_id: o.id }); S.tdraft.delete(o.id); return; }
+    if (o.kind === 'team-details') { await call('admin_save_team', { p_id: o.id, p_name: o.t.name.trim(), p_colour: o.t.colour, p_description: o.t.description.trim() }); return; }
+    S.teams = await call('admin_set_team_members', { p_id: o.id, p_members: [...o.t.members] });
+  }
+  async function reloadTeams() { if (S.teams) { S.teams = await call('admin_teams'); pruneTeams(); } }
   async function send(c) {
     if (c.kind === 'role') { await call('admin_set_role', { p_user: c.a.id, p_role: c.value }); const a = byId(c.a.id); if (a) a.role = c.value; return; }
     if (c.kind === 'status') { await call('admin_set_status', { p_user: c.a.id, p_status: c.value }); const a = byId(c.a.id); if (a) a.status = c.value; return; }
@@ -600,14 +896,26 @@
     if (row && i >= 0) S.accounts[i] = row;
   }
   async function save() {
-    const list = changes();
-    if (!list.length || S.saving) return;
-    const w = warnings(list);
-    if (w.text && !(await confirmIt(`Save ${plural(list.length, 'change', 'changes')}?`, w.text, 'Save changes', w.danger))) return;
+    const list = changes(), tops = teamOps(), total = dirty();
+    if (!total || S.saving) return;
+    for (const o of tops) if ((o.kind === 'team-new' || o.kind === 'team-details') && !o.t.name.trim()) {
+      S.team = o.id; S.mode = 'teams'; S.error = 'Give the team a name before saving.'; render(); const n = $('#pa-team-name'); if (n) n.focus(); return;
+    }
+    const w = warnings(list), tw = teamWarnings(tops);
+    const text = [w.text, tw].filter(Boolean).join(' ');
+    if (text && !(await confirmIt(`Save ${plural(total, 'change', 'changes')}?`, text, 'Save changes', w.danger || !!tw))) return;
     S.saving = true; S.error = ''; S.saved = ''; renderFoot(); render();
     const failed = [];
     let stop = null;
-    for (const c of list) {
+    for (const o of tops) {
+      if (stop) break;
+      try { await sendTeam(o); }
+      catch (e) {
+        failed.push(e);
+        if (offline(e) || expired(e) || ['FLR_SIGN_IN_REQUIRED', 'FLR_FORBIDDEN', 'FLR_ACCOUNT_DISABLED'].includes(flrCode(e))) stop = e;
+      }
+    }
+    for (const c of stop ? [] : list) {
       try { await send(c); }
       catch (e) {
         failed.push(e);
@@ -616,16 +924,17 @@
     }
     // Read everything back, so the page shows what the database has now; what didn't save is still a draft.
     try { await reloadAccounts(); } catch (e) { prune(); }
+    try { await reloadTeams(); } catch (e) { pruneTeams(); }
     S.saving = false;
     const left = dirty();
     if (!failed.length && !left) {
-      S.saved = `${plural(list.length, 'change', 'changes')} saved`;
+      S.saved = `${plural(total, 'change', 'changes')} saved`; S.teamMsg = '';
       toast(S.saved);
     } else {
       const e = stop || failed[0];
       const why = e ? said(e) : 'Some changes didn’t reach the FLR database.';
-      S.error = `${left === list.length ? 'Nothing was saved.' : `${plural(left, 'change', 'changes')} didn’t save.`} ${why} ${left === 1 ? 'It’s' : 'They’re'} still here: press Save changes to try again.`;
-      if (expired(e) || flrCode(e) === 'FLR_SIGN_IN_REQUIRED') S.error = `Your sign-in has expired, so ${left === list.length ? 'nothing was saved' : `${plural(left, 'change', 'changes')} didn’t save`}. Sign in again in another tab, then press Save changes.`;
+      S.error = `${left === total ? 'Nothing was saved.' : `${plural(left, 'change', 'changes')} didn’t save.`} ${why} ${left === 1 ? 'It’s' : 'They’re'} still here: press Save changes to try again.`;
+      if (expired(e) || flrCode(e) === 'FLR_SIGN_IN_REQUIRED') S.error = `Your sign-in has expired, so ${left === total ? 'nothing was saved' : `${plural(left, 'change', 'changes')} didn’t save`}. Sign in again in another tab, then press Save changes.`;
     }
     render();
   }
@@ -634,7 +943,7 @@
     const n = dirty();
     if (!n || S.saving) return;
     if (!(await confirmIt(`Discard ${plural(n, 'unsaved change', 'unsaved changes')}?`, 'Everything goes back to how it is in the FLR database. Nothing has been saved.', 'Discard', true))) return;
-    S.draft.clear(); S.error = ''; S.saved = '';
+    S.draft.clear(); S.tdraft.clear(); S.error = ''; S.saved = ''; S.teamMsg = '';
     render(); toast('Changes discarded');
   });
 
