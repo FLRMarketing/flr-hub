@@ -2182,7 +2182,10 @@
         "how does warehouse tasks work",
         "where are the instructions for a warehouse task",
         "how do I do the forklift check",
-        "forklift inspection form"
+        "forklift inspection form",
+        "how long did this take",
+        "how do I log time on a warehouse task",
+        "time taken"
       ],
       "keys": [
         "warehouse",
@@ -2196,9 +2199,11 @@
         "all tasks",
         "instructions",
         "form",
-        "forklift form"
+        "forklift form",
+        "time taken",
+        "how long"
       ],
-      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were. Each task has an Instructions button with how to do it (as written on Monday). The Forklift Checks need the Forklift Inspection Form first: open it from the task, send it, then tick the task off.",
+      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were. Each task has an Instructions button with how to do it (as written on Monday). The Forklift Checks need the Forklift Inspection Form first: open it from the task, send it, then tick the task off. When you tick a task off it asks how long it took (tap a time or type it); the time goes on Monday in Time taken (mins).",
       "link": {
         "tile": "warehouse",
         "label": "Open Warehouse Tasks"

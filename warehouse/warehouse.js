@@ -113,17 +113,19 @@
   function stateOf(t) {
     const l = local.get(t.id), k = t.tick, mondayDone = t.status === DONE;
     if (l && l.state === 'sending') return { done: l.done, sync: 'saving' };
-    if (l && l.state === 'error') return { done: mondayDone, sync: 'failed', want: l.done, error: l.error };
+    if (l && l.state === 'error') return { done: mondayDone, sync: 'failed', want: l.done, minutes: l.minutes, error: l.error };
     if (k && k.state === 'waiting') return { done: k.done, sync: 'saving', slow: Date.now() - Date.parse(k.at) > SLOW_SAVE_MS };
-    if (k && k.state === 'failed' && k.done !== mondayDone && Date.now() - Date.parse(k.at) < 12 * 3600e3) return { done: mondayDone, sync: 'failed', want: k.done, error: k.error };
+    if (k && k.state === 'failed' && k.done !== mondayDone && Date.now() - Date.parse(k.at) < 12 * 3600e3) return { done: mondayDone, sync: 'failed', want: k.done, minutes: k.minutes, error: k.error };
     if ((savedUntil.get(t.id) || 0) > Date.now()) return { done: mondayDone, sync: 'saved' };
     return { done: mondayDone, sync: null };
   }
   // Who ticked it and when: the Hub's tick when it's the latest change, else Monday's own (its log), else just when.
   function doneInfo(t) {
     const k = t.tick;
-    if (k && k.done && k.state === 'sent' && (!t.statusAt || Date.parse(k.sentAt || k.at) >= Date.parse(t.statusAt) - 120e3)) return { by: k.by, at: k.at };
-    return { by: t.mondayBy || null, at: t.statusAt };
+    // 1.2: how long it took: Monday's "Time taken (mins)" (it can be corrected there), else the time given with the tick
+    const minutes = t.minutes != null ? t.minutes : k && k.done && k.state === 'sent' ? k.minutes : null;
+    if (k && k.done && k.state === 'sent' && (!t.statusAt || Date.parse(k.sentAt || k.at) >= Date.parse(t.statusAt) - 120e3)) return { by: k.by, at: k.at, minutes };
+    return { by: t.mondayBy || null, at: t.statusAt, minutes };
   }
   const inScope = t => scope !== 'mine' || t.mine;
 
@@ -151,12 +153,12 @@
     if (s.sync === 'saving') meta.push(h('span', { class: 'sync saving' }, s.slow ? 'Still saving… waiting for Monday' : 'Saving…'));
     else if (s.sync === 'saved') meta.push(h('span', { class: 'sync saved' }, icon('i-check'), 'Saved to Monday'));
     else if (s.sync === 'failed') meta.push(h('span', { class: 'sync failed', title: s.error || '' }, icon('i-warn'), 'Not saved'),
-      o.readOnly ? null : h('button', { class: 'retry', type: 'button', onclick: () => tick(t, s.want) }, 'Try again'));
-    else if (s.done) { const d = doneInfo(t); meta.push(h('span', { class: 'when' }, [d.by || 'Done on Monday', d.at ? when(d.at) : ''].filter(Boolean).join(' · '))); }
+      o.readOnly ? null : h('button', { class: 'retry', type: 'button', onclick: () => s.want && !s.minutes ? askTime(t) : tick(t, s.want, s.minutes) }, 'Try again'));
+    else if (s.done) { const d = doneInfo(t); meta.push(h('span', { class: 'when' }, [d.by || 'Done on Monday', d.at ? when(d.at) : '', d.minutes ? short(d.minutes) : ''].filter(Boolean).join(' · '))); }
 
     const label = needsForm ? `Send the form first, then tick off ${t.title}` : (s.done ? 'Untick ' : 'Tick off ') + t.title;
     const btn = h('button', { class: 'tick' + (s.sync === 'saving' ? ' busy' : '') + (needsForm ? ' locked' : ''), type: 'button', 'aria-pressed': String(!!s.done), 'aria-label': label, title: label,
-      disabled: s.sync === 'saving' || skipped || o.readOnly || null, onclick: () => needsForm ? openGuide(t.id, { needForm: true }) : tick(t, !s.done) }, icon(needsForm ? 'i-lock' : 'i-check'));
+      disabled: s.sync === 'saving' || skipped || o.readOnly || null, onclick: () => needsForm ? openGuide(t.id, { needForm: true }) : s.done ? tick(t, false) : askTime(t) }, icon(needsForm ? 'i-lock' : 'i-check'));
     // 1.1: Will's instructions (and the form), opened from the card
     const guide = (t.instructions || t.form) ? h('button', { class: 'guide-btn', type: 'button', onclick: () => openGuide(t.id) }, icon('i-book'), t.form ? 'Instructions & form' : 'Instructions') : null;
     return h('li', { class: cls, 'data-id': t.id }, h('div', null, h('p', { class: 'name' }, t.title), h('div', { class: 'meta' }, meta), guide), btn);
@@ -259,7 +261,8 @@
     renderScope($('#scope-week'), b.tasks);
     const tasks = b.tasks.filter(inScope), counted = tasks.filter(t => !isSkipped(t));
     const doneN = counted.filter(t => stateOf(t).done && stateOf(t).sync !== 'saving').length;
-    $('#week-count').replaceChildren(counted.length ? h('span', null, h('b', null, `${doneN} of ${counted.length}`), ' done this week')
+    const logged = counted.filter(t => stateOf(t).done).reduce((n, t) => n + (doneInfo(t).minutes || 0), 0);   // 1.2
+    $('#week-count').replaceChildren(counted.length ? h('span', null, h('b', null, `${doneN} of ${counted.length}`), ' done this week', logged ? ` · ${short(logged)} logged` : '')
       : (scope === 'mine' ? 'Nothing given to you this week' : 'No tasks this week'));
     const days = [];
     for (let i = 0; i < 7; i++) days.push(addDays(shownWeek, i));
@@ -318,18 +321,19 @@
   $('#next').addEventListener('click', () => { location.hash = `#/week/${addDays(shownWeek, 7)}`; });
 
   /* ---------------------------------------------------------------- ticking */
-  async function tick(t, done) {
-    local.set(t.id, { done, state: 'sending' });
+  async function tick(t, done, minutes) {
+    local.set(t.id, { done, minutes, state: 'sending' });
     render();
     let res;
-    try { res = await client().rpc('warehouse_tick', { p_task: t.id, p_done: done }); }
+    try { res = await client().rpc('warehouse_tick', done ? { p_task: t.id, p_done: true, p_minutes: minutes } : { p_task: t.id, p_done: false }); }
     catch (e) { res = { error: e }; }
     if (res.error) {
       if (expired(res.error) || flrCode(res.error) === 'FLR_SIGN_IN_REQUIRED') return location.replace(SIGN_IN);
       if (flrCode(res.error) === 'FLR_FORBIDDEN') return failGate(res.error);
       if (flrCode(res.error) === 'FLR_FORM_NEEDED') { local.delete(t.id); render(); return openGuide(t.id, { needForm: true }); }
+      if (flrCode(res.error) === 'FLR_TIME_NEEDED') { local.delete(t.id); render(); return askTime(t); }
       const why = offline(res.error) ? 'Couldn’t reach the FLR database. Check your connection.' : flrCode(res.error) === 'FLR_NOT_FOUND' ? 'That task is no longer on Monday.' : 'The FLR database didn’t take the tick.';
-      local.set(t.id, { done, state: 'error', error: why });
+      local.set(t.id, { done, minutes, state: 'error', error: why });
       say(`${t.title}: not saved. ${why}`);
       render();
       return;
@@ -379,7 +383,7 @@
     const parts = [h('h3', null, t.form.title || 'Form')];
     if (sent.length) {
       for (const a of sent) parts.push(h('p', { class: 'form-line' }, h('span', { class: 'chip ' + formClass(a.status) }, a.status || 'Sent'), ` ${a.by || 'Someone'} · ${when(a.at)}`, a.note ? h('span', { class: 'form-note' }, a.note) : null));
-      if (!s.done) parts.push(h('p', { class: 'guide-actions' }, h('button', { class: 'btn btn-brand', type: 'button', onclick: () => { dialog.close(); tick(t, true); } }, 'Tick it off now')));
+      if (!s.done) parts.push(h('p', { class: 'guide-actions' }, h('button', { class: 'btn btn-brand', type: 'button', onclick: () => { dialog.close(); askTime(t); } }, 'Tick it off now')));
     } else {
       parts.push(h('p', { class: 'form-wait' + (guideNote === 'need' ? ' urgent' : '') }, guideNote === 'need'
         ? `Send the form for ${day} first. Once it has arrived on Monday you can tick this off.`
@@ -414,6 +418,41 @@
     try { await client().rpc('warehouse_read_now'); } catch (e) { /* the 2-minute read still comes */ }
     schedule(2500);
     setTimeout(() => { checkingUntil = 0; const t = guideId && findTask(guideId); if (t && t.form && !(t.form.sent || []).length) guideNote = 'checked'; renderGuide(); }, 40e3);
+  }
+
+  /* ---------------------------------------------------------------- 1.2: "How long did this take you?" before a tick off */
+  // "15 min", "1 h", "1 h 30 min"
+  const short = m => { const hh = Math.floor(m / 60), mm = m % 60; return hh ? (mm ? `${hh} h ${mm} min` : `${hh} h`) : `${mm} min`; };
+  const QUICK = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180];
+  const timeDialog = h('dialog', { class: 'guide timeprompt', 'aria-labelledby': 'time-title' });
+  document.body.append(timeDialog);
+  timeDialog.addEventListener('click', e => { if (e.target === timeDialog) timeDialog.close(); });
+  // Required: the tick is only sent once a time is chosen. Closing the prompt leaves the task as it was.
+  function askTime(t) {
+    let chosen = null;
+    const save = h('button', { class: 'btn btn-brand', type: 'button', disabled: true }, 'Tick off');
+    const hours = h('input', { type: 'number', inputmode: 'numeric', min: '0', max: '24', placeholder: '0', 'aria-label': 'Hours' });
+    const mins = h('input', { type: 'number', inputmode: 'numeric', min: '0', max: '59', placeholder: '0', 'aria-label': 'Minutes' });
+    const chips = QUICK.map(m => h('button', { class: 'time-chip', type: 'button', 'aria-pressed': 'false', onclick: () => pick(m, true) }, short(m)));
+    function pick(m, fromChip) {
+      chosen = Number.isInteger(m) && m >= 1 && m <= 1440 ? m : null;
+      chips.forEach((c, i) => c.setAttribute('aria-pressed', String(fromChip && QUICK[i] === chosen)));
+      if (fromChip) { hours.value = ''; mins.value = ''; }
+      save.disabled = !chosen;
+      save.textContent = chosen ? `Tick off · ${short(chosen)}` : 'Tick off';
+    }
+    const typed = () => { const v = (parseInt(hours.value, 10) || 0) * 60 + (parseInt(mins.value, 10) || 0); pick(v || NaN, false); };
+    hours.addEventListener('input', typed); mins.addEventListener('input', typed);
+    save.addEventListener('click', () => { if (!chosen) return; timeDialog.close(); tick(t, true, chosen); });
+    timeDialog.replaceChildren(h('div', { class: 'guide-head' },
+        h('div', null, h('p', { class: 'guide-day' }, t.title), h('h2', { id: 'time-title' }, 'How long did this take you?')),
+        h('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Close without ticking off', onclick: () => timeDialog.close() }, icon('i-close'))),
+      h('div', { class: 'guide-body' },
+        h('div', { class: 'time-grid', role: 'group', 'aria-label': 'Quick times' }, chips),
+        h('p', { class: 'time-other' }, h('span', null, 'Or type it:'), h('label', null, hours, ' h'), h('label', null, mins, ' min')),
+        h('p', { class: 'guide-actions' }, save, h('button', { class: 'btn', type: 'button', onclick: () => timeDialog.close() }, 'Cancel'))));
+    if (!timeDialog.open) timeDialog.showModal();
+    chips[2].focus();
   }
 
   /* ---------------------------------------------------------------- the database */
