@@ -2296,7 +2296,8 @@
       },
       "related": [
         "surveyors-missing",
-        "surveyors-access"
+        "surveyors-access",
+        "surveyors-off"
       ]
     },
     {
@@ -2349,6 +2350,36 @@
       "related": [
         "about-surveyors",
         "hub-settings"
+      ]
+    },
+    {
+      "id": "surveyors-off",
+      "tool": "surveyors",
+      "title": "Days off on the Surveyor Calendar",
+      "ask": [
+        "who is off on the surveyor calendar",
+        "why does it say off on the calendar",
+        "surveyor on holiday",
+        "can I book a surveyor who is off",
+        "what does the red warning on a survey mean",
+        "surveyor days off"
+      ],
+      "keys": [
+        "off",
+        "off am",
+        "off pm",
+        "holiday",
+        "leave",
+        "days off",
+        "closed",
+        "bank holiday",
+        "warning",
+        "clash"
+      ],
+      "answer": "Days off come from Annual Leave: accepted leave and other leave show as “off”, “off AM” or “off PM” (never the reason), and bank holidays and closures shade the whole day. Tap a day to see “Off — don’t book”. A survey booked on its surveyor’s day off turns red with a warning. Leave changes show within 15 minutes; a surveyor only shows days off if their name matches on HubSpot and Annual Leave.",
+      "related": [
+        "about-surveyors",
+        "surveyors-missing"
       ]
     }
   ]

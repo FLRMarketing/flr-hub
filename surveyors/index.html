@@ -10,11 +10,11 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="surveyors.css?v=1.0">
+<link rel="stylesheet" href="surveyors.css?v=1.1">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="surveyors.js?v=1.0" defer></script>
+<script src="surveyors.js?v=1.1" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -72,6 +72,11 @@
       <div class="panel">
         <h3 id="dayTitle">Surveys</h3>
         <p class="panel-note" id="dayNote"></p>
+        <p class="closed-note" id="dayClosed" hidden></p>
+        <div class="offbox" id="dayOff" hidden>
+          <p class="offbox-title">Off — don’t book</p>
+          <ul class="offlist" id="dayOffList"></ul>
+        </div>
         <ul class="events" id="dayList"></ul>
       </div>
       <div class="panel" id="trayNoSurveyor">

@@ -18,6 +18,9 @@
    by the flr-surveyors Edge Function every 15 minutes. Until that function is in
    the database the page shows made-up SAMPLE bookings, labelled on the page.
 
+   Days off (1.1): off [{ day, surveyor, part: all|am|pm }] and closures [{ day, name }], from Annual Leave; the
+   reason for leave is never sent. Shown as "off" markers on the day, and in the side panel as "Off — don't book".
+
    Shape of surveyor_board():
      { readAt, failing,
        surveyors:    [{ id, name }],
@@ -118,6 +121,9 @@
         { id: 'n2', name: 'Harbour Restaurant - Dining room', postcode: 'HP5 1AA', createdAt: at(-5, 14), url: '#sample' },
         { id: 'n3', name: 'Seaview Care Home - 8 flats refurb', postcode: '', createdAt: at(-6, 11), url: '#sample' },
       ],
+      off: [{ day: iso(addDays(mon, 1)), surveyor: 's1', part: 'all' }, { day: iso(addDays(mon, 2)), surveyor: 's1', part: 'all' },
+        { day: iso(addDays(mon, 3)), surveyor: 's4', part: 'pm' }, { day: iso(addDays(mon, 8)), surveyor: 's3', part: 'am' }],
+      closures: [],
       needDate: [
         { id: 'd1', name: 'Grange Church - New premises - ME', surveyor: 's5', postcode: '', stage: 'Appointment Scheduled', url: '#sample' },
         { id: 'd2', name: 'Fire Station - Dignity rooms - PS', surveyor: 's2', postcode: 'WV1 1AA', stage: 'Allocated to Surveyor', url: '#sample' },
@@ -161,6 +167,17 @@
     $('#legend').replaceChildren(chip('', 'Everyone', ''), ...[...byId().values()].map(s => chip(String(s.id), s.name, s.c)));
   }
 
+  /* ---------------------------------------------------------------- days off (from Annual Leave: off, am or pm; never why) */
+  const PART = { all: 'off', am: 'off AM', pm: 'off PM' };
+  const PART_LONG = { all: 'off all day', am: 'off in the morning', pm: 'off in the afternoon' };
+  const offOn = di => (DATA.off || []).filter(o => o.day === di && (!who || String(o.surveyor) === who) && byId().has(String(o.surveyor)));
+  const closureOn = di => (DATA.closures || []).find(c => c.day === di) || null;
+  const offName = o => (byId().get(String(o.surveyor)) || { name: '?' }).name;
+  const offShort = o => `${offName(o).split(' ')[0]} ${PART[o.part] || 'off'}`;
+  // A booking on a day its surveyor is off (any part: the time may be unset): worth a second look.
+  const clashOf = (b, di) => (DATA.off || []).find(o => o.day === di && String(o.surveyor) === String(b.surveyor)) || null;
+  const offText = o => `${offName(o)} ${PART_LONG[o.part] || 'off'}`;
+
   /* ---------------------------------------------------------------- the month */
   function render() {
     $('#sampleLabel').hidden = !DATA.sample;
@@ -179,18 +196,26 @@
       const di = iso(d);
       if (d.getMonth() !== first.getMonth()) { cells.push(h('div', { class: 'tile out', 'aria-hidden': 'true' }, h('span', { class: 'dn' }, String(d.getDate())))); continue; }
       const here = all.filter(x => x.day === di), we = d.getDay() === 0 || d.getDay() === 6;
-      const cls = ['tile', we ? 'we' : '', di === todayIso ? 'today' : '', di === selected ? 'sel' : ''].filter(Boolean).join(' ');
+      const offs = offOn(di), closed = closureOn(di);
+      const cls = ['tile', we ? 'we' : '', closed ? 'closed' : '', di === todayIso ? 'today' : '', di === selected ? 'sel' : ''].filter(Boolean).join(' ');
       const shownEv = here.slice(0, 2).map(x => {
         const s = S.get(String(x.b.surveyor)), tm = tOf(x.b);
-        return h('span', { class: 'ev ' + colour(x.b.surveyor) }, h('span', { class: 'n' }, s ? s.name.split(' ')[0] : 'No surveyor'),
+        const clash = clashOf(x.b, di);
+        return h('span', { class: 'ev ' + colour(x.b.surveyor) + (clash ? ' clash' : ''), title: clash ? `${s ? s.name : 'The surveyor'} is ${PART_LONG[clash.part]} that day` : null },
+          h('span', { class: 'n' }, (s ? s.name.split(' ')[0] : 'No surveyor') + (clash ? ' ⚠' : '')),
           h('span', { class: 'p' }, [tm, x.b.postcode || 'No postcode'].filter(Boolean).join(' · ')));
       });
       cells.push(h('button', { class: cls, type: 'button', role: 'gridcell', 'aria-pressed': String(di === selected),
-        'aria-label': `${fmtLong.format(d)}${di === todayIso ? ', today' : ''}: ${here.length ? here.length + (here.length === 1 ? ' survey' : ' surveys') : 'no surveys'}`,
+        'aria-label': `${fmtLong.format(d)}${di === todayIso ? ', today' : ''}${closed ? ', ' + closed.name + ', FLR closed' : ''}: ${here.length ? here.length + (here.length === 1 ? ' survey' : ' surveys') : 'no surveys'}${offs.length ? '. Off: ' + offs.map(o => offText(o)).join(', ') : ''}`,
         onclick: () => { selected = di; render(); } },
-        h('span', { class: 'dn' }, String(d.getDate())), shownEv,
+        h('span', { class: 'dn' }, String(d.getDate())),
+        closed ? h('span', { class: 'closure' }, closed.name) : null,
+        shownEv,
         here.length > 2 ? h('span', { class: 'more' }, `+${here.length - 2} more`) : null,
-        here.length ? h('span', { class: 'dots', 'aria-hidden': 'true' }, here.slice(0, 6).map(x => h('i', { class: colour(x.b.surveyor) }))) : null));
+        offs.length ? h('span', { class: 'offs', 'aria-hidden': 'true' }, offs.slice(0, 3).map(o => h('span', { class: 'offp ' + colour(o.surveyor) }, offShort(o))),
+          offs.length > 3 ? h('span', { class: 'offp more-off' }, `+${offs.length - 3} off`) : null) : null,
+        here.length || offs.length ? h('span', { class: 'dots', 'aria-hidden': 'true' }, here.slice(0, 6).map(x => h('i', { class: colour(x.b.surveyor) })),
+          offs.slice(0, 4).map(o => h('i', { class: 'ring ' + colour(o.surveyor) }))) : null));
     }
     $('#cal').replaceChildren(...cells);
     renderDay(all);
@@ -202,6 +227,12 @@
     const d = parse(selected), here = all.filter(x => x.day === selected), S = byId();
     $('#dayTitle').textContent = selected === todayIso ? 'Today’s surveys' : 'Surveys';
     $('#dayNote').textContent = fmtLong.format(d) + (who && S.get(who) ? ' · ' + S.get(who).name : '');
+    const closed = closureOn(selected), offs = offOn(selected);
+    $('#dayClosed').hidden = !closed;
+    if (closed) $('#dayClosed').textContent = `${closed.name}: FLR is closed.`;
+    $('#dayOff').hidden = !offs.length;
+    $('#dayOffList').replaceChildren(...offs.map(o => h('li', { class: colour(o.surveyor) }, h('span', { class: 'mini' }, initials(offName(o))),
+      h('span', { class: 'nm' }, offName(o)), h('span', { class: 'pt' }, PART_LONG[o.part] || 'off'))));
     $('#dayList').replaceChildren(...(here.length ? here.map(x => {
       const b = x.b, s = S.get(String(b.surveyor)), tm = tOf(b), c = colour(b.surveyor);
       return h('li', null, h('button', { class: 'evc ' + c, type: 'button', onclick: () => openSheet(b),
@@ -210,6 +241,7 @@
         h('span', { class: 't' }, short(b.name)),
         h('span', { class: 'pc' + (b.postcode ? '' : ' miss') }, b.postcode || 'No postcode'),
         h('span', { class: 'meta' }, icon('i-clock'), tm || 'Time not set', b.address ? ' · ' + b.address : ''),
+        clashOf(b, selected) ? h('span', { class: 'clash-note' }, `⚠ ${s ? s.name.split(' ')[0] : 'The surveyor'} is ${PART_LONG[clashOf(b, selected).part]} this day (Annual Leave)`) : null,
         h('span', { class: 'who' }, h('span', { class: 'mini' }, initials(s ? s.name : '?')), h('span', { class: 'bar' }, h('i')), b.stage || '')));
     }) : [h('li', { class: 'none' }, 'No surveys booked.')]));
   }

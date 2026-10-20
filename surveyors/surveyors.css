@@ -115,6 +115,29 @@ main{max-width:1280px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
 .dots{display:none;gap:4px;margin-top:auto}
 .dots i{width:8px;height:8px;border-radius:50%;background:var(--c)}
 
+/* days off (from Annual Leave): striped pills in the surveyor's colour; closure days shaded and named */
+.offs{display:flex;flex-wrap:wrap;gap:3px;margin-top:auto}
+.offp{display:inline-block;max-width:100%;padding:1px 6px;border-radius:6px;font:600 11px/1.45 var(--font-text);color:var(--ink);
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,transparent) 0 4px,color-mix(in srgb,var(--c) 8%,transparent) 4px 8px);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.offp.more-off{--c:var(--ink-3)}
+.ev.clash{border-left-color:var(--red);background:var(--red-soft);border-radius:0 6px 6px 0}
+.ev.clash .n{color:var(--red)}
+.tile.today .ev.clash .n{color:#fff}
+.evc .clash-note{grid-column:1 / -1;margin-top:2px;font:600 12.5px/1.3 var(--font-text);color:var(--red)}
+.tile.today .offp{color:var(--on-tint);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--on-tint) 55%,transparent)}
+.tile.closed:not(.today){background:repeating-linear-gradient(135deg,var(--tile-we) 0 6px,var(--tile) 6px 12px)}
+.closure{display:block;font:700 11.5px/1.25 var(--font-text);color:var(--gold-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile.today .closure{color:var(--on-tint)}
+.dots i.ring{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+.closed-note{margin:2px 0 8px;padding:8px 10px;border-radius:10px;background:var(--gold-soft);color:var(--gold-ink);font:600 13.5px/1.35 var(--font-text)}
+.offbox{margin:2px 0 6px;padding:10px 12px;border-radius:12px;background:var(--red-soft)}
+.offbox-title{margin:0 0 6px;font:700 13.5px/1.2 var(--font-text);color:var(--red)}
+.offlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.offlist li{display:flex;align-items:center;gap:8px;font-size:14px}
+.offlist .nm{font-weight:600}
+.offlist .pt{margin-left:auto;color:var(--ink-2);font-size:13px}
+
 /* ---------- side panels */
 .side{display:flex;flex-direction:column;gap:16px}
 .panel{padding:16px;border-radius:18px;background:var(--panel);box-shadow:var(--sh-card)}
@@ -177,7 +200,7 @@ main{max-width:1280px;margin:0 auto;padding:24px max(var(--gutter),env(safe-area
   .dow{font-size:12px}
   .tile{min-height:58px;padding:6px 5px;border-radius:10px;gap:3px}
   .tile .dn{font-size:14px}
-  .ev,.more{display:none}
+  .ev,.more,.offs,.closure{display:none}
   .dots{display:flex;flex-wrap:wrap;gap:3px}
   .dots i{width:7px;height:7px}
   .tile.today .dots i{box-shadow:0 0 0 1.5px var(--on-tint)}
