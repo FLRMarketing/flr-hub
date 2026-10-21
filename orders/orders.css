@@ -536,3 +536,13 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 /* the fitters on each job (1.8) */
 .od-ft{margin-top:12px}
 .ft-head{margin:0 0 -4px;color:var(--on-brand-2);font:700 12px/1 var(--font);text-transform:uppercase;letter-spacing:.06em}
+
+/* answers from monday.com (1.9) */
+.has-dot{position:relative}
+.ans-dot{position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:var(--red,#ff5a4f);box-shadow:0 0 0 2px var(--bg)}
+.tab-ic .ans-dot{top:-2px;right:-4px}
+.bub-ans{border-left:3px solid var(--brand-ink)}
+.prob-answers{list-style:none;margin:8px 0 0;padding:0 0 0 12px;border-left:2px solid var(--brand-ink);display:flex;flex-direction:column;gap:8px}
+.prob-answer-head{display:flex;gap:8px;align-items:baseline;margin:0;font:600 13px/1.3 var(--font);color:var(--ink-2)}
+.prob-answer-head b{color:var(--ink)}
+.prob-answer .prob-text{margin:2px 0 0}
