@@ -148,7 +148,7 @@
     return { label: 'Expected arrival', big: dayLong(o.day), small: timed(o) ? `at ${clock(o.at)}` : 'Time not confirmed', date: true };
   }
   /* ---------------------------------------------------------------- state and routes: #/today, #/upcoming, #/received, each with /<order id> */
-  const S = { data: null, gotAt: 0, err: null, busy: false, again: false, timer: 0, surveyors: null, photos: {}, tab: 'today', id: null, attnAll: false, scroll: {}, saving: new Map() };
+  const S = { data: null, gotAt: 0, err: null, busy: false, again: false, timer: 0, surveyors: null, photos: {}, answers: { replies: {}, seenAt: null }, tab: 'today', id: null, attnAll: false, scroll: {}, saving: new Map() };
   const TABS = [['today', 'Today', 'i-today'], ['upcoming', 'Coming up', 'i-calendar'], ['received', 'Received', 'i-inbox']];
   function parseRoute() {
     const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -295,7 +295,7 @@
       h('div', { class: 'head-bar' },
         h('a', { class: 'brand', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('i-back', 'brand-back'), icon('flr-mark', 'brand-mark'), h('span', { class: 'brand-word' }, 'Hub')),
         h('div', { class: 'head-tools' }, updated(today),
-          h('button', { class: 'round only-wide', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, title: 'Have a problem?', onclick: () => { const j = findJob(S.id); openProblem(j ? j.orders[0].id : null); } }, icon('i-help')),
+          h('button', { class: 'round only-wide has-dot', type: 'button', 'aria-label': problemLabel(), title: 'Have a problem?', onclick: () => { const j = findJob(S.id); openProblem(j ? j.orders[0].id : null); } }, icon('i-help'), problemDot()),
           h('button', { class: 'round', type: 'button', id: 'refresh', 'aria-label': 'Check for updates now', title: 'Check for updates now', onclick: () => refresh(true) }, icon('i-refresh')))),
       h('div', { class: 'head-titles' }, h('h1', { class: 'head-title' }, title), sub ? h('p', { class: 'head-sub' }, sub) : null),
       h('nav', { class: 'seg', 'aria-label': 'Deliveries' }, TABS.map(([k, label]) =>
@@ -318,7 +318,7 @@
   function tabbar(counts) {
     $('#tabs').replaceChildren(...TABS.map(([k, label, ic]) => h('a', { class: 'tab', href: href(k), 'aria-current': S.tab === k ? 'page' : null },
       h('span', { class: 'tab-ic' }, icon(ic), counts[k] ? h('span', { class: 'tab-n' }, String(counts[k])) : null), h('span', { class: 'tab-label' }, label))),
-      h('button', { class: 'tab tab-problem', type: 'button', 'aria-label': `Have a problem? Message ${contactsText()}`, onclick: () => openProblem(null) }, h('span', { class: 'tab-ic' }, icon('i-help')), h('span', { class: 'tab-label' }, 'Have a problem?')));
+      h('button', { class: 'tab tab-problem has-dot', type: 'button', 'aria-label': problemLabel(), onclick: () => openProblem(null) }, h('span', { class: 'tab-ic' }, icon('i-help'), problemDot()), h('span', { class: 'tab-label' }, 'Have a problem?')));
   }
 
   /* ---------------------------------------------------------------- one job in a list */
@@ -510,7 +510,7 @@
       h('div', { class: 'od-hero' },
         opt.back ? h('div', { class: 'od-bar' }, h('a', { class: 'od-back', href: href(S.tab) }, icon('i-back'), TABS.find(x => x[0] === S.tab)[1]),
           h('span', { class: 'od-bar-end' },
-            h('button', { class: 'round', type: 'button', 'aria-label': `Have a problem with this job? Message ${contactsText()}`, onclick: () => openProblem(lead.o.id) }, icon('i-help')),
+            h('button', { class: 'round has-dot', type: 'button', 'aria-label': `Have a problem with this job? Message ${contactsText()}${unreadAnswers() ? ' (new answer)' : ''}`, onclick: () => openProblem(lead.o.id) }, icon('i-help'), problemDot()),
             h('a', { class: 'brand brand-solo', href: '../', 'aria-label': 'Back to the FLR Hub' }, icon('flr-mark', 'brand-mark')))) : null,
         h('div', { class: 'od-top' },
           h('div', { class: 'od-when' }, a.label ? h('p', { class: 'od-label' }, open.length > 1 ? `Next: ${a.label.toLowerCase()}` : a.label) : null,
@@ -588,6 +588,19 @@
     if (p.state === 'failed') return ['Saved. Not sent yet; it will try again in a few minutes', 'warn'];
     return ['Sending…', 'wait'];
   }
+  // Answers from monday.com (1.9): replies to the problem's update, or updates that @mention the sender.
+  const answersOf = id => (S.answers.replies || {})[id] || [];
+  const unreadAnswers = () => Object.values(S.answers.replies || {}).flat()
+    .filter(a => a.mine && (!S.answers.seenAt || a.at > S.answers.seenAt)).length;
+  const answerMeta = (a, today) => `${a.by} · ${a.kind === 'mention' ? 'mentioned you on monday.com' : 'replied on monday.com'} · ${when(a.at, today)}`;
+  const answerList = (p, today) => {
+    const as = answersOf(p.id);
+    return as.length ? h('ul', { class: 'prob-answers', 'aria-label': 'Answers' }, as.map(a =>
+      h('li', { class: 'prob-answer' }, h('p', { class: 'prob-answer-head' }, h('b', null, a.by), h('span', null, `${a.kind === 'mention' ? 'mentioned' : 'replied'} · ${when(a.at, today)}`)),
+        h('p', { class: 'prob-text' }, a.body)))) : null;
+  };
+  const problemDot = () => unreadAnswers() ? h('span', { class: 'ans-dot', 'aria-hidden': 'true' }) : null;
+  const problemLabel = () => `Have a problem? Message ${contactsText()}${unreadAnswers() ? ` (${unreadAnswers()} new ${unreadAnswers() === 1 ? 'answer' : 'answers'})` : ''}`;
   // Admins and Super Admins: the problems sent about a delivery, on the delivery itself.
   function problemsAbout(o, today) {
     if (!S.data.seesAllProblems) return null;
@@ -598,8 +611,14 @@
       h('ul', { class: 'probs' }, ps.map(p => {
         const [st, tone] = problemStatus(p);
         return h('li', { class: 'prob' }, h('p', { class: 'prob-head' }, h('b', null, p.mine ? 'You' : p.by), h('span', null, when(p.at, today))),
-          h('p', { class: 'prob-text' }, p.message), h('p', { class: `prob-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st));
+          h('p', { class: 'prob-text' }, p.message), h('p', { class: `prob-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st), answerList(p, today));
       })));
+  }
+  async function markAnswersSeen() {
+    try {
+      const { data, error } = await client().rpc('orders_replies_seen');
+      if (!error) { S.answers.seenAt = data || new Date().toISOString(); render(); }
+    } catch (e) { /* the dot stays until next time */ }
   }
   function openProblem(orderId) {
     if (!S.data) return;
@@ -635,7 +654,7 @@
           h('p', { class: 'prob-head' }, h('b', null, p.mine ? 'You' : p.by), h('span', null, when(p.at, today))),
           o ? h('a', { class: 'prob-about', href: href(S.tab, o.id), onclick: () => dlg.close() }, icon('i-box'), ab) : h('p', { class: 'prob-about prob-about-none' }, ab),
           h('p', { class: 'prob-text' }, p.message),
-          h('p', { class: `prob-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st));
+          h('p', { class: `prob-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st), answerList(p, today));
       }));
       log.scrollTop = 0;
     }
@@ -649,6 +668,7 @@
         const ab = p.order ? `About ${product(p.what || '').title || p.job} · ${p.job}` : 'Not about one delivery';
         const out = [h('p', { class: 'chat-day' }, when(p.at, today)), bubble('me', p.message, [ab, h('span', { class: `bub-st bub-st-${tone}` }, tone === 'ok' ? icon('i-check') : null, st)])];
         if (p.state === 'sent') out.push(bubble('them', `Thanks, ${andList(firstNames())} have your message${p.order ? ' and it’s on the delivery in monday.com' : ''}.`, null, 'bub-auto'));
+        for (const a of answersOf(p.id)) out.push(bubble('them', a.body, answerMeta(a, today), 'bub-ans'));
         return out;
       }));
       log.scrollTop = log.scrollHeight;
@@ -689,6 +709,7 @@
     document.body.append(dlg);
     chatOpen = drawLog;
     drawLog(); drawCompose();
+    if (unreadAnswers()) markAnswersSeen();
     dlg.showModal();
     box.focus();
   }
@@ -771,6 +792,14 @@
       return data && typeof data === 'object' ? data : {};
     } catch (e) { return null; }
   }
+  // Answers to problems from monday.com (1.9); until 1.9 is live, none.
+  async function fetchAnswers() {
+    try {
+      const { data, error } = await client().rpc('orders_problem_replies');
+      if (error) return missingFunction(error) ? { replies: {}, seenAt: null } : null;
+      return data && typeof data === 'object' ? { replies: data.replies || {}, seenAt: data.seenAt || null } : null;
+    } catch (e) { return null; }
+  }
   // The fitters' photos (1.8), for the names shown and not asked for yet; until 1.8 is live, initials.
   async function fetchPhotos() {
     const today = londonDay(), want = new Set();
@@ -807,6 +836,7 @@
     try {
       const d = await fetchBoard();
       if (!S.surveyors) S.surveyors = await fetchSurveyors();
+      S.answers = (await fetchAnswers()) || S.answers;
       S.data = d; S.gotAt = Date.now(); S.err = null;
       if (!d.readAt && !d.orders.length) gate('No deliveries yet', d.failing ? `The tracker couldn’t read monday.com yet. ${d.failing}` : 'The tracker hasn’t read the Goods In board yet. It does every 5 minutes.', { retry: true });
       else { render(); fetchPhotos().then(got => { if (got) render(); }); }
