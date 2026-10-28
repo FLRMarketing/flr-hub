@@ -364,6 +364,35 @@
       ]
     },
     {
+      "id": "hub-activity",
+      "tool": "hub",
+      "who": "superadmin",
+      "title": "See who changed what (the change log)",
+      "ask": [
+        "where is the change log",
+        "who changed this quote",
+        "see what everyone has been doing on the hub",
+        "audit log",
+        "who changed someone's role",
+        "history of changes",
+        "activity log"
+      ],
+      "keys": [
+        "change log",
+        "activity",
+        "audit",
+        "history"
+      ],
+      "answer": "Every change on the Hub and in its apps is in Hub settings under “Activity”, as plain sentences, newest first: who did it and when. Pick an area such as Quotes or Accounts, or one person, to narrow it down, and press “Details” for the specifics. The Cost Estimator’s old Change log tab points there.",
+      "link": {
+        "href": "settings/#activity",
+        "label": "Open Activity"
+      },
+      "related": [
+        "hub-settings"
+      ]
+    },
+    {
       "id": "likkle-jeff-switch",
       "tool": "hub",
       "title": "Switch Likkle Jeff on or off",

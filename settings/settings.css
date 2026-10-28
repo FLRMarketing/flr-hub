@@ -229,6 +229,45 @@ body:not([data-view="loading"]) .gate-loading{display:none}
 @media (prefers-reduced-motion:reduce){.pa-swatch,.pa-toggle{transition:none}}
 @media (forced-colors:active){.pa-swatch[aria-checked="true"],.pa-toggle[aria-pressed="true"],.pa-fchip[aria-pressed="true"]{outline:2px solid Highlight}}
 
+/* Activity (Hub migration 2.9): the change log as sentences, grouped by day */
+.act{margin-top:8px}
+.act-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 18px}
+.act-areas{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.act-tools{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.act-person .pa-select select{min-width:180px}
+.act-views{display:inline-flex;align-items:center;gap:8px;color:var(--pa-muted);font-size:13px;cursor:pointer}
+.act-views input{width:17px;height:17px;margin:0;accent-color:var(--pa-blue)}
+.act-list{display:flex;flex-direction:column;gap:18px}
+.act-day{border:1px solid var(--pa-line);border-radius:14px;background:var(--pa-panel);overflow:clip}
+.act-day-title{margin:0;padding:11px 16px;border-bottom:1px solid var(--pa-line);background:color-mix(in srgb,var(--pa-soft) 55%,var(--pa-panel));
+  color:var(--pa-muted);font-size:12.5px;font-weight:650;letter-spacing:.01em}
+.act-items{margin:0;padding:0;list-style:none}
+.act-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:13px 16px;border-bottom:1px solid var(--pa-line)}
+.act-row:last-child{border-bottom:0}
+.act-row .pa-avatar{margin-top:1px}
+.act-line{margin:0;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.act-line b{font-weight:650}
+.act-who{font-weight:650}
+.act-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:3px 0 0;color:var(--pa-muted);font-size:12px}
+.act-times{color:var(--pa-text);font-weight:600}
+.act-area{display:inline-flex;align-items:center;gap:5px}
+.act-area::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ac,var(--pa-muted))}
+.act-area-quotes{--ac:#2f6bff}.act-area-accounts{--ac:#7a4dff}.act-area-teams{--ac:#ff6b57}.act-area-leave{--ac:#18a957}.act-area-fleet{--ac:#e5383b}
+.act-area-orders{--ac:#ff7a1a}.act-area-warehouse{--ac:#b07a3c}.act-area-nearby{--ac:#00a7c7}
+.act-details{margin-top:6px}
+.act-details summary{display:inline-block;color:var(--pa-blue-text);font-size:12.5px;font-weight:600;cursor:pointer;list-style:none}
+.act-details summary::-webkit-details-marker{display:none}
+.act-details summary::after{content:"";display:inline-block;width:5px;height:5px;margin-left:7px;border:solid currentColor;border-width:0 1.6px 1.6px 0;transform:translateY(-2px) rotate(45deg)}
+.act-details[open] summary::after{transform:translateY(1px) rotate(225deg)}
+.act-details dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:8px 0 2px;padding:10px 12px;border-radius:10px;background:var(--pa-soft);font-size:12.5px}
+.act-details dt{color:var(--pa-muted)}
+.act-details dd{margin:0;overflow-wrap:anywhere}
+.act-status{margin:14px 0 0;color:var(--pa-muted);font-size:13px;text-align:center}
+.act-status:empty{display:none}
+.act-status.is-error{color:var(--pa-red);font-weight:600}
+.act-more-wrap{margin:14px 0 0;text-align:center}
+@media (max-width:480px){.act-row{grid-template-columns:30px minmax(0,1fr);gap:10px;padding:12px}.act-person .pa-select select{min-width:0;width:100%}.act-tools{width:100%}.act-person{flex:1}}
+
 /* Save and Discard: stays in view at the bottom of the window while there's anything here */
 .pa-foot{position:relative;bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:5;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;
   margin-top:24px;padding:14px 18px;border:1px solid var(--pa-line);border-radius:14px;background:var(--pa-panel);box-shadow:0 10px 30px rgba(16,18,40,.08)}

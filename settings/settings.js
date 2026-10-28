@@ -725,7 +725,7 @@
     }
     $('#gate').hidden = true;
     $('#accounts-section').hidden = false; $('#registration-section').hidden = false; $('#jeff-section').hidden = false;
-    renderSettings(); renderAccounts(); renderPre(); loadJeff(); loadPhotos(); loadTeams();
+    renderSettings(); renderAccounts(); renderPre(); loadJeff(); loadPhotos(); loadTeams(); loadActivity(true);
     view('ready');
   }
   // Staff photos (Hub migration 2.5). Before that update, or if it fails, everyone keeps their initials.
@@ -740,6 +740,116 @@
     catch (e) { S.teams = null; }
     pruneTeams(); render();
   }
+  /* ---------------------------------------------------------------- Activity (Hub migration 2.9): the change log, readable */
+  // A page at a time, newest first. Before that update the section stays hidden (the Cost Estimator still has the log).
+  const ACT = { area: '', actor: '', views: false, events: [], more: false, actors: null, busy: false, error: '' };
+  const ACT_AREAS = [['', 'Everything'], ['quotes', 'Quotes'], ['accounts', 'Accounts'], ['teams', 'Teams'], ['leave', 'Annual Leave'], ['fleet', 'Fleet'],
+    ['orders', 'Orders'], ['warehouse', 'Warehouse'], ['nearby', 'Nearby']];
+  const actCtx = {
+    personName: id => { const a = id && byId(String(id)); return a ? nameOf(a) : (ACT.actors || []).find(x => x.id === id)?.name || ''; },
+    appTitle: id => id ? appTitle(id) : '',
+    roleName: r => roleName(r || ''),
+    roleAs: r => AS[r] || roleName(r || ''),
+    teamName: id => { const t = id && (S.teams || []).find(x => x.id === id); return t ? t.name : ''; },
+  };
+  async function loadActivity(reset) {
+    if (ACT.busy || !window.FLRActivity) return;
+    ACT.busy = true; ACT.error = ''; renderActivityStatus();
+    if (reset) { ACT.events = []; ACT.more = false; }
+    try {
+      const r = await call('admin_activity', { p_before: reset ? null : (ACT.events[ACT.events.length - 1] || {}).id || null, p_limit: 100,
+        p_area: ACT.area || null, p_actor: ACT.actor || null, p_views: ACT.views });
+      ACT.events = reset ? (r.events || []) : ACT.events.concat(r.events || []);
+      ACT.more = !!r.more;
+      if (r.actors) ACT.actors = r.actors;
+      const first = $('#activity-section').hidden;
+      $('#activity-section').hidden = false;
+      if (first && location.hash === '#activity') requestAnimationFrame(() => $('#activity-section').scrollIntoView({ block: 'start' }));   // from the Cost Estimator's Change log tab
+    } catch (e) {
+      if (missingFunction(e)) { $('#activity-section').hidden = true; ACT.busy = false; return; }
+      ACT.error = said(e);
+    }
+    ACT.busy = false;
+    renderActivity();
+  }
+  const dayKey = iso => { const d = new Date(iso); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+  function dayLabel(iso) {
+    const d = new Date(iso), now = new Date();
+    const days = Math.round((new Date(now.toDateString()) - new Date(d.toDateString())) / 864e5);
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', ...(d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}) });
+  }
+  const hm = iso => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  function activityRow(e, run = { n: 1, first: e }) {
+    const li = el('li', `act-row act-${e.area || 'other'}`);
+    const a = e.actorId && byId(e.actorId);
+    const av = a ? avatarOf(a) : el('span', 'pa-avatar', initials(e.actorName || '?'));
+    av.setAttribute('aria-hidden', 'true');
+    const body = el('div', 'act-body');
+    const line = el('p', 'act-line');
+    line.append(el('strong', 'act-who', e.actorName || 'Someone'), ' ');
+    let said;
+    try { said = window.FLRActivity.describe(e, actCtx); } catch (err) { said = { parts: ['did something'], details: [] }; }
+    for (const p of said.parts) line.append(typeof p === 'string' ? document.createTextNode(p) : el('b', null, p.b));
+    const meta = el('p', 'act-meta');
+    const t = new Date(e.at);
+    const time = el('time', null, t.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })); time.dateTime = e.at;
+    time.title = t.toLocaleString('en-GB', { dateStyle: 'full', timeStyle: 'medium' });
+    if (run.n > 1) { time.textContent = `${hm(run.first.at)}–${hm(e.at)}`; meta.append(el('span', 'act-times', `${run.n} times`), el('span', 'pa-dot', '·')); }
+    meta.append(time, el('span', 'pa-dot', '·'), el('span', `act-area act-area-${e.area || 'other'}`, window.FLRActivity.AREA[e.area] || 'Hub'));
+    body.append(line, meta);
+    if (said.details.length) {
+      const det = el('details', 'act-details');
+      det.append(el('summary', null, 'Details'));
+      const dl = el('dl');
+      for (const [k, v] of said.details) dl.append(el('dt', null, k), el('dd', null, v));
+      det.append(dl);
+      body.append(det);
+    }
+    li.append(av, body);
+    return li;
+  }
+  function renderActivity() {
+    $('#act-areas').replaceChildren(...ACT_AREAS.map(([id, label]) => {
+      const bt = el('button', 'pa-fchip act-chip', label); bt.type = 'button'; bt.dataset.actArea = id;
+      bt.setAttribute('aria-pressed', String(ACT.area === id)); return bt;
+    }));
+    const sel = $('#act-person');
+    if (ACT.actors && sel.options.length !== ACT.actors.length + 1) {
+      sel.replaceChildren(Object.assign(el('option', null, 'Everyone'), { value: '' }), ...ACT.actors.map(p => Object.assign(el('option', null, p.name), { value: p.id })));
+      sel.value = ACT.actor;
+    }
+    $('#act-views').checked = ACT.views;
+    const list = $('#act-list'), frag = document.createDocumentFragment();
+    // The same thing done again and again in a row (saving a quotation's details as you type, say) is one line with a count.
+    const runs = [];
+    for (const e of ACT.events) {
+      const r = runs[runs.length - 1];
+      if (r && r.e.actorId === e.actorId && r.e.kind === e.kind && r.e.quoteId === e.quoteId && r.e.roomId === e.roomId && dayKey(r.e.at) === dayKey(e.at)) { r.n++; r.first = e; }
+      else runs.push({ e, first: e, n: 1 });
+    }
+    let last = '', ul = null;
+    for (const r of runs) {
+      const k = dayKey(r.e.at);
+      if (k !== last) { last = k; const g = el('section', 'act-day'); g.append(el('h3', 'act-day-title', dayLabel(r.e.at))); ul = el('ul', 'act-items'); g.append(ul); frag.append(g); }
+      ul.append(activityRow(r.e, r));
+    }
+    list.replaceChildren(frag);
+    $('#act-more').hidden = !ACT.more;
+    $('#act-count').textContent = ACT.events.length ? `${ACT.events.length}${ACT.more ? '+' : ''} shown` : '';
+    renderActivityStatus();
+  }
+  function renderActivityStatus() {
+    const st = $('#act-status');
+    st.textContent = ACT.busy ? 'Loading…' : ACT.error ? ACT.error : !ACT.events.length ? 'Nothing here yet for this choice.' : '';
+    st.classList.toggle('is-error', !!ACT.error);
+    $('#act-more').disabled = ACT.busy;
+  }
+  $('#act-areas').addEventListener('click', e => { const bt = e.target.closest('[data-act-area]'); if (!bt || ACT.area === bt.dataset.actArea) return; ACT.area = bt.dataset.actArea; loadActivity(true); });
+  $('#act-person').addEventListener('change', e => { ACT.actor = e.target.value; loadActivity(true); });
+  $('#act-views').addEventListener('change', e => { ACT.views = e.target.checked; loadActivity(true); });
+  $('#act-more').addEventListener('click', () => loadActivity(false));
   async function reloadAccounts() {
     const acc = await call('admin_accounts');
     S.you = acc.you; S.apps = acc.apps || []; S.accounts = acc.accounts || [];
@@ -925,6 +1035,7 @@
     // Read everything back, so the page shows what the database has now; what didn't save is still a draft.
     try { await reloadAccounts(); } catch (e) { prune(); }
     try { await reloadTeams(); } catch (e) { pruneTeams(); }
+    if (!$('#activity-section').hidden) loadActivity(true);
     S.saving = false;
     const left = dirty();
     if (!failed.length && !left) {
