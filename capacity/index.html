@@ -10,11 +10,12 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="capacity.css?v=1.4">
+<link rel="stylesheet" href="capacity.css?v=1.5">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="capacity.js?v=1.4" defer></script>
+<script src="week.js?v=1.5" defer></script>
+<script src="capacity.js?v=1.5" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -52,6 +53,13 @@
     <p class="notice" id="notice" role="status" hidden></p>
   </header>
 
+  <!-- Month = the capacity calendar; Week = who is booked where (week.js). #month / #week in the address remembers it -->
+  <div class="tabs" role="tablist" aria-label="Planner view">
+    <button type="button" role="tab" id="tab-month" data-tab="month" aria-controls="month-view" aria-selected="true">Month</button>
+    <button type="button" role="tab" id="tab-week" data-tab="week" aria-controls="week-view" aria-selected="false" tabindex="-1">Week</button>
+  </div>
+
+  <section id="month-view" role="tabpanel" aria-labelledby="tab-month">
   <div class="monthnav">
     <button class="iconbtn" type="button" id="prev" aria-label="Previous month"><svg aria-hidden="true"><use href="#i-chev-l"/></svg></button>
     <h2 class="month" id="monthLabel" aria-live="polite"></h2>
@@ -73,6 +81,35 @@
     <span><i class="sw closed-shut" aria-hidden="true"></i><span>Company close day</span></span>
     <span><i class="sw closed-jeff" aria-hidden="true"></i><span>Jeff Day</span></span>
   </div>
+  </section>
+
+  <section id="week-view" role="tabpanel" aria-labelledby="tab-week" hidden>
+    <div class="wkbar">
+      <button class="btn" type="button" id="wk-today">Today</button>
+      <span class="wkarrows">
+        <button class="iconbtn" type="button" id="wk-prev" aria-label="Previous week"><svg aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+        <button class="iconbtn" type="button" id="wk-next" aria-label="Next week"><svg aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+      </span>
+      <h2 class="wkrange" id="wk-range" aria-live="polite"></h2>
+      <span class="wknum" id="wk-num"></span>
+    </div>
+    <div class="wklayout">
+      <aside class="mini" id="mini" aria-label="Pick a week"></aside>
+      <div class="week" id="week"></div>
+    </div>
+    <div class="key wkkey" aria-label="Key">
+      <span><i class="kc" aria-hidden="true"></i><span>Booked (Scheduled)</span></span>
+      <span><i class="kc tbc" aria-hidden="true"></i><span>To be confirmed (TBC)</span></span>
+      <span><i class="kc need" aria-hidden="true"></i><span>Needs a fitter</span></span>
+      <span><span class="al">Away</span><span>Off that day (names only)</span></span>
+      <span class="key-break" aria-hidden="true"></span>
+      <span><i class="sw closed-bh" aria-hidden="true"></i><span>Bank holiday</span></span>
+      <span><i class="sw closed-shut" aria-hidden="true"></i><span>Company close day</span></span>
+      <span><i class="sw closed-jeff" aria-hidden="true"></i><span>Jeff Day</span></span>
+    </div>
+  </section>
+
+  <dialog class="sheet" id="sheet"></dialog>
 </main>
 
 <noscript><p class="noscript">The Planner needs JavaScript switched on.</p></noscript>

@@ -670,6 +670,30 @@
   "expect": "about-capacity"
  },
  {
+  "q": "planner week view",
+  "expect": "capacity-week"
+ },
+ {
+  "q": "who is booked where this week",
+  "expect": "capacity-week"
+ },
+ {
+  "q": "who is booked on which job in the planner",
+  "expect": "capacity-week"
+ },
+ {
+  "q": "what does a dashed card mean on the planner",
+  "expect": "capacity-week-key"
+ },
+ {
+  "q": "what is the week number on the planner",
+  "expect": "capacity-week-key"
+ },
+ {
+  "q": "why doesn't the planner say why someone is away",
+  "expect": "capacity-week-key"
+ },
+ {
   "q": "which fitter is nearest to CV22 5DJ",
   "expect": "about-proximity"
  },

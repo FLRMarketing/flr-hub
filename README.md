@@ -204,8 +204,8 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   look, behaviour and labels, light and dark with the device. Each day with fitting work: a battery and a badge, distinct
   fitters booked out of the capacity in the data (23). Red with a warning sign over capacity; an empty grey battery (0/23)
   when work is booked but no fitter is on it yet; a gold number in the corner (and a dashed battery) = bookings that day
-  still needing a fitter (bookings, not fitters short). A day with no fitting work shows the date only. Names and jobs
-  are never shown, and never reach the page.
+  still needing a fitter (bookings, not fitters short). A day with no fitting work shows the date only. The Month view
+  shows no names or jobs (since Planner 1.4 the Week view does, see below).
 - **Data (Planner 1.1).** The page calls `public.planner_board()` (Estimator repo,
   `20261016100000_flr_planner_data.sql`), which makes the Order Tracker's app check (`private.require_app('capacity')`)
   and returns `{capacity, readAt, source, days: {"YYYY-MM-DD": {b, u, t?, f?}}}` from the one row in
@@ -232,6 +232,22 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   day). No Annual Leave access is needed, and nothing about people is in it. The page hatches those days with the
   Diary's `.closed-bh` / `.closed-shut` / `.closed-jeff` and tokens `--bh` / `--shut` / `--jeff`, shows the name under
   the date (phones: hatch only, the name in the day's label), and adds the Diary's three swatches to the key.
+- **Week view (Planner 1.4, Estimator `20261028100000_flr_planner_week.sql` + `flr-planner` update; `capacity/week.js`).**
+  Tabs "Month" | "Week" under the heading (`#month` / `#week` in the address remembers the tab; bare tokens only). Week =
+  an Outlook-style Monday–Sunday week: toolbar Today, ‹ ›, the range ("26 October – 01 November, 2026") and the ISO 8601
+  week number pill; day headers with the date, weekday, the day's capacity badge (as the Month view) and today marked
+  with a blue rule and tint; on screens 1200px and wider a mini month calendar with ISO week numbers (click a date to jump).
+  Each job (grouped by the Work Programme parent item ID only, never by name) is a card across its booked days in lanes
+  that never overlap; a gap in its days starts a new card; the fitters show once, or day by day inside the card when
+  they change. All-TBC = dashed card (Outlook "tentative"), else solid; gold "Needs a fitter" cards (no fitter, the
+  placeholder, or only leavers from today: build.py's rule); an "Away" line per day with names only (leave, sickness,
+  appointments, training and Not Working all just "away"; more than six names show five and "+N more"); closed days
+  hatched with the name. Tap a card: a dialog with the job name, full site address, WFM number and every loaded day with
+  fitters and status. Phones (≤640px): a day-by-day list. Data: `planner_board()` also returns `bookings`,
+  `bookingsFrom`, `bookingsTo` (4 weeks back to 16 weeks ahead, whole weeks; still `require_app('capacity')`); a week
+  outside that says "No bookings loaded for this week". `planner_save()` checks the bookings strictly (see the
+  migration). Names shown as the Fitter Schedule does: "Ben Smith - K4" → Ben Smith; ZFLR / ZSub prefixes removed with a
+  small "FLR staff" / "Sub" tag; "ZZ Left" people only before today. Go-live steps: `~/Documents/claude/planner-week-go-live/`.
 - Tile `capacity` (listed, sort 70), Hub settings label "Planner": Super Admins (active, role `admin`) when the
   migration ran, others switched on in Hub settings. Migrations (Estimator repo): `20261015400000_flr_fitter_capacity.sql`
   (the tile and 'capacity' in the five Hub settings functions' app list, md5 guard) and `20261016100000_flr_planner_data.sql`

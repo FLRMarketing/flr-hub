@@ -2022,7 +2022,8 @@
       },
       "related": [
         "capacity-key",
-        "capacity-access"
+        "capacity-access",
+        "capacity-week"
       ]
     },
     {
@@ -2100,6 +2101,91 @@
       "related": [
         "about-capacity",
         "hub-settings"
+      ]
+    },
+    {
+      "id": "capacity-week",
+      "tool": "capacity",
+      "title": "The Planner's Week view: who is booked where",
+      "ask": [
+        "planner week view",
+        "what is the week view on the planner",
+        "who is booked where",
+        "who is booked where this week",
+        "which jobs are the fitters on this week",
+        "where is each fitter working this week",
+        "show the week on the planner",
+        "how do I see a week on the planner",
+        "which fitter is on which job",
+        "who is on which job tomorrow",
+        "how do I see the address of a job on the planner",
+        "what does the week tab show",
+        "where are the fitters booked next week"
+      ],
+      "keys": [
+        "week view",
+        "week tab",
+        "booked where",
+        "which job",
+        "which jobs",
+        "on which job",
+        "job cards",
+        "week"
+      ],
+      "answer": "Open the Planner and choose Week at the top (Month is the capacity calendar). It shows Monday to Sunday like Outlook: each job is a card across its booked days, with the site and the fitters, day by day when they change. Gold cards still need a fitter; the Away line lists who is off. Tap a card for the address, WFM number and every booked day. Use Today, the arrows or the small calendar.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open the Planner"
+      },
+      "related": [
+        "capacity-week-key",
+        "about-capacity"
+      ]
+    },
+    {
+      "id": "capacity-week-key",
+      "tool": "capacity",
+      "title": "Reading the Planner's Week view",
+      "ask": [
+        "what does a dashed card mean",
+        "what does a dashed card mean on the planner",
+        "why is a job card dashed",
+        "what is the week number",
+        "what is week 44",
+        "what does the week number mean",
+        "what does needs a fitter mean",
+        "what does the gold card mean",
+        "why does it say away",
+        "why doesn't the planner say why someone is away",
+        "can I see why a fitter is off",
+        "what does FLR staff mean on a card",
+        "what does sub mean on a card",
+        "why does a week say no bookings loaded",
+        "what is the week number on the planner",
+        "does the planner show why someone is off",
+        "what does away mean on the planner"
+      ],
+      "keys": [
+        "dashed card",
+        "dashed",
+        "tentative",
+        "week number",
+        "iso week",
+        "needs a fitter",
+        "gold card",
+        "why someone is off",
+        "flr staff",
+        "no bookings loaded",
+        "away line"
+      ],
+      "answer": "A dashed card is TBC on the Work Programme (to be confirmed); solid is booked. A gold “Needs a fitter” card has no fitter yet. The week number is the ISO week (weeks start on Monday). “Away” lists names only: leave, sickness, appointments, training and rota days all just say away, never why. “FLR staff” and “Sub” mark office staff and subcontractors. Only 4 weeks back to 16 ahead are loaded.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open the Planner"
+      },
+      "related": [
+        "capacity-week",
+        "capacity-key"
       ]
     },
     {

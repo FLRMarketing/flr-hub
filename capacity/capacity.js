@@ -8,7 +8,8 @@
    public.planner_board() (Estimator repo, 20261016100000_flr_planner_data.sql) answers
      { capacity, readAt, source, days: { "YYYY-MM-DD": { b, u, t?, f? } },
        triedAt, failingSince, pageError,      (since Planner 1.2)
-       closures: [{ date, name, kind }] }     (since Planner 1.3)
+       closures: [{ date, name, kind }],      (since Planner 1.3)
+       bookings, bookingsFrom, bookingsTo }   (since Planner 1.4: who is booked where, for the Week view, week.js)
        b  distinct fitters booked on fitting work that day
        u  fitting bookings that day still with no fitter (the gold number)
        t  fitters booked only on TBC bookings
@@ -190,8 +191,62 @@
       if (x && typeof x.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && typeof x.name === 'string' && x.name.trim() && CLOSURE_KINDS.has(x.kind))
         closures.set(x.date, { name: x.name.trim(), kind: x.kind });
     }
-    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days, failingSince, closures };
+    const wk = bookingsFrom(d);
+    return { capacity: Number.isInteger(d.capacity) && d.capacity > 0 ? d.capacity : 23, readAt: d.readAt, source: d.source, days, failingSince, closures, ...wk };
   }
+  // The Week view's bookings (Planner 1.4; none from an older database): checked again here, and any entry that isn't
+  // as planner_save() allows is left out. No window = "No bookings loaded yet" on the Week view.
+  const DAY_RE = /^\d{4}-\d{2}-\d{2}$/, ID_RE = /^\d{1,20}$/;
+  const str = (v, max) => typeof v === 'string' && v.length <= max;
+  function bookingsFrom(d) {
+    if (!DAY_RE.test(d.bookingsFrom || '') || !DAY_RE.test(d.bookingsTo || '') || !Array.isArray(d.bookings)) return { bookings: [], bookingsFrom: null, bookingsTo: null };
+    const out = [];
+    for (const b of d.bookings) {
+      if (!b || typeof b !== 'object') continue;
+      if (b.kind === 'away') {
+        if (DAY_RE.test(b.day || '') && Array.isArray(b.people)) out.push({ kind: 'away', day: b.day, people: b.people.filter(p => str(p, 80) && p.trim()).map(p => p.trim()) });
+        continue;
+      }
+      const j = b.job, s = b.sub;
+      if ((b.kind !== 'work' && b.kind !== 'unassigned') || !j || !s || !ID_RE.test(j.id || '') || !str(j.name, 200) || !j.name || !ID_RE.test(s.id || '')) continue;
+      if (!Array.isArray(b.days) || !Array.isArray(b.people) || !b.days.every(x => DAY_RE.test(x))) continue;
+      out.push({ kind: b.kind, status: str(b.status, 20) ? b.status : '',
+        job: { id: j.id, name: j.name, site: str(j.site, 80) ? j.site : '', postcode: str(j.postcode, 16) ? j.postcode : '', address: str(j.address, 300) ? j.address : '', wfm: str(j.wfm, 32) ? j.wfm : '' },
+        sub: { id: s.id, name: str(s.name, 200) ? s.name : '' }, days: b.days.slice(),
+        people: b.people.filter(p => p && str(p.name, 80) && p.name.trim()).map(p => (p.tag === 'flr' || p.tag === 'sub') ? { name: p.name.trim(), tag: p.tag } : { name: p.name.trim() }) });
+    }
+    return { bookings: out, bookingsFrom: d.bookingsFrom, bookingsTo: d.bookingsTo };
+  }
+
+  /* ---------------------------------------------------------------- the tabs: Month | Week (#month / #week remembers it) */
+  const TABS = ['month', 'week'];
+  let tab = 'month';
+  function setTab(t, o = {}) {
+    if (!TABS.includes(t)) t = 'month';
+    tab = t;
+    document.body.dataset.tab = t;
+    for (const b of document.querySelectorAll('.tabs [role="tab"]')) {
+      const on = b.dataset.tab === t;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      if (on && o.focus) b.focus();
+    }
+    $('#month-view').hidden = t !== 'month';
+    $('#week-view').hidden = t !== 'week';
+    if (o.hash !== false && location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
+  }
+  const hashTab = () => { const x = location.hash.replace(/^#/, ''); return TABS.includes(x) ? x : null; };
+  for (const b of document.querySelectorAll('.tabs [role="tab"]')) {
+    b.addEventListener('click', () => setTab(b.dataset.tab));
+    b.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      setTab(TABS[(TABS.indexOf(tab) + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length], { focus: true });
+    });
+  }
+  window.addEventListener('hashchange', () => { const x = hashTab(); if (x && x !== tab) setTab(x, { hash: false }); });
+  setTab(hashTab() || 'month', { hash: false });
+  if (window.FLRPlannerWeek) window.FLRPlannerWeek.init({ h, icon, battery, capLabel, closureText });
 
   $('#prev').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() - 1, 1); render(); });
   $('#next').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() + 1, 1); render(); });
@@ -210,6 +265,7 @@
     showSource();
     renderKey();
     render();
+    if (window.FLRPlannerWeek) window.FLRPlannerWeek.update(plan);
     document.body.dataset.view = 'ready';
     $('#view').hidden = false;
   }
