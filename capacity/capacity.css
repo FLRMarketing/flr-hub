@@ -373,4 +373,23 @@ body[data-tab="week"] main{max-width:1480px}
   .sh-days li{grid-template-columns:88px minmax(0,1fr)}
   .wkkey{display:flex;flex-wrap:wrap;gap:10px 18px}
 }
+/* ---------- phones: the day picker (Mon–Sun chips) above the chosen day */
+.dstrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding:6px 0 7px;border:0;border-radius:12px;
+  background-color:var(--surface);box-shadow:var(--sh-card),0 0 0 var(--hair) var(--sep);color:var(--ink);font:inherit;cursor:pointer}
+.dc.we{background-color:var(--weekend)}
+.dc.today{box-shadow:inset 0 3px 0 var(--tint-fill),0 0 0 var(--hair) var(--sep)}
+.dc.today .dl,.dc.today .dn2{color:var(--tint)}
+.dc.on{background-color:var(--tint-fill);background-image:none;box-shadow:0 2px 8px color-mix(in srgb,var(--tint-fill) 40%,transparent)}
+.dc.on .dl,.dc.on .dn2{color:var(--on-tint)}
+.dl{font:700 11px/1.2 var(--font-text);color:var(--ink-3);letter-spacing:.02em}
+.dn2{font:700 17px/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.dk{display:inline-grid;place-items:center;min-width:24px;height:16px;padding:0 4px;border-radius:999px;color:#111;font:800 10.5px/1 var(--font-num);font-variant-numeric:tabular-nums}
+.dk.over{background:var(--red);color:#fff}
+.dk.zero{background:transparent;color:var(--ink-3);box-shadow:inset 0 0 0 1.2px var(--batt-empty)}
+.dk.none{color:var(--ink-3);font-weight:600}
+.dc.on .dk.zero,.dc.on .dk.none{color:var(--on-tint);box-shadow:inset 0 0 0 1.2px color-mix(in srgb,var(--on-tint) 60%,transparent)}
+.du{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 1.5px var(--surface)}
+.wl .wld{touch-action:pan-y}
+@media (max-width:369px){.dn2{font-size:15px}.dk{min-width:20px;padding:0 2px}}
 @media (prefers-reduced-motion:no-preference){.jc{transition:background-color .15s}}

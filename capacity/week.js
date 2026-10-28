@@ -19,7 +19,7 @@
    - bank holidays, company close days and the Jeff Day hatched, with the name, as on the Month view;
    - each day's capacity badge (N/23, gold number) from the same totals as the Month view.
    Outside the loaded window the week says "No bookings loaded for this week" rather than showing empty days.
-   Phones (640px and narrower): the same week as a day-by-day list.
+   Phones (640px and narrower): a Mon–Sun day picker and the chosen day only (chips or a swipe change the day).
    CSP: no inline styles; sizes and grid places are set with element.style.
    ========================================================================== */
 (function () {
@@ -29,6 +29,7 @@
   let PLAN = null;         // the current planner_board() answer, checked
   let IDX = null;          // indexes built from PLAN
   let shownMon = null;     // the Monday of the week shown
+  let shownDay = 0;        // phones: the day of that week shown (0 = Monday)
   let miniMonth = null;    // the month shown in the mini calendar (1st of the month)
 
   /* ---------------------------------------------------------------- dates */
@@ -219,31 +220,59 @@
     return grid;
   }
 
-  /* ---------------------------------------------------------------- the week (phones): day by day */
-  function renderList(mon) {
-    const { days, cards } = cardsFor(mon);
-    const t = iso(today());
-    const list = h('div', { class: 'wl' });
-    days.forEach((d, i) => {
-      const dt = fromIso(d), cl = PLAN.closures.get(d);
-      const sec = h('section', { class: ['wld', d === t ? 'today' : '', i >= 5 ? 'we' : '', cl ? 'closed-' + cl.kind : ''].filter(Boolean).join(' '), id: 'wl-' + d });
-      sec.append(h('div', { class: 'wlh' },
-        h('h3', { class: 'wd', 'aria-label': fmtLong.format(dt) + (d === t ? ', today' : '') + '. ' + capText(d) },
-          h('span', { class: 'dnum', 'aria-hidden': 'true' }, String(dt.getDate())), h('span', { class: 'dname', 'aria-hidden': 'true' }, DOW[i] + (d === t ? ' · Today' : ''))),
-        capBadge(d)));
-      if (cl) sec.append(h('p', { class: 'cl' }, P.closureText(cl)));
-      // this day's cards: each job's people on this day only
-      const todays = cards.filter(c => c.start <= i && i < c.start + c.len).map(c => {
-        const x = c.per[i - c.start];
-        return { ...c, start: 0, len: 1, per: [x] };
-      });
-      for (const c of todays) sec.append(card(c, true));
-      if (!todays.length) sec.append(h('p', { class: 'wnone' }, 'No fitting work booked.'));
-      const a = awayLine(d);
-      if (a) sec.append(a);
-      list.append(sec);
+  /* ---------------------------------------------------------------- the week (phones): a day picker and one day */
+  // Phones show one day of the shown week at a time: a Mon–Sun strip of chips (weekday letter, date, the day's booked
+  // count in its battery colour, a gold dot when bookings still need a fitter, today marked, closed days hatched, the
+  // chosen day filled), then only that day: header, closure, Away, its job cards. Chips or a swipe change the day;
+  // ‹ › change the week. The day isn't kept in the address (#week only).
+  function dayChip(d, i, sel) {
+    const dt = fromIso(d), cl = PLAN.closures.get(d), c = PLAN.days[d], t = iso(today());
+    const b = h('button', { type: 'button', role: 'tab', class: ['dc', i === sel ? 'on' : '', d === t ? 'today' : '', i >= 5 ? 'we' : '', cl ? 'closed-' + cl.kind : ''].filter(Boolean).join(' '),
+      'aria-selected': i === sel ? 'true' : 'false', tabindex: i === sel ? '0' : '-1', 'data-i': String(i),
+      'aria-label': fmtLong.format(dt) + (d === t ? ', today' : '') + (cl ? '. FLR closed: ' + P.closureText(cl) : '') + '. ' + capText(d) },
+      h('span', { class: 'dl', 'aria-hidden': 'true' }, DOW[i][0]),
+      h('span', { class: 'dn2', 'aria-hidden': 'true' }, String(dt.getDate())));
+    if (c) {
+      const n = h('span', { class: 'dk' + (c.b > PLAN.capacity ? ' over' : c.b === 0 ? ' zero' : ''), 'aria-hidden': 'true' }, String(c.b));
+      if (c.b > 0 && c.b <= PLAN.capacity) n.style.background = P.battColour(c.b);
+      b.append(n);
+      if (c.u) b.append(h('span', { class: 'du', 'aria-hidden': 'true' }));
+    } else b.append(h('span', { class: 'dk none', 'aria-hidden': 'true' }, '–'));
+    b.addEventListener('click', () => { shownDay = i; render(); const f = document.querySelector('.dc.on'); if (f) f.focus(); });
+    b.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault(); shownDay = Math.max(0, Math.min(6, shownDay + (e.key === 'ArrowRight' ? 1 : -1))); render();
+      const f = document.querySelector('.dc.on'); if (f) f.focus();
     });
-    return list;
+    return b;
+  }
+  function renderPhone(mon) {
+    const { days, cards } = cardsFor(mon);
+    const t = iso(today()), i = shownDay, d = days[i], dt = fromIso(d), cl = PLAN.closures.get(d);
+    const strip = h('div', { class: 'dstrip', role: 'tablist', 'aria-label': 'Day' }, days.map((x, k) => dayChip(x, k, i)));
+    const sec = h('section', { class: ['wld', d === t ? 'today' : '', i >= 5 ? 'we' : '', cl ? 'closed-' + cl.kind : ''].filter(Boolean).join(' '), id: 'wl-' + d, role: 'tabpanel', 'aria-label': fmtLong.format(dt) });
+    sec.append(h('div', { class: 'wlh' },
+      h('h3', { class: 'wd', 'aria-label': fmtLong.format(dt) + (d === t ? ', today' : '') + '. ' + capText(d) },
+        h('span', { class: 'dnum', 'aria-hidden': 'true' }, String(dt.getDate())), h('span', { class: 'dname', 'aria-hidden': 'true' }, DOW[i] + (d === t ? ' · Today' : ''))),
+      capBadge(d)));
+    if (cl) sec.append(h('p', { class: 'cl' }, P.closureText(cl)));
+    const a = awayLine(d);
+    if (a) sec.append(a);
+    // this day's cards: each job's people on this day only
+    const todays = cards.filter(c => c.start <= i && i < c.start + c.len).map(c => ({ ...c, start: 0, len: 1, per: [c.per[i - c.start]] }));
+    for (const c of todays) sec.append(card(c, true));
+    if (!todays.length) sec.append(h('p', { class: 'wnone' }, 'No fitting work booked.'));
+    // a swipe left / right: the next / previous day of this week
+    let x0 = null, y0 = null;
+    sec.addEventListener('touchstart', e => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive: true });
+    sec.addEventListener('touchend', e => {
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      const n = Math.max(0, Math.min(6, shownDay + (dx < 0 ? 1 : -1)));
+      if (n !== shownDay) { shownDay = n; render(); }
+    });
+    return h('div', { class: 'wl' }, strip, sec);
   }
 
   /* ---------------------------------------------------------------- the mini calendar (wide screens) */
@@ -333,7 +362,7 @@
       box.replaceChildren(h('div', { class: 'wmsg' }, h('h3', null, 'No bookings loaded for this week'),
         h('p', null, `The Planner keeps bookings from ${fmtWindow.format(fromIso(PLAN.bookingsFrom))} to ${fmtWindow.format(fromIso(PLAN.bookingsTo))}.`), back));
     } else {
-      box.replaceChildren(narrow.matches ? renderList(shownMon) : renderGrid(shownMon));
+      box.replaceChildren(narrow.matches ? renderPhone(shownMon) : renderGrid(shownMon));
     }
     const minMon = PLAN.bookingsFrom ? addDays(fromIso(PLAN.bookingsFrom), -7) : null, maxMon = PLAN.bookingsTo ? addDays(mondayOf(fromIso(PLAN.bookingsTo)), 7) : null;
     $('#wk-prev').disabled = !!minMon && shownMon <= minMon;
@@ -342,6 +371,8 @@
   }
   function go(mon) {
     shownMon = mon;
+    const ti = Math.round((today() - mon) / 864e5);   // phones open on today when it's in this week, else Monday
+    shownDay = ti >= 0 && ti <= 6 ? ti : 0;
     if (!miniMonth || mon.getMonth() !== miniMonth.getMonth() && addDays(mon, 6).getMonth() !== miniMonth.getMonth()) miniMonth = new Date(mon.getFullYear(), mon.getMonth(), 1);
     render();
   }

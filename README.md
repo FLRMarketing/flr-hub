@@ -243,7 +243,10 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   placeholder, or only leavers from today: build.py's rule); an "Away" line per day with names only (leave, sickness,
   appointments, training and Not Working all just "away"; more than six names show five and "+N more"); closed days
   hatched with the name. Tap a card: a dialog with the job name, full site address, WFM number and every loaded day with
-  fitters and status. Phones (≤640px): a day-by-day list. Data: `planner_board()` also returns `bookings`,
+  fitters and status. Phones (≤640px): a Mon–Sun day picker (weekday letter, date, the day's booked count in its
+  battery colour, a gold dot for bookings needing a fitter, today marked, closed days hatched) and only the chosen day
+  (header and badge, closure, Away, its cards); it opens on today in this week, else Monday; chips or a swipe change
+  the day, ‹ › the week; the day isn't kept in the address. Data: `planner_board()` also returns `bookings`,
   `bookingsFrom`, `bookingsTo` (4 weeks back to 16 weeks ahead, whole weeks; still `require_app('capacity')`); a week
   outside that says "No bookings loaded for this week". `planner_save()` checks the bookings strictly (see the
   migration). Names shown as the Fitter Schedule does: "Ben Smith - K4" → Ben Smith; ZFLR / ZSub prefixes removed with a

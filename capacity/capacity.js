@@ -246,7 +246,7 @@
   }
   window.addEventListener('hashchange', () => { const x = hashTab(); if (x && x !== tab) setTab(x, { hash: false }); });
   setTab(hashTab() || 'month', { hash: false });
-  if (window.FLRPlannerWeek) window.FLRPlannerWeek.init({ h, icon, battery, capLabel, closureText });
+  if (window.FLRPlannerWeek) window.FLRPlannerWeek.init({ h, icon, battery, battColour, capLabel, closureText });
 
   $('#prev').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() - 1, 1); render(); });
   $('#next').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() + 1, 1); render(); });
