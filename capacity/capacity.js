@@ -124,6 +124,7 @@
   let shown = new Date(today.getFullYear(), today.getMonth(), 1);
 
   /* ---------- the month ---------- */
+  let monthMove = '';   // 'enter' when the person changed month (a quiet refresh doesn't animate)
   function render() {
     const first = new Date(shown.getFullYear(), shown.getMonth(), 1);
     const last = new Date(shown.getFullYear(), shown.getMonth() + 1, 0);
@@ -144,7 +145,11 @@
         h('span', { class: 'dn', 'aria-hidden': 'true' }, String(d.getDate())),
         cl ? h('span', { class: 'closure', 'aria-hidden': 'true' }, h('span', { class: 'ct' }, cl.name)) : null, body));
     }
-    $('#cal').replaceChildren(...cells);
+    const cal = $('#cal');
+    cal.replaceChildren(...cells);
+    cal.classList.remove('enter');
+    if (monthMove) { void cal.offsetWidth; cal.classList.add('enter'); }
+    monthMove = '';
   }
 
   function renderKey() {
@@ -231,8 +236,11 @@
       b.tabIndex = on ? 0 : -1;
       if (on && o.focus) b.focus();
     }
+    const was = $('#month-view').hidden ? 'week' : 'month';
     $('#month-view').hidden = t !== 'month';
     $('#week-view').hidden = t !== 'week';
+    const shownView = $('#' + t + '-view');
+    if (o.hash !== false && was !== t) { shownView.classList.remove('enter'); void shownView.offsetWidth; shownView.classList.add('enter'); }
     if (o.hash !== false && location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
   }
   const hashTab = () => { const x = location.hash.replace(/^#/, ''); return TABS.includes(x) ? x : null; };
@@ -246,11 +254,18 @@
   }
   window.addEventListener('hashchange', () => { const x = hashTab(); if (x && x !== tab) setTab(x, { hash: false }); });
   setTab(hashTab() || 'month', { hash: false });
-  if (window.FLRPlannerWeek) window.FLRPlannerWeek.init({ h, icon, battery, battColour, capLabel, closureText });
+  // Planner 1.5: the faces and van plates of the people named (week.js asks once per name; any error = initials)
+  async function photos(names) {
+    const { data, error } = await client().rpc('planner_photos', { p_names: names });
+    if (error) throw error;
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  }
+  if (window.FLRPlannerWeek) window.FLRPlannerWeek.init({ h, icon, battery, battColour, capLabel, closureText, photos });
 
-  $('#prev').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() - 1, 1); render(); });
-  $('#next').addEventListener('click', () => { shown = new Date(shown.getFullYear(), shown.getMonth() + 1, 1); render(); });
-  $('#thisMonth').addEventListener('click', () => { shown = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
+  const goMonth = m => { if (+m !== +shown) monthMove = 'enter'; shown = m; render(); };
+  $('#prev').addEventListener('click', () => goMonth(new Date(shown.getFullYear(), shown.getMonth() - 1, 1)));
+  $('#next').addEventListener('click', () => goMonth(new Date(shown.getFullYear(), shown.getMonth() + 1, 1)));
+  $('#thisMonth').addEventListener('click', () => goMonth(new Date(today.getFullYear(), today.getMonth(), 1)));
 
   /* ================================================================ the Hub: signed in, and the Planner is theirs */
   function gate(title, text, o = {}) {

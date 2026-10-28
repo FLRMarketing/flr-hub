@@ -2161,7 +2161,7 @@
         "job cards",
         "week"
       ],
-      "answer": "Open the Planner and choose Week at the top (Month is the capacity calendar). It shows Monday to Sunday like Outlook: each job is a card across its booked days, with the site and everyone on it that week (tap it for who is there each day). Gold cards still need a fitter; the Away line lists who is off. Tap a card for the address, WFM number and every booked day. Use Today, the arrows or the small calendar.",
+      "answer": "Open the Planner and choose Week at the top (Month is the capacity calendar). It shows Monday to Sunday like Outlook: each job is a card across its booked days, with the site and everyone on it that week (tap it for who is there each day). Gold cards still need a fitter; the Away line lists who is off. Each person shows with their photo (or initials). Tap a card for the address, WFM number, the van each fitter drives and every booked day. Use Today, the arrows or the small calendar.",
       "link": {
         "tile": "capacity",
         "label": "Open the Planner"

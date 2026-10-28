@@ -20,7 +20,12 @@
    - each day's capacity badge (N/23, gold number) from the same totals as the Month view.
    Outside the loaded window the week says "No bookings loaded for this week" rather than showing empty days.
    Phones (640px and narrower): a Mon–Sun day picker and the chosen day only (chips or a swipe change the day).
-   CSP: no inline styles; sizes and grid places are set with element.style.
+   Faces (Planner 1.5): each person shows as a round photo, else their initials in a tinted circle. The photos and van
+   plates come from planner_photos(names) (Estimator repo 20261028200000_flr_planner_faces.sql: the Annual Leave staff
+   photo, else Fleet Management's, as the Order Tracker; the plate of the van FleetView has them driving most, as the
+   Fitter Schedule), asked once per name for the people in the week shown and kept in memory for this page only. The
+   week draws straight away with initials and the faces fade in when they arrive; if the ask fails, initials stay.
+   CSP: no inline styles; sizes, grid places and avatar tints are set with element.style.
    ========================================================================== */
 (function () {
   'use strict';
@@ -113,13 +118,87 @@
     return { days, cards, lanes: lanes.length };
   }
 
+  /* ---------------------------------------------------------------- faces (Planner 1.5) */
+  // name -> { photo: data URL or '', plate: 'K4 FLR' or '' } | null (asked: no photo and no plate, or the ask failed)
+  const FACES = new Map(), ASKED = new Set();
+  const PHOTO_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/, PLATE_RE = /^[A-Z0-9 ]{2,10}$/;
+  function faceFrom(x) {
+    if (!x || typeof x !== 'object') return null;
+    const photo = typeof x.photo === 'string' && x.photo.length <= 400000 && PHOTO_RE.test(x.photo) ? x.photo : '';
+    const plate = typeof x.plate === 'string' && PLATE_RE.test(x.plate.trim().toUpperCase()) ? x.plate.trim().toUpperCase() : '';
+    return photo || plate ? { photo, plate } : null;
+  }
+  const ASK_MAX = 80;   // planner_photos() takes up to 80 names at a time
+  function wantFaces(list) {
+    if (!P.photos) return;
+    const need = [...new Set(list)].filter(n => n && !ASKED.has(n));
+    for (let i = 0; i < need.length; i += ASK_MAX) {
+      const part = need.slice(i, i + ASK_MAX);
+      part.forEach(n => ASKED.add(n));
+      Promise.resolve().then(() => P.photos(part)).then(m => {
+        for (const n of part) FACES.set(n, faceFrom(m && typeof m === 'object' ? m[n] : null));
+        paintFaces();
+      }, () => { for (const n of part) FACES.set(n, null); });   // initials stay; asked again only after a reload
+    }
+  }
+  const initials = n => { const w = n.replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter(Boolean); return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase(); };
+  // a calm, steady tint per person (the same name always gets the same one)
+  const HUES = [232, 212, 188, 162, 268, 300, 24, 42];
+  const hueOf = n => { let x = 0; for (const c of n) x = (x * 31 + c.charCodeAt(0)) >>> 0; return HUES[x % HUES.length]; };
+  function photoInto(el, src) {
+    if (el.querySelector('img')) return;
+    const img = h('img', { alt: '', src, decoding: 'async', draggable: 'false' });
+    if (img.complete) img.classList.add('in'); else img.addEventListener('load', () => img.classList.add('in'), { once: true });
+    img.addEventListener('error', () => img.remove(), { once: true });
+    el.append(img);
+  }
+  // A round face: the photo, else initials on the person's tint. Screen readers hear the names elsewhere.
+  function avatar(name, cls = '') {
+    const el = h('span', { class: 'av' + (cls ? ' ' + cls : ''), 'data-face': name, 'aria-hidden': 'true' }, h('span', { class: 'ini' }, initials(name)));
+    el.style.setProperty('--h', String(hueOf(name)));
+    const f = FACES.get(name);
+    if (f && f.photo) photoInto(el, f.photo);
+    el.title = f && f.plate ? `${name} · ${f.plate}` : name;
+    return el;
+  }
+  // A few faces overlapping, then "+N" for the rest
+  function stack(list, max, cls = '') {
+    const shown = list.length > max ? list.slice(0, max - 1) : list;
+    const s = h('span', { class: 'avs' + (cls ? ' ' + cls : ''), 'aria-hidden': 'true' }, shown.map(n => avatar(n)));
+    if (list.length > shown.length) s.append(h('span', { class: 'av more', title: list.slice(shown.length).join(', ') }, '+' + (list.length - shown.length)));
+    return s;
+  }
+  // A UK number plate, as Fleet Management and the Fitter Schedule show them
+  const plateEl = name => { const f = FACES.get(name); return h('span', { class: 'plate', 'data-plate': name, hidden: !(f && f.plate), title: 'Van (from Fleet Management)' }, f && f.plate ? f.plate : ''); };
+  function paintFaces() {
+    for (const el of document.querySelectorAll('.av[data-face]')) {
+      const n = el.dataset.face, f = FACES.get(n);
+      if (!f) continue;
+      if (f.photo) photoInto(el, f.photo);
+      el.title = f.plate ? `${n} · ${f.plate}` : n;
+    }
+    for (const el of document.querySelectorAll('.plate[data-plate]')) {
+      const f = FACES.get(el.dataset.plate);
+      if (f && f.plate) { el.textContent = f.plate; el.hidden = false; }
+    }
+  }
+
   /* ---------------------------------------------------------------- pieces */
   const h = (...a) => P.h(...a);
+  const tagText = t => t === 'flr' ? 'FLR staff' : 'Sub';
   function chip(p, tbc) {
-    return h('span', { class: 'chip' + (p.tag ? ' t-' + p.tag : '') }, h('span', { class: 'cn' }, p.name),
-      p.tag ? h('span', { class: 'tg', title: p.tag === 'flr' ? 'FLR staff' : 'Subcontractor' }, p.tag === 'flr' ? 'FLR staff' : 'Sub') : null,
+    return h('span', { class: 'chip' + (p.tag ? ' t-' + p.tag : '') }, avatar(p.name, 'xs'), h('span', { class: 'cn' }, p.name),
+      p.tag ? h('span', { class: 'tg', title: p.tag === 'flr' ? 'FLR staff' : 'Subcontractor' }, tagText(p.tag)) : null,
       tbc ? h('span', { class: 'tb', title: 'To be confirmed' }, 'TBC') : null);
   }
+  // A card's people: their faces overlapping, then every name once (with FLR staff / Sub / TBC tags)
+  function people(ps, max) {
+    return h('span', { class: 'pp' }, stack(ps.map(p => p.name), max),
+      h('span', { class: 'pn' }, ps.map(p => h('span', { class: 'pnm' }, h('span', { class: 'cn' }, p.name),
+        p.tag ? h('span', { class: 'tg', title: p.tag === 'flr' ? 'FLR staff' : 'Subcontractor' }, tagText(p.tag)) : null,
+        p.tbc ? h('span', { class: 'tb', title: 'To be confirmed' }, 'TBC') : null))));
+  }
+  const pinIcon = () => P.icon('i-pin', 'pin');
   // Everyone on a card's days, each once (in the order first booked), and whether ALL of that person's bookings on the
   // card are TBC. The card itself is dashed when every booking on it is TBC; otherwise only those people's chips say TBC.
   function crew(c) {
@@ -149,15 +228,17 @@
     const btn = h('button', { type: 'button', class: ['jc', need ? 'need' : '', tbc ? 'tbc' : ''].filter(Boolean).join(' '), 'aria-label': cardLabel(c), 'data-job': j.id });
     if (need) {
       const n = Math.max(...c.per.map(x => x.n));
-      btn.append(h('span', { class: 'jk' }, 'Needs a fitter' + (n > 1 ? ` ×${n}` : '')));
+      btn.append(h('span', { class: 'jk' }, h('span', { class: 'av open', 'aria-hidden': 'true' }, P.icon('i-person', 'pi')), h('span', null, 'Needs a fitter' + (n > 1 ? ` ×${n}` : ''))));
     }
     btn.append(h('span', { class: 'jn' }, j.name));
     const site = siteLine(j);
-    if (site) btn.append(h('span', { class: 'js' }, site));
+    if (site) btn.append(h('span', { class: 'js' }, pinIcon(), h('span', null, site)));
     if (!need) {
       // everyone on the job this week, once (on phones the card is one day, so that day's fitters); day by day is in the details
-      btn.append(h('span', { class: 'pp' }, crew(c).map(p => chip(p, !tbc && p.tbc))));
+      const ps = crew(c).map(p => ({ ...p, tbc: !tbc && p.tbc }));
+      btn.append(people(ps, phone ? 6 : c.len > 1 ? 6 : 4));
     }
+    if (tbc) btn.append(h('span', { class: 'jt' }, 'TBC'));
     btn.addEventListener('click', () => openSheet(j.id, btn));
     return btn;
   }
@@ -173,12 +254,14 @@
   function awayLine(d) {
     const ps = IDX.away.get(d);
     if (!ps || !ps.length) return null;
-    const p = h('p', { class: 'away' }, h('span', { class: 'al' }, 'Away'), ' ');
-    if (ps.length <= AWAY_SHOWN + 1) { p.append(ps.join(', ')); return p; }
+    const p = h('p', { class: 'away' }, h('span', { class: 'ah' }, h('span', { class: 'al' }, 'Away'), stack(ps, 5, 'sm')), ' ');
+    const txt = h('span', { class: 'an' });
+    p.append(txt);
+    if (ps.length <= AWAY_SHOWN + 1) { txt.append(ps.join(', ')); return p; }
     const rest = h('span', { class: 'more', hidden: true }, ', ' + ps.slice(AWAY_SHOWN).join(', '));
     const btn = h('button', { type: 'button', class: 'morebtn', 'aria-expanded': 'false', 'aria-label': `Show all ${ps.length} people away` }, `+${ps.length - AWAY_SHOWN} more`);
     btn.addEventListener('click', () => { rest.hidden = false; btn.remove(); });
-    p.append(ps.slice(0, AWAY_SHOWN).join(', '), rest, ' ', btn);
+    txt.append(ps.slice(0, AWAY_SHOWN).join(', '), rest, ' ', btn);
     return p;
   }
 
@@ -201,7 +284,7 @@
       const dt = fromIso(d), cl = PLAN.closures.get(d);
       const head = h('div', { class: ['wh', d === t ? 'today' : '', i >= 5 ? 'we' : '', cl ? 'closed-' + cl.kind : ''].filter(Boolean).join(' ') },
         h('h3', { class: 'wd', 'aria-label': fmtLong.format(dt) + (d === t ? ', today' : '') + (cl ? '. FLR closed: ' + P.closureText(cl) : '') + '. ' + capText(d) },
-          h('span', { class: 'dnum', 'aria-hidden': 'true' }, String(dt.getDate())), h('span', { class: 'dname', 'aria-hidden': 'true' }, DOW[i])),
+          h('span', { class: 'dname', 'aria-hidden': 'true' }, DOW[i]), h('span', { class: 'dnum', 'aria-hidden': 'true' }, String(dt.getDate()))),
         capBadge(d),
         cl ? h('span', { class: 'cl', 'aria-hidden': 'true' }, cl.name) : null);
       head.style.gridColumn = String(i + 1); head.style.gridRow = '1';
@@ -244,10 +327,10 @@
       b.append(n);
       if (c.u) b.append(h('span', { class: 'du', 'aria-hidden': 'true' }));
     } else b.append(h('span', { class: 'dk none', 'aria-hidden': 'true' }, '–'));
-    b.addEventListener('click', () => { shownDay = i; render(); const f = document.querySelector('.dc.on'); if (f) f.focus(); });
+    b.addEventListener('click', () => { if (shownDay !== i) moving = 'enter-day'; shownDay = i; render(); const f = document.querySelector('.dc.on'); if (f) f.focus(); });
     b.addEventListener('keydown', e => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-      e.preventDefault(); shownDay = Math.max(0, Math.min(6, shownDay + (e.key === 'ArrowRight' ? 1 : -1))); render();
+      e.preventDefault(); moving = 'enter-day'; shownDay = Math.max(0, Math.min(6, shownDay + (e.key === 'ArrowRight' ? 1 : -1))); render();
       const f = document.querySelector('.dc.on'); if (f) f.focus();
     });
     return b;
@@ -276,7 +359,7 @@
       const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
       if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
       const n = Math.max(0, Math.min(6, shownDay + (dx < 0 ? 1 : -1)));
-      if (n !== shownDay) { shownDay = n; render(); }
+      if (n !== shownDay) { moving = 'enter-day'; shownDay = n; render(); }
     });
     return h('div', { class: 'wl' }, strip, sec);
   }
@@ -322,12 +405,21 @@
     if (!j || !dlg) return;
     const job = j.job;
     const all = [...new Set([...j.days.keys(), ...j.need.keys()])].sort();
-    const body = [h('h2', { class: 'sh-t', id: 'sheet-title' }, job.name)];
+    const body = [h('p', { class: 'sh-e' }, 'Job'), h('h2', { class: 'sh-t', id: 'sheet-title' }, job.name)];
     const addr = [job.address, job.postcode && !job.address.toUpperCase().includes(job.postcode.toUpperCase()) ? job.postcode : ''].filter(Boolean).join(', ');
     const facts = h('dl', { class: 'sh-f' },
       h('dt', null, 'Site'), h('dd', null, addr || 'No address on the Work Programme'),
-      h('dt', null, 'WFM'), h('dd', null, job.wfm || '—'));
+      h('dt', null, 'WFM'), h('dd', null, job.wfm ? h('span', { class: 'wfm' }, job.wfm) : '—'));
     body.push(facts);
+    // Everyone booked on it in the loaded days, once, with the van they drive (Fleet Management) when known
+    const team = new Map();
+    for (const d of all) { const x = j.days.get(d); if (x) for (const p of x.people) if (!team.has(p.name)) team.set(p.name, p); }
+    if (team.size) {
+      body.push(h('h3', { class: 'sh-h' }, team.size === 1 ? 'Fitter' : `Team (${team.size})`));
+      body.push(h('ul', { class: 'sh-team' }, [...team.values()].map(p => h('li', null, avatar(p.name, 'lg'),
+        h('span', { class: 'tn' }, h('span', { class: 'cn' }, p.name), p.tag ? h('span', { class: 'tg' }, p.tag === 'flr' ? 'FLR staff' : 'Subcontractor') : null),
+        plateEl(p.name)))));
+    }
     body.push(h('h3', { class: 'sh-h' }, all.length === 1 ? 'Booked day' : `Booked days (${all.length})`));
     const ul = h('ul', { class: 'sh-days' });
     const wk = new Set(Array.from({ length: 7 }, (_, i) => iso(addDays(shownMon, i))));
@@ -343,9 +435,10 @@
     }
     body.push(ul);
     body.push(h('p', { class: 'sh-n' }, `Days from ${fmtWindow.format(fromIso(PLAN.bookingsFrom))} to ${fmtWindow.format(fromIso(PLAN.bookingsTo))}, from the Monday Work Programme.`));
-    const close = h('button', { type: 'button', class: 'sh-x', 'aria-label': 'Close' }, '×');
+    const close = h('button', { type: 'button', class: 'sh-x', 'aria-label': 'Close' }, P.icon('i-x'));
     close.addEventListener('click', () => dlg.close());
-    dlg.replaceChildren(h('div', { class: 'sh-in' }, close, body));
+    dlg.replaceChildren(h('div', { class: 'sh-grab', 'aria-hidden': 'true' }), h('div', { class: 'sh-in' }, close, body));
+    wantFaces([...team.keys()]);
     dlg.setAttribute('aria-labelledby', 'sheet-title');
     dlg.returnTo = from;
     if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
@@ -368,14 +461,27 @@
       box.replaceChildren(h('div', { class: 'wmsg' }, h('h3', null, 'No bookings loaded for this week'),
         h('p', null, `The Planner keeps bookings from ${fmtWindow.format(fromIso(PLAN.bookingsFrom))} to ${fmtWindow.format(fromIso(PLAN.bookingsTo))}.`), back));
     } else {
-      box.replaceChildren(narrow.matches ? renderPhone(shownMon) : renderGrid(shownMon));
+      const view = narrow.matches ? renderPhone(shownMon) : renderGrid(shownMon);
+      if (moving) view.classList.add(moving);
+      box.replaceChildren(view);
+      wantFaces(weekNames(shownMon));
     }
+    moving = '';
     const minMon = PLAN.bookingsFrom ? addDays(fromIso(PLAN.bookingsFrom), -7) : null, maxMon = PLAN.bookingsTo ? addDays(mondayOf(fromIso(PLAN.bookingsTo)), 7) : null;
     $('#wk-prev').disabled = !!minMon && shownMon <= minMon;
     $('#wk-next').disabled = !!maxMon && shownMon >= maxMon;
     renderMini();
   }
+  // the people in the week shown (cards and Away), for their faces
+  function weekNames(mon) {
+    const out = [];
+    for (let i = 0; i < 7; i++) { const d = iso(addDays(mon, i)); for (const p of IDX.away.get(d) || []) out.push(p); }
+    for (const j of IDX.jobs.values()) for (let i = 0; i < 7; i++) { const x = j.days.get(iso(addDays(mon, i))); if (x) for (const p of x.people) out.push(p.name); }
+    return out;
+  }
+  let moving = '';   // how the next render arrives: 'enter' (a new week), 'enter-day' (another day on phones); '' = a quiet refresh
   function go(mon) {
+    moving = shownMon && +mon === +shownMon ? '' : 'enter';
     shownMon = mon;
     const ti = Math.round((today() - mon) / 864e5);   // phones open on today when it's in this week, else Monday
     shownDay = ti >= 0 && ti <= 6 ? ti : 0;
@@ -392,7 +498,10 @@
       $('#wk-next').addEventListener('click', () => go(addDays(shownMon, 7)));
       narrow.addEventListener('change', render);
       const dlg = $('#sheet');
-      if (dlg) dlg.addEventListener('close', () => { const r = dlg.returnTo; dlg.returnTo = null; if (r && r.isConnected) r.focus(); });
+      if (dlg) {
+        dlg.addEventListener('close', () => { const r = dlg.returnTo; dlg.returnTo = null; if (r && r.isConnected) r.focus(); });
+        dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });   // a tap on the dimmed page closes it
+      }
     },
     // every good planner_board() answer (first load and the 5-minute refresh): the week shown stays
     update(plan) {
