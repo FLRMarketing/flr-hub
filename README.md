@@ -238,8 +238,9 @@ those requirements (`private.onb_rules`, which Super Admins can change in Setup)
   week number pill; day headers with the date, weekday, the day's capacity badge (as the Month view) and today marked
   with a blue rule and tint; on screens 1200px and wider a mini month calendar with ISO week numbers (click a date to jump).
   Each job (grouped by the Work Programme parent item ID only, never by name) is a card across its booked days in lanes
-  that never overlap; a gap in its days starts a new card; the fitters show once, or day by day inside the card when
-  they change. All-TBC = dashed card (Outlook "tentative"), else solid; gold "Needs a fitter" cards (no fitter, the
+  that never overlap; a gap in its days starts a new card; everyone on it that week is listed once as name chips (day
+  by day is in the details). All-TBC = dashed card (Outlook "tentative"), else solid, with a small TBC tag on the
+  people whose bookings on the card are all TBC; gold "Needs a fitter" cards (no fitter, the
   placeholder, or only leavers from today: build.py's rule); an "Away" line per day with names only (leave, sickness,
   appointments, training and Not Working all just "away"; more than six names show five and "+N more"); closed days
   hatched with the name. Tap a card: a dialog with the job name, full site address, WFM number and every loaded day with

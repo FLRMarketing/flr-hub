@@ -12,8 +12,8 @@
    What the week shows:
    - each job (one Work Programme item: grouped by its item ID only, never by name) as a card across the days it is
      booked that week; a gap in its days starts a new card, so a card never covers a day nobody is booked. The fitters
-     are shown once when the same every day, else day by day inside the card. All-TBC days: dashed (Outlook's
-     "tentative"); Scheduled: solid. Tap a card for its details (address, WFM, every loaded day with who and status);
+     on it that week are listed once (on phones: that day's). All bookings TBC: dashed (Outlook's "tentative"), else
+     solid, with a small TBC tag on the people whose bookings on the card are all TBC. Tap a card for its details (address, WFM, every loaded day with who and status);
    - bookings with no fitter: gold "Needs a fitter" cards (no fitter, the "FLR Fitter TBC" placeholder, or only leavers);
    - an "Away" line per day with names only (leave, sickness, appointments, training, Not Working: never which);
    - bank holidays, company close days and the Jeff Day hatched, with the name, as on the Month view;
@@ -73,8 +73,11 @@
       for (const d of b.days) {
         if (b.kind === 'unassigned') { const n = j.need.get(d) || { n: 0, statuses: new Set(), subs: [] }; n.n++; n.statuses.add(b.status); n.subs.push(b.sub); j.need.set(d, n); continue; }
         let x = j.days.get(d);
-        if (!x) j.days.set(d, x = { people: [], names: new Set(), statuses: new Set(), subs: [] });
-        for (const p of b.people) if (!x.names.has(p.name)) { x.names.add(p.name); x.people.push(p); }
+        if (!x) j.days.set(d, x = { people: [], names: new Set(), statuses: new Set(), subs: [], pst: new Map() });
+        for (const p of b.people) {
+          if (!x.names.has(p.name)) { x.names.add(p.name); x.people.push(p); }
+          let st = x.pst.get(p.name); if (!st) x.pst.set(p.name, st = new Set()); st.add(b.status);   // each person's statuses that day
+        }
         x.statuses.add(b.status); x.subs.push(b.sub);
       }
     }
@@ -82,7 +85,6 @@
   }
   const loaded = mon => !!(PLAN && PLAN.bookingsFrom && PLAN.bookingsTo && iso(mon) >= PLAN.bookingsFrom && iso(addDays(mon, 6)) <= PLAN.bookingsTo);
   const allTbc = statuses => statuses.size > 0 && [...statuses].every(s => s === 'TBC');
-  const peopleKey = ps => ps.map(p => p.name + '|' + (p.tag || '')).sort().join(',');
 
   // The week's cards: runs of consecutive booked days per job (work), and per job (needs a fitter).
   function cardsFor(mon) {
@@ -113,9 +115,20 @@
 
   /* ---------------------------------------------------------------- pieces */
   const h = (...a) => P.h(...a);
-  function chip(p) {
+  function chip(p, tbc) {
     return h('span', { class: 'chip' + (p.tag ? ' t-' + p.tag : '') }, h('span', { class: 'cn' }, p.name),
-      p.tag ? h('span', { class: 'tg', title: p.tag === 'flr' ? 'FLR staff' : 'Subcontractor' }, p.tag === 'flr' ? 'FLR staff' : 'Sub') : null);
+      p.tag ? h('span', { class: 'tg', title: p.tag === 'flr' ? 'FLR staff' : 'Subcontractor' }, p.tag === 'flr' ? 'FLR staff' : 'Sub') : null,
+      tbc ? h('span', { class: 'tb', title: 'To be confirmed' }, 'TBC') : null);
+  }
+  // Everyone on a card's days, each once (in the order first booked), and whether ALL of that person's bookings on the
+  // card are TBC. The card itself is dashed when every booking on it is TBC; otherwise only those people's chips say TBC.
+  function crew(c) {
+    const out = new Map();
+    for (const x of c.per) for (const p of x.people) {
+      let e = out.get(p.name); if (!e) out.set(p.name, e = { p, st: new Set() });
+      for (const s of (x.pst && x.pst.get(p.name)) || x.statuses) e.st.add(s);
+    }
+    return [...out.values()].map(e => ({ ...e.p, tbc: allTbc(e.st) }));
   }
   // "Moseley · B13 8RD"; the postcode once when the site already ends with it
   const siteLine = job => [job.site, job.postcode && !job.site.toUpperCase().includes(job.postcode.toUpperCase()) ? job.postcode : ''].filter(Boolean).join(' · ');
@@ -125,9 +138,9 @@
     const when = c.len === 1 ? fmtLong.format(first) : `${fmtShort.format(first)} to ${fmtShort.format(last)}`;
     const site = siteLine(c.job.job);
     if (c.kind === 'need') return `Needs a fitter: ${c.job.job.name}${site ? ', ' + site : ''}. ${when}. Open the details`;
-    const same = c.per.every(x => peopleKey(x.people) === peopleKey(c.per[0].people));
-    const who = same ? names(c.per[0].people) : c.per.map(x => `${fmtShort.format(fromIso(x.day))}: ${names(x.people)}`).join('; ');
-    const tbc = c.per.every(x => allTbc(x.statuses)) ? ' To be confirmed (TBC).' : c.per.some(x => allTbc(x.statuses)) ? ' Some days TBC.' : '';
+    const ps = crew(c), all = c.per.every(x => allTbc(x.statuses));
+    const who = names(ps), some = ps.filter(p => p.tbc);
+    const tbc = all ? ' To be confirmed (TBC).' : some.length ? ` TBC: ${some.map(p => p.name).join(', ')}.` : '';
     return `${c.job.job.name}${site ? ', ' + site : ''}. ${when}. ${who}.${tbc} Open the details`;
   }
   function card(c, phone) {
@@ -142,15 +155,8 @@
     const site = siteLine(j);
     if (site) btn.append(h('span', { class: 'js' }, site));
     if (!need) {
-      const same = c.per.every(x => peopleKey(x.people) === peopleKey(c.per[0].people));
-      if (same || phone) {
-        btn.append(h('span', { class: 'pp' }, c.per[0].people.map(chip), tbc ? null : c.per.some(x => allTbc(x.statuses)) ? h('span', { class: 'tb' }, 'TBC') : null));
-      } else {
-        const split = h('span', { class: 'split' });
-        split.style.gridTemplateColumns = `repeat(${c.len}, minmax(0, 1fr))`;
-        for (const x of c.per) split.append(h('span', { class: 'pp' }, x.people.map(chip), !tbc && allTbc(x.statuses) ? h('span', { class: 'tb' }, 'TBC') : null));
-        btn.append(split);
-      }
+      // everyone on the job this week, once (on phones the card is one day, so that day's fitters); day by day is in the details
+      btn.append(h('span', { class: 'pp' }, crew(c).map(p => chip(p, !tbc && p.tbc))));
     }
     btn.addEventListener('click', () => openSheet(j.id, btn));
     return btn;
