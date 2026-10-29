@@ -475,7 +475,7 @@
  },
  {
   "q": "how do I contact IT",
-  "expect": null
+  "expect": "about-maintenance"
  },
  {
   "q": "timesheet",
@@ -704,5 +704,21 @@
  {
   "q": "why are there no vans on nearby",
   "expect": "proximity-access"
+ },
+ {
+  "q": "the printer on the first floor is broken",
+  "expect": "about-maintenance"
+ },
+ {
+  "q": "how do I report a broken cupboard",
+  "expect": "about-maintenance"
+ },
+ {
+  "q": "they asked me for more information about my report",
+  "expect": "maintenance-progress"
+ },
+ {
+  "q": "who can see my maintenance report",
+  "expect": "maintenance-handling"
  }
 ]

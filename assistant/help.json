@@ -2507,6 +2507,116 @@
         "about-surveyors",
         "surveyors-missing"
       ]
+    },
+    {
+      "id": "about-maintenance",
+      "tool": "maintenance",
+      "title": "About Maintenance",
+      "ask": [
+        "how do I report a problem",
+        "report a fault",
+        "something is broken in the office",
+        "the printer isn't working",
+        "how do I contact IT",
+        "report an IT problem",
+        "the hub isn't working",
+        "a hub page won't load",
+        "who do I tell about a broken",
+        "report something broken",
+        "what is maintenance",
+        "how do I report an issue",
+        "the printer is broken",
+        "something in the office is broken"
+      ],
+      "keys": [
+        "maintenance",
+        "report",
+        "problem",
+        "fault",
+        "broken",
+        "issue",
+        "IT",
+        "printer",
+        "facilities",
+        "equipment",
+        "repair",
+        "not working"
+      ],
+      "answer": "Maintenance is where you report office problems, IT and equipment faults, and problems with the Hub. Tap Report an issue, choose what it’s about, give it a title, say what’s wrong and how much it’s affecting you, and add up to 3 photos if they help. It goes in under your Hub name. My reports shows each one’s progress; Known issues lists shared problems already being handled.",
+      "link": {
+        "tile": "maintenance",
+        "label": "Open Maintenance"
+      },
+      "related": [
+        "maintenance-progress",
+        "maintenance-handling"
+      ]
+    },
+    {
+      "id": "maintenance-progress",
+      "tool": "maintenance",
+      "title": "Report statuses and replies",
+      "ask": [
+        "what does waiting for information mean",
+        "how do I reply to a maintenance report",
+        "they asked me for more information",
+        "what does submitted mean",
+        "is my report being looked at",
+        "my problem came back",
+        "reply needed"
+      ],
+      "keys": [
+        "status",
+        "submitted",
+        "in progress",
+        "waiting for information",
+        "resolved",
+        "reply",
+        "reply needed",
+        "update",
+        "maintenance"
+      ],
+      "answer": "Each report shows Submitted, In progress, Waiting for information or Resolved. Waiting for information means the person handling it has asked you something: open the report, read the question under Updates and reply there, with photos if they help. It then goes back to In progress. If a resolved problem comes back, report it again.",
+      "link": {
+        "tile": "maintenance",
+        "label": "Open Maintenance"
+      },
+      "related": [
+        "about-maintenance"
+      ]
+    },
+    {
+      "id": "maintenance-handling",
+      "tool": "maintenance",
+      "title": "Who sees and handles reports",
+      "ask": [
+        "who sees my maintenance report",
+        "who handles maintenance reports",
+        "how do I handle a report",
+        "add someone to handle maintenance",
+        "who handles IT problems",
+        "how do I add a known issue",
+        "to handle tab"
+      ],
+      "keys": [
+        "handler",
+        "handles",
+        "who sees",
+        "private",
+        "known issues",
+        "to handle",
+        "super admin",
+        "category",
+        "maintenance"
+      ],
+      "answer": "Only you and the people handling your report can see it. Each category is handled by the people a Super Admin names under Who handles what, and by Super Admins. Handlers use the To handle tab to update a report, ask for more information or mark it resolved, and write the Known issues, which everyone sees, so they never name anyone.",
+      "link": {
+        "tile": "maintenance",
+        "label": "Open Maintenance"
+      },
+      "related": [
+        "about-maintenance"
+      ]
     }
   ]
 }

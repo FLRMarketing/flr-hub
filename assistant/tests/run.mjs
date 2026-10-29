@@ -11,7 +11,7 @@ const help = JSON.parse(readFileSync(new URL('../help.json', import.meta.url), '
 // records.json: questions about records, with names and registrations, routed as the chat routes them (--records).
 const setName = process.argv.includes('--heldout') ? 'heldout.json' : process.argv.includes('--records') ? 'records.json' : 'questions.json';
 const cases = JSON.parse(readFileSync(new URL('./' + setName, import.meta.url), 'utf8'));
-const TOOLS = new Set(['hub', 'estimator', 'speeding', 'annual-leave', 'fitters', 'orders', 'capacity', 'proximity', 'surveyors']);
+const TOOLS = new Set(['hub', 'estimator', 'speeding', 'annual-leave', 'fitters', 'orders', 'capacity', 'proximity', 'surveyors', 'maintenance']);
 const problems = [];
 
 // ---- the library itself: complete, linked up, and safe to publish (this site is public)
