@@ -1,6 +1,6 @@
 /* ============================================================================
-   FLR Hub: Maintenance (Hub tile 'maintenance'). PROTOTYPE: report office problems, IT faults
-   and Hub faults, and follow each one's progress. Sample reports only; nothing is sent.
+   FLR Hub: Maintenance (Hub tile 'maintenance'). Report office problems, IT faults and Hub
+   faults and follow each one's progress; handlers work through them on the To handle tab.
    Tokens are Warehouse Tasks' (the Planner's, the Annual Leave Diary's), so the Hub's tools
    read as one family. Colour is kept for the four statuses and the FLR navy buttons.
    This page's CSP allows no inline styles: everything is here.
@@ -330,3 +330,81 @@ body[data-view="ready"] .gate{display:none}
 @media (max-width:340px){.cats{grid-template-columns:1fr}}
 .field-error svg,.reply .field-error svg{width:16px;height:16px;flex:none}
 html.locked{overflow:hidden}
+
+/* ======================================================================== 1.0: live data and handlers */
+.notice{display:flex;align-items:flex-start;gap:8px;margin:0 0 22px;padding:11px 14px;border-radius:12px;background:var(--gold-soft);color:var(--gold-ink);font:600 14.5px/1.4 var(--font-text)}
+.notice > svg{flex:none;width:18px;height:18px;margin-top:1px}
+.known-none{margin:0 2px;color:var(--ink-3);font-size:14.5px}
+
+/* My reports | To handle */
+.tabs{display:inline-grid;grid-auto-flow:column;gap:2px;margin:0 0 26px;padding:3px;border-radius:12px;background:var(--fill)}
+.tab{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 18px;border:0;border-radius:9px;background:transparent;color:var(--ink-2);font:600 15px/1 var(--font-text);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.tab-n{min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--tint-fill);color:var(--on-tint);font:700 12.5px/22px var(--font-text);text-align:center;font-variant-numeric:tabular-nums}
+.tab-n:empty{display:none}
+@media (max-width:640px){.tabs{display:grid;grid-template-columns:1fr 1fr}.tab{justify-content:center}}
+
+.filters-cat{margin-top:-6px}
+.filters-cat .filter{min-height:32px;font-size:13.5px}
+.manage{margin-top:44px;max-width:760px}
+#handle-view > section:first-child{max-width:760px}
+.section-head-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.r-who{color:var(--ink);font-weight:600}
+.r-blocked{color:var(--red-ink);font-weight:650}
+.st-known{background:var(--fill);color:var(--ink-2)}
+.st-off{background:transparent;color:var(--ink-3);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* who handles what: a card per category */
+.handlers{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.hcard{padding:14px 16px;border-radius:var(--r-card);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.hcard h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font:650 15.5px/1.3 var(--font-text)}
+.hcard h3 .cat-ico{width:28px;height:28px;border-radius:8px}
+.hcard h3 .cat-ico svg{width:16px;height:16px}
+.hlist{margin:0 0 10px;padding:0;list-style:none}
+.hlist li{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:38px;border-top:1px solid var(--line);font-size:14.5px}
+.hlist li:first-child{border-top:0}
+.hlist .sub{display:block;color:var(--ink-3);font-size:13px}
+.hlist .none{color:var(--ink-3)}
+.hadd{display:flex;gap:8px}
+.hadd .input{min-height:40px;padding:8px 12px;font-size:15px}
+.hadd .btn{min-height:40px}
+.hcard .field-error{margin-top:6px}
+.iconbtn.small{width:30px;height:30px}
+.iconbtn.small svg{width:13px;height:13px}
+
+/* the handler's update box under a report */
+.upd{margin:10px 0 0;padding:16px;border-radius:var(--r-card);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip-opt{position:relative;display:inline-flex}
+.chip-opt input{position:absolute;opacity:0;pointer-events:none}
+.chip-opt span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--sep);
+  color:var(--ink-2);font:600 14.5px/1 var(--font-text);cursor:pointer}
+.chip-opt input:checked + span{background:var(--tint-soft);color:var(--tint);box-shadow:inset 0 0 0 2px var(--tint)}
+.chip-opt input:focus-visible + span{outline:3px solid var(--focus);outline-offset:2px}
+.upd .chips{margin-bottom:12px}
+.upd textarea.input{min-height:88px}
+.check{display:flex;align-items:center;gap:10px;margin:0 0 6px;font-size:15px;cursor:pointer}
+.check input{width:20px;height:20px;margin:0;accent-color:var(--tint-fill)}
+select.input{appearance:none;-webkit-appearance:none;background-image:none;cursor:pointer}
+
+/* photos waiting to be sent */
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 0;padding:0;list-style:none}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:84px}
+.thumb img{display:block;width:84px;height:84px;border-radius:10px;object-fit:cover;background:var(--fill);box-shadow:inset 0 0 0 1px var(--line)}
+.thumb button{position:absolute;top:-7px;right:-7px;display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:50%;background:var(--ink);color:var(--surface);cursor:pointer;box-shadow:0 0 0 2px var(--bg)}
+.thumb button svg{width:12px;height:12px}
+.d-file img.loading{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.5}}
+.d-file a{display:block;border-radius:10px}
+.tl-photos{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0;padding:0;list-style:none}
+.tl-photos img{display:block;width:72px;height:72px;border-radius:9px;object-fit:cover;background:var(--fill)}
+.reply-actions{align-items:center;justify-content:space-between;gap:12px}
+.reply-actions .btn:only-child{margin-left:auto}
+.add-photos{display:inline-flex;align-items:center;gap:6px;font-size:15px;cursor:pointer}
+.add-photos svg{width:19px;height:19px}
+.reply:has(#reply-photo:focus-visible) .add-photos,.upd:has(#reply-photo:focus-visible) .add-photos{outline:3px solid var(--focus);outline-offset:3px;border-radius:6px}
+.zoom-btn{display:block;padding:0;border:0;background:none;border-radius:10px;cursor:zoom-in}
+.zoom{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.86);cursor:zoom-out}
+.zoom img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
+.zoom:focus{outline:none}

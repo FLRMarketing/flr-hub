@@ -10,11 +10,11 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="icon" href="../assets/flr-icon-192.png">
-<link rel="stylesheet" href="maintenance.css?v=0.1">
+<link rel="stylesheet" href="maintenance.css?v=1.0">
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js" defer></script>
-<script src="maintenance.js?v=0.1" defer></script>
+<script src="maintenance.js?v=1.0" defer></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body data-view="loading">
@@ -65,13 +65,19 @@
     <button class="btn btn-brand btn-report" type="button" id="report-btn"><svg aria-hidden="true"><use href="#i-plus"/></svg><span>Report an issue</span></button>
   </header>
 
-  <p class="demo-note" id="demo-note"><svg aria-hidden="true"><use href="#i-info"/></svg><span><b>Preview with sample reports.</b> Nothing you submit here is sent to anyone or saved to FLR records. <button class="link" type="button" id="demo-reset">Reset the demo</button></span></p>
+  <p class="notice" id="notice" role="status" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span> <button class="link" type="button" id="notice-retry">Try again</button></p>
 
-  <div class="cols">
+  <!-- For the people who handle reports: their own reports, or the ones to handle -->
+  <div class="tabs" role="tablist" aria-label="Maintenance" id="tabs" hidden>
+    <button class="tab" type="button" role="tab" id="tab-mine" aria-controls="mine-view" aria-selected="true">My reports</button>
+    <button class="tab" type="button" role="tab" id="tab-handle" aria-controls="handle-view" aria-selected="false" tabindex="-1">To handle <span class="tab-n" id="tab-n"></span></button>
+  </div>
+
+  <div class="cols" id="mine-view" role="tabpanel" aria-labelledby="tab-mine">
     <section class="mine" aria-labelledby="mine-title">
       <div class="section-head">
         <h2 class="section-title" id="mine-title">My reports</h2>
-        <p class="section-sub" id="mine-sub">Only you and the people handling them can see these.</p>
+        <p class="section-sub">Only you and the people handling them can see these.</p>
       </div>
       <div class="filters" role="radiogroup" aria-label="Show reports by status" id="filters"></div>
       <ul class="reports" id="reports" aria-live="polite"></ul>
@@ -87,7 +93,39 @@
         <p class="section-sub">Shared problems already being handled. No need to report these again.</p>
       </div>
       <ul class="known-list" id="known-list"></ul>
+      <p class="known-none" id="known-none" hidden>Nothing at the moment.</p>
     </aside>
+  </div>
+
+  <div id="handle-view" role="tabpanel" aria-labelledby="tab-handle" hidden>
+    <section aria-labelledby="queue-title">
+      <div class="section-head">
+        <h2 class="section-title" id="queue-title">Reports to handle</h2>
+        <p class="section-sub" id="queue-sub"></p>
+      </div>
+      <div class="filters" role="radiogroup" aria-label="Show reports by status" id="q-filters"></div>
+      <div class="filters filters-cat" role="radiogroup" aria-label="Show reports by category" id="q-cats" hidden></div>
+      <ul class="reports" id="queue" aria-live="polite"></ul>
+      <div class="empty" id="queue-empty" hidden><h3 id="queue-empty-title">Nothing to handle</h3><p id="queue-empty-text"></p></div>
+    </section>
+
+    <section class="manage" aria-labelledby="km-title">
+      <div class="section-head section-head-row">
+        <div><h2 class="section-title" id="km-title">Known issues</h2>
+        <p class="section-sub">Notices everyone sees on this page. Write them for everyone: no names or personal details.</p></div>
+        <button class="btn" type="button" id="known-add"><svg aria-hidden="true"><use href="#i-plus"/></svg><span>Add a known issue</span></button>
+      </div>
+      <ul class="reports" id="known-manage"></ul>
+      <p class="known-none" id="known-manage-none" hidden>No known issues yet.</p>
+    </section>
+
+    <section class="manage" aria-labelledby="hd-title" id="handlers-section" hidden>
+      <div class="section-head">
+        <h2 class="section-title" id="hd-title">Who handles what</h2>
+        <p class="section-sub">Handlers see and update every report in their categories. Super Admins see all of them as well.</p>
+      </div>
+      <div class="handlers" id="handlers"></div>
+    </section>
   </div>
 </main>
 
@@ -140,21 +178,18 @@
       </fieldset>
 
       <div class="field">
-        <span class="label" id="photo-label">Photo or screenshot <span class="opt">optional</span></span>
+        <span class="label" id="photo-label">Photos or screenshots <span class="opt">optional, up to 3</span></span>
         <div class="photo" id="photo">
-          <label class="photo-add" for="f-photo"><svg aria-hidden="true"><use href="#i-camera"/></svg><span>Add a photo or screenshot</span></label>
-          <input class="sr" id="f-photo" type="file" accept="image/*" aria-labelledby="photo-label" aria-describedby="err-photo">
-          <div class="photo-preview" id="photo-preview" hidden>
-            <img id="photo-img" alt="">
-            <div class="photo-meta"><span id="photo-name"></span><button class="link" type="button" id="photo-remove">Remove</button></div>
-          </div>
+          <label class="photo-add" for="f-photo"><svg aria-hidden="true"><use href="#i-camera"/></svg><span>Add photos or screenshots</span></label>
+          <input class="sr" id="f-photo" type="file" accept="image/*" multiple aria-labelledby="photo-label" aria-describedby="err-photo">
+          <ul class="thumbs" id="thumbs"></ul>
         </div>
         <p class="field-error" id="err-photo" hidden></p>
       </div>
 
       <div class="panel-actions">
         <button class="btn btn-brand btn-block" type="submit" id="submit"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Send report</span></button>
-        <p class="hint center">Demo only: this won’t be sent to anyone.</p>
+        <p class="hint center">It goes to the people who handle this kind of problem.</p>
       </div>
     </form>
 
@@ -163,12 +198,40 @@
       <span class="done-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
       <h3 class="done-title" tabindex="-1" id="done-title">Report added</h3>
       <p class="done-text" id="done-text"></p>
-      <p class="done-demo"><svg aria-hidden="true"><use href="#i-info"/></svg><span>This is a demo, so no one has been told. In the live version, the right team would be notified and you’d see their updates here.</span></p>
+      <p class="done-demo"><svg aria-hidden="true"><use href="#i-info"/></svg><span>The people who handle this kind of problem can see it now. Their updates appear here, under My reports.</span></p>
       <div class="done-actions">
         <button class="btn btn-brand" type="button" id="done-view">View report</button>
         <button class="btn" type="button" id="done-close">Done</button>
       </div>
     </div>
+
+    <!-- Add or change a Known issue (handlers) -->
+    <form class="panel-body" id="kform" novalidate hidden>
+      <p class="form-error" id="kform-error" role="alert" tabindex="-1" hidden><svg aria-hidden="true"><use href="#i-alert"/></svg><span></span></p>
+      <div class="field">
+        <label class="label" for="k-category">Category</label>
+        <select class="input" id="k-category"></select>
+      </div>
+      <div class="field">
+        <label class="label" for="k-title">Title</label>
+        <input class="input" id="k-title" type="text" maxlength="80" autocomplete="off" placeholder="For example: Wi-Fi dropping in the meeting room">
+      </div>
+      <div class="field">
+        <label class="label" for="k-text">Note for everyone <span class="opt">optional</span></label>
+        <textarea class="input" id="k-text" rows="3" maxlength="400" placeholder="What’s being done, and what to do meanwhile"></textarea>
+      </div>
+      <fieldset class="field">
+        <legend class="label">Status</legend>
+        <div class="chips" id="k-status">
+          <label class="chip-opt"><input type="radio" name="k-status" value="known"><span>Known</span></label>
+          <label class="chip-opt"><input type="radio" name="k-status" value="fixing"><span>Being fixed</span></label>
+          <label class="chip-opt"><input type="radio" name="k-status" value="fixed"><span>Fixed</span></label>
+        </div>
+        <p class="hint">A fixed issue stays on the page for 7 days.</p>
+      </fieldset>
+      <label class="check"><input type="checkbox" id="k-active" checked><span>Show it on the Maintenance page</span></label>
+      <div class="panel-actions"><button class="btn btn-brand btn-block" type="submit" id="k-save"><svg class="spin" aria-hidden="true"><use href="#i-spin"/></svg><span class="btn-label">Save</span></button></div>
+    </form>
 
     <!-- A report's details -->
     <div class="panel-body detail" id="detail" hidden></div>
