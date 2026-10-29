@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 290"><!-- SAMPLE IMAGE for the Maintenance prototype: a drawn printer screen, not a real photo -->
+<rect width="400" height="290" fill="#3a3d45"/><rect x="40" y="70" width="320" height="170" rx="18" fill="#d9dbe0"/><rect x="40" y="70" width="320" height="40" rx="18" fill="#c4c7cd"/>
+<rect x="80" y="130" width="240" height="84" rx="8" fill="#1d2633"/><text x="200" y="164" fill="#ffb84d" font-family="Helvetica,Arial,sans-serif" font-size="20" font-weight="700" text-anchor="middle">Paper jam</text>
+<text x="200" y="192" fill="#c9d4e3" font-family="Helvetica,Arial,sans-serif" font-size="13" text-anchor="middle">Open cover B and remove paper</text>
+<rect x="110" y="40" width="180" height="34" rx="4" fill="#f4f4f4"/><text x="200" y="272" fill="#9aa0ab" font-family="Helvetica,Arial,sans-serif" font-size="12" text-anchor="middle">Sample image</text></svg>

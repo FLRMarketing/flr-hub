@@ -17,7 +17,7 @@
   // Only for a database from before each account was given its apps (hub_home without 'apps'): it showed everyone the
   // Estimator. Since then the Estimator is a tile like the others, for the accounts that have it.
   const ESTIMATOR = { id: 'estimator', title: 'Cost Estimator', subtitle: 'Price commercial flooring jobs and build quotes.', url: 'estimator/' };
-  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters', onboarding: 'i-onboarding', orders: 'i-orders', capacity: 'i-capacity', proximity: 'i-proximity', warehouse: 'i-warehouse', surveyors: 'i-surveyors' };
+  const ICONS = { estimator: 'i-estimator', speeding: 'i-speeding', 'annual-leave': 'i-leave', fitters: 'i-fitters', onboarding: 'i-onboarding', orders: 'i-orders', capacity: 'i-capacity', proximity: 'i-proximity', warehouse: 'i-warehouse', surveyors: 'i-surveyors', maintenance: 'i-maintenance' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const strongEnough = p => p.length >= 10 && /[A-Za-z]/.test(p) && /\d/.test(p);
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -350,6 +350,8 @@
       for (const t of (home && home.tiles) || []) if (safeTile(t)) tiles.push(tileEl(t));
     }
     $('#tiles').replaceChildren(...tiles);
+    // A quiet way into Maintenance's report form, for the people who have the Maintenance tile.
+    $('#maint-shortcut').hidden = !!o.loading || waiting || !((home && home.tiles) || []).some(t => t && t.id === 'maintenance' && safeTile(t));
     const n = $('#home-notice'); n.querySelector('span').textContent = o.notice || ''; n.hidden = !o.notice;
     if (o.loading || o.notice || waiting || !home || !home.tiles) renderAttention(null);
   }
