@@ -44,7 +44,7 @@ head = """<!doctype html>
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
-<script src="bridge.js?v=1.3"></script>
+<script src="bridge.js?v=1.4"></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body>

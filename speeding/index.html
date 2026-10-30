@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
-<script src="bridge.js?v=1.3"></script>
+<script src="bridge.js?v=1.4"></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body>
@@ -1178,8 +1178,51 @@ html[data-mode="dark"] .base-streets #mapcanvas,html[data-mode="dark"] .mapstage
 @media (prefers-reduced-motion:reduce){.pt.veh.o20::before{animation:none}}
 .pt.veh b{top:-2px;left:24px}
 .dotkey .pt.veh{width:28px;height:32px}.dotkey .pt.veh img.vimg{height:30px!important}.dotkey .pt.veh svg.car{width:24px;height:28px}
+/* Live map (Super Admins): vehicles where they are now, and a ghost trail of the last 24 hours. */
+.mb-live .ldot{width:9px;height:9px;border-radius:50%;background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.25)}
+.mb-live[aria-pressed="true"]{background:#14a44d;color:#fff;border-color:transparent}
+.mb-live[aria-pressed="true"] .ldot{background:#fff;animation:ldot 1.6s ease-in-out infinite}
+@keyframes ldot{50%{opacity:.35}}
+.live-on .leaflet-hotspot-pane,.live-on .leaflet-marker-pane,.live-on #mf-ds,.live-on #mf-open,.live-on .mlegend,.live-on #map-status,.live-on #mf-dsnote{display:none}
+.lv{display:flex;flex-direction:column;align-items:center}
+.lv img.vimg,.lv svg.car{display:block}
+.lv::after{content:"";position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;z-index:-1;background:radial-gradient(circle,var(--lg) 0 30%,transparent 70%)}
+.lv{isolation:isolate;--lg:rgba(52,199,89,.9)}
+.lv.lv-idle{--lg:rgba(255,190,40,.9)}.lv.lv-parked{--lg:rgba(160,170,185,.65)}.lv.lv-stale{--lg:transparent;opacity:.5}
+.lv-tag{margin-top:1px;padding:1px 5px;border-radius:5px;background:rgba(16,20,28,.86);color:#fff;font:700 10px/1.3 var(--font-text);white-space:nowrap;letter-spacing:.02em}
+.lv.sel .lv-tag{background:var(--tint-fill)}
+.lv-notags .lv:not(.sel) .lv-tag{display:none}
+.lv.sel::before{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px var(--tint-fill)}
+.ghost-line{stroke:#9ff3ff}.ghost-glow{stroke:#7fe7ff}
+html[data-mode="light"] .base-streets .ghost-line,html[data-mode="light"] .base-flr .ghost-line{stroke:#1a5fd6}
+html[data-mode="light"] .base-streets .ghost-glow,html[data-mode="light"] .base-flr .ghost-glow{stroke:#5b8ff0}
+.ghost-start span{display:block;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #7fe7ff;opacity:.7}
+.ghost-stop span{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(16,20,28,.85);color:#fff;border:2px solid #9ff3ff;font:700 10px/1 var(--font-text)}
+.lv-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.lv-list button,.lv-stops button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:10px;cursor:pointer}
+.lv-list button:hover,.lv-stops button:hover{background:var(--fill-2,rgba(118,118,128,.12))}
+.lv-list button:focus-visible,.lv-stops button:focus-visible{outline:3px solid var(--sel)}
+.lv-who{display:grid;flex:1;min-width:0}.lv-who small,.lv-when small,.lv-stops small{display:block;color:var(--ink-3);font-size:12px}
+.lv-when{text-align:right;font-size:13px;font-variant-numeric:tabular-nums}
+.lv-dot{flex:none;width:10px;height:10px;border-radius:50%;background:#a0aab9}
+.lv-dot.lv-moving,.lv-now.lv-moving .lv-dot{background:#34c759}.lv-dot.lv-idle,.lv-now.lv-idle .lv-dot{background:#ffbe28}.lv-dot.lv-stale,.lv-now.lv-stale .lv-dot{background:transparent;box-shadow:inset 0 0 0 2px #a0aab9}
+.lv-now{display:flex;align-items:center;gap:8px;font-size:15px}
+.lv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.lv-stats div{display:grid;padding:8px 10px;border-radius:10px;background:var(--fill-2,rgba(118,118,128,.1))}
+.lv-stats b{font:700 18px/1.2 var(--font-display);font-variant-numeric:tabular-nums}.lv-stats span{font-size:12px;color:var(--ink-3)}
+.lv-stops{list-style:none;margin:0;padding:0}.lv-stops .n{flex:none;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(16,20,28,.85);color:#fff;font:700 11px/1 var(--font-text)}
+.lv-err{color:var(--red-ink)}
+@media (prefers-reduced-motion:reduce){.mb-live[aria-pressed="true"] .ldot{animation:none}}
+
+/* Mileage and wear card */
+.dwear .pf-grid + .pf-grid{margin-top:10px}
+.dwear .pf.up b{color:var(--red-ink)}.dwear .pf.down b{color:var(--green-ink)}
+.wbar{display:block;height:5px;margin:6px 0 2px;border-radius:3px;background:var(--fill-2,rgba(118,118,128,.16));overflow:hidden}
+.wbar i{display:block;height:100%;border-radius:3px;background:#34c759}
+.pf.wear.soon .wbar i{background:#ffbe28}.pf.wear.over .wbar i{background:var(--red)}.pf.wear.over b{color:var(--red-ink)}
+
 /* Groups: a frosted disc on satellite, like the rest of the map controls. */
-.base-sat .cl{background:rgba(16,20,28,.72);color:#fff;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 0 0 1.5px rgba(255,255,255,.8),0 2px 10px rgba(0,0,0,.45)}
+.base-sat .cl{background:rgba(22,26,34,.88);color:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.8),0 1px 4px rgba(0,0,0,.4)}
 
 /* ============================================================================
    FLR brand rules: what tokens alone can't restore (the live report's look).
@@ -1334,6 +1377,7 @@ html.drv .f-driver{display:none}
         </fieldset>
         <button type="button" class="mb-btn" id="mf-open" aria-expanded="false" aria-controls="mfilters"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M5.5 10h9M8 14.5h4"/></svg><span class="mb-lbl">Filters</span><span class="mb-n" id="mf-n" hidden>0</span></button>
         <button type="button" class="mb-btn" id="mb-fit"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5V3h4.5M12.5 3H17v4.5M17 12.5V17h-4.5M7.5 17H3v-4.5"/></svg><span class="mb-lbl">Fit all</span></button>
+        <button type="button" class="mb-btn mb-live" id="mb-live" aria-pressed="false" hidden title="Where every vehicle is now (Super Admins)"><i class="ldot" aria-hidden="true"></i><span class="mb-lbl">Live</span></button>
       </div>
       <div class="mfilters" id="mfilters" role="dialog" aria-label="Map filters" hidden>
         <div class="fl-head"><b>Filters</b><button type="button" class="close" id="mf-close" aria-label="Close filters">×</button></div>
@@ -3636,6 +3680,7 @@ html.drv .f-driver{display:none}
     map.on('zoom', () => { if (MAP.binZ != null) map.getPane('hotspotPane').style.setProperty('--hs-k', Math.pow(2, map.getZoom() - MAP.binZ).toFixed(4)); });
     map.on('movestart', () => { layerJob++; });
     map.on('moveend', applyLayersSoon);
+    liveInit(map);
   }
   // Switch the base map. The report's own street map stays underneath as a fallback while tiles load;
   // its place and road labels are only drawn on the Simple map (satellite and streets carry their own).
@@ -3667,6 +3712,171 @@ html.drv .f-driver{display:none}
       if (hadFocus) map.once('moveend', () => setTimeout(() => { const a = document.activeElement; if (!a || a === document.body || !document.contains(a)) map.getContainer().focus({preventScroll:true}); }, 450));
     }
     else openSet({kind:'group', ids:new Set(cl.getAllChildMarkers().flatMap(m => m.options.evs.map(e => e.id))), bounds:b, z});
+  }
+
+  // =====================================================================================
+  // Live map (Super Admins): where every vehicle is now, from FleetView's live positions saved by the FLR server
+  // every 2 minutes (fleet_live), and for the vehicle you pick a faint "ghost" trail of its last 24 hours
+  // (fleet_trail): older parts fade out, and the places it stopped are marked. The database deletes positions after
+  // 24 hours and only answers active Super Admins; drivers never see this.
+  // =====================================================================================
+  const LIVE = {on:false, map:null, layer:null, trail:null, sel:null, data:null, path:null, timer:0, trailAt:0, err:'', loading:false};
+  const LIVE_EVERY = 30000, STALE_MIN = 30, STOP_MIN = 5, MOVING_MPH = 3;
+  const liveApi = () => { const h = HUBAPI(); return h && typeof h.live === 'function' && typeof h.trail === 'function' ? h : null; };
+  const grpOf = reg => { const r = report && report.drivers.find(d => d.reg === reg); return r ? r.grp : ''; };
+  const minsAgo = iso => (Date.now() - new Date(iso).getTime()) / 60000;
+  const hhmm = t => { const day = x => new Date(x).toLocaleDateString('en-GB', {timeZone:'Europe/London'}); const s = new Date(t).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/London'});
+    return day(t) === day(Date.now()) ? s : day(t) === day(Date.now() - 864e5) ? `yesterday ${s}` : `${new Date(t).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'Europe/London'})} ${s}`; };
+  const agoText = iso => { const m = minsAgo(iso); return m < 1 ? 'just now' : m < 60 ? `${Math.round(m)} min ago` : m < 24 * 60 ? `${Math.floor(m / 60)} h ${Math.round(m % 60)} min ago` : 'over a day ago'; };
+  function liveState(v){
+    if (minsAgo(v.at) > STALE_MIN) return 'stale';
+    return v.ignition && (v.speed || 0) > MOVING_MPH ? 'moving' : v.ignition ? 'idle' : 'parked';
+  }
+  const STATE_TEXT = {moving:'Moving', idle:'Engine on, stopped', parked:'Parked', stale:'No signal'};
+  function liveInit(map){
+    LIVE.map = map;
+    map.createPane('trailPane').style.zIndex = 430;
+    map.createPane('livePane').style.zIndex = 660;
+    const tags = () => map.getContainer().classList.toggle('lv-notags', map.getZoom() < 9);
+    map.on('zoomend', tags); tags();
+    const b = $('#mb-live');
+    if (!b) return;
+    b.hidden = !(hubAdmin() && liveApi());
+    b.addEventListener('click', () => setLive(!LIVE.on));
+  }
+  function setLive(on){
+    const map = LIVE.map; if (!map) return;
+    LIVE.on = on;
+    const b = $('#mb-live'); b.setAttribute('aria-pressed', String(on));
+    $('#mapstage').classList.toggle('live-on', on);
+    clearInterval(LIVE.timer); LIVE.timer = 0;
+    if (on) {
+      LIVE.layer = L.layerGroup().addTo(map); LIVE.trail = L.layerGroup().addTo(map);
+      loadLive(true);
+      LIVE.timer = setInterval(() => { if (!document.hidden) loadLive(false); }, LIVE_EVERY);
+    } else {
+      if (LIVE.layer) map.removeLayer(LIVE.layer); if (LIVE.trail) map.removeLayer(LIVE.trail);
+      LIVE.layer = LIVE.trail = null; LIVE.sel = null; LIVE.path = null;
+      $('#h-map-lt').textContent = 'Speeding map';
+      renderPanel();
+    }
+    if (on) $('#h-map-lt').textContent = 'Live map';
+  }
+  async function loadLive(fit){
+    if (LIVE.loading) return; LIVE.loading = true;
+    try { LIVE.data = await liveApi().live(); LIVE.err = ''; }
+    catch (e) { LIVE.err = (e && e.message) || "Live positions couldn't be loaded."; }
+    LIVE.loading = false;
+    if (!LIVE.on) return;
+    drawLive();
+    if (fit && LIVE.data && LIVE.data.vehicles.length) LIVE.map.fitBounds(L.latLngBounds(LIVE.data.vehicles.map(v => [v.lat, v.lon])), {...mapPad(60), ...anim()});
+    if (LIVE.sel && Date.now() - LIVE.trailAt > 110000) loadTrail(LIVE.sel, false);
+    renderLivePanel();
+  }
+  function drawLive(){
+    LIVE.layer.clearLayers();
+    for (const v of (LIVE.data && LIVE.data.vehicles) || []) {
+      const st = liveState(v), sel = v.reg === LIVE.sel;
+      const html = `${vehSvg(grpOf(v.reg), v.reg)}<span class="lv-tag">${esc(v.reg)}</span>`;
+      const m = L.marker([v.lat, v.lon], {pane:'livePane', keyboard:true, title:`${v.reg} · ${v.driver || 'No driver'} · ${STATE_TEXT[st]}`,
+        icon:L.divIcon({className:`lv lv-${st}${sel ? ' sel' : ''}`, html, iconSize:[34, 40], iconAnchor:[17, 20]})});
+      m.on('click', () => pickLive(v.reg));
+      m.on('keypress', ev => { if (isKey(ev)) pickLive(v.reg); });
+      LIVE.layer.addLayer(m);
+    }
+  }
+  function pickLive(reg){
+    LIVE.sel = reg === LIVE.sel ? null : reg;
+    LIVE.trail.clearLayers(); LIVE.path = null;
+    drawLive(); renderLivePanel();
+    if (LIVE.sel) loadTrail(LIVE.sel, true);
+  }
+  // A trail point: [seconds, lat, lon, speed, ignition]. Stops: the vehicle stood still (or was switched off) for 5+ min.
+  function trailStops(pts){
+    const out = []; let i = 0;
+    while (i < pts.length) {
+      const still = p => !p[4] || (p[3] || 0) <= MOVING_MPH;
+      if (!still(pts[i])) { i++; continue; }
+      let j = i; while (j + 1 < pts.length && still(pts[j + 1]) && distM(pts[j + 1], pts[i]) < 150) j++;
+      const end = j + 1 < pts.length ? pts[j + 1][0] : Date.now() / 1000;
+      if ((end - pts[i][0]) / 60 >= STOP_MIN) out.push({lat:pts[i][1], lon:pts[i][2], from:pts[i][0], to:end, open:j + 1 >= pts.length});
+      i = j + 1;
+    }
+    return out;
+  }
+  function distM(a, b){ const R = 6371000, r = Math.PI / 180, dl = (b[1] - a[1]) * r, dn = (b[2] - a[2]) * r;
+    const x = Math.sin(dl / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
+  async function loadTrail(reg, fit){
+    let pts;
+    try { pts = await liveApi().trail(reg); } catch (e) { LIVE.err = (e && e.message) || "The trail couldn't be loaded."; renderLivePanel(); return; }
+    if (!LIVE.on || LIVE.sel !== reg) return;
+    LIVE.trailAt = Date.now();
+    const stops = trailStops(pts);
+    let miles = 0; for (let i = 1; i < pts.length; i++) miles += distM(pts[i - 1], pts[i]) / 1609.344;
+    LIVE.path = {reg, pts, stops, miles};
+    drawTrail();
+    if (fit && pts.length > 1) LIVE.map.fitBounds(L.latLngBounds(pts.map(p => [p[1], p[2]])), {...mapPad(60), ...anim()});
+    renderLivePanel();
+  }
+  // The ghost: the last 24 hours in six 4-hour pieces, the oldest faintest, over a soft wide glow.
+  function drawTrail(){
+    const t = LIVE.path; LIVE.trail.clearLayers(); if (!t || t.pts.length < 2) return;
+    const nowS = Date.now() / 1000, SPAN = 24 * 3600, BANDS = 6;
+    for (let b = 0; b < BANDS; b++) {
+      const lo = nowS - SPAN + b * SPAN / BANDS, hi = lo + SPAN / BANDS;
+      const seg = []; for (let i = 0; i < t.pts.length; i++) { const p = t.pts[i]; if (p[0] >= lo - 1 && p[0] <= hi + 1) seg.push([p[1], p[2]]); else if (seg.length && p[0] > hi) { seg.push([p[1], p[2]]); break; } }
+      if (seg.length < 2) continue;
+      const op = .14 + .7 * (b + 1) / BANDS;
+      L.polyline(seg, {pane:'trailPane', interactive:false, className:'ghost-glow', weight:9, opacity:op * .35, lineCap:'round', lineJoin:'round'}).addTo(LIVE.trail);
+      L.polyline(seg, {pane:'trailPane', interactive:false, className:'ghost-line', weight:2.5, opacity:op, lineCap:'round', lineJoin:'round'}).addTo(LIVE.trail);
+    }
+    const first = t.pts[0];
+    L.marker([first[1], first[2]], {pane:'trailPane', interactive:false, keyboard:false, icon:L.divIcon({className:'ghost-start', html:'<span></span>', iconSize:[12, 12], iconAnchor:[6, 6]})}).addTo(LIVE.trail);
+    t.stops.forEach((s, i) => {
+      const age = (nowS - s.to) / SPAN;
+      const m = L.marker([s.lat, s.lon], {pane:'trailPane', keyboard:false, title:`Stopped ${hhmm(s.from * 1000)}–${s.open ? 'now' : hhmm(s.to * 1000)} (${durText(s.to - s.from)})`,
+        icon:L.divIcon({className:'ghost-stop', html:`<span style="opacity:${(1 - age * .6).toFixed(2)}">${i + 1}</span>`, iconSize:[20, 20], iconAnchor:[10, 10]})});
+      LIVE.trail.addLayer(m);
+    });
+  }
+  const durText = sec => { const m = Math.round(sec / 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`; };
+  function renderLivePanel(){
+    const el = $('#mpanel'), vs = ((LIVE.data && LIVE.data.vehicles) || []).slice();
+    const order = {moving:0, idle:1, parked:2, stale:3};
+    vs.sort((a, b) => order[liveState(a)] - order[liveState(b)] || a.reg.localeCompare(b.reg));
+    const counts = vs.reduce((c, v) => (c[liveState(v)] = (c[liveState(v)] || 0) + 1, c), {});
+    $('#map-count').textContent = LIVE.data ? `${plural(vs.length, 'vehicle', 'vehicles')} · ${counts.moving || 0} moving · updated ${hhmm(Date.now())}` : 'Loading live positions…';
+    $('#map-recon').textContent = 'Positions from FleetView every 2 minutes. Trails show the last 24 hours, then are deleted.';
+    const v = LIVE.sel ? vs.find(x => x.reg === LIVE.sel) : null;
+    let h = '';
+    if (LIVE.err) h += `<section><p class="lv-err">${esc(LIVE.err)}</p></section>`;
+    if (v) {
+      const st = liveState(v), t = LIVE.path && LIVE.path.reg === v.reg ? LIVE.path : null;
+      h += `<div class="mp-head"><div><div class="kick">Live · last 24 hours</div><h3>${esc(v.reg)}</h3></div><button type="button" class="close" data-live="back" aria-label="Back to all vehicles">×</button></div>
+        <div class="mp-body"><section><div class="lv-now lv-${st}"><span class="lv-dot"></span><b>${STATE_TEXT[st]}</b>${st === 'moving' ? ` · ${v.speed} mph` : ''}</div>
+        <p>${esc(v.driver || 'No FleetView driver')} · seen ${agoText(v.at)} (${hhmm(v.at)})</p></section>`;
+      if (!t) h += `<section><p>Loading the trail…</p></section>`;
+      else if (t.pts.length < 2) h += `<section><p>No movement saved in the last 24 hours yet. Trails build up from when the live map started saving positions.</p></section>`;
+      else {
+        h += `<section><div class="lv-stats"><div><b>${t.miles.toFixed(1)}</b><span>miles in 24 h</span></div><div><b>${t.stops.length}</b><span>${t.stops.length === 1 ? 'stop' : 'stops'} of 5+ min</span></div><div><b>${hhmm(t.pts[0][0] * 1000)}</b><span>trail starts</span></div></div>
+          <button type="button" class="btn ghost sm" data-live="fit">Show the whole trail</button></section>`;
+        if (t.stops.length) h += `<section><h4>Stops</h4><ol class="lv-stops">${t.stops.map((s, i) => `<li><button type="button" data-live="stop" data-i="${i}"><span class="n">${i + 1}</span><span>${hhmm(s.from * 1000)}–${s.open ? 'now' : hhmm(s.to * 1000)}<small>${durText(s.to - s.from)}</small></span></button></li>`).join('')}</ol></section>`;
+      }
+      h += `</div>`;
+    } else {
+      h += `<div class="mp-head"><div><div class="kick">Live map</div><h3>Where every vehicle is now</h3></div></div><div class="mp-body"><section><ul class="lv-list">${vs.map(x => { const st = liveState(x);
+        return `<li><button type="button" data-live="pick" data-reg="${esc(x.reg)}"><span class="lv-dot lv-${st}"></span><span class="lv-who"><b>${esc(x.reg)}</b><small>${esc(x.driver || 'No driver')}</small></span><span class="lv-when">${st === 'moving' ? `${x.speed} mph` : STATE_TEXT[st]}<small>${agoText(x.at)}</small></span></button></li>`; }).join('') || '<li class="lv-none">No positions saved yet.</li>'}</ul>
+        <p class="note" style="margin-top:8px">Pick a vehicle to see where it has been in the last 24 hours.</p></section></div>`;
+    }
+    el.innerHTML = h;
+    el.onclick = ev => {
+      const b = ev.target.closest('[data-live]'); if (!b) return;
+      const a = b.dataset.live;
+      if (a === 'pick') pickLive(b.dataset.reg);
+      else if (a === 'back') pickLive(LIVE.sel);
+      else if (a === 'fit' && LIVE.path) LIVE.map.fitBounds(L.latLngBounds(LIVE.path.pts.map(p => [p[1], p[2]])), {...mapPad(60), ...anim()});
+      else if (a === 'stop' && LIVE.path) { const s = LIVE.path.stops[+b.dataset.i]; LIVE.map.setView([s.lat, s.lon], Math.max(LIVE.map.getZoom(), 15), anim()); }
+    };
   }
 
   // ---- Layers ----
@@ -3912,6 +4122,7 @@ html.drv .f-driver{display:none}
     return a.iso === b.iso ? longDate(a.iso) : `${longDate(a.iso)} – ${longDate(b.iso)}`;
   }
   function renderPanel(onlyOverview){
+    if (LIVE.on) { renderLivePanel(); return; }
     const el = $('#mpanel');
     if (!report || !incidentsLoaded) { el.innerHTML = ''; MAP.panelEntry = undefined; return; }
     const top = MAP.stack[MAP.stack.length - 1] || null;
@@ -4338,6 +4549,66 @@ html.drv .f-driver{display:none}
       ${r.scoreUp ? `<p class="pf-period pf-up ${r.st}">This score moves ${spareOrName(r)} up a group in the review order, to ${esc(STATUS[r.st].label.toLowerCase())}: it is ${SCORE_GAP} or more points below FleetView's fleet average.</p>` : ''}
       <p class="note">The score is imported from FleetView as it stands. It isn't worked out from this report's speeding incidents, and it depends on FleetView's rating settings, so it can change if those settings change. A score ${SCORE_GAP} or more points below FleetView's fleet average${scoreCut() != null ? ` (currently ${scoreCut()} or lower)` : ''} moves a driver up one group in the review order, unless they drove too few miles to rate. The harsh event counts are for information only.</p></section>`;
   }
+
+  // ---- Mileage and wear (Oct 2026). Miles: FleetView's last 30 days, against the vehicle's usual 30 days from the
+  // daily history snapshots. Wear: estimates from Monday's own log (services, tyres, brakes, mileage checks) at this
+  // vehicle's current rate, adjusted for driving style. Figures agreed with FLR: service every 20,000 miles, tyres
+  // about 25,000, brake pads about 30,000. Everything here is an estimate and says so.
+  const WEAR = {serviceMi:20000, tyreMi:25000, brakeMi:30000, usualPct:30};
+  const harshPer100 = reg => { const p = report.perf && report.perf.byReg ? report.perf.byReg[reg] : null, d = report.drivers.find(x => x.reg === reg);
+    if (!p || !d || !d.mi) return null; const n = (p.braking || 0) + (p.accel || 0) + (p.cornering || 0); return n / d.mi * 100; };
+  function fleetHarsh(){ const v = report.drivers.map(d => harshPer100(d.reg)).filter(x => x != null && isFinite(x)).sort((a, b) => a - b); return v.length ? v[v.length >> 1] : null; }
+  const dayMs = 864e5, isoDay = s => s ? new Date(String(s).slice(0, 10) + 'T12:00:00Z') : null;
+  function lastJob(log, test){
+    let best = null;
+    for (const l of log || []) { if (String(l.status || '').toLowerCase() !== 'done' || !l.date) continue; if (!test(l)) continue; if (!best || l.date > best.date) best = l; }
+    return best;
+  }
+  const isService = l => /service/i.test(l.type || '') || /\bservice\b/i.test(l.name || '');
+  const isTyres = l => /tyre/i.test(l.name || '') && !/repair|puncture|tread check|pressure/i.test(l.name || '') && !/tread check/i.test(l.type || '');
+  const isBrakes = l => /brake|pads?\b|\bdiscs?\b(?! wheel)/i.test(l.name || '');
+  function mileageHtml(r){
+    const all = report.drivers.find(x => x.reg === r.reg); if (!all) return '';
+    const rate = all.mi / 30;                     // miles a day over the last 30 days
+    const hist = (history || []).filter(h => h && h.periodEnd && h.periodEnd < report.periodEnd).map(h => { const d = (h.drivers || []).find(x => x.reg === r.reg); return d && d.mi != null ? d.mi : null; }).filter(x => x != null);
+    const usual = hist.length >= 3 ? hist.reduce((a, b) => a + b, 0) / hist.length : null;
+    const pct = usual ? Math.round((all.mi - usual) / usual * 100) : null;
+    const flag = pct == null ? '' : pct >= WEAR.usualPct ? 'up' : pct <= -WEAR.usualPct ? 'down' : '';
+    const m = fleetMeta ? fvMatch(r.reg) : null, veh = m && m.itemId ? vehicleDocs.get(String(m.itemId)) : null, log = veh ? veh.log || [] : [];
+    // Odometer: the newest Mileage Check on Monday, plus the miles FleetView has seen since.
+    const odo = veh && veh.latestMileage ? veh.latestMileage : null;
+    const odoDays = odo ? Math.max(0, (Date.now() - isoDay(odo.date)) / dayMs) : null, odoNow = odo ? Math.round(odo.miles + rate * odoDays) : null;
+    const since = job => { if (!job) return null;
+      if (job.mileage != null && odoNow != null && odoNow >= job.mileage) return {mi:odoNow - job.mileage, how:'odometer'};
+      return {mi:Math.round(rate * (Date.now() - isoDay(job.date)) / dayMs), how:'rate'}; };
+    const hp = harshPer100(r.reg), fh = fleetHarsh(), ratio = hp != null && fh ? hp / fh : null;
+    const style = ratio == null ? null : ratio >= 1.25 ? 'High' : ratio <= .8 ? 'Low' : 'Normal';
+    const factor = ratio == null ? 1 : Math.min(1.15, Math.max(.75, 1 / (1 + .25 * (ratio - 1))));
+    const when = mi => rate > 0 ? new Date(Date.now() + mi / rate * dayMs) : null;
+    const monthYear = d => d ? d.toLocaleDateString('en-GB', {month:'short', year:'numeric'}) : '';
+    function part(label, job, life, adj){
+      if (!job) return `<div class="pf"><span class="k">${label}</span><span class="na">No ${label.toLowerCase()} job on Monday's log</span></div>`;
+      const s = since(job), left = Math.round(life * (adj ? factor : 1) - s.mi), pctUsed = Math.min(100, Math.max(0, Math.round(s.mi / (life * (adj ? factor : 1)) * 100)));
+      const due = left > 0 ? when(left) : null;
+      return `<div class="pf wear ${left <= 0 ? 'over' : pctUsed >= 80 ? 'soon' : ''}"><span class="k">${label}</span><b>${left > 0 ? `~${fmt(left)}` : 'Due'}</b><span class="s">${left > 0 ? `miles left${due ? ` · about ${monthYear(due)}` : ''}` : `${fmt(-left)} miles past`}</span>
+        <span class="wbar" aria-hidden="true"><i style="width:${pctUsed}%"></i></span><span class="s">Last ${esc(longDate(job.date))}${s.how === 'rate' ? ' · miles since estimated' : ''}</span></div>`;
+    }
+    const svc = lastJob(log, isService), tyres = lastJob(log, isTyres), brakes = lastJob(log, isBrakes);
+    return `<section class="card dwear" aria-labelledby="h-dwear"><div class="card-h"><h3 id="h-dwear">Mileage and wear</h3><span class="role">Estimates from FleetView's miles and the Monday fleet log</span></div>
+      <div class="pf-grid">
+        <div class="pf"><span class="k">Last 30 days</span><b>${fmt(all.mi)}</b><span class="s">miles · ${fmt(Math.round(rate))} a day</span></div>
+        <div class="pf ${flag}"><span class="k">Compared with usual</span>${pct == null ? '<span class="na">Not enough history yet</span>' : `<b>${pct > 0 ? '+' : ''}${pct}%</b><span class="s">${flag === 'up' ? 'well above' : flag === 'down' ? 'well below' : 'about'} their usual ${fmt(Math.round(usual))}</span>`}</div>
+        <div class="pf"><span class="k">At this rate</span><b>${fmt(Math.round(rate * 365))}</b><span class="s">miles a year · ${fmt(Math.round(rate * 30.4))} a month</span></div>
+        <div class="pf"><span class="k">Odometer</span>${odoNow == null ? '<span class="na">No mileage check on Monday</span>' : `<b>~${fmt(odoNow)}</b><span class="s">${fmt(odo.miles)} on ${esc(longDate(odo.date))}, plus FleetView's miles since</span>`}</div>
+      </div>
+      <div class="pf-grid">
+        ${part('Service', svc, WEAR.serviceMi, false)}
+        <div class="pf ${style === 'High' ? 'up' : ''}"><span class="k">Driving-style wear</span>${style == null ? '<span class="na">Data unavailable</span>' : `<b>${style}</b><span class="s">${f1(hp)} harsh events per 100 miles · fleet ${f1(fh)}</span>`}</div>
+        ${part('Tyres', tyres, WEAR.tyreMi, true)}
+        ${part('Brakes', brakes, WEAR.brakeMi, true)}
+      </div>
+      <p class="note">Estimates, not inspections. Service every ${fmt(WEAR.serviceMi)} miles; tyres about ${fmt(WEAR.tyreMi)} and brake pads about ${fmt(WEAR.brakeMi)}, shortened or stretched by driving style (harsh braking, acceleration and cornering against the fleet). "Usual" is the average of this vehicle's earlier 30-day totals; ${WEAR.usualPct}% or more either way is flagged. ${veh ? '' : 'This vehicle isn\'t matched to the Monday fleet board, so its log isn\'t used.'}</p></section>`;
+  }
   function renderDriverPage(key){
     driverRowKey = key;
     const el = $('#driver-page');
@@ -4383,6 +4654,7 @@ html.drv .f-driver{display:none}
       </div>
       ${DRV() ? '' : driverMovesHtml(r)}
       ${perfHtml(r)}
+      ${DRV() || view.week != null ? '' : mileageHtml(r)}
       ${report.weeks && all.weeks ? `<section class="card dtrend" aria-labelledby="h-dtrend"><div class="card-h"><h3 id="h-dtrend">Week by week</h3><span class="role">Incidents per 100 miles, with incidents and miles under each week</span></div>${trendChart(weeksOf(r.reg), fa, view.week)}</section>` : ''}
       ${hist}
       ${parts.length ? `<div class="pgrid">${parts.join('')}</div>` : ''}
