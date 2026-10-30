@@ -137,6 +137,7 @@
     // The live map (Super Admins; the database checks): each vehicle's latest position, and one vehicle's last 24 hours.
     live: () => call('fleet_live'),
     trail: reg => call('fleet_trail', { p_reg: String(reg || '') }),
+    journeys: reg => call('fleet_journeys', { p_reg: String(reg || '') }),
     link: (account, driver) => call('speeding_link', { p_account: account, p_driver: driver || '' }),
     previewHref: driver => location.pathname + '?preview=' + encodeURIComponent(driver),
     exitPreviewHref: () => location.pathname,

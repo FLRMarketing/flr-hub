@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="../tool-transition.css">
 <script src="../flr-config.js"></script>
 <script src="../vendor/supabase-2.116.0.js"></script>
-<script src="bridge.js?v=1.4"></script>
+<script src="bridge.js?v=1.5"></script>
 <script type="module" src="../assistant/assistant.js?v=2.2"></script>
 </head>
 <body>
@@ -1196,8 +1196,39 @@ html[data-mode="dark"] .base-streets #mapcanvas,html[data-mode="dark"] .mapstage
 .ghost-line{stroke:#9ff3ff}.ghost-glow{stroke:#7fe7ff}
 html[data-mode="light"] .base-streets .ghost-line,html[data-mode="light"] .base-flr .ghost-line{stroke:#1a5fd6}
 html[data-mode="light"] .base-streets .ghost-glow,html[data-mode="light"] .base-flr .ghost-glow{stroke:#5b8ff0}
-.ghost-start span{display:block;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #7fe7ff;opacity:.7}
-.ghost-stop span{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(16,20,28,.85);color:#fff;border:2px solid #9ff3ff;font:700 10px/1 var(--font-text)}
+.ghost-stop span{display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:rgba(16,20,28,.88);color:#fff;border:1.5px solid #9ff3ff;font:800 10px/1 var(--font-text)}
+.ghost-lab span{display:inline-flex;align-items:center;gap:5px;padding:2px 7px 2px 2px;border-radius:999px;background:rgba(16,20,28,.88);color:#fff;border:1.5px solid #9ff3ff;font:700 11px/1.2 var(--font-text);white-space:nowrap;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.ghost-lab b{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:50%;background:#9ff3ff;color:#0b1220;font:800 10px/1 var(--font-text)}
+.lv-notags .ghost-lab span{padding-right:2px;font-size:0;gap:0}.lv-notags .ghost-lab b{font-size:10px}
+.leaflet-container .ghost-tip{background:rgba(16,20,28,.94);color:#fff;border:0;border-radius:10px;padding:7px 10px;font:500 12px/1.4 var(--font-text);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.leaflet-container .ghost-tip::before{display:none}
+.ghost-line.gps{stroke:#c9f6ff}
+.spd-line.spd-amber{stroke:#ffb020}.spd-line.spd-orange{stroke:#ff7a1a}.spd-line.spd-red{stroke:#ff3b30}
+.spd-dot span{display:block;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 3px rgba(0,0,0,.25)}
+.spd-dot.spd-amber span,.lv-key .k.spd-amber,.jsp.spd-amber{background:#ffb020}.spd-dot.spd-orange span,.lv-key .k.spd-orange,.jsp.spd-orange{background:#ff7a1a}.spd-dot.spd-red span,.lv-key .k.spd-red,.jsp.spd-red{background:#ff3b30}
+.lv-stats .spd-amber b{color:#c27c00}.lv-stats .spd-orange b{color:#e0600a}.lv-stats .spd-red b{color:var(--red-ink)}
+.lv-win{display:flex;gap:4px;padding:3px;border-radius:10px;background:var(--fill-2,rgba(118,118,128,.12));margin-bottom:10px}
+.lv-win button{all:unset;flex:1;text-align:center;padding:6px 4px;border-radius:8px;font:600 12px/1.2 var(--font-text);cursor:pointer;color:var(--label-2,inherit)}
+.lv-win button[aria-pressed="true"]{background:var(--bg-card,#fff);color:var(--label,inherit);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.lv-win button:focus-visible{outline:2px solid var(--tint-fill);outline-offset:1px}
+.lv-age{position:relative;display:flex;justify-content:space-between;padding-top:12px;font:500 11px/1.2 var(--font-text);color:var(--label-3,#888)}
+.lv-age i{position:absolute;left:0;right:0;top:0;height:6px;border-radius:3px;background:linear-gradient(90deg,rgba(127,231,255,.14),rgba(127,231,255,.55) 55%,#9ff3ff)}
+html[data-mode="light"] .lv-age i{background:linear-gradient(90deg,rgba(26,95,214,.12),rgba(26,95,214,.5) 55%,#1a5fd6)}
+.lv-key{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:10px 0 0;font:500 11px/1.3 var(--font-text);color:var(--label-2,inherit)}
+.lv-key .k{display:inline-block;width:14px;height:4px;border-radius:2px;margin-left:4px}.lv-key .k:first-child{margin-left:0}
+.lv-legs{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.lv-legs button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:10px;cursor:pointer}
+.lv-legs button:hover{background:var(--fill-2,rgba(118,118,128,.12))}
+.lv-legs button[aria-pressed="true"]{background:var(--tint-soft,rgba(10,132,255,.14))}
+.lv-legs button:focus-visible{outline:2px solid var(--tint-fill);outline-offset:-2px}
+.lv-legs .n{flex:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#9ff3ff;color:#0b1220;font:800 11px/1 var(--font-text)}
+.lv-legs .jt{flex:1;min-width:0;display:flex;flex-direction:column}.lv-legs .jt small{color:var(--label-2,#888);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv-legs .jsp{flex:none;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;color:#fff;font:800 11px/20px var(--font-text);text-align:center}
+.lv-gap{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 12px;color:var(--label-3,#888);font:500 12px/1.3 var(--font-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv-gap .p{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;border:1.5px solid currentColor;font:800 9px/1 var(--font-text)}
+.live-on #mp-list{display:none}
+/* With one vehicle picked, the others step back so its trail reads clearly. */
+.lv-picked .lv:not(.sel){opacity:.3}.lv-picked .lv:not(.sel) .lv-tag{display:none}.lv-picked .lv:not(.sel):hover{opacity:1}
 .lv-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
 .lv-list button,.lv-stops button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:10px;cursor:pointer}
 .lv-list button:hover,.lv-stops button:hover{background:var(--fill-2,rgba(118,118,128,.12))}
@@ -3716,11 +3747,13 @@ html.drv .f-driver{display:none}
 
   // =====================================================================================
   // Live map (Super Admins): where every vehicle is now, from FleetView's live positions saved by the FLR server
-  // every 2 minutes (fleet_live), and for the vehicle you pick a faint "ghost" trail of its last 24 hours
-  // (fleet_trail): older parts fade out, and the places it stopped are marked. The database deletes positions after
+  // every 2 minutes (fleet_live), and for the vehicle you pick a faint "ghost" trail of up to its last 24 hours: its
+  // drives along the road from FleetView's journeys (fleet_journeys), older parts fading out, speeding in amber to red,
+  // and where it stopped. The database deletes positions after
   // 24 hours and only answers active Super Admins; drivers never see this.
   // =====================================================================================
-  const LIVE = {on:false, map:null, layer:null, trail:null, sel:null, data:null, path:null, timer:0, trailAt:0, err:'', loading:false};
+  const LIVE = {on:false, map:null, layer:null, trail:null, sel:null, data:null, path:null, timer:0, trailAt:0, err:'', loading:false, leg:null,
+    win:(() => { try { const w = +localStorage.getItem('flr-live-win'); return [2, 6, 24].includes(w) ? w : 24; } catch (e) { return 24; } })()};
   const LIVE_EVERY = 30000, STALE_MIN = 30, STOP_MIN = 5, MOVING_MPH = 3;
   const liveApi = () => { const h = HUBAPI(); return h && typeof h.live === 'function' && typeof h.trail === 'function' ? h : null; };
   const grpOf = reg => { const r = report && report.drivers.find(d => d.reg === reg); return r ? r.grp : ''; };
@@ -3756,7 +3789,7 @@ html.drv .f-driver{display:none}
       LIVE.timer = setInterval(() => { if (!document.hidden) loadLive(false); }, LIVE_EVERY);
     } else {
       if (LIVE.layer) map.removeLayer(LIVE.layer); if (LIVE.trail) map.removeLayer(LIVE.trail);
-      LIVE.layer = LIVE.trail = null; LIVE.sel = null; LIVE.path = null;
+      LIVE.layer = LIVE.trail = null; LIVE.sel = null; LIVE.path = null; LIVE.leg = null; map.getContainer().classList.remove('lv-picked');
       $('#h-map-lt').textContent = 'Speeding map';
       renderPanel();
     }
@@ -3787,7 +3820,8 @@ html.drv .f-driver{display:none}
   }
   function pickLive(reg){
     LIVE.sel = reg === LIVE.sel ? null : reg;
-    LIVE.trail.clearLayers(); LIVE.path = null;
+    LIVE.trail.clearLayers(); LIVE.path = null; LIVE.leg = null;
+    LIVE.map.getContainer().classList.toggle('lv-picked', !!LIVE.sel);
     drawLive(); renderLivePanel();
     if (LIVE.sel) loadTrail(LIVE.sel, true);
   }
@@ -3806,61 +3840,168 @@ html.drv .f-driver{display:none}
   }
   function distM(a, b){ const R = 6371000, r = Math.PI / 180, dl = (b[1] - a[1]) * r, dn = (b[2] - a[2]) * r;
     const x = Math.sin(dl / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
+  const pathMiles = pts => { let m = 0; for (let i = 1; i < pts.length; i++) m += distM(pts[i - 1], pts[i]); return m / 1609.344; };
+  // Speeding along the trail: amber up to 9 mph over the limit, orange 10–19, red 20 or more.
+  const spdBand = over => over >= SERIOUS ? 'red' : over >= 10 ? 'orange' : 'amber';
+  const BAND_RANK = {amber:0, orange:1, red:2};
+  // A trail is the vehicle's journeys from FleetView (its own GPS points, along the roads) plus the saved 2-minute
+  // positions FleetView's journeys don't cover yet (the drive under way, or before journeys were saved), drawn dashed.
+  // Every point is [seconds, lat, lon]. Stops are the gaps of 5+ min between drives.
+  function buildPath(reg, pts, trips){
+    const legs = (trips || []).filter(j => Array.isArray(j.pts) && j.pts.length > 1)
+      .map(j => ({kind:'trip', s:j.s, e:j.e, mi:Number.isFinite(j.mi) ? j.mi : null, from:j.from || '', to:j.to || '', pts:j.pts.map(p => [p[2], p[0], p[1]])}));
+    const covered = t => legs.some(j => t >= j.s - 120 && t <= j.e + 120);
+    let run = null; const runs = [];
+    for (const p of pts) {
+      if (covered(p[0])) { run = null; continue; }
+      if (run && p[0] - run[run.length - 1][0] <= 600) run.push([p[0], p[1], p[2]]); else runs.push(run = [[p[0], p[1], p[2]]]);
+    }
+    for (const r of runs) {
+      // Only the parts where it moved: a parked van's repeated position is a stop, not a drive.
+      let a = 0; while (a + 1 < r.length && distM(r[a], r[a + 1]) < 60) a++;
+      let b = r.length - 1; while (b > a && distM(r[b - 1], r[b]) < 60) b--;
+      const seg = r.slice(a, b + 1);
+      if (seg.length > 1 && pathMiles(seg) > 0.1) legs.push({kind:'gps', s:seg[0][0], e:seg[seg.length - 1][0], mi:null, from:'', to:'', pts:seg});
+    }
+    legs.sort((x, y) => x.s - y.s);
+    legs.forEach((j, i) => { j.n = i + 1; if (j.mi == null) j.mi = pathMiles(j.pts); j.spd = []; });
+    let stops = [];
+    if (legs.length) {
+      for (let i = 0; i < legs.length; i++) {
+        const prev = legs[i], next = legs[i + 1], end = prev.pts[prev.pts.length - 1];
+        const to = next ? next.s : Date.now() / 1000;
+        if ((to - prev.e) / 60 >= STOP_MIN) stops.push({lat:end[1], lon:end[2], from:prev.e, to, open:!next, after:i});
+      }
+    } else stops = trailStops(pts);
+    // Each FleetView speeding event in the last 24 hours, put on the nearest drive (within 400 m).
+    const nowS = Date.now() / 1000, spd = [];
+    for (const e of allEvents) {
+      if (e.reg !== reg || e.utc < nowS - 24 * 3600 || e.lat == null) continue;
+      const at = [e.utc, e.lat, e.lon]; let best = null;
+      legs.forEach((j, li) => j.pts.forEach((p, pi) => { const d = distM(p, at); if (d < 400 && (!best || d < best.d)) best = {d, li, pi}; }));
+      const x = {e, band:spdBand(e.over), leg:best ? best.li : -1, pi:best ? best.pi : -1};
+      spd.push(x); if (best) legs[best.li].spd.push(x);
+    }
+    return {reg, pts, legs, stops, spd};
+  }
   async function loadTrail(reg, fit){
-    let pts;
-    try { pts = await liveApi().trail(reg); } catch (e) { LIVE.err = (e && e.message) || "The trail couldn't be loaded."; renderLivePanel(); return; }
+    const api = liveApi(); let pts, trips;
+    // Journeys are an extra: if they can't be read (say, before the database has them), the positions still draw.
+    try { [pts, trips] = await Promise.all([api.trail(reg), typeof api.journeys === 'function' ? api.journeys(reg).catch(() => []) : []]); }
+    catch (e) { LIVE.err = (e && e.message) || "The trail couldn't be loaded."; renderLivePanel(); return; }
     if (!LIVE.on || LIVE.sel !== reg) return;
     LIVE.trailAt = Date.now();
-    const stops = trailStops(pts);
-    let miles = 0; for (let i = 1; i < pts.length; i++) miles += distM(pts[i - 1], pts[i]) / 1609.344;
-    LIVE.path = {reg, pts, stops, miles};
+    LIVE.path = buildPath(reg, pts || [], trips || []);
+    if (LIVE.leg != null && !LIVE.path.legs[LIVE.leg]) LIVE.leg = null;
     drawTrail();
-    if (fit && pts.length > 1) LIVE.map.fitBounds(L.latLngBounds(pts.map(p => [p[1], p[2]])), {...mapPad(60), ...anim()});
+    if (fit) fitTrail();
     renderLivePanel();
   }
-  // The ghost: the last 24 hours in six 4-hour pieces, the oldest faintest, over a soft wide glow.
+  const winLo = () => Date.now() / 1000 - LIVE.win * 3600;
+  function fitTrail(){
+    const t = LIVE.path; if (!t) return;
+    const lo = winLo(), legs = LIVE.leg != null ? [t.legs[LIVE.leg]] : t.legs.filter(j => j.e >= lo);
+    const ll = legs.flatMap(j => j.pts.filter(p => LIVE.leg != null || p[0] >= lo).map(p => [p[1], p[2]]));
+    const v = LIVE.data && LIVE.data.vehicles.find(x => x.reg === t.reg); if (v && LIVE.leg == null) ll.push([v.lat, v.lon]);
+    if (ll.length > 1) LIVE.map.fitBounds(L.latLngBounds(ll), {...mapPad(60), ...anim(), maxZoom:16});
+  }
+  // The ghost: brightest where the vehicle was most recently, fading to faint at the start of the window, cut into
+  // 10-minute pieces so the fade is smooth. Each drive is numbered at its start with its start time; speeding is laid
+  // over it in amber to red. Picking a drive in the list dims the others.
   function drawTrail(){
-    const t = LIVE.path; LIVE.trail.clearLayers(); if (!t || t.pts.length < 2) return;
-    const nowS = Date.now() / 1000, SPAN = 24 * 3600, BANDS = 6;
-    for (let b = 0; b < BANDS; b++) {
-      const lo = nowS - SPAN + b * SPAN / BANDS, hi = lo + SPAN / BANDS;
-      const seg = []; for (let i = 0; i < t.pts.length; i++) { const p = t.pts[i]; if (p[0] >= lo - 1 && p[0] <= hi + 1) seg.push([p[1], p[2]]); else if (seg.length && p[0] > hi) { seg.push([p[1], p[2]]); break; } }
-      if (seg.length < 2) continue;
-      const op = .14 + .7 * (b + 1) / BANDS;
-      L.polyline(seg, {pane:'trailPane', interactive:false, className:'ghost-glow', weight:9, opacity:op * .35, lineCap:'round', lineJoin:'round'}).addTo(LIVE.trail);
-      L.polyline(seg, {pane:'trailPane', interactive:false, className:'ghost-line', weight:2.5, opacity:op, lineCap:'round', lineJoin:'round'}).addTo(LIVE.trail);
-    }
-    const first = t.pts[0];
-    L.marker([first[1], first[2]], {pane:'trailPane', interactive:false, keyboard:false, icon:L.divIcon({className:'ghost-start', html:'<span></span>', iconSize:[12, 12], iconAnchor:[6, 6]})}).addTo(LIVE.trail);
-    t.stops.forEach((s, i) => {
-      const age = (nowS - s.to) / SPAN;
-      const m = L.marker([s.lat, s.lon], {pane:'trailPane', keyboard:false, title:`Stopped ${hhmm(s.from * 1000)}–${s.open ? 'now' : hhmm(s.to * 1000)} (${durText(s.to - s.from)})`,
-        icon:L.divIcon({className:'ghost-stop', html:`<span style="opacity:${(1 - age * .6).toFixed(2)}">${i + 1}</span>`, iconSize:[20, 20], iconAnchor:[10, 10]})});
-      LIVE.trail.addLayer(m);
+    const t = LIVE.path; LIVE.trail.clearLayers(); if (!t) return;
+    const nowS = Date.now() / 1000, span = LIVE.win * 3600, lo = nowS - span, focus = LIVE.leg;
+    const ageF = s => Math.max(0, Math.min(1, 1 - (nowS - s) / span));
+    t.legs.forEach((j, li) => {
+      if (j.e < lo && focus !== li) return;
+      const dim = focus != null && focus !== li, pts = focus === li ? j.pts : j.pts.filter((p, i) => p[0] >= lo || (j.pts[i + 1] && j.pts[i + 1][0] >= lo));
+      if (pts.length < 2) return;
+      const tip = `<b>${j.n}. ${legSpan(j.s, j.e)}</b> · ${agoText(new Date(j.e * 1000).toISOString())}<br>${j.mi.toFixed(1)} mi${j.from && j.to ? ` · ${esc(j.from)} → ${esc(j.to)}` : ''}${j.kind === 'gps' ? '<br><i>From 2-minute positions, so not along the road</i>' : ''}`;
+      let piece = [pts[0]];
+      const flush = () => {
+        if (piece.length < 2) return;
+        const f = focus === li ? Math.max(.75, ageF(piece[piece.length - 1][0])) : ageF((piece[0][0] + piece[piece.length - 1][0]) / 2);
+        const op = dim ? .1 : .16 + .84 * f ** 1.2, w = 2 + 1.8 * f, ll = piece.map(p => [p[1], p[2]]);
+        if (!dim && f > .35) L.polyline(ll, {pane:'trailPane', interactive:false, className:'ghost-glow', weight:w + 7, opacity:op * .3, lineCap:'round', lineJoin:'round'}).addTo(LIVE.trail);
+        L.polyline(ll, {pane:'trailPane', className:'ghost-line' + (j.kind === 'gps' ? ' gps' : ''), weight:w, opacity:op, lineCap:'round', lineJoin:'round', dashArray:j.kind === 'gps' ? '5 7' : null})
+          .bindTooltip(tip, {sticky:true, className:'ghost-tip', direction:'top', offset:[0, -8]}).on('click', () => pickLeg(li)).addTo(LIVE.trail);
+      };
+      for (let i = 1; i < pts.length; i++) { piece.push(pts[i]); if (pts[i][0] - piece[0][0] >= 600) { flush(); piece = [pts[i]]; } }
+      flush();
+      // Speeding stretches: the road either side of the event (about 300 m), in its colour.
+      if (!dim) for (const x of j.spd) {
+        if (x.e.utc < lo && focus !== li) continue;
+        let a = x.pi, b = x.pi, da = 0, db = 0;
+        while (a > 0 && da < 300) { da += distM(j.pts[a - 1], j.pts[a]); a--; }
+        while (b < j.pts.length - 1 && db < 300) { db += distM(j.pts[b], j.pts[b + 1]); b++; }
+        const ll = j.pts.slice(a, b + 1).map(p => [p[1], p[2]]);
+        if (ll.length > 1) L.polyline(ll, {pane:'trailPane', interactive:false, className:`spd-line spd-${x.band}`, weight:7, opacity:.95, lineCap:'round'}).addTo(LIVE.trail);
+      }
+      const p0 = pts[0], f0 = focus === li ? 1 : ageF(j.s);
+      L.marker([p0[1], p0[2]], {pane:'trailPane', keyboard:false, title:`Drive ${j.n}, from ${hhmm(j.s * 1000)}`, zIndexOffset:li,
+        icon:L.divIcon({className:'ghost-lab' + (dim ? ' dim' : ''), html:`<span style="opacity:${dim ? .35 : (.45 + .55 * f0).toFixed(2)}"><b>${j.n}</b>${hhmm(j.s * 1000).replace('yesterday ', 'yest. ')}</span>`, iconSize:null, iconAnchor:[11, 11]})})
+        .on('click', () => pickLeg(li)).addTo(LIVE.trail);
     });
+    for (const s of t.stops) {
+      if (s.to < lo || focus != null) continue;
+      L.marker([s.lat, s.lon], {pane:'trailPane', keyboard:false, title:`Stopped ${hhmm(s.from * 1000)}–${s.open ? 'now' : hhmm(s.to * 1000)} (${durText(s.to - s.from)})`,
+        icon:L.divIcon({className:'ghost-stop', html:`<span style="opacity:${(.4 + .6 * ageF(s.to)).toFixed(2)}">P</span>`, iconSize:[18, 18], iconAnchor:[9, 9]})}).addTo(LIVE.trail);
+    }
+    // A dot where each speeding event was (on the drive, or on its own when no drive is near it).
+    for (const x of t.spd) {
+      if (focus != null ? x.leg !== focus : x.e.utc < lo) continue;
+      L.marker([x.e.lat, x.e.lon], {pane:'trailPane', keyboard:false, icon:L.divIcon({className:`spd-dot spd-${x.band}`, html:'<span></span>', iconSize:[12, 12], iconAnchor:[6, 6]})})
+        .bindTooltip(spdTip(x), {className:'ghost-tip', direction:'top'}).addTo(LIVE.trail);
+    }
+  }
+  // "yesterday 21:22–23:13": the day once, when both ends are on it.
+  const legSpan = (s, e) => { const a = hhmm(s * 1000), b = hhmm(e * 1000), da = a.replace(/\d\d:\d\d$/, ''), db = b.replace(/\d\d:\d\d$/, '');
+    return da === db ? `${a}–${b.slice(db.length)}` : `${a}–${b}`; };
+  const spdTip = x => `<b>${x.e.speed} mph in a ${x.e.limit}</b> · ${x.e.over} over<br>${hhmm(x.e.utc * 1000)}`;
+  function pickLeg(i){
+    LIVE.leg = LIVE.leg === i ? null : i;
+    drawTrail(); fitTrail(); renderLivePanel();
   }
   const durText = sec => { const m = Math.round(sec / 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`; };
+  const LIVE_WINS = [2, 6, 24];
   function renderLivePanel(){
     const el = $('#mpanel'), vs = ((LIVE.data && LIVE.data.vehicles) || []).slice();
     const order = {moving:0, idle:1, parked:2, stale:3};
     vs.sort((a, b) => order[liveState(a)] - order[liveState(b)] || a.reg.localeCompare(b.reg));
     const counts = vs.reduce((c, v) => (c[liveState(v)] = (c[liveState(v)] || 0) + 1, c), {});
     $('#map-count').textContent = LIVE.data ? `${plural(vs.length, 'vehicle', 'vehicles')} · ${counts.moving || 0} moving · updated ${hhmm(Date.now())}` : 'Loading live positions…';
-    $('#map-recon').textContent = 'Positions from FleetView every 2 minutes. Trails show the last 24 hours, then are deleted.';
+    $('#map-recon').textContent = 'Positions from FleetView every 2 minutes, drives along the road from FleetView’s journeys. Trails show up to the last 24 hours, then are deleted.';
     const v = LIVE.sel ? vs.find(x => x.reg === LIVE.sel) : null;
     let h = '';
     if (LIVE.err) h += `<section><p class="lv-err">${esc(LIVE.err)}</p></section>`;
     if (v) {
       const st = liveState(v), t = LIVE.path && LIVE.path.reg === v.reg ? LIVE.path : null;
-      h += `<div class="mp-head"><div><div class="kick">Live · last 24 hours</div><h3>${esc(v.reg)}</h3></div><button type="button" class="close" data-live="back" aria-label="Back to all vehicles">×</button></div>
+      h += `<div class="mp-head"><div><div class="kick">Live · last ${LIVE.win} hours</div><h3>${esc(v.reg)}</h3></div><button type="button" class="close" data-live="back" aria-label="Back to all vehicles">×</button></div>
         <div class="mp-body"><section><div class="lv-now lv-${st}"><span class="lv-dot"></span><b>${STATE_TEXT[st]}</b>${st === 'moving' ? ` · ${v.speed} mph` : ''}</div>
-        <p>${esc(v.driver || 'No FleetView driver')} · seen ${agoText(v.at)} (${hhmm(v.at)})</p></section>`;
+        <p>${esc(v.driver || 'No FleetView driver')} · seen ${agoText(v.at)} (${hhmm(v.at)})</p></section>
+        <section><div class="lv-win" role="group" aria-label="How far back">${LIVE_WINS.map(w => `<button type="button" data-live="win" data-h="${w}" aria-pressed="${LIVE.win === w}">Last ${w} h</button>`).join('')}</div>
+        <div class="lv-age" aria-hidden="true"><i></i><span>${LIVE.win} h ago</span><span>${LIVE.win / 2} h</span><span>now</span></div>
+        <p class="lv-key"><span class="k spd-amber"></span>Up to 9 over <span class="k spd-orange"></span>10–19 over <span class="k spd-red"></span>20+ over</p></section>`;
+      const lo = winLo();
       if (!t) h += `<section><p>Loading the trail…</p></section>`;
-      else if (t.pts.length < 2) h += `<section><p>No movement saved in the last 24 hours yet. Trails build up from when the live map started saving positions.</p></section>`;
       else {
-        h += `<section><div class="lv-stats"><div><b>${t.miles.toFixed(1)}</b><span>miles in 24 h</span></div><div><b>${t.stops.length}</b><span>${t.stops.length === 1 ? 'stop' : 'stops'} of 5+ min</span></div><div><b>${hhmm(t.pts[0][0] * 1000)}</b><span>trail starts</span></div></div>
-          <button type="button" class="btn ghost sm" data-live="fit">Show the whole trail</button></section>`;
-        if (t.stops.length) h += `<section><h4>Stops</h4><ol class="lv-stops">${t.stops.map((s, i) => `<li><button type="button" data-live="stop" data-i="${i}"><span class="n">${i + 1}</span><span>${hhmm(s.from * 1000)}–${s.open ? 'now' : hhmm(s.to * 1000)}<small>${durText(s.to - s.from)}</small></span></button></li>`).join('')}</ol></section>`;
+        const legs = t.legs.filter(j => j.e >= lo), stops = t.stops.filter(s => s.to >= lo), spd = t.spd.filter(x => x.e.utc >= lo);
+        const miles = legs.reduce((m, j) => m + (j.s >= lo ? j.mi : pathMiles(j.pts.filter(p => p[0] >= lo))), 0);
+        const worst = spd.reduce((w, x) => BAND_RANK[x.band] > BAND_RANK[w] ? x.band : w, 'amber');
+        h += `<section><div class="lv-stats"><div><b>${miles.toFixed(1)}</b><span>miles</span></div><div><b>${legs.length}</b><span>${legs.length === 1 ? 'drive' : 'drives'}</span></div><div class="${spd.length ? 'spd-' + worst : ''}"><b>${spd.length}</b><span>speeding</span></div></div>
+          ${legs.length ? `<button type="button" class="btn ghost sm" data-live="fit">${LIVE.leg != null ? 'Show every drive' : 'Show the whole trail'}</button>` : ''}</section>`;
+        if (!legs.length) h += `<section><p>${stops.length ? `Parked since ${hhmm(stops[stops.length - 1].from * 1000)}. No drives in the last ${LIVE.win} hours.` : `No drives saved in the last ${LIVE.win} hours.`}</p></section>`;
+        else {
+          // Newest first, so the top of the list is where it is now; numbers count up through the day.
+          const rows = [];
+          for (const j of legs) {
+            const li = t.legs.indexOf(j), stop = stops.find(s => s.after === li);
+            const w = j.spd.reduce((a, x) => BAND_RANK[x.band] > BAND_RANK[a] ? x.band : a, 'amber');
+            rows.push(`<li><button type="button" data-live="leg" data-i="${li}" aria-pressed="${LIVE.leg === li}"><span class="n">${j.n}</span><span class="jt"><b>${legSpan(j.s, j.e)}</b><small>${j.mi.toFixed(1)} mi · ${durText(j.e - j.s)}${j.from && j.to ? ` · ${esc(j.from)} → ${esc(j.to)}` : j.kind === 'gps' ? ' · from 2-minute positions' : ''}</small></span>${j.spd.length ? `<span class="jsp spd-${w}" title="${plural(j.spd.length, 'speeding event', 'speeding events')}">${j.spd.length}</span>` : ''}</button></li>`);
+            if (stop) rows.push(`<li class="lv-gap"><span class="p">P</span>${stop.open ? `Stopped since ${hhmm(stop.from * 1000)}` : `Stopped ${durText(stop.to - stop.from)}`}${j.to ? ` · ${esc(j.to)}` : ''}</li>`);
+          }
+          h += `<section><h4>Drives</h4><ol class="lv-legs">${rows.reverse().join('')}</ol></section>`;
+        }
       }
       h += `</div>`;
     } else {
@@ -3874,8 +4015,9 @@ html.drv .f-driver{display:none}
       const a = b.dataset.live;
       if (a === 'pick') pickLive(b.dataset.reg);
       else if (a === 'back') pickLive(LIVE.sel);
-      else if (a === 'fit' && LIVE.path) LIVE.map.fitBounds(L.latLngBounds(LIVE.path.pts.map(p => [p[1], p[2]])), {...mapPad(60), ...anim()});
-      else if (a === 'stop' && LIVE.path) { const s = LIVE.path.stops[+b.dataset.i]; LIVE.map.setView([s.lat, s.lon], Math.max(LIVE.map.getZoom(), 15), anim()); }
+      else if (a === 'fit') { LIVE.leg = null; drawTrail(); fitTrail(); renderLivePanel(); }
+      else if (a === 'leg') pickLeg(+b.dataset.i);
+      else if (a === 'win') { LIVE.win = +b.dataset.h; LIVE.leg = null; try { localStorage.setItem('flr-live-win', String(LIVE.win)); } catch (e) {} drawTrail(); fitTrail(); renderLivePanel(); }
     };
   }
 
