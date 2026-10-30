@@ -84,6 +84,7 @@
     'project.discarded': (e) => ['dropped their copy of ', quote(e), ' after it was deleted elsewhere'],
     'project.duplicate': (e) => ['duplicated ', quote(e)],
     'project.revision': (e) => ['started a new revision of ', quote(e)],
+    'project.fromdeal': (e) => ['started ', quote(e), ' from a HubSpot deal'],
     'project.export': (e) => ['exported ', quote(e)],
     'room.save': (e, d) => ['saved ', room(e), d.name ? [' “', b(d.name), '”'] : '', ' on ', quote(e)],
     'room.delete': (e) => ['deleted ', room(e), ' from ', quote(e)],
