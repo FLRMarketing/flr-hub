@@ -1,0 +1,60 @@
+/* ============================================================================
+   FLR Hub Assistant: his face. Six drawings of the same man (face/*.webp, made
+   from the originals by art/make-faces.mjs), one per mood, stacked in one box.
+   A new mood fades in on top of the last, so he never moves or changes size
+   between them, and no drawing is bent into another. Only opacity and
+   transform animate, so it stays cheap.
+   <span class="face" data-mood="…"> sets his mood (assistant.js decides which):
+     idle    thumbs up (default.webp): floats gently; now and then a small tilt (class "tilt")
+     think   hand on chin (thinking.webp): while an answer takes a moment to fetch; almost still
+     cheer   fist pump (celebrating.webp): found it; a small hop, then back to idle
+     care    open hand (reassuring.webp): privacy, someone's own leave or driving, sign-in, bad news
+     unsure  shrug (unsure.webp): no answer, or not sure which one you mean
+     grr     raised fist (angry.webp): only when something broke on the Hub's side, then the explanation
+     land    thumbs up: back in the corner after the chat closes, a small settle
+   data-look (hover or keyboard focus): he lifts a little towards you.
+   ========================================================================== */
+.face{position:relative;display:block;flex:none;width:var(--face-w,64px);aspect-ratio:224/218;pointer-events:none;user-select:none;-webkit-user-select:none;
+  --fade-in:.16s;--fade-out:.18s;--fade-wait:.12s}
+.face-float{position:absolute;inset:0;animation:face-float 5.2s ease-in-out infinite}
+.face-body{position:absolute;inset:0;transform-origin:50% 96%;
+  transition:translate .45s cubic-bezier(.3,1.3,.5,1),scale .45s cubic-bezier(.3,1.3,.5,1),rotate .6s cubic-bezier(.3,1.2,.5,1)}
+/* the drawings: the one going stays solid until the next is nearly in, so he never looks see-through as they swap */
+.face img{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;-webkit-user-drag:none;transition:opacity var(--fade-out) ease-in var(--fade-wait)}
+.face[data-mood="idle"] .f-default,.face[data-mood="land"] .f-default,.face[data-mood="think"] .f-thinking,
+.face[data-mood="cheer"] .f-celebrating,.face[data-mood="care"] .f-reassuring,.face[data-mood="unsure"] .f-unsure,
+.face[data-mood="grr"] .f-angry{opacity:1;z-index:1;transition:opacity var(--fade-in) ease-out}
+
+/* his shadow on the "floor", which shrinks as he rises */
+.face-shadow{position:absolute;left:20%;right:20%;top:96%;height:8%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(8,16,48,.24),rgba(8,16,48,0));animation:face-shadow 5.2s ease-in-out infinite}
+
+@keyframes face-float{0%,100%{translate:0 0}50%{translate:0 -3.5%}}
+@keyframes face-shadow{0%,100%{scale:1;opacity:1}50%{scale:.86;opacity:.7}}
+@keyframes face-tilt{0%,100%{rotate:0deg}30%{rotate:-4deg}64%{rotate:1.5deg}}
+@keyframes face-sway{0%,100%{rotate:-1deg}50%{rotate:1deg}}
+@keyframes face-hop{0%{translate:0 0;scale:1}30%{translate:0 -9%;scale:1.02 .99}55%{translate:0 0;scale:1.04 .95}76%{scale:.99 1.02}100%{translate:0 0;scale:1}}
+@keyframes face-nod{0%,100%{translate:0 0}40%{translate:0 2.5%}}
+@keyframes face-grr{0%,100%{rotate:0deg;translate:0 0}18%{rotate:-3deg;translate:0 -2%}38%{rotate:3deg}58%{rotate:-2deg}78%{rotate:1deg}}
+@keyframes face-land{0%{scale:1}35%{scale:1.04 .94}70%{scale:.99 1.02}100%{scale:1}}
+
+.face[data-look] .face-body{translate:0 -6%;scale:1.06}
+.face.tilt[data-mood="idle"] .face-body{animation:face-tilt 1.7s ease-in-out}
+.face[data-mood="think"] .face-float,.face[data-mood="think"] .face-shadow{animation-play-state:paused}
+.face[data-mood="think"] .face-body{animation:face-sway 3.2s ease-in-out infinite}
+.face[data-mood="cheer"] .face-body{animation:face-hop .62s cubic-bezier(.3,.7,.4,1)}
+.face[data-mood="care"] .face-body{animation:face-nod .7s ease-in-out}
+.face[data-mood="unsure"] .face-body{rotate:-3deg}
+.face[data-mood="grr"] .face-body{animation:face-grr .5s ease-in-out}
+.face[data-mood="land"] .face-body{animation:face-land .4s cubic-bezier(.3,.7,.4,1)}
+
+/* the small one in the chat's header: still, no shadow */
+.face.mini .face-float{animation:none}
+.face.mini .face-shadow{display:none}
+
+/* reduced motion: he keeps still. His mood still shows, as the drawing changes (a quick fade, no movement). */
+@media (prefers-reduced-motion:reduce){
+  .face .face-float,.face .face-shadow,.face .face-body{animation:none!important}
+  .face .face-body{transition:none;translate:none!important;scale:none!important;rotate:none!important}
+  .face{--fade-in:.1s;--fade-out:.1s;--fade-wait:.06s}
+}

@@ -1,0 +1,2710 @@
+{
+  "about": "The FLR Hub Assistant's approved help. Everything here is public (this site is), so it holds how-to text only: no names, email addresses, records, codes or private links. Links are relative to the Hub; a tool whose address lives in the FLR database is linked by its tile id and only shown to people whose Hub has that tile. 'ask' is how people might ask, 'keys' are extra words it can be found by, 'who' is who can do it (admin, estimator, approver or driver). 'care' marks a topic that's a worry or about privacy, which the assistant answers with a reassuring face rather than a celebration. 'alsoPeople' lists words the help uses in its own names that are also people's first names (\"the Jeff Day\", \"Likkle Jeff\"): in a question they're taken for a person unless they're part of one of those names. 'data' names the look-up in records.js that answers with the person's own records (read-only) when they're signed in and have the tool. Every answer shows where it comes from: help answers say \"Hub help\", and an entry may add 'updated' (the day its answer was last checked against its tool, as YYYY-MM-DD) to show \"Hub help · updated 1 Oct\"; look-ups say \"Live\" with the tool and when its data was last synced. Check changes with: node assistant/tests/run.mjs",
+  "version": 1,
+  "alsoPeople": [
+    "Jeff"
+  ],
+  "entries": [
+    {
+      "id": "assistant-about",
+      "tool": "hub",
+      "title": "What Likkle Jeff can do",
+      "ask": [
+        "who is likkle jeff",
+        "what can likkle jeff do",
+        "what is likkle jeff",
+        "is likkle jeff an AI",
+        "what can you do",
+        "what can the assistant help with",
+        "are you an AI",
+        "is this a chatbot",
+        "what can this chat do",
+        "how does this assistant work",
+        "can the assistant do things for me",
+        "what can you not do",
+        "where do your answers come from",
+        "what does hub help mean"
+      ],
+      "keys": [
+        "likkle jeff",
+        "likkle",
+        "assistant",
+        "chatbot",
+        "ai",
+        "bot",
+        "chat"
+      ],
+      "answer": "I’m Likkle Jeff, the Hub’s assistant. I can explain the Hub and look up your own figures. I can’t book, approve or change anything: that happens in the tools.\n\nEach answer says where it’s from: “Hub help”, or “Live” for your leave, driving or quotations, with how fresh they are. I show only what your tools would show you, and if the help doesn’t cover something, I’ll say so rather than guess.",
+      "related": [
+        "about-hub"
+      ]
+    },
+    {
+      "id": "about-hub",
+      "tool": "hub",
+      "title": "What’s on the Hub",
+      "ask": [
+        "what is the hub",
+        "what tools are on the hub",
+        "what can I do on the hub",
+        "which apps are there",
+        "what is the flr hub for",
+        "what can I use the hub for"
+      ],
+      "keys": [
+        "hub",
+        "tools",
+        "apps",
+        "home screen"
+      ],
+      "answer": "The FLR Hub is the home for FLR’s staff tools: the Cost Estimator, Fleet Management, Annual Leave and the Fitter Schedule. It shows the tools your account can use. Hover over an icon, or press and hold it on a phone, to see what it does.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "tools-missing",
+        "assistant-about"
+      ]
+    },
+    {
+      "id": "hub-attention",
+      "tool": "hub",
+      "title": "“Needs your attention” and the red numbers",
+      "ask": [
+        "what is needs your attention",
+        "what do the red numbers on the icons mean",
+        "why is there a number on the cost estimator icon",
+        "what does the number on fleet management mean",
+        "what needs my attention",
+        "why can't I see needs your attention",
+        "how up to date are the counts on the hub",
+        "what are the badges on the hub icons"
+      ],
+      "keys": [
+        "attention",
+        "badge",
+        "badges",
+        "red number",
+        "counts",
+        "panel"
+      ],
+      "answer": "The Hub home lists what needs you, as counts only: leave requests waiting for a decision (for approvers), vehicles overdue or needing checking (Admins and Super Admins), your own empty drafts in the Estimator, and new accounts waiting (Super Admins). Each line appears only if you can open that tool, and the red number on its icon matches. Counts are read again after five minutes.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "about-hub",
+        "tools-missing"
+      ]
+    },
+    {
+      "id": "signin",
+      "tool": "hub",
+      "title": "Sign in",
+      "ask": [
+        "how do I sign in",
+        "how do I log in to the hub",
+        "where do I log in",
+        "I can't log in",
+        "login isn't working",
+        "problems signing in"
+      ],
+      "keys": [
+        "signin",
+        "email",
+        "password"
+      ],
+      "answer": "Sign in on the Hub with your FLR email address and password. One sign-in opens the Hub’s tools on that device, including the Cost Estimator; the Fitter Schedule also asks for a team passcode.\n\nIf your password isn’t accepted, use “Forgotten your password?” below the “Sign in” button.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "password-forgot",
+        "account-new"
+      ]
+    },
+    {
+      "id": "account-new",
+      "tool": "hub",
+      "title": "Create an FLR account",
+      "ask": [
+        "how do I create an account",
+        "how do I sign up",
+        "I don't have an account",
+        "I'm new, how do I get access",
+        "register for the hub",
+        "make an account for the hub"
+      ],
+      "keys": [
+        "account",
+        "new starter"
+      ],
+      "answer": "On the Hub’s sign-in screen, choose “Create an account”. You’ll need your full name, your work email, a password of at least 10 characters with letters and numbers, and the access code from an FLR Super Admin. A Super Admin then checks who you are and switches on your tools.",
+      "steps": [
+        "Open the Hub and choose “Create an account”, below “Sign in”.",
+        "Enter your full name and work email, then a password and the same password again under “Confirm”.",
+        "Enter the access code from an FLR Super Admin.",
+        "Press “Create account”.",
+        "Wait for a Super Admin to check who you are. Your tools appear on the Hub once they’re on."
+      ],
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "account-waiting",
+        "access-code",
+        "signin"
+      ]
+    },
+    {
+      "id": "account-waiting",
+      "tool": "hub",
+      "title": "Waiting for your tools",
+      "ask": [
+        "I've registered but I can't see any tools",
+        "why is my account waiting",
+        "my hub says waiting for a super admin",
+        "when will my tools appear",
+        "I made an account and nothing is there",
+        "how long until my tools are switched on"
+      ],
+      "keys": [
+        "waiting",
+        "empty hub",
+        "new account"
+      ],
+      "answer": "New accounts wait until a Super Admin checks it’s really you, using your usual work number or Teams, or through IT. They then switch on your tools, which appear on the Hub. You don’t need to do anything. If it’s been more than a working day, ask a Super Admin.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "account-new",
+        "tools-missing"
+      ]
+    },
+    {
+      "id": "access-code",
+      "tool": "hub",
+      "title": "Get the access code",
+      "ask": [
+        "what is the access code",
+        "where do I get the access code",
+        "I need the access code",
+        "the access code isn't working",
+        "my code isn't accepted when I sign up"
+      ],
+      "keys": [
+        "access code",
+        "code"
+      ],
+      "answer": "You only need the access code to create an account. Ask an FLR Super Admin for it: it isn’t written anywhere on the Hub, and I don’t know it.\n\nIf it isn’t accepted, check it with a Super Admin, as it may have changed.",
+      "related": [
+        "account-new"
+      ]
+    },
+    {
+      "id": "password-forgot",
+      "tool": "hub",
+      "title": "Reset a forgotten password",
+      "care": true,
+      "ask": [
+        "I forgot my password",
+        "reset my password",
+        "forgotten password",
+        "password reset link",
+        "I'm locked out of my account",
+        "I can't remember my password"
+      ],
+      "keys": [
+        "forgot",
+        "password",
+        "reset"
+      ],
+      "answer": "On the Hub’s sign-in screen, choose “Forgotten your password?”, enter your email and press “Send reset link”. The link in the email opens “Choose a new password”; enter it twice and press “Save password”.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      },
+      "related": [
+        "signin",
+        "password-change"
+      ]
+    },
+    {
+      "id": "password-change",
+      "tool": "estimator",
+      "title": "Change your password",
+      "ask": [
+        "how do I change my password",
+        "update my password",
+        "set a new password",
+        "change password"
+      ],
+      "keys": [
+        "password",
+        "change"
+      ],
+      "answer": "In the Cost Estimator, press your name at the top right (your initials on a phone), then “Change password…”. You can also set a new one from the Hub’s sign-in screen with “Forgotten your password?”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "password-forgot"
+      ]
+    },
+    {
+      "id": "signout",
+      "tool": "hub",
+      "title": "Sign out",
+      "ask": [
+        "how do I sign out",
+        "log out",
+        "sign out of the hub",
+        "switch to a different account",
+        "use another account",
+        "sign out on a shared computer"
+      ],
+      "keys": [
+        "signout",
+        "switch account"
+      ],
+      "answer": "On the Hub, press the round button with your initials at the top, then “Sign out”. It signs you out of the Hub and its tools on this device.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      }
+    },
+    {
+      "id": "tools-missing",
+      "tool": "hub",
+      "title": "A tool is missing from your Hub",
+      "care": true,
+      "ask": [
+        "a tool is missing from my hub",
+        "I can't see a tool on the hub",
+        "how do I get access to a tool",
+        "where has my app gone",
+        "some of my tools didn't load",
+        "why is an icon missing",
+        "why can't I see the same tools as my manager",
+        "it says I don't have access to the cost estimator",
+        "annual leave says I don't have access",
+        "why can't I open fleet management"
+      ],
+      "keys": [
+        "missing",
+        "access",
+        "icon"
+      ],
+      "answer": "Your Hub shows the apps your account can use: FLR Super Admins choose them in Hub settings. If one you need isn’t there, or an app says you don’t have access, ask an FLR Super Admin.\n\nIf the Hub says “Some of your tools didn’t load”, press “Try again”.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      }
+    },
+    {
+      "id": "account-off",
+      "tool": "hub",
+      "title": "Your account is switched off",
+      "care": true,
+      "ask": [
+        "my account is switched off",
+        "my account has been disabled",
+        "it says my FLR account is switched off",
+        "my account is blocked"
+      ],
+      "keys": [
+        "disabled",
+        "switched off",
+        "blocked"
+      ],
+      "answer": "If a page says your FLR account is switched off, only an FLR Super Admin can switch it back on, in Hub settings. Ask one to check it."
+    },
+    {
+      "id": "hub-settings",
+      "tool": "hub",
+      "who": "superadmin",
+      "title": "Manage accounts and app access",
+      "ask": [
+        "how do I give someone access to an app",
+        "turn off someone's access to an app",
+        "switch the cost estimator on for someone",
+        "stop someone using fleet management",
+        "manage staff accounts",
+        "where do I manage accounts now",
+        "switch off a leaver's account",
+        "how do I close registration",
+        "send someone else a password reset",
+        "where are the hub settings",
+        "which apps does a new account get",
+        "change which apps a person can use"
+      ],
+      "keys": [
+        "settings",
+        "accounts",
+        "app access",
+        "registration",
+        "leaver"
+      ],
+      "answer": "FLR Super Admins look after every account in Hub settings: the gear beside your initials on the Hub. New accounts wait under “New accounts waiting” until you’ve checked who they are. Under “People & access”, pick a person to change their role, status, apps or password, or choose “By app”. Nothing changes until you press Save changes. Registration, the access code and what new accounts get are under “Registration”.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "approve-account",
+        "tools-missing",
+        "account-off"
+      ]
+    },
+    {
+      "id": "hub-activity",
+      "tool": "hub",
+      "who": "superadmin",
+      "title": "See who changed what (the change log)",
+      "ask": [
+        "where is the change log",
+        "who changed this quote",
+        "see what everyone has been doing on the hub",
+        "audit log",
+        "who changed someone's role",
+        "history of changes",
+        "activity log"
+      ],
+      "keys": [
+        "change log",
+        "activity",
+        "audit",
+        "history"
+      ],
+      "answer": "Every change on the Hub and in its apps is in Hub settings under “Activity”, as plain sentences, newest first: who did it and when. Pick an area such as Quotes or Accounts, or one person, to narrow it down, and press “Details” for the specifics. The Cost Estimator’s old Change log tab points there.",
+      "link": {
+        "href": "settings/#activity",
+        "label": "Open Activity"
+      },
+      "related": [
+        "hub-settings"
+      ]
+    },
+    {
+      "id": "likkle-jeff-switch",
+      "tool": "hub",
+      "title": "Switch Likkle Jeff on or off",
+      "ask": [
+        "how do I turn likkle jeff off",
+        "turn off the assistant",
+        "hide likkle jeff",
+        "switch likkle jeff off for everyone",
+        "how do I get likkle jeff back",
+        "turn the help button back on",
+        "can I hide the help button",
+        "where is the likkle jeff switch",
+        "why has likkle jeff disappeared",
+        "stop the assistant showing"
+      ],
+      "keys": [
+        "switch",
+        "hide",
+        "turn off",
+        "help button"
+      ],
+      "answer": "Super Admins switch Likkle Jeff on or off for everyone in Hub settings, under “Likkle Jeff”. The change shows the next time each page is opened or refreshed, on every Hub page and the Fitter Schedule. If you’re not a Super Admin, ask one.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "hub-settings",
+        "assistant-about"
+      ]
+    },
+    {
+      "id": "approve-account",
+      "tool": "hub",
+      "who": "superadmin",
+      "title": "Check and switch on a new account",
+      "ask": [
+        "how do I approve a new account",
+        "someone has registered, what do I do",
+        "new accounts waiting",
+        "check who someone is before switching them on",
+        "switch on someone who has just registered",
+        "how do I check a new account is genuine"
+      ],
+      "keys": [
+        "waiting",
+        "identity",
+        "registered"
+      ],
+      "answer": "In Hub settings, new accounts are listed under “New accounts waiting”. Open the person, check it’s really them with contact details FLR already holds (their work number from the staff list, Teams on their existing work account, or IT) and write a short note. Then choose their role and tools, tick the box and confirm. If you can’t confirm who it is, turn the account down: it stays switched off.",
+      "steps": [
+        "Open Hub settings and find the person under “New accounts waiting”.",
+        "Contact them using details FLR already holds, never ones that came with the sign-up.",
+        "Say how you checked, add a note (when, and the IT ticket number if IT checked), choose the role and tools, and tick the box.",
+        "Confirm. Their tools appear on their Hub straight away."
+      ],
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "hub-settings",
+        "admin-roles"
+      ]
+    },
+    {
+      "id": "admin-roles",
+      "tool": "hub",
+      "title": "Admins and Super Admins",
+      "ask": [
+        "what's the difference between an admin and a super admin",
+        "what can an admin do",
+        "what can a super admin do",
+        "who can change the settings",
+        "why can't an admin open hub settings",
+        "what does super admin mean"
+      ],
+      "keys": [
+        "super admin",
+        "roles"
+      ],
+      "answer": "Super Admins look after accounts, roles, app access, registration and every app’s settings. Admins do the day-to-day work: they approve leave and see everyone’s, see every driver and fitter arrivals, and reassign quotations, but can’t see or change any settings. Your role is shown in your account on the Hub.",
+      "related": [
+        "hub-settings",
+        "estimate-roles"
+      ]
+    },
+    {
+      "id": "back-to-hub",
+      "tool": "hub",
+      "title": "Get back to the Hub",
+      "ask": [
+        "how do I get back to the hub",
+        "go back to the home page",
+        "return to the hub",
+        "where is the home screen",
+        "what does the flr logo do",
+        "is the logo a link to the hub"
+      ],
+      "keys": [
+        "back",
+        "home",
+        "return",
+        "logo"
+      ],
+      "answer": "Press the FLR logo at the top of any tool, or use your browser’s Back button. The link below goes there too.",
+      "link": {
+        "href": "./",
+        "label": "Go to the Hub"
+      }
+    },
+    {
+      "id": "name-change",
+      "tool": "estimator",
+      "title": "Change the name on your account",
+      "ask": [
+        "how do I change my name",
+        "my name is spelt wrong",
+        "update my display name",
+        "change the name on my quotes"
+      ],
+      "keys": [
+        "name",
+        "display name",
+        "spelling"
+      ],
+      "answer": "In the Cost Estimator, press your name at the top right (your initials on a phone), change “Your name (as shown on quotations and in the change log)” and press “Save”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "appearance",
+      "tool": "hub",
+      "title": "Switch between light and dark",
+      "ask": [
+        "dark mode",
+        "how do I turn on dark mode",
+        "change the theme",
+        "light mode",
+        "the screen is too dark"
+      ],
+      "keys": [
+        "dark",
+        "light",
+        "theme",
+        "appearance"
+      ],
+      "answer": "The Hub and the Cost Estimator follow your device’s light or dark setting. To choose one for the Cost Estimator, press your name at the top right (your initials on a phone), then “Appearance”. Fleet Management has its own light and dark button at the top, and the Fitter Schedule has “Switch theme”."
+    },
+    {
+      "id": "about-estimator",
+      "tool": "estimator",
+      "title": "About the Cost Estimator",
+      "ask": [
+        "what is the cost estimator",
+        "what does the estimator do",
+        "where do I do quotes",
+        "open the estimator"
+      ],
+      "keys": [
+        "estimate",
+        "quotation",
+        "estimator"
+      ],
+      "answer": "The Cost Estimator builds FLR’s flooring quotations in four stages: “Project details”, “Rooms”, “Review costs” and “Client quotation”. It opens from the Hub already signed in.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-new",
+        "estimate-find"
+      ]
+    },
+    {
+      "id": "estimate-new",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Start a new estimate",
+      "ask": [
+        "how do I start a new estimate",
+        "create a new quote",
+        "new quotation",
+        "make an estimate",
+        "start a quote for a new job",
+        "how do I price up a new job"
+      ],
+      "keys": [
+        "new",
+        "estimate",
+        "quotation"
+      ],
+      "answer": "In the Cost Estimator, press “Create new quotation” on the Projects page, then use the next FLR number or type an existing FLR reference.",
+      "steps": [
+        "Open the Cost Estimator. It opens on Projects.",
+        "Press “Create new quotation”. If it asks you to complete your profile, add your name and press “Save and continue”.",
+        "Press “Create with the next FLR number”, or type a reference such as Q-2026-041 under “Or use an existing FLR reference” and press “Create with this reference”.",
+        "Fill in “Project details”, then press “Continue to rooms”."
+      ],
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-rooms",
+        "estimate-stages"
+      ]
+    },
+    {
+      "id": "estimate-rooms",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Add rooms to an estimate",
+      "ask": [
+        "how do I add a room",
+        "add another room to a quote",
+        "add areas to an estimate",
+        "enter room measurements",
+        "duplicate a room",
+        "save a room",
+        "enter the room sizes"
+      ],
+      "keys": [
+        "room",
+        "area",
+        "floorcovering",
+        "measurements"
+      ],
+      "answer": "On the “Rooms” stage, press “Add first room”, fill in the room or area name, project type, who measured it and the specified floorcovering, then press “Save room” or “Save and add another”. Saved rooms have “Edit”, “Duplicate”, “Copy ×…” and “Delete”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-stages",
+        "estimate-approve"
+      ]
+    },
+    {
+      "id": "estimate-find",
+      "tool": "estimator",
+      "title": "Find a quotation",
+      "ask": [
+        "where can I find an old quote",
+        "find an existing estimate",
+        "search for a quotation",
+        "look up a quote by client",
+        "open a previous estimate",
+        "where are my quotes",
+        "show the draft quotes",
+        "approved quotes this month",
+        "quotes by an estimator"
+      ],
+      "keys": [
+        "find",
+        "search",
+        "existing",
+        "previous",
+        "draft",
+        "approved",
+        "quotestate"
+      ],
+      "answer": "On the Cost Estimator’s Projects page, search by quote ID, client or site, or pick a group: “All”, “Drafts”, “Ready to quote”, “Approved” or “Archived”. “Your drafts” at the top are quotes you made or that are assigned to you; empty drafts are folded into one line until you press “Show”. Choose yourself under “All estimators” to see only yours, then press “Open” or the quote ID.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-copy",
+        "estimate-archive"
+      ],
+      "data": "quotes.find"
+    },
+    {
+      "id": "estimate-approve",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Approve a quotation",
+      "ask": [
+        "how do I approve a quote",
+        "approve an estimate",
+        "sign off a quotation",
+        "finish a quote",
+        "the quotation is ready, what next",
+        "approve"
+      ],
+      "keys": [
+        "approve",
+        "quotation",
+        "sign off"
+      ],
+      "answer": "Once the rooms are saved, mark the costs as reviewed, check the client quotation and approve it. Approving prints it.",
+      "steps": [
+        "On “Review costs”, press “Mark costs as reviewed”, then “Review client quotation”.",
+        "Check the quotation. “Full-screen preview” helps.",
+        "Tick “I have reviewed this quotation and its wording”.",
+        "Press “Approve and print quotation”."
+      ],
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-print",
+        "estimate-revise"
+      ]
+    },
+    {
+      "id": "estimate-print",
+      "tool": "estimator",
+      "title": "Print or save a quotation as PDF",
+      "ask": [
+        "how do I print a quote",
+        "save a quotation as a pdf",
+        "download the quote",
+        "print a quotation again",
+        "get a pdf of an estimate"
+      ],
+      "keys": [
+        "print",
+        "pdf",
+        "download"
+      ],
+      "answer": "A quotation prints when you approve it with “Approve and print quotation”. After that, open it and press “Print again”. For a PDF, choose “Save as PDF” as the printer.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      },
+      "related": [
+        "estimate-approve"
+      ]
+    },
+    {
+      "id": "estimate-revise",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Change an approved quotation",
+      "ask": [
+        "how do I change an approved quote",
+        "edit a quote after it's approved",
+        "revise a quotation",
+        "make a revision",
+        "update a quote that's already been sent",
+        "add a room to a quote that's already approved"
+      ],
+      "keys": [
+        "revision",
+        "revise",
+        "approved"
+      ],
+      "answer": "An approved quotation stays as it was approved. Open it and press “Create revision” to make a new version you can change.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-copy",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Copy a quotation",
+      "ask": [
+        "how do I copy a quote",
+        "duplicate an estimate",
+        "use an old quote as a template",
+        "clone a quotation",
+        "copy an existing quotation",
+        "make a copy of a quote"
+      ],
+      "keys": [
+        "duplicate",
+        "copy",
+        "template",
+        "clone",
+        "similar"
+      ],
+      "answer": "On the Projects page, open the quotation’s “More” menu and choose “Duplicate”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-archive",
+      "tool": "estimator",
+      "who": "estimator",
+      "title": "Archive or delete a quotation",
+      "ask": [
+        "how do I delete a quote",
+        "archive an estimate",
+        "remove an old quotation",
+        "restore an archived quote",
+        "get rid of a test quote"
+      ],
+      "keys": [
+        "archive",
+        "delete",
+        "restore"
+      ],
+      "answer": "On the Projects page, open the quotation’s “More” menu and choose “Archive”. Archived quotations are under “Archived”, where “Restore” brings them back. Only FLR Super Admins can delete a quotation.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-stages",
+      "tool": "estimator",
+      "title": "The four stages of a quotation",
+      "ask": [
+        "what are the stages of a quote",
+        "why is a stage locked",
+        "why can't I open the client quotation",
+        "it says save a room first",
+        "it says resolve the blocking issues first"
+      ],
+      "keys": [
+        "stage",
+        "locked",
+        "blocking"
+      ],
+      "answer": "Every quotation goes through “Project details”, “Rooms”, “Review costs” and “Client quotation”. A stage stays locked until the one before is done: it tells you why, for example “Save a room first” or “Resolve the blocking issues first”.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-roles",
+      "tool": "estimator",
+      "title": "What your role allows in the Cost Estimator",
+      "ask": [
+        "why can't I create a quote",
+        "what can an estimator do",
+        "what does the developer role do",
+        "it says my role can view quotations but not create them",
+        "what's the difference between admin and estimator",
+        "what can a user do",
+        "what does the user role mean"
+      ],
+      "keys": [
+        "role",
+        "developer",
+        "permission"
+      ],
+      "answer": "Users can create, edit, approve and archive quotations. Admins can also reassign them; Super Admins can also delete them and change the Cost Estimator’s settings. Developers can view and export quotations but not create or change them. Your role is shown in your account on the Hub; Super Admins change it in Hub settings.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-admin",
+      "tool": "estimator",
+      "who": "superadmin",
+      "title": "Change prices, rules or quotation wording",
+      "ask": [
+        "how do I change the prices",
+        "update the price list",
+        "edit the commercial rules",
+        "change the quotation wording",
+        "add a product to the catalogue",
+        "price overrides"
+      ],
+      "keys": [
+        "catalogue",
+        "rules",
+        "overrides",
+        "settings",
+        "wording"
+      ],
+      "answer": "FLR Super Admins set prices, rules and wording in the Cost Estimator’s Settings: “Catalogue”, “Commercial rules”, “Price overrides” and “Quotation settings”.",
+      "steps": [
+        "Open the Cost Estimator and choose “Settings” in the bar at the top (at the bottom on a phone).",
+        "Pick “Catalogue”, “Commercial rules”, “Price overrides” or “Quotation settings”."
+      ],
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-reassign",
+      "tool": "estimator",
+      "who": "admin",
+      "title": "Give a quotation to another estimator",
+      "ask": [
+        "how do I reassign a quote",
+        "change the estimator on a quote",
+        "hand a quote over to someone else",
+        "transfer a quotation"
+      ],
+      "keys": [
+        "reassign",
+        "transfer",
+        "hand over"
+      ],
+      "answer": "FLR Admins and Super Admins can move a quotation to another estimator with “Reassign…” on the quotation.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "estimate-terms",
+      "tool": "estimator",
+      "title": "What the cost terms mean",
+      "ask": [
+        "what do the terms mean",
+        "what does materials mean in the costs",
+        "explain the cost review",
+        "is there a glossary"
+      ],
+      "keys": [
+        "terms",
+        "glossary",
+        "meaning"
+      ],
+      "answer": "On the “Review costs” stage, open “What the terms mean” for an explanation of each figure.",
+      "link": {
+        "href": "estimator/",
+        "label": "Open the Cost Estimator"
+      }
+    },
+    {
+      "id": "about-fleet",
+      "tool": "speeding",
+      "title": "About Fleet Management",
+      "ask": [
+        "what is fleet management",
+        "what does fleet management show",
+        "what is the fleet report",
+        "who can use fleet management"
+      ],
+      "keys": [
+        "fleet",
+        "speed",
+        "report"
+      ],
+      "answer": "Fleet Management shows speeding by driver and vehicle from FleetView, covering the last 30 days and updated every 15 minutes through the working day. FLR Admins and Super Admins see every driver and vehicle. A driver whose FLR account is linked to their FleetView name sees only their own driving; anyone else sees nothing until a Super Admin links them.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-my-driving",
+        "fleet-privacy"
+      ]
+    },
+    {
+      "id": "fleet-find",
+      "tool": "speeding",
+      "title": "Find the driver speeding report",
+      "ask": [
+        "where can I find the driver speeding report",
+        "where is the speeding report",
+        "open the speeding report",
+        "driver speed reports",
+        "where do I see speeding"
+      ],
+      "keys": [
+        "speed",
+        "report",
+        "fleet"
+      ],
+      "answer": "The driver speeding report is Fleet Management on the Hub. Admins and Super Admins see every driver; a driver linked to their FLR account sees their own driving.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-my-driving",
+        "fleet-nothing"
+      ]
+    },
+    {
+      "id": "fleet-my-driving",
+      "tool": "speeding",
+      "who": "driver",
+      "title": "See your own driving",
+      "ask": [
+        "how do I see my driving",
+        "check my speeding",
+        "my speeding incidents",
+        "how is my driving",
+        "my driving score",
+        "see my own report",
+        "how is a driver doing",
+        "a driver's speeding",
+        "speeding for registration",
+        "someone's speeding",
+        "speeding for someone"
+      ],
+      "keys": [
+        "my driving",
+        "own",
+        "incidents"
+      ],
+      "answer": "Open Fleet Management. If your FLR account is linked to your FleetView name, it opens on “My driving”, with your incidents and FleetView performance, then “Map” for where they happened and “My vehicle” for your vehicle’s dates. Only you and FLR Admins and Super Admins can see your page.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-nothing",
+        "fleet-privacy"
+      ],
+      "data": "fleet.me"
+    },
+    {
+      "id": "fleet-nothing",
+      "tool": "speeding",
+      "title": "Fleet Management shows nothing",
+      "care": true,
+      "ask": [
+        "fleet management says nothing to show you yet",
+        "why can't I see anything in fleet management",
+        "the speeding report is empty",
+        "my account isn't linked to a driver",
+        "nothing to show"
+      ],
+      "keys": [
+        "nothing",
+        "empty",
+        "linked"
+      ],
+      "answer": "“Nothing to show you yet” means your FLR account isn’t linked to your FleetView driver name. Ask an FLR Super Admin to link it; then you’ll see your own driving.",
+      "related": [
+        "fleet-privacy"
+      ]
+    },
+    {
+      "id": "fleet-link",
+      "tool": "speeding",
+      "who": "superadmin",
+      "title": "Link a driver to an FLR account",
+      "ask": [
+        "how do I link a driver to an account",
+        "connect a driver to their sign in",
+        "give a driver access to their report",
+        "manage driver sign ins",
+        "unlink a driver"
+      ],
+      "keys": [
+        "link",
+        "sign-ins",
+        "driver"
+      ],
+      "answer": "FLR Super Admins link each FleetView driver to their FLR account in Fleet Management. A linked driver sees only their own page.",
+      "steps": [
+        "Open Fleet Management on the “Drivers” page.",
+        "Under “Driver sign-ins”, press “Manage sign-ins”.",
+        "Find the driver, choose their FLR account and press “Link” (or “Unlink”).",
+        "Use “Preview” to see exactly what they’ll see."
+      ],
+      "link": {
+        "href": "speeding/#report",
+        "label": "Open Drivers"
+      }
+    },
+    {
+      "id": "fleet-review",
+      "tool": "speeding",
+      "who": "admin",
+      "title": "Review drivers",
+      "ask": [
+        "which drivers need reviewing",
+        "who are the worst drivers",
+        "the review order",
+        "priority drivers",
+        "drivers needing review"
+      ],
+      "keys": [
+        "review",
+        "priority",
+        "drivers",
+        "most"
+      ],
+      "answer": "The “Drivers” page lists drivers in review order, most urgent first. Narrow it with the status chips (“Needs review”, “Priority”, “Above average”, “At or below”, “Limited evidence”), the search, vehicle type, period and sort.",
+      "link": {
+        "href": "speeding/#report",
+        "label": "Open Drivers"
+      },
+      "related": [
+        "fleet-rules"
+      ],
+      "data": "fleet.review"
+    },
+    {
+      "id": "fleet-rules",
+      "tool": "speeding",
+      "who": "admin",
+      "title": "How the speeding report works",
+      "ask": [
+        "what counts as an incident",
+        "what is the speeding threshold",
+        "what does priority review mean",
+        "what is limited evidence",
+        "how are drivers ranked",
+        "what is a serious incident"
+      ],
+      "keys": [
+        "threshold",
+        "status",
+        "serious",
+        "limited evidence",
+        "above average",
+        "ranked"
+      ],
+      "answer": "An incident is a recorded speed at or above the limit plus 10% plus 2 mph, such as 35 in a 30. It isn’t an allowance. Serious incidents are 20 mph or more over. Drivers are grouped by incidents per 100 miles against the fleet rate, and under 150 miles is “Limited evidence”.\n\n“How this report works” on the Drivers page explains it all.",
+      "link": {
+        "href": "speeding/#report",
+        "label": "Open Drivers"
+      }
+    },
+    {
+      "id": "fleet-serious",
+      "tool": "speeding",
+      "title": "See the worst speeding incidents",
+      "ask": [
+        "worst speeding incidents",
+        "the fastest speeds",
+        "serious incidents this month",
+        "top speeding incidents",
+        "the highest speeds recorded"
+      ],
+      "keys": [
+        "worst",
+        "fastest",
+        "serious",
+        "top"
+      ],
+      "answer": "Fleet Management lists each serious incident: 20 mph or more over the limit. Admins and Super Admins see the whole fleet’s on the map and each driver’s page; a linked driver sees their own. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
+      "data": "fleet.serious",
+      "link": {
+        "href": "speeding/#map",
+        "label": "Open the map"
+      },
+      "related": [
+        "fleet-review",
+        "fleet-incident"
+      ]
+    },
+    {
+      "id": "fleet-incident",
+      "tool": "speeding",
+      "title": "Look at a speeding incident",
+      "care": true,
+      "ask": [
+        "how do I see where an incident happened",
+        "open a speeding event",
+        "incident details",
+        "see an incident on google maps",
+        "where was I speeding"
+      ],
+      "keys": [
+        "incident",
+        "google maps",
+        "where"
+      ],
+      "answer": "Open an incident to see when and where it happened, with “Open in Google Maps”. Admins and Super Admins also get “Open in FleetView” and the driver and vehicle details. Speed limits come from FleetView’s mapping and can be wrong, so check the location.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-map"
+      ]
+    },
+    {
+      "id": "fleet-map",
+      "tool": "speeding",
+      "title": "Use the speeding map",
+      "ask": [
+        "show the speeding map",
+        "where are the speeding hotspots",
+        "map of incidents",
+        "see incidents on a map",
+        "all events on the map"
+      ],
+      "keys": [
+        "map",
+        "hotspot"
+      ],
+      "answer": "Open “Map” in Fleet Management. Choose “Incidents” or “All events”, narrow it with “Filters”, and press “Fit all” to see everything. The “Incident list” shows the same incidents as a list.",
+      "link": {
+        "href": "speeding/#map",
+        "label": "Open the map"
+      },
+      "related": [
+        "fleet-incident"
+      ]
+    },
+    {
+      "id": "fleet-vehicles",
+      "tool": "speeding",
+      "title": "Check MOT, tax and service dates",
+      "ask": [
+        "when is the mot due",
+        "vehicle service dates",
+        "which vans need an mot",
+        "when is the road tax due",
+        "vehicle details",
+        "overdue services",
+        "when is the mot due on registration",
+        "vehicle details for registration",
+        "who drives the van with registration",
+        "which vans need an mot this month",
+        "what's overdue on the vehicles",
+        "service history of a van",
+        "which vehicles need checking"
+      ],
+      "keys": [
+        "mot",
+        "tax",
+        "service",
+        "vehicle",
+        "registration",
+        "overdue"
+      ],
+      "answer": "Admins and Super Admins: the “Vehicles” page starts with “Needs action” (a passed date Monday also calls Overdue) and “Needs checking” (a passed date Monday doesn’t call Overdue, or a missing date), then what’s due in the next 30 days. Search by plate, driver or model; each vehicle has “Open in Monday”. Linked drivers: see “My vehicle”.",
+      "link": {
+        "href": "speeding/#vehicles",
+        "label": "Open Fleet Management"
+      },
+      "data": "fleet.vehicles"
+    },
+    {
+      "id": "fleet-updated",
+      "tool": "speeding",
+      "title": "When the fleet data updates",
+      "ask": [
+        "how often is the speeding report updated",
+        "when does fleet management refresh",
+        "it says data is out of date",
+        "is the report live",
+        "why is yesterday missing"
+      ],
+      "keys": [
+        "updated",
+        "refresh",
+        "out of date",
+        "live"
+      ],
+      "answer": "Speeding figures come from FleetView via the FLR Fleet Management updater, a Chrome add-on on an FLR Super Admin’s computer. It sends them every 15 minutes while that computer is on, so not overnight, at weekends or on FLR close days. Monday board vehicle details update every 15 minutes. If the figures stop updating in the working day, Admins and Super Admins see a notice; tell an FLR Super Admin if it stays.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      }
+    },
+    {
+      "id": "fleet-privacy",
+      "tool": "speeding",
+      "title": "Who can see your driving",
+      "care": true,
+      "ask": [
+        "who can see my driving",
+        "can other drivers see my speeding",
+        "is my driving private",
+        "can my manager see my speeding",
+        "who sees the speeding report"
+      ],
+      "keys": [
+        "privacy",
+        "private"
+      ],
+      "answer": "Only you and FLR Admins and Super Admins can see your page. Drivers never see other drivers or the review order.",
+      "related": [
+        "fleet-my-driving",
+        "fleet-wrong-driver"
+      ]
+    },
+    {
+      "id": "fleet-wrong-driver",
+      "tool": "speeding",
+      "title": "An incident that wasn’t you",
+      "care": true,
+      "ask": [
+        "it wasn't me driving",
+        "someone else was driving my van",
+        "this speeding isn't mine",
+        "the report shows a journey I didn't do",
+        "wrong driver on an incident"
+      ],
+      "keys": [
+        "otherdriver",
+        "wrong driver",
+        "not me"
+      ],
+      "answer": "FleetView records events against a vehicle, so the name shown is the vehicle’s assigned driver, who may not have been driving at the time. If an incident wasn’t you, tell an FLR Admin or Super Admin which one.",
+      "link": {
+        "href": "speeding/",
+        "label": "Open Fleet Management"
+      },
+      "related": [
+        "fleet-privacy",
+        "fleet-incident"
+      ]
+    },
+    {
+      "id": "about-leave",
+      "tool": "annual-leave",
+      "title": "About Annual Leave",
+      "ask": [
+        "what is the annual leave page",
+        "what does annual leave show",
+        "where is the holiday calendar",
+        "the annual leave tool"
+      ],
+      "keys": [
+        "leave",
+        "annual"
+      ],
+      "answer": "Annual Leave shows who’s off today, your days left, your leave requests and any other leave such as sick or unpaid leave, with the “Request leave” button. Leave approvers also get “Approvals”, “Diary” and “All requests”, and selecting a name in the Diary opens that person’s leave record.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-request",
+        "leave-balance"
+      ]
+    },
+    {
+      "id": "leave-request",
+      "tool": "annual-leave",
+      "title": "Request annual leave",
+      "ask": [
+        "where do I request annual leave",
+        "how do I book a holiday",
+        "request time off",
+        "book some days off",
+        "apply for leave",
+        "the holiday request form"
+      ],
+      "keys": [
+        "request",
+        "leave",
+        "form",
+        "book"
+      ],
+      "answer": "In Annual Leave, choose “My Leave” and press “Request leave”: the leave form opens in a new tab. Your request then shows under “Your requests” once it reaches monday.com, and a leave approver decides.\n\nIf there’s no “Request leave” button, ask a leave approver for the form.",
+      "steps": [
+        "Open Annual Leave and choose “My Leave”.",
+        "Press “Request leave” and fill in the leave form.",
+        "Check “Your requests” for the decision. “Refresh” updates it."
+      ],
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-balance",
+        "leave-status"
+      ]
+    },
+    {
+      "id": "leave-balance",
+      "tool": "annual-leave",
+      "title": "See how many days you have left",
+      "ask": [
+        "how many days holiday do I have left",
+        "what's my leave balance",
+        "how much annual leave have I got",
+        "remaining holiday",
+        "what's my allowance",
+        "days left this year",
+        "who can see my leave balance",
+        "how many days does someone have left",
+        "someone's leave balance"
+      ],
+      "keys": [
+        "balance",
+        "allowance",
+        "days left",
+        "remaining"
+      ],
+      "answer": "In Annual Leave, choose “My Leave”. The big number under “Days left in …” is your balance for that leave year, with “Bookable”, “Accepted”, “Waiting for a decision” and “Left if accepted”. Use “Leave year” to switch years. Only you and leave approvers can see it.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-closures",
+        "leave-request"
+      ],
+      "data": "leave.balance"
+    },
+    {
+      "id": "leave-status",
+      "tool": "annual-leave",
+      "title": "Check on a leave request",
+      "ask": [
+        "has my holiday been approved",
+        "check my leave request",
+        "is my time off accepted",
+        "the status of my holiday request",
+        "where are my requests",
+        "is my holiday request accepted",
+        "has my leave request been approved",
+        "has someone's holiday been approved",
+        "show someone's leave requests"
+      ],
+      "keys": [
+        "status",
+        "approved",
+        "decision",
+        "pending"
+      ],
+      "answer": "In Annual Leave, choose “My Leave” and look under “Your requests”: each request shows its decision. A new request can take a few minutes to appear; press “Refresh” to check again.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-cancel"
+      ],
+      "data": "leave.requests"
+    },
+    {
+      "id": "leave-not-linked",
+      "tool": "annual-leave",
+      "title": "Annual Leave says you aren’t linked",
+      "care": true,
+      "ask": [
+        "my account isn't linked to a staff record",
+        "annual leave says I'm not linked",
+        "I can't see my leave",
+        "my leave isn't showing",
+        "annual leave is empty"
+      ],
+      "keys": [
+        "linked",
+        "staff record",
+        "not showing"
+      ],
+      "answer": "Your leave appears once your work email is on your record in the “FLR - Leave Allowances” board. Ask a leave approver to add it.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-cancel",
+      "tool": "annual-leave",
+      "title": "Cancel or change booked leave",
+      "ask": [
+        "how do I cancel my holiday",
+        "cancel a leave request",
+        "change my holiday dates",
+        "withdraw a leave request",
+        "I don't need the day off any more"
+      ],
+      "keys": [
+        "cancel",
+        "withdraw"
+      ],
+      "answer": "Ask a leave approver. They can cancel accepted leave, which puts the days back into your allowance, or re-open a request.\n\nApprovers: open the request, then “Cancel leave” or “Re-open”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-pending",
+      "tool": "annual-leave",
+      "title": "See what’s waiting for approval",
+      "ask": [
+        "what's waiting for a decision",
+        "pending leave requests",
+        "requests waiting for a decision",
+        "how many requests are waiting",
+        "leave still waiting to be decided"
+      ],
+      "keys": [
+        "pending",
+        "waiting"
+      ],
+      "answer": "Leave approvers see every request waiting for a decision on the “Approvals” tab, each with Annual Leave’s own suggestion: accept, review or deny. Everyone else sees their own requests on My Leave.",
+      "data": "leave.pending",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-approve",
+        "leave-status"
+      ]
+    },
+    {
+      "id": "leave-approve",
+      "tool": "annual-leave",
+      "who": "approver",
+      "title": "Approve or decline leave",
+      "ask": [
+        "how do I approve a holiday request",
+        "accept a leave request",
+        "decline a leave request",
+        "deny a holiday",
+        "where are the leave approvals",
+        "approve time off for my team",
+        "approve"
+      ],
+      "keys": [
+        "approve",
+        "decline",
+        "deny",
+        "approvals"
+      ],
+      "answer": "Leave approvers use “Approvals” in Annual Leave. Each request has a suggestion; press “Accept”, “Review” or “Deny”, with an optional note. Accepting against the suggestion asks you to confirm. If you don’t see “Approvals”, you aren’t a leave approver.",
+      "steps": [
+        "Open Annual Leave and choose “Approvals”.",
+        "Open “Details” to check the request and the suggestion.",
+        "Add a note if you like, then press “Accept”, “Review” or “Deny”."
+      ],
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-cancel",
+        "leave-diary"
+      ]
+    },
+    {
+      "id": "leave-diary",
+      "tool": "annual-leave",
+      "title": "See who’s off",
+      "ask": [
+        "who is off today",
+        "who's on holiday this week",
+        "team holiday calendar",
+        "the leave planner",
+        "see everyone's leave",
+        "who's off",
+        "who is off next week",
+        "who's off on friday",
+        "who is on holiday on a date",
+        "who's off tomorrow"
+      ],
+      "keys": [
+        "diary",
+        "calendar",
+        "planner",
+        "who is off",
+        "today"
+      ],
+      "answer": "“Today” in Annual Leave shows who’s off today, for everyone. Staff see names, groups and whether it’s all day or half, not the kind of leave. Leave approvers also see the kind of leave and when people are back, and can look further ahead in the “Diary”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-colours"
+      ],
+      "data": "leave.off"
+    },
+    {
+      "id": "leave-balances-all",
+      "tool": "annual-leave",
+      "who": "approver",
+      "title": "See everyone’s days left",
+      "ask": [
+        "everyone's holiday balances",
+        "how much leave has the team got left",
+        "staff allowances",
+        "balances for all staff",
+        "who has the most leave left",
+        "who has the least holiday left"
+      ],
+      "keys": [
+        "balances",
+        "allowances",
+        "team",
+        "most"
+      ],
+      "answer": "Leave approvers can see anyone’s allowance and days left in Annual Leave: open the “Diary” and select their name. Their leave record also lists their requests and other leave, such as sick or unpaid leave.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "data": "leave.balances"
+    },
+    {
+      "id": "leave-colours",
+      "tool": "annual-leave",
+      "who": "approver",
+      "title": "What the diary colours mean",
+      "ask": [
+        "what do the colours mean in the diary",
+        "where is the colour key",
+        "legend for the planner",
+        "what do the colours in the calendar mean"
+      ],
+      "keys": [
+        "colour",
+        "key",
+        "legend"
+      ],
+      "answer": "In the “Diary”, press “Colour key” to see what each colour means, including bank holidays, company close days and the Jeff Day.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "leave-closures",
+      "tool": "annual-leave",
+      "title": "Bank holidays and company close days",
+      "ask": [
+        "do bank holidays come out of my allowance",
+        "is the christmas shutdown taken from my holiday",
+        "bank holidays",
+        "company closure days",
+        "does the jeff day count as holiday",
+        "when are the bank holidays this year",
+        "what are the christmas shutdown dates",
+        "what are the company close days"
+      ],
+      "keys": [
+        "closure",
+        "christmas",
+        "jeff day",
+        "shutdown"
+      ],
+      "answer": "Bank holidays and the Jeff Day are on top of your allowance. Company close days (when FLR closes over Christmas) are set aside from it, and My Leave shows how many. My Leave also lists the year’s bank holidays and company close days under “Request leave”; switch the year to see next year’s.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      },
+      "related": [
+        "leave-balance"
+      ]
+    },
+    {
+      "id": "leave-form-link",
+      "tool": "annual-leave",
+      "title": "Share the leave form",
+      "ask": [
+        "how do I share the leave form",
+        "copy the holiday form link",
+        "send someone the leave form",
+        "where is the leave form link"
+      ],
+      "keys": [
+        "form",
+        "link",
+        "share",
+        "copy"
+      ],
+      "answer": "Leave approvers can press “Copy form link” at the top of Annual Leave and send it on. Everyone else opens the form with “Request leave”.",
+      "link": {
+        "href": "annual-leave/",
+        "label": "Open Annual Leave"
+      }
+    },
+    {
+      "id": "about-fitters",
+      "tool": "fitters",
+      "title": "About the Fitter Schedule",
+      "ask": [
+        "what is the fitter schedule",
+        "what does the fitter schedule show",
+        "the fitter rota",
+        "installer schedule",
+        "where is the fitter planner",
+        "how far ahead does it go"
+      ],
+      "keys": [
+        "fitter",
+        "schedule"
+      ],
+      "answer": "The Fitter Schedule shows which fitters are working, free or off on each day from 30 days ago to 30 days ahead, and which jobs still need a fitter. It opens from its tile on the Hub and asks for the team passcode.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      },
+      "related": [
+        "fitters-free",
+        "fitters-passcode"
+      ]
+    },
+    {
+      "id": "fitters-free",
+      "tool": "fitters",
+      "title": "Find a free fitter",
+      "ask": [
+        "which fitters are free",
+        "who is available tomorrow",
+        "find an available fitter",
+        "is anyone free next week",
+        "fitter availability"
+      ],
+      "keys": [
+        "free",
+        "available",
+        "availability"
+      ],
+      "answer": "In the Fitter Schedule’s “Day” tab, pick a date in the day strip (30 days back to 30 ahead; “Today” comes back), then choose “Free”. Each day is split into “Needs a fitter”, “Working”, “Free” and “Unavailable”, and “Search fitter or job” finds someone quickly.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      },
+      "related": [
+        "fitters-jobs",
+        "fitters-views"
+      ]
+    },
+    {
+      "id": "fitters-passcode",
+      "tool": "fitters",
+      "title": "The Fitter Schedule passcode",
+      "ask": [
+        "what's the passcode for the fitter schedule",
+        "fitter schedule passcode",
+        "the passcode was not accepted",
+        "change the passcode",
+        "team passcode",
+        "do I need to log in for the fitter schedule"
+      ],
+      "keys": [
+        "passcode"
+      ],
+      "answer": "The Fitter Schedule opens with the team passcode, not your Hub sign-in. Ask the office for it: it isn’t on the Hub, and I don’t know it. If you’re also signed in to the Hub on that device, it shows fitters’ photos and number plates. “Change passcode” is at the foot of the schedule.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "fitters-statuses",
+      "tool": "fitters",
+      "title": "What Working, Free, Off and Clash mean",
+      "ask": [
+        "what does off mean on the fitter schedule",
+        "what do the colours mean on the fitter schedule",
+        "what does clash mean",
+        "why is a fitter showing as off",
+        "what does unavailable mean"
+      ],
+      "keys": [
+        "working",
+        "off",
+        "clash",
+        "unavailable"
+      ],
+      "answer": "A fitter is “Working” on a day if a job overlaps it, “Off” (under “Unavailable”) if they’re on leave, off sick, at an appointment or not working, and “Free” otherwise. “Clash” means work and leave on the same day. Jobs with no fitter are under “Needs a fitter”.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      },
+      "related": [
+        "fitters-free"
+      ]
+    },
+    {
+      "id": "fitters-views",
+      "tool": "fitters",
+      "title": "See one fitter’s days",
+      "ask": [
+        "show one fitter's schedule",
+        "what is a fitter doing this week",
+        "a fitter's next two weeks",
+        "choose a fitter",
+        "what did a fitter do last week",
+        "see a fitter's past jobs"
+      ],
+      "keys": [
+        "fitter tab",
+        "fortnight",
+        "two weeks"
+      ],
+      "answer": "Open the “Fitter” tab in the Fitter Schedule and use “Choose a fitter” to see their days from today to 30 days ahead. Their last 30 days are under “Earlier”.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "fitters-jobs",
+      "tool": "fitters",
+      "title": "Find jobs that need a fitter",
+      "ask": [
+        "which jobs need a fitter",
+        "unassigned jobs",
+        "jobs without a fitter",
+        "find a job by postcode",
+        "open a job in monday.com",
+        "see all the fitters on a job",
+        "which fitters are booked on a job"
+      ],
+      "keys": [
+        "jobs",
+        "needs fitter",
+        "postcode",
+        "unassigned"
+      ],
+      "answer": "In the Fitter Schedule’s “Jobs” tab each job shows once with all its fitters. “Today” lists today’s jobs with today’s crew; “Needs fitter” shows jobs still missing one, with the day. Search by job, address, postcode, fitter or number plate. Tap a job for its people, later and earlier bookings and “Open in monday.com”; Admins and Super Admins also see what each van did today (“Van arrived 07:42”).",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "fitters-settings",
+      "tool": "fitters",
+      "title": "Show weekends, subcontractors or completed jobs",
+      "ask": [
+        "show weekends on the fitter schedule",
+        "use the weekend rota",
+        "show subcontractors",
+        "include completed jobs",
+        "fitter schedule settings"
+      ],
+      "keys": [
+        "weekend",
+        "subcontractors",
+        "completed",
+        "settings"
+      ],
+      "answer": "Open “Settings” in the Fitter Schedule: “Show weekends”, “Use the weekend rota”, “Show FLR staff and subcontractors” and “Include jobs already marked Completed”.",
+      "link": {
+        "tile": "fitters",
+        "label": "Open the Fitter Schedule"
+      }
+    },
+    {
+      "id": "about-orders",
+      "tool": "orders",
+      "title": "About the Order Tracker",
+      "ask": [
+        "what is the order tracker",
+        "which deliveries are coming in today",
+        "what's arriving today",
+        "what does the order tracker show",
+        "which deliveries are due today",
+        "where are my orders",
+        "track a delivery",
+        "what is coming in today",
+        "goods in today"
+      ],
+      "keys": [
+        "order tracker",
+        "orders",
+        "deliveries",
+        "goods in",
+        "delivery",
+        "coming in"
+      ],
+      "answer": "The Order Tracker shows what’s arriving from the Monday “FLR - Goods In” board: Today’s deliveries, late or delayed ones under “Needs attention”, and Coming up and Received tabs. Tap a delivery for its materials, what’s still to arrive, the supplier, order reference and WFM job. It reads Monday every 5 minutes; deliveries recorded or corrected on the Hub, and problems reported, are added to the order there.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      },
+      "related": [
+        "orders-progress",
+        "orders-late"
+      ]
+    },
+    {
+      "id": "orders-progress",
+      "tool": "orders",
+      "title": "What the order steps mean",
+      "ask": [
+        "what does order reference recorded mean",
+        "does the order tracker show dispatch",
+        "why is there no out for delivery step",
+        "order progress steps",
+        "why is the arrival time not confirmed",
+        "when will my delivery arrive",
+        "has the supplier confirmed my order"
+      ],
+      "keys": [
+        "reference",
+        "dispatched",
+        "out for delivery",
+        "confirmed",
+        "progress",
+        "time not confirmed",
+        "arrival"
+      ],
+      "answer": "Each delivery shows one status line from the Goods In board: awaiting delivery, part received, delayed, overdue or received. Supplier confirmation, dispatch and out for delivery aren’t on the board, so it doesn’t show them. The order reference, date changes and older notes are under History. A time shows only when one is set on Monday; otherwise “Time not confirmed”.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "orders-late",
+      "tool": "orders",
+      "title": "Late, delayed, moved and part-received orders",
+      "ask": [
+        "what does overdue mean on the order tracker",
+        "what does delayed mean",
+        "what does date moved mean",
+        "where are yesterday's deliveries",
+        "my order has disappeared",
+        "where are received orders",
+        "order still waiting for a new date",
+        "only part of my order arrived"
+      ],
+      "keys": [
+        "overdue",
+        "delayed",
+        "late",
+        "date moved",
+        "part received",
+        "received",
+        "new date"
+      ],
+      "answer": "Overdue: its date passed and it isn’t all received. Delayed: its first date has gone and Monday gives a later one. Date moved: moved later before its first date came, so not late. Part received: an item is still to arrive or “Item missing” is logged; it stays on Today until everything is in. Late orders are under “Needs attention”; received ones in the Received tab.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "orders-record",
+      "tool": "orders",
+      "title": "Tick off materials when they arrive",
+      "ask": [
+        "how do I record a delivery",
+        "a delivery has arrived",
+        "mark an order as received",
+        "record damaged materials",
+        "only some of the delivery came",
+        "report a problem with a delivery",
+        "tick goods in as received",
+        "how do I tick off a delivery",
+        "tick a material as arrived"
+      ],
+      "keys": [
+        "record delivery",
+        "received",
+        "arrived",
+        "damaged",
+        "damage",
+        "condition",
+        "goods in",
+        "tick",
+        "checklist"
+      ],
+      "answer": "Open the job in the Order Tracker and tick each material as it arrives. Your name and the time are saved, and the tracker ticks it on monday.com. Materials you don't tick stay outstanding, and tapping a tick again unticks it; an order is received once everything on it is ticked. A tick only says it arrived, not its condition: for anything damaged, wrong or missing, use the help line under the materials.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "orders-correct",
+      "tool": "orders",
+      "title": "Untick a material ticked by mistake",
+      "ask": [
+        "I recorded a delivery by mistake",
+        "undo a receipt",
+        "correct a receipt",
+        "I ticked the wrong material as arrived",
+        "change the condition of a delivery",
+        "it wasn't damaged after all",
+        "unticking on monday doesn't change the tracker",
+        "undo a tick",
+        "I ticked the wrong material",
+        "untick a material",
+        "how do I untick something"
+      ],
+      "keys": [
+        "correct receipt",
+        "correct",
+        "mistake",
+        "undo",
+        "wrong",
+        "untick",
+        "reverse",
+        "tick"
+      ],
+      "answer": "Tap a ticked box again to untick it: the material goes back to still to arrive, on monday.com too. That works for ticks made on the Hub and for ones made on monday.com. The tick and the untick both stay in the order's History, with who did them and when.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "orders-problem",
+      "tool": "orders",
+      "title": "Report a problem with a delivery",
+      "ask": [
+        "who do I tell about a delivery problem",
+        "the delivery hasn't turned up",
+        "the driver needs help",
+        "report a problem with an order",
+        "contact goods in",
+        "something is wrong with a delivery"
+      ],
+      "keys": [
+        "have a problem",
+        "problem",
+        "contact",
+        "tell",
+        "message",
+        "goods in"
+      ],
+      "answer": "In the Order Tracker, choose Have a problem? (the tab at the bottom on a phone, or the ? button). Open it from a delivery and your message is about that delivery. Write what’s wrong and press send: the people who look after Goods In are told straight away on monday.com, and the chat shows when it’s been sent.",
+      "link": {
+        "tile": "orders",
+        "label": "Open the Order Tracker"
+      }
+    },
+    {
+      "id": "about-capacity",
+      "tool": "capacity",
+      "title": "About the Planner",
+      "ask": [
+        "what is the planner",
+        "what does the planner show",
+        "open the planner",
+        "what is fitter capacity",
+        "what does fitter capacity show",
+        "how many fitters are booked each day",
+        "are we fully booked next week",
+        "how busy are the fitters this month",
+        "fitter capacity calendar",
+        "why out of 23",
+        "how many fitters do we have each day",
+        "is fitter capacity real data",
+        "how many fitters are booked on a day",
+        "how many fitters are booked next week",
+        "what is on the capacity page",
+        "where do the planner figures come from",
+        "is the planner up to date",
+        "when was the planner last updated",
+        "how often is the planner updated",
+        "how often does the planner refresh",
+        "what does days with no battery mean"
+      ],
+      "keys": [
+        "planner",
+        "fitter capacity",
+        "capacity",
+        "booked",
+        "fully booked",
+        "out of 23",
+        "23",
+        "battery",
+        "capacity page",
+        "work programme",
+        "monday",
+        "real data",
+        "up to date"
+      ],
+      "answer": "The Planner is a month calendar of how many fitters are booked each day, out of 23. The figures are read from the Monday Work Programme every 15 minutes: each day counts the different fitters on fitting work. A battery fills as fitters are booked, with a badge such as 18/23; a gold number shows bookings with no fitter yet. “Monday · updated …” at the top says when it was last read.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open the Planner"
+      },
+      "related": [
+        "capacity-key",
+        "capacity-access",
+        "capacity-week"
+      ]
+    },
+    {
+      "id": "capacity-key",
+      "tool": "capacity",
+      "title": "What the capacity batteries mean",
+      "ask": [
+        "what does the question mark mean on the planner",
+        "why is a day red on the planner",
+        "what does the red battery mean",
+        "what does the question mark mean on fitter capacity",
+        "what does over capacity mean",
+        "why is a day red on fitter capacity",
+        "what do the battery colours mean",
+        "why is a battery dashed",
+        "are we over capacity",
+        "which days are over capacity",
+        "what does the gold number mean on the planner",
+        "what does the number in the corner mean",
+        "why is a day grey on the planner",
+        "why does a day only show the date",
+        "what do the hatched days mean on the planner",
+        "why is a day striped on the planner",
+        "are bank holidays on the planner",
+        "does the planner show company close days"
+      ],
+      "keys": [
+        "red",
+        "over capacity",
+        "question mark",
+        "dashed",
+        "colours",
+        "key",
+        "full",
+        "gold",
+        "gold number",
+        "needing a fitter",
+        "no fitter",
+        "grey",
+        "hatched",
+        "striped"
+      ],
+      "answer": "An empty grey battery (0/23): work booked, no fitter yet. It fills yellow to green as fitters are booked, full at 23; red with a warning sign is over capacity. A gold number in the corner (dashed battery): bookings still needing a fitter. A day with only the date has no fitting work. Hatched days are closures, as on the Annual Leave Diary: bank holidays (grey), company close days (blue) and the Jeff Day (purple).",
+      "link": {
+        "tile": "capacity",
+        "label": "Open the Planner"
+      },
+      "related": [
+        "about-capacity"
+      ]
+    },
+    {
+      "id": "capacity-access",
+      "tool": "capacity",
+      "title": "Who can see the Planner",
+      "ask": [
+        "who can see the planner",
+        "why can't I see the planner",
+        "how do I get the planner",
+        "give someone the planner",
+        "switch on the planner for someone",
+        "the planner isn't on my hub"
+      ],
+      "keys": [
+        "planner",
+        "capacity",
+        "access",
+        "switch on"
+      ],
+      "answer": "The Planner starts with FLR Super Admins only. A Super Admin can switch it on for anyone else in Hub settings, with the “Planner” switch beside their name, like the other apps; the daily totals are only given to people it’s switched on for. If it isn’t on your Hub and you need it, ask an FLR Super Admin.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-capacity",
+        "hub-settings"
+      ]
+    },
+    {
+      "id": "capacity-week",
+      "tool": "capacity",
+      "title": "The Planner's Week view: who is booked where",
+      "ask": [
+        "planner week view",
+        "what is the week view on the planner",
+        "who is booked where",
+        "who is booked where this week",
+        "which jobs are the fitters on this week",
+        "where is each fitter working this week",
+        "show the week on the planner",
+        "how do I see a week on the planner",
+        "which fitter is on which job",
+        "who is on which job tomorrow",
+        "how do I see the address of a job on the planner",
+        "what does the week tab show",
+        "where are the fitters booked next week"
+      ],
+      "keys": [
+        "week view",
+        "week tab",
+        "booked where",
+        "which job",
+        "which jobs",
+        "on which job",
+        "job cards",
+        "week"
+      ],
+      "answer": "Open the Planner and choose Week at the top (Month is the capacity calendar). It shows Monday to Sunday like Outlook: each job is a card across its booked days, with the site and everyone on it that week (tap it for who is there each day). Gold cards still need a fitter; the Away line lists who is off. Each person shows with their photo (or initials). Tap a card for the address, WFM number, the van each fitter drives and every booked day. Use Today, the arrows or the small calendar.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open the Planner"
+      },
+      "related": [
+        "capacity-week-key",
+        "about-capacity"
+      ]
+    },
+    {
+      "id": "capacity-week-key",
+      "tool": "capacity",
+      "title": "Reading the Planner's Week view",
+      "ask": [
+        "what does a dashed card mean",
+        "what does a dashed card mean on the planner",
+        "why is a job card dashed",
+        "what is the week number",
+        "what is week 44",
+        "what does the week number mean",
+        "what does needs a fitter mean",
+        "what does the gold card mean",
+        "why does it say away",
+        "why doesn't the planner say why someone is away",
+        "can I see why a fitter is off",
+        "what does FLR staff mean on a card",
+        "what does sub mean on a card",
+        "why does a week say no bookings loaded",
+        "what is the week number on the planner",
+        "does the planner show why someone is off",
+        "what does away mean on the planner"
+      ],
+      "keys": [
+        "dashed card",
+        "dashed",
+        "tentative",
+        "week number",
+        "iso week",
+        "needs a fitter",
+        "gold card",
+        "why someone is off",
+        "flr staff",
+        "no bookings loaded",
+        "away line"
+      ],
+      "answer": "A dashed card is TBC on the Work Programme (to be confirmed); solid is booked. A gold “Needs a fitter” card has no fitter yet. The week number is the ISO week (weeks start on Monday). “Away” lists names only: leave, sickness, appointments, training and rota days all just say away, never why. “FLR staff” and “Sub” mark office staff and subcontractors. Only 4 weeks back to 16 ahead are loaded.",
+      "link": {
+        "tile": "capacity",
+        "label": "Open the Planner"
+      },
+      "related": [
+        "capacity-week",
+        "capacity-key"
+      ]
+    },
+    {
+      "id": "about-proximity",
+      "tool": "proximity",
+      "title": "About Nearby",
+      "ask": [
+        "what is nearby",
+        "what is the nearby app",
+        "who is nearest to a site",
+        "which surveyor is closest to this postcode",
+        "nearest surveyor to a postcode",
+        "who is the closest surveyor today",
+        "who is working near this postcode",
+        "open nearby",
+        "how does nearby work",
+        "where is the nearest vehicle right now",
+        "what is the proximity finder",
+        "open the proximity finder",
+        "which fitter is closest to this postcode",
+        "where is the nearest van right now"
+      ],
+      "keys": [
+        "nearby",
+        "proximity",
+        "proximity finder",
+        "nearest",
+        "closest",
+        "postcode",
+        "nearest vehicle",
+        "fleetview",
+        "live vehicle positions",
+        "surveyor",
+        "vehicle"
+      ],
+      "answer": "Nearby shows who is nearest a site. Type the postcode from an enquiry (and the first line of the address for the exact spot): Admins and Super Admins get the nearest vehicles right now from FleetView; everyone with the app gets the surveyor working nearest today and on each of the next 14 days, from the Monday Work Programme. Distances and drive times are the best road route.",
+      "link": {
+        "tile": "proximity",
+        "label": "Open Nearby"
+      },
+      "related": [
+        "proximity-access"
+      ]
+    },
+    {
+      "id": "proximity-access",
+      "tool": "proximity",
+      "title": "Who has Nearby",
+      "ask": [
+        "who has nearby",
+        "why are there no vehicles on nearby",
+        "give someone nearby",
+        "switch on nearby for someone",
+        "how do I get nearby",
+        "who has the proximity finder"
+      ],
+      "keys": [
+        "nearby",
+        "proximity",
+        "access",
+        "switch on"
+      ],
+      "answer": "Nearby starts with FLR Super Admins only. A Super Admin can switch it on for others in Hub settings with the “Nearby” switch, like the other apps. Live vehicle positions are only for Admins and Super Admins, as with arrival times on the Fitter Schedule; others get the Work Programme part only.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-proximity",
+        "hub-settings"
+      ]
+    },
+    {
+      "id": "about-warehouse",
+      "tool": "warehouse",
+      "title": "About Warehouse Tasks",
+      "ask": [
+        "what is warehouse tasks",
+        "what do I need to do today in the warehouse",
+        "warehouse checklist",
+        "open warehouse tasks",
+        "how do I tick off a warehouse task",
+        "where is the warehouse weekly task list",
+        "forklift check",
+        "my warehouse tasks",
+        "how does warehouse tasks work",
+        "where are the instructions for a warehouse task",
+        "how do I do the forklift check",
+        "forklift inspection form",
+        "how long did this take",
+        "how do I log time on a warehouse task",
+        "time taken"
+      ],
+      "keys": [
+        "warehouse",
+        "warehouse tasks",
+        "checklist",
+        "tick off",
+        "forklift",
+        "goods in",
+        "weekly task list",
+        "my tasks",
+        "all tasks",
+        "instructions",
+        "form",
+        "forklift form",
+        "time taken",
+        "how long"
+      ],
+      "answer": "Warehouse Tasks is the warehouse’s weekly checklist from Monday (FLR - Operations, Warehouse Weekly Task List). It opens on today’s tasks: tap the round button on a task when it’s done and it’s ticked off on Monday too. “My tasks” shows the ones Monday’s Owner column gives you; “All tasks” shows everything, including tasks nobody owns. Done tasks fold into their own group with who did them and when. “Week” shows every day of this week, and earlier weeks. Each Monday morning a fresh copy of the list is made on Monday, so last week’s ticks stay as they were. Each task has an Instructions button with how to do it (as written on Monday). The Forklift Checks need the Forklift Inspection Form first: open it from the task, send it, then tick the task off. When you tick a task off it asks how long it took (tap a time or type it); the time goes on Monday in Time taken (mins).",
+      "link": {
+        "tile": "warehouse",
+        "label": "Open Warehouse Tasks"
+      },
+      "related": [
+        "warehouse-saving",
+        "warehouse-access"
+      ]
+    },
+    {
+      "id": "warehouse-saving",
+      "tool": "warehouse",
+      "title": "Saving, Saved and Not saved",
+      "ask": [
+        "what does saving mean on warehouse tasks",
+        "my tick says not saved",
+        "warehouse task didn't save",
+        "why is my tick still saving",
+        "does ticking update monday",
+        "I ticked it on monday",
+        "why can't I tick the forklift check",
+        "it says form needed"
+      ],
+      "keys": [
+        "saving",
+        "saved",
+        "not saved",
+        "try again",
+        "monday",
+        "sync",
+        "warehouse"
+      ],
+      "answer": "A tick shows “Saving…” until Monday has confirmed it, then “Saved”. If Monday refuses or can’t be reached it says “Not saved” and nothing changes on Monday: tap Try again. Ticks made on Monday itself, or by someone else, show here within about 2 minutes. A Forklift Check with a lock says “Form needed”: send that day's Forklift Inspection Form first (Instructions & form on the task), then tap “I’ve sent it: check again”.",
+      "related": [
+        "about-warehouse"
+      ]
+    },
+    {
+      "id": "warehouse-access",
+      "tool": "warehouse",
+      "title": "Who has Warehouse Tasks",
+      "ask": [
+        "who has warehouse tasks",
+        "give someone warehouse tasks",
+        "switch on warehouse tasks",
+        "how do I get warehouse tasks",
+        "why is my tasks empty",
+        "how do I assign a warehouse task"
+      ],
+      "keys": [
+        "warehouse",
+        "access",
+        "switch on",
+        "owner",
+        "assign",
+        "my tasks"
+      ],
+      "answer": "Warehouse Tasks starts with FLR Super Admins and the warehouse team. A Super Admin can switch it on for others in Hub settings with the “Warehouse” switch. Tasks are given to people in Monday’s Owner column, on the template (every week) or on this week’s copy (this week only); “My tasks” matches them to your Hub account by your FLR email address.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-warehouse",
+        "hub-settings"
+      ]
+    },
+    {
+      "id": "about-surveyors",
+      "tool": "surveyors",
+      "title": "About the Surveyor Calendar",
+      "ask": [
+        "what is the surveyor calendar",
+        "when is my next survey",
+        "which surveys are booked this week",
+        "who is surveying today",
+        "open the surveyor calendar",
+        "where am I surveying tomorrow",
+        "survey appointments calendar"
+      ],
+      "keys": [
+        "surveyor calendar",
+        "survey",
+        "surveys",
+        "surveyor",
+        "appointment",
+        "booked",
+        "calendar",
+        "hubspot"
+      ],
+      "answer": "The Surveyor Calendar shows survey appointments from HubSpot: a month of days, each surveyor in their own colour. Tap a day to list its surveys with time and postcode, and tap a survey to open its HubSpot deal. The chips at the top show one surveyor. It reads HubSpot every 15 minutes and changes nothing there.",
+      "link": {
+        "tile": "surveyors",
+        "label": "Open the Surveyor Calendar"
+      },
+      "related": [
+        "surveyors-missing",
+        "surveyors-access",
+        "surveyors-off"
+      ]
+    },
+    {
+      "id": "surveyors-missing",
+      "tool": "surveyors",
+      "title": "A survey isn’t on the Surveyor Calendar",
+      "ask": [
+        "my survey isn't on the calendar",
+        "survey missing from the surveyor calendar",
+        "why does it say time not set",
+        "what is needs a surveyor",
+        "what is needs a date",
+        "how do I book a survey"
+      ],
+      "keys": [
+        "missing",
+        "time not set",
+        "needs a surveyor",
+        "needs a date",
+        "no postcode",
+        "book",
+        "appointment date"
+      ],
+      "answer": "Surveys are booked in HubSpot, not here. A deal shows on a day once it has an Appointment Date & Time and an owner (the surveyor). Deals in Enquiry Received are under Needs a surveyor; allocated or scheduled deals with no date are under Needs a date. A midday time means no time was set. Changes show within 15 minutes.",
+      "related": [
+        "about-surveyors"
+      ]
+    },
+    {
+      "id": "surveyors-access",
+      "tool": "surveyors",
+      "title": "Who has the Surveyor Calendar",
+      "ask": [
+        "who has the surveyor calendar",
+        "give someone the surveyor calendar",
+        "switch on the surveyor calendar",
+        "how do I get the surveyor calendar"
+      ],
+      "keys": [
+        "surveyor calendar",
+        "access",
+        "switch on",
+        "surveys"
+      ],
+      "answer": "The Surveyor Calendar starts with FLR Super Admins, the surveyors and the office. Everyone who has it sees the whole team. A Super Admin can switch it on for others in Hub settings with the “Surveyor Calendar” switch.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-surveyors",
+        "hub-settings"
+      ]
+    },
+    {
+      "id": "surveyors-off",
+      "tool": "surveyors",
+      "title": "Days off on the Surveyor Calendar",
+      "ask": [
+        "who is off on the surveyor calendar",
+        "why does it say off on the calendar",
+        "surveyor on holiday",
+        "can I book a surveyor who is off",
+        "what does the red warning on a survey mean",
+        "surveyor days off"
+      ],
+      "keys": [
+        "off",
+        "off am",
+        "off pm",
+        "holiday",
+        "leave",
+        "days off",
+        "closed",
+        "bank holiday",
+        "warning",
+        "clash"
+      ],
+      "answer": "Days off come from Annual Leave: accepted leave and other leave show as “off”, “off AM” or “off PM” (never the reason), and bank holidays and closures shade the whole day. Tap a day to see “Off — don’t book”. A survey booked on its surveyor’s day off turns red with a warning. Leave changes show within 15 minutes; a surveyor only shows days off if their name matches on HubSpot and Annual Leave.",
+      "related": [
+        "about-surveyors",
+        "surveyors-missing"
+      ]
+    },
+    {
+      "id": "about-maintenance",
+      "tool": "maintenance",
+      "title": "About Maintenance",
+      "ask": [
+        "how do I report a problem",
+        "report a fault",
+        "something is broken in the office",
+        "the printer isn't working",
+        "how do I contact IT",
+        "report an IT problem",
+        "the hub isn't working",
+        "a hub page won't load",
+        "who do I tell about a broken",
+        "report something broken",
+        "what is maintenance",
+        "how do I report an issue",
+        "the printer is broken",
+        "something in the office is broken"
+      ],
+      "keys": [
+        "maintenance",
+        "report",
+        "problem",
+        "fault",
+        "broken",
+        "issue",
+        "IT",
+        "printer",
+        "facilities",
+        "equipment",
+        "repair",
+        "not working"
+      ],
+      "answer": "Maintenance is where you report office problems, IT and equipment faults, and problems with the Hub. Tap Report an issue, choose what it’s about, give it a title, say what’s wrong and how much it’s affecting you, and add up to 3 photos if they help. It goes in under your Hub name. My reports shows each one’s progress; Known issues lists shared problems already being handled.",
+      "link": {
+        "tile": "maintenance",
+        "label": "Open Maintenance"
+      },
+      "related": [
+        "maintenance-progress",
+        "maintenance-handling"
+      ]
+    },
+    {
+      "id": "maintenance-progress",
+      "tool": "maintenance",
+      "title": "Report statuses and replies",
+      "ask": [
+        "what does waiting for information mean",
+        "how do I reply to a maintenance report",
+        "they asked me for more information",
+        "what does submitted mean",
+        "is my report being looked at",
+        "my problem came back",
+        "reply needed"
+      ],
+      "keys": [
+        "status",
+        "submitted",
+        "in progress",
+        "waiting for information",
+        "resolved",
+        "reply",
+        "reply needed",
+        "update",
+        "maintenance"
+      ],
+      "answer": "Each report shows Submitted, In progress, Waiting for information or Resolved. Waiting for information means the person handling it has asked you something: open the report, read the question under Updates and reply there, with photos if they help. It then goes back to In progress. If a resolved problem comes back, report it again.",
+      "link": {
+        "tile": "maintenance",
+        "label": "Open Maintenance"
+      },
+      "related": [
+        "about-maintenance"
+      ]
+    },
+    {
+      "id": "maintenance-handling",
+      "tool": "maintenance",
+      "title": "Who sees and handles reports",
+      "ask": [
+        "who sees my maintenance report",
+        "who handles maintenance reports",
+        "how do I handle a report",
+        "add someone to handle maintenance",
+        "who handles IT problems",
+        "how do I add a known issue",
+        "to handle tab"
+      ],
+      "keys": [
+        "handler",
+        "handles",
+        "who sees",
+        "private",
+        "known issues",
+        "to handle",
+        "super admin",
+        "category",
+        "maintenance"
+      ],
+      "answer": "Only you and the people handling your report can see it. Each category is handled by the people a Super Admin names under Who handles what, and by Super Admins. Handlers use the To handle tab to update a report, ask for more information or mark it resolved, and write the Known issues, which everyone sees, so they never name anyone.",
+      "link": {
+        "tile": "maintenance",
+        "label": "Open Maintenance"
+      },
+      "related": [
+        "about-maintenance"
+      ]
+    },
+    {
+      "id": "about-market",
+      "tool": "market",
+      "title": "About Market Watch",
+      "ask": [
+        "what is market watch",
+        "open market watch",
+        "show me new leads",
+        "any new tenders",
+        "which contractors have won work",
+        "contractor wins",
+        "what are our competitors doing",
+        "what do people search for",
+        "how many visits does our website get"
+      ],
+      "keys": [
+        "market watch",
+        "leads",
+        "tenders",
+        "competitors",
+        "search trends",
+        "website traffic",
+        "news"
+      ],
+      "answer": "Market Watch keeps an eye on FLR’s market. Every weekday morning it gathers local news as leads and LinkedIn post ideas, each with its picture and a link to the story, and lists public tenders that mention flooring. On Mondays it checks Google Trends and looks for main contractors that have won Midlands jobs (Contractor wins on the Leads tab: the firms to approach about the flooring), and on the 3rd of each month it reads five rival contractors’ homepages. Anything found in the last 24 hours is marked New. It starts with FLR Super Admins and the marketing account; to get it, ask an FLR Super Admin.",
+      "link": {
+        "tile": "market",
+        "label": "Open Market Watch"
+      },
+      "related": [
+        "market-refresh",
+        "market-access"
+      ]
+    },
+    {
+      "id": "market-refresh",
+      "tool": "market",
+      "title": "When Market Watch refreshes",
+      "ask": [
+        "when does market watch update",
+        "market watch is out of date",
+        "why is market watch late",
+        "how often does market watch refresh"
+      ],
+      "keys": [
+        "market watch",
+        "refresh",
+        "update",
+        "late",
+        "out of date"
+      ],
+      "answer": "Market Watch refreshes news and tenders at 6:30 every weekday morning (7:30 in summer), search trends and contractor wins on Mondays, and rivals’ websites on the 3rd of each month. Website visits aren’t refreshed for now, to save Firecrawl credits. Each section says when it was last updated, in red if a refresh didn’t work. If it stays red, tell an FLR Super Admin.",
+      "link": {
+        "tile": "market",
+        "label": "Open Market Watch"
+      },
+      "related": [
+        "about-market",
+        "market-access"
+      ]
+    },
+    {
+      "id": "market-access",
+      "tool": "market",
+      "title": "Who has Market Watch",
+      "ask": [
+        "who has market watch",
+        "give someone market watch",
+        "how do I get market watch",
+        "switch on market watch"
+      ],
+      "keys": [
+        "market watch",
+        "access",
+        "switch on",
+        "get",
+        "give"
+      ],
+      "answer": "Market Watch starts with FLR Super Admins and the marketing account. To give it to someone else, ask an FLR Super Admin.",
+      "link": {
+        "href": "settings/",
+        "label": "Open Hub settings"
+      },
+      "related": [
+        "about-market",
+        "hub-settings"
+      ]
+    }
+  ]
+}

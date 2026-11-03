@@ -1,0 +1,477 @@
+[
+ {
+  "q": "it won't let me log in",
+  "expect": "signin"
+ },
+ {
+  "q": "forgot pasword",
+  "expect": "password-forgot"
+ },
+ {
+  "q": "where do i get an access code to sign up",
+  "expect": "access-code",
+  "alt": [
+   "account-new"
+  ]
+ },
+ {
+  "q": "how do I sign out, I'm on the shared computer in the showroom",
+  "expect": "signout"
+ },
+ {
+  "q": "reset password email never came through, checked my junk as well",
+  "expect": "password-forgot",
+  "declineOk": true
+ },
+ {
+  "q": "do I log in with my work email or my personal one?",
+  "expect": "signin",
+  "alt": [
+   "account-new"
+  ]
+ },
+ {
+  "q": "keeps saying wrong email or password but I literally just reset it!!",
+  "expect": "signin",
+  "alt": [
+   "password-forgot"
+  ]
+ },
+ {
+  "q": "new starter here - how do I get onto the hub?",
+  "expect": "account-new"
+ },
+ {
+  "q": "access code isnt working when i try to make an account",
+  "expect": "access-code",
+  "alt": [
+   "account-new"
+  ]
+ },
+ {
+  "q": "what can I actually use the hub for",
+  "expect": "about-hub"
+ },
+ {
+  "q": "why can't I see the same stuff on the hub as my manager",
+  "expect": "tools-missing",
+  "declineOk": true
+ },
+ {
+  "q": "how do i start a new quote",
+  "expect": "estimate-new"
+ },
+ {
+  "q": "estimater wont save my rooms",
+  "expect": "estimate-rooms",
+  "alt": [
+   "estimate-stages"
+  ]
+ },
+ {
+  "q": "How do I copy an old quotation for a job that's almost identical?",
+  "expect": "estimate-copy"
+ },
+ {
+  "q": "where do I put the room sizes in",
+  "expect": "estimate-rooms"
+ },
+ {
+  "q": "customer wants another room adding but the quote's already been approved, what do I do",
+  "expect": "estimate-revise",
+  "alt": [
+   "estimate-rooms"
+  ]
+ },
+ {
+  "q": "print quote for client",
+  "expect": "estimate-print"
+ },
+ {
+  "q": "how do I find an old quote, I only know the customer's surname",
+  "expect": "estimate-find"
+ },
+ {
+  "q": "whats the difference between review costs and the client quotation bit",
+  "expect": "estimate-stages",
+  "alt": [
+   "estimate-terms",
+   "estimate-approve"
+  ]
+ },
+ {
+  "q": "As an admin, how do I update the price of a product in the estimator?",
+  "expect": "estimate-admin"
+ },
+ {
+  "q": "how do I move quotes over to another estimator, one of the lads has left",
+  "expect": "estimate-reassign"
+ },
+ {
+  "q": "why is everything greyed out in the estimator, I cant change anything",
+  "expect": "estimate-roles",
+  "alt": [
+   "estimate-stages",
+   "estimate-revise"
+  ],
+  "declineOk": true
+ },
+ {
+  "q": "can I delete a quotaion I made by mistake or can I only archive it?",
+  "expect": "estimate-archive"
+ },
+ {
+  "q": "where do I change the wording that prints on the quotation",
+  "expect": "estimate-admin"
+ },
+ {
+  "q": "what does the developer role mean",
+  "expect": "estimate-roles"
+ },
+ {
+  "q": "archived a project by accident how do i get it back",
+  "expect": "estimate-archive"
+ },
+ {
+  "q": "what is the speeding report",
+  "expect": "fleet-find",
+  "alt": [
+   "about-fleet"
+  ]
+ },
+ {
+  "q": "WHY does fleet management just say nothing to show you yet",
+  "expect": "fleet-nothing"
+ },
+ {
+  "q": "how often does the speading data update",
+  "expect": "fleet-updated"
+ },
+ {
+  "q": "van mot date",
+  "expect": "fleet-vehicles"
+ },
+ {
+  "q": "where do I see my own driving",
+  "expect": "fleet-my-driving"
+ },
+ {
+  "q": "what does the review order mean on the speeding page",
+  "expect": "fleet-rules",
+  "alt": [
+   "fleet-review"
+  ]
+ },
+ {
+  "q": "can i see where i was speeding on the map",
+  "expect": "fleet-map",
+  "alt": [
+   "fleet-incident"
+  ]
+ },
+ {
+  "q": "how do I get my account linked to my van",
+  "expect": "fleet-nothing",
+  "alt": [
+   "fleet-link"
+  ]
+ },
+ {
+  "q": "speeding report is showing a journey I didn't do, someone else had the van that day",
+  "expect": "fleet-wrong-driver",
+  "declineOk": true,
+  "alt": [
+   "fleet-privacy"
+  ]
+ },
+ {
+  "q": "where does the speeding info come from, is it the tracker in the van",
+  "expect": "about-fleet",
+  "alt": [
+   "fleet-updated",
+   "fleet-find"
+  ]
+ },
+ {
+  "q": "I'm a manager - how do I see which vans have a service or MOT coming up?",
+  "expect": "fleet-vehicles"
+ },
+ {
+  "q": "is today's speeding in yet? still looks like yesterday's",
+  "expect": "fleet-updated"
+ },
+ {
+  "q": "holiday form",
+  "expect": "leave-request",
+  "alt": [
+   "leave-form-link"
+  ]
+ },
+ {
+  "q": "how many days holliday have i got left",
+  "expect": "leave-balance"
+ },
+ {
+  "q": "how do I book hols? cheers",
+  "expect": "leave-request"
+ },
+ {
+  "q": "can I cancel a holiday request after it's been approved",
+  "expect": "leave-cancel"
+ },
+ {
+  "q": "what is Jeff Day?",
+  "expect": "leave-closures",
+  "declineOk": true
+ },
+ {
+  "q": "do bank hols come out of my allowance",
+  "expect": "leave-closures"
+ },
+ {
+  "q": "when's the christmas shutdown this year",
+  "expect": "leave-closures",
+  "declineOk": true
+ },
+ {
+  "q": "my leave request has said pending for a week, does my gaffer actually get told about it?",
+  "expect": "leave-status",
+  "alt": [
+   "leave-approve"
+  ],
+  "declineOk": true
+ },
+ {
+  "q": "can I book half a day off",
+  "expect": "leave-request",
+  "declineOk": true
+ },
+ {
+  "q": "how do I approve leave requests for my team",
+  "expect": "leave-approve"
+ },
+ {
+  "q": "where's the diary of who's off",
+  "expect": "leave-diary"
+ },
+ {
+  "q": "What's the difference between deny and review on a leave request?",
+  "expect": "leave-approve",
+  "declineOk": true
+ },
+ {
+  "q": "as an approver can I see how many days everyone's got left",
+  "expect": "leave-balances-all"
+ },
+ {
+  "q": "annual leave says I've got 0 days left, that can't be right",
+  "expect": "leave-balance",
+  "alt": [
+   "leave-closures"
+  ],
+  "declineOk": true
+ },
+ {
+  "q": "how do I open the fitter schedule",
+  "expect": "about-fitters"
+ },
+ {
+  "q": "who do I ask for the fitter schedule passcode",
+  "expect": "fitters-passcode"
+ },
+ {
+  "q": "fitter scedule wont accept the passcode",
+  "expect": "fitters-passcode"
+ },
+ {
+  "q": "how far ahead does the fitter schedule go",
+  "expect": "about-fitters",
+  "alt": [
+   "fitters-free"
+  ]
+ },
+ {
+  "q": "where can I see which jobs still need a fitter",
+  "expect": "fitters-jobs"
+ },
+ {
+  "q": "can the fitters look at the schedule on their phones",
+  "expect": "about-fitters",
+  "declineOk": true
+ },
+ {
+  "q": "what do the colours mean on the fitter schedule, does off mean they're on holiday?",
+  "expect": "fitters-statuses",
+  "alt": [
+   "about-fitters"
+  ]
+ },
+ {
+  "q": "do I need a hub login for the fitter schedule or just the team code",
+  "expect": "fitters-passcode",
+  "alt": [
+   "about-fitters",
+   "signin"
+  ]
+ },
+ {
+  "q": "when do we get paid this month, is it the last Friday?",
+  "expect": null
+ },
+ {
+  "q": "how do I get a copy of my P60",
+  "expect": null
+ },
+ {
+  "q": "outlook keeps asking for my password on my phone",
+  "expect": null
+ },
+ {
+  "q": "whats the wifi password for the warehouse",
+  "expect": null
+ },
+ {
+  "q": "who do I talk to about a pay rise",
+  "expect": null
+ },
+ {
+  "q": "how do I claim mileage for using my own car",
+  "expect": null
+ },
+ {
+  "q": "fuel card got declined at the pump, what do I do?",
+  "expect": null
+ },
+ {
+  "q": "what's the sick pay policy",
+  "expect": null
+ },
+ {
+  "q": "tell me a joke",
+  "expect": null
+ },
+ {
+  "q": "best way to get old adhesive off a concrete floor?",
+  "expect": null
+ },
+ {
+  "q": "who's the first aider today",
+  "expect": null
+ },
+ {
+  "q": "can you write an email to a customer chasing an unpaid invoice",
+  "expect": null
+ },
+ {
+  "q": "printer upstairs is jammed again",
+  "expect": null
+ },
+ {
+  "q": "how do I join the pension scheme",
+  "expect": null
+ },
+ {
+  "q": "who do I ask for new knee pads",
+  "expect": null
+ },
+ {
+  "q": "show me daves speeding from last week",
+  "expect": null,
+  "alt": [
+   "fleet-review",
+   "fleet-my-driving",
+   "fleet-find",
+   "about-fleet"
+  ]
+ },
+ {
+  "q": "how many days has Sarah in accounts got left?",
+  "expect": null,
+  "alt": [
+   "leave-balances-all",
+   "leave-balance"
+  ]
+ },
+ {
+  "q": "can you approve my holiday for next week",
+  "expect": null,
+  "alt": [
+   "leave-approve",
+   "leave-request",
+   "assistant-about"
+  ]
+ },
+ {
+  "q": "whats the access code to create an account",
+  "expect": "access-code",
+  "alt": [
+   "account-new"
+  ]
+ },
+ {
+  "q": "book me off friday",
+  "expect": "leave-request",
+  "alt": [
+   "assistant-about"
+  ]
+ },
+ {
+  "q": "what's the passcode for the fitter schedule?",
+  "expect": "fitters-passcode"
+ },
+ {
+  "q": "can you just reset my password for me",
+  "expect": "password-forgot",
+  "alt": [
+   "assistant-about"
+  ]
+ },
+ {
+  "q": "who's off next week?",
+  "expect": "leave-diary"
+ },
+ {
+  "q": "link my account to my van please",
+  "expect": "fleet-nothing",
+  "alt": [
+   "fleet-link"
+  ]
+ },
+ {
+  "q": "delete that speeding from Tuesday, it wasn't me driving",
+  "expect": null,
+  "alt": [
+   "fleet-wrong-driver",
+   "fleet-privacy",
+   "fleet-incident"
+  ]
+ },
+ {
+  "q": "change the price of carpet tiles to £18.50 a square metre",
+  "expect": "estimate-admin",
+  "declineOk": true
+ },
+ {
+  "q": "which fitters are free on Thursday?",
+  "expect": "fitters-free"
+ },
+ {
+  "q": "who's the worst speeder in the company lol",
+  "expect": "fleet-review",
+  "declineOk": true
+ },
+ {
+  "q": "make me an admin on the estimator",
+  "expect": "estimate-roles",
+  "declineOk": true
+ },
+ {
+  "q": "send the Henderson quote to the customer for me",
+  "expect": null,
+  "alt": [
+   "estimate-print",
+   "assistant-about",
+   "estimate-find"
+  ]
+ }
+]
